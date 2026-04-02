@@ -3,7 +3,6 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { LabelAnalysisResult, WineType } from "@/types";
-import type { NaverItem } from "@/app/api/naver/search/route";
 import { createWineRecord } from "@/lib/actions/diary";
 import LoadingOverlay from "@/components/LoadingOverlay";
 
@@ -64,10 +63,9 @@ export default function NewDiaryPage() {
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
 
   // 단계별 상태
-  const [ocrLoading, setOcrLoading] = useState(false);           // 1단계: OCR
-  const [naverItems, setNaverItems] = useState<NaverItem[] | null>(null);  // 네이버 결과
-  const [selectedNaver, setSelectedNaver] = useState<NaverItem | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);             // 3단계: AI 웹검색 (백그라운드)
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [naverLoading, setNaverLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const [aiDone, setAiDone] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -120,27 +118,8 @@ export default function NewDiaryPage() {
     const { raw_text } = await ocrRes.value.json();
     setRawText(raw_text);
 
-    // 네이버 검색할 쿼리 추출 (첫 두 줄 or 전체)
-    const firstLines = raw_text.split("\n").slice(0, 2).join(" ").trim();
-    const query = firstLines || raw_text.slice(0, 80);
-    setNaverQuery(query);
-    await runNaverSearch(query);
-
     // AI 웹검색은 백그라운드에서 진행
     runAiSearch(raw_text);
-  }
-
-  async function runNaverSearch(query: string) {
-    if (!query.trim()) return;
-    try {
-      const res = await fetch("/api/naver/search?q=" + encodeURIComponent(query));
-      const data = await res.json();
-      setNaverItems(data.items ?? []);
-      if (data.error) console.warn("[naver search]", data.error);
-    } catch (e) {
-      console.error("[naver search] fetch failed", e);
-      setNaverItems([]);
-    }
   }
 
   function runAiSearch(text: string) {
@@ -170,23 +149,37 @@ export default function NewDiaryPage() {
       .finally(() => setAiLoading(false));
   }
 
-  function selectNaver(item: NaverItem) {
-    setSelectedNaver(item);
-    setForm((f) => ({
-      ...f,
-      name: item.title,
-      price: item.lprice ? String(item.lprice) : f.price,
-      producer: item.brand || item.maker || f.producer,
-    }));
-    if (item.image && !uploadedUrl) setUploadedUrl(item.image);
-  }
-
   async function handleManualSearch(e?: React.SyntheticEvent) {
     e?.preventDefault();
     if (!naverQuery.trim()) return;
-    setNaverItems(null);
-    await runNaverSearch(naverQuery);
-    if (naverQuery !== rawText) runAiSearch(naverQuery);
+    setNaverLoading(true);
+    setAiDone(false);
+    setError(null);
+    try {
+      const res = await fetch("/api/naver/extract?q=" + encodeURIComponent(naverQuery));
+      const data: LabelAnalysisResult = await res.json();
+      if ("error" in data) {
+        setError((data as { error: string }).error);
+        return;
+      }
+      setAiResult(data);
+      setAiDone(true);
+      setForm((f) => ({
+        ...f,
+        name: f.name || data.name || "",
+        vintage: f.vintage || (data.vintage ? String(data.vintage) : ""),
+        country: f.country || data.country || "",
+        region: f.region || data.region || "",
+        grapes: f.grapes || (data.grapes?.join(", ") ?? ""),
+        producer: f.producer || data.producer || "",
+        type: f.type || (data.type as WineType) || "",
+      }));
+    } catch (e) {
+      console.error("[naver extract] failed", e);
+      setError("검색 중 오류가 발생했습니다.");
+    } finally {
+      setNaverLoading(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -257,82 +250,43 @@ export default function NewDiaryPage() {
             )}
           </section>
 
-          {/* ── 검색창 (직접 입력 or 보정) ── */}
-          <section className="flex gap-2">
-            <input
-              value={naverQuery}
-              onChange={(e) => setNaverQuery(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleManualSearch(e as never))}
-              placeholder="와인 이름으로 검색…"
-              className="flex-1 rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-rose-600"
-            />
-            <button
-              type="button"
-              onClick={handleManualSearch}
-              className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm font-medium transition-colors"
-            >
-              검색
-            </button>
+          {/* ── 검색창 ── */}
+          <section className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <input
+                value={naverQuery}
+                onChange={(e) => setNaverQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleManualSearch(e as never))}
+                placeholder="와인 이름으로 검색…"
+                className="flex-1 rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-rose-600"
+              />
+              <button
+                type="button"
+                onClick={handleManualSearch}
+                disabled={naverLoading}
+                className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-200 text-sm font-medium transition-colors"
+              >
+                {naverLoading ? "분석 중…" : "검색"}
+              </button>
+            </div>
+            {naverLoading && (
+              <p className="text-xs text-zinc-500 animate-pulse px-1">블로그 검색 결과를 분석하고 있습니다…</p>
+            )}
+            {aiDone && !naverLoading && (
+              <p className="text-xs text-emerald-500 px-1">정보가 자동으로 입력되었습니다. 확인 후 수정하세요.</p>
+            )}
+            {aiLoading && (
+              <p className="text-xs text-zinc-500 animate-pulse px-1">AI가 라벨 정보를 분석 중입니다…</p>
+            )}
+            {rawText && (
+              <button type="button" onClick={() => setShowRawText((v) => !v)} className="text-xs text-zinc-600 hover:text-zinc-400 underline text-left px-1">
+                {showRawText ? "라벨 텍스트 접기 ▲" : "라벨에서 읽은 텍스트 보기 ▼"}
+              </button>
+            )}
+            {showRawText && (
+              <pre className="text-xs text-zinc-300 bg-zinc-900 rounded-xl p-3 whitespace-pre-wrap font-mono leading-relaxed max-h-36 overflow-y-auto">{rawText}</pre>
+            )}
           </section>
-
-          {/* ── 네이버 쇼핑 결과 ── */}
-          {naverItems !== null && (
-            <section className="flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">네이버 쇼핑 결과</span>
-                {aiLoading && <span className="text-xs text-zinc-500 animate-pulse">AI 분석 중…</span>}
-                {aiDone && <span className="text-xs text-emerald-500">✓ AI 분석 완료</span>}
-              </div>
-
-              {naverItems.length === 0 ? (
-                <p className="text-sm text-zinc-500 py-2">검색 결과가 없습니다. 이름을 수정해서 다시 검색해 보세요.</p>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {naverItems.map((item) => {
-                    const selected = selectedNaver?.productId === item.productId;
-                    return (
-                      <button
-                        key={item.productId}
-                        type="button"
-                        onClick={() => selectNaver(item)}
-                        className={`flex gap-3 p-3 rounded-xl border text-left transition-colors ${
-                          selected
-                            ? "border-rose-600 bg-rose-950/30"
-                            : "border-zinc-700 bg-zinc-900 hover:border-zinc-500"
-                        }`}
-                      >
-                        {item.image && (
-                          <img src={item.image} alt={item.title} className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-zinc-800" />
-                        )}
-                        <div className="flex flex-col gap-0.5 min-w-0">
-                          <p className="text-sm font-medium text-zinc-100 leading-snug line-clamp-2">{item.title}</p>
-                          {(item.brand || item.maker) && (
-                            <p className="text-xs text-zinc-500">{item.brand || item.maker}</p>
-                          )}
-                          {item.lprice && (
-                            <p className="text-xs text-rose-400 mt-0.5">
-                              {item.lprice.toLocaleString()}원{item.hprice && item.hprice !== item.lprice ? ` ~ ${item.hprice.toLocaleString()}원` : ""}
-                            </p>
-                          )}
-                        </div>
-                        {selected && <span className="ml-auto text-rose-400 flex-shrink-0">✓</span>}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* AI 결과가 있으면 raw_text 보기 제공 */}
-              {rawText && (
-                <button type="button" onClick={() => setShowRawText((v) => !v)} className="text-xs text-zinc-600 hover:text-zinc-400 underline text-left">
-                  {showRawText ? "라벨 텍스트 접기 ▲" : "라벨에서 읽은 텍스트 보기 ▼"}
-                </button>
-              )}
-              {showRawText && (
-                <pre className="text-xs text-zinc-300 bg-zinc-900 rounded-xl p-3 whitespace-pre-wrap font-mono leading-relaxed max-h-36 overflow-y-auto">{rawText}</pre>
-              )}
-            </section>
-          )}
 
           {/* ── 기본 정보 폼 ── */}
           <section className="flex flex-col gap-4">

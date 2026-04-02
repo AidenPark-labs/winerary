@@ -65,25 +65,25 @@ export async function GET(request: Request) {
     .map((it, i) => `[${i + 1}] ${it.title}\n${it.description}`)
     .join("\n\n");
 
-  const schema: LabelAnalysisResult = {
+  const schema = {
     name: "와인 이름 또는 null",
     vintage: 2020,
     country: "영어 국가명 또는 null",
     region: "AOC/DOC/지역명 또는 null",
     grapes: ["품종"],
     producer: "와이너리명 또는 null",
-    type: "red|white|rose|sparkling|fortified|other 또는 null",
+    type: "red 또는 white 또는 rose 또는 sparkling 또는 fortified 또는 other 또는 null",
     alcohol: "예: 13.5% 또는 null",
     raw_text: q,
     notes: "추가 정보 (한국어) 또는 null",
     confidence: {
-      name: "high|medium|low",
-      vintage: "high|medium|low",
-      country: "high|medium|low",
-      region: "high|medium|low",
-      grapes: "high|medium|low",
-      producer: "high|medium|low",
-      type: "high|medium|low",
+      name: "high 또는 medium 또는 low",
+      vintage: "high 또는 medium 또는 low",
+      country: "high 또는 medium 또는 low",
+      region: "high 또는 medium 또는 low",
+      grapes: "high 또는 medium 또는 low",
+      producer: "high 또는 medium 또는 low",
+      type: "high 또는 medium 또는 low",
     },
   };
 

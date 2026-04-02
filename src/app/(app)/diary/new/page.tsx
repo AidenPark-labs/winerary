@@ -181,8 +181,8 @@ export default function NewDiaryPage() {
     if (item.image && !uploadedUrl) setUploadedUrl(item.image);
   }
 
-  async function handleManualSearch(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleManualSearch(e?: React.SyntheticEvent) {
+    e?.preventDefault();
     if (!naverQuery.trim()) return;
     setNaverItems(null);
     await runNaverSearch(naverQuery);
@@ -258,21 +258,21 @@ export default function NewDiaryPage() {
           </section>
 
           {/* ── 검색창 (직접 입력 or 보정) ── */}
-          <section>
-            <form onSubmit={handleManualSearch} className="flex gap-2">
-              <input
-                value={naverQuery}
-                onChange={(e) => setNaverQuery(e.target.value)}
-                placeholder="와인 이름으로 검색…"
-                className="flex-1 rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-rose-600"
-              />
-              <button
-                type="submit"
-                className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm font-medium transition-colors"
-              >
-                검색
-              </button>
-            </form>
+          <section className="flex gap-2">
+            <input
+              value={naverQuery}
+              onChange={(e) => setNaverQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleManualSearch(e as never))}
+              placeholder="와인 이름으로 검색…"
+              className="flex-1 rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-rose-600"
+            />
+            <button
+              type="button"
+              onClick={handleManualSearch}
+              className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm font-medium transition-colors"
+            >
+              검색
+            </button>
           </section>
 
           {/* ── 네이버 쇼핑 결과 ── */}

@@ -132,10 +132,14 @@ export default function NewDiaryPage() {
 
   async function runNaverSearch(query: string) {
     if (!query.trim()) return;
-    const res = await fetch("/api/naver/search?q=" + encodeURIComponent(query));
-    if (res.ok) {
-      const { items } = await res.json();
-      setNaverItems(items ?? []);
+    try {
+      const res = await fetch("/api/naver/search?q=" + encodeURIComponent(query));
+      const data = await res.json();
+      setNaverItems(data.items ?? []);
+      if (data.error) console.warn("[naver search]", data.error);
+    } catch (e) {
+      console.error("[naver search] fetch failed", e);
+      setNaverItems([]);
     }
   }
 

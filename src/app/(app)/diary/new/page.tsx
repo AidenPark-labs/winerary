@@ -48,6 +48,35 @@ export default function NewDiaryPage() {
   const set = (field: keyof FormState, value: string | number) =>
     setForm((f) => ({ ...f, [field]: value }));
 
+  // HEIC 등 비표준 포맷을 JPEG으로 변환 + 최대 1920px 리사이즈
+  async function normalizeImage(file: File): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const MAX = 1920;
+        let { width, height } = img;
+        if (width > MAX || height > MAX) {
+          const ratio = Math.min(MAX / width, MAX / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob(
+          (blob) => (blob ? resolve(blob) : reject(new Error("변환 실패"))),
+          "image/jpeg",
+          0.92
+        );
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("이미지 로드 실패")); };
+      img.src = url;
+    });
+  }
+
   async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -56,15 +85,26 @@ export default function NewDiaryPage() {
     setAiResult(null);
     setUploadedUrl(null);
     setError(null);
+    setLoading({ active: true, message: "이미지 준비 중…", subMessage: "HEIC → JPEG 변환 중" });
+
+    let blob: Blob;
+    try {
+      blob = await normalizeImage(file);
+    } catch {
+      blob = file;
+    }
+
     setLoading({ active: true, message: "라벨 분석 중…", subMessage: "AI가 와인 정보를 읽고 있습니다" });
 
-    const fd = new FormData();
-    fd.append("file", file);
+    // FormData를 각각 별도로 생성 (같은 객체 공유 시 스트림 소진 버그)
+    const fdAi = new FormData();
+    fdAi.append("file", blob, "label.jpg");
+    const fdUpload = new FormData();
+    fdUpload.append("file", blob, "label.jpg");
 
-    // AI 분석 + 이미지 업로드 병렬 처리
     const [aiRes, uploadRes] = await Promise.allSettled([
-      fetch("/api/ai/recognize", { method: "POST", body: fd }),
-      fetch("/api/upload", { method: "POST", body: fd }),
+      fetch("/api/ai/recognize", { method: "POST", body: fdAi }),
+      fetch("/api/upload", { method: "POST", body: fdUpload }),
     ]);
 
     setLoading({ active: false });
@@ -170,6 +210,15 @@ export default function NewDiaryPage() {
               className="hidden"
               onChange={handleImageChange}
             />
+            {previewUrl && (
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="text-xs text-zinc-500 hover:text-zinc-300 underline"
+              >
+                다시 촬영 / 다른 사진 선택
+              </button>
+            )}
 
             {/* AI 결과 상태 표시 */}
             {anyAiData && (

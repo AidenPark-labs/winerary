@@ -1,28 +1,20 @@
-export type WineType = 'red' | 'white' | 'rose' | 'sparkling' | 'fortified' | 'other'
 export type Visibility = 'private' | 'link' | 'public'
 
 export interface WineRecord {
   id: string
   user_id: string
   name: string
-  vintage: number | null
-  country: string | null
-  region: string | null
-  grapes: string[] | null
-  producer: string | null
-  type: WineType | null
-  label_image_url: string | null
+  wine_vivino_url: string | null
+  photos: string[]
   location: string | null
   drunk_at: string
-  price: number | null
-  memo: string | null
   companions: string[] | null
-  balance: number | null
-  complexity: number | null
-  value_score: number | null
+  memo: string | null
+  pairing_score: number | null
   rating: number | null
   foods: FoodRecord[]
   visibility: Visibility
+  deleted_at: string | null
   created_at: string
   updated_at: string
 }
@@ -64,16 +56,12 @@ export interface SessionComment {
   created_at: string
 }
 
-export interface LabelAnalysisResult {
-  name: string | null
-  vintage: number | null
-  country: string | null
-  region: string | null
-  grapes: string[] | null
-  producer: string | null
-  type: WineType | null
-  alcohol: string | null
-  raw_text: string | null
-  notes: string | null
-  confidence: Record<string, 'high' | 'medium' | 'low'>
+export interface WineSuggestion {
+  name: string
+  name_ko: string
+  producer: string
+  country: string
+  type: string
+  vintage_range: string
+  vivino_url: string
 }

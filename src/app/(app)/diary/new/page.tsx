@@ -2,36 +2,11 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import type { LabelAnalysisResult, WineType } from "@/types";
+import type { WineSuggestion } from "@/types";
 import { createWineRecord } from "@/lib/actions/diary";
 import LoadingOverlay from "@/components/LoadingOverlay";
 
-const WINE_TYPES: { value: WineType; label: string }[] = [
-  { value: "red", label: "레드" },
-  { value: "white", label: "화이트" },
-  { value: "rose", label: "로제" },
-  { value: "sparkling", label: "스파클링" },
-  { value: "fortified", label: "주정강화" },
-  { value: "other", label: "기타" },
-];
-
-type FormState = {
-  name: string; vintage: string; country: string; region: string;
-  grapes: string; producer: string; type: WineType | "";
-  location: string; drunk_at: string; price: string; memo: string;
-  balance: number; complexity: number; value_score: number; rating: number;
-};
-
-const INITIAL: FormState = {
-  name: "", vintage: "", country: "", region: "",
-  grapes: "", producer: "", type: "", location: "",
-  drunk_at: new Date().toISOString().split("T")[0],
-  price: "", memo: "",
-  balance: 3, complexity: 3, value_score: 3, rating: 3,
-};
-
-// 이미지를 JPEG으로 정규화 + 최대 1920px 리사이즈
-async function normalizeImage(file: File): Promise<Blob> {
+async function compressImage(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -44,351 +19,353 @@ async function normalizeImage(file: File): Promise<Blob> {
         height = Math.round(height * r);
       }
       const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = width; canvas.height = height;
       canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
       URL.revokeObjectURL(url);
-      canvas.toBlob((b) => (b ? resolve(b) : reject()), "image/jpeg", 0.92);
+      canvas.toBlob((b) => (b ? resolve(b) : reject()), "image/jpeg", 0.88);
     };
     img.onerror = () => { URL.revokeObjectURL(url); reject(); };
     img.src = url;
   });
 }
 
+const TYPE_KO: Record<string, string> = {
+  red: "레드", white: "화이트", rose: "로제",
+  sparkling: "스파클링", fortified: "주정강화", other: "기타",
+};
+
 export default function NewDiaryPage() {
   const router = useRouter();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [form, setForm] = useState<FormState>(INITIAL);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
-  // 단계별 상태
-  const [ocrLoading, setOcrLoading] = useState(false);
-  const [naverLoading, setNaverLoading] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiDone, setAiDone] = useState(false);
+  // 검색 단계
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<WineSuggestion[] | null>(null);
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const [selectedWine, setSelectedWine] = useState<WineSuggestion | null>(null);
+
+  // 사진
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [photoUploading, setPhotoUploading] = useState(false);
+
+  // 폼
+  const [drunkAt, setDrunkAt] = useState(new Date().toISOString().split("T")[0]);
+  const [location, setLocation] = useState("");
+  const [companions, setCompanions] = useState("");
+  const [foodInput, setFoodInput] = useState("");
+  const [foods, setFoods] = useState<string[]>([]);
+  const [rating, setRating] = useState(3);
+  const [pairingScore, setPairingScore] = useState(3);
+  const [memo, setMemo] = useState("");
+  const [visibility, setVisibility] = useState<"private" | "link" | "public">("private");
+
   const [saving, setSaving] = useState(false);
-
-  const [rawText, setRawText] = useState("");
-  const [naverQuery, setNaverQuery] = useState("");
-  const [aiResult, setAiResult] = useState<LabelAnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showRawText, setShowRawText] = useState(false);
-  const [showEval, setShowEval] = useState(false);
 
-  const set = (field: keyof FormState, v: string | number) =>
-    setForm((f) => ({ ...f, [field]: v }));
-
-  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setPreviewUrl(URL.createObjectURL(file));
-    setAiResult(null);
-    setAiDone(false);
-    setError(null);
-    setOcrLoading(true);
-
-    let blob: Blob;
-    try { blob = await normalizeImage(file); } catch { blob = file; }
-
-    // OCR + 업로드 병렬
-    const fdOcr = new FormData(); fdOcr.append("file", blob, "label.jpg");
-    const fdUpload = new FormData(); fdUpload.append("file", blob, "label.jpg");
-
-    const [ocrRes, uploadRes] = await Promise.allSettled([
-      fetch("/api/ai/ocr", { method: "POST", body: fdOcr }),
-      fetch("/api/upload", { method: "POST", body: fdUpload }),
-    ]);
-
-    setOcrLoading(false);
-
-    if (uploadRes.status === "fulfilled" && uploadRes.value.ok) {
-      const d = await uploadRes.value.json();
-      if (d.url) setUploadedUrl(d.url);
-    }
-
-    if (ocrRes.status !== "fulfilled" || !ocrRes.value.ok) {
-      setError("라벨 텍스트 인식에 실패했습니다. 직접 입력해 주세요.");
-      return;
-    }
-
-    const { raw_text } = await ocrRes.value.json();
-    setRawText(raw_text);
-
-    // AI 웹검색은 백그라운드에서 진행
-    runAiSearch(raw_text);
-  }
-
-  function runAiSearch(text: string) {
-    setAiLoading(true);
-    fetch("/api/ai/recognize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
-    })
-      .then((r) => r.json())
-      .then((data: LabelAnalysisResult) => {
-        setAiResult(data);
-        setAiDone(true);
-        // AI 결과로 폼 채우기 (이미 네이버로 선택된 필드는 유지)
-        setForm((f) => ({
-          ...f,
-          name: f.name || data.name || "",
-          vintage: f.vintage || (data.vintage ? String(data.vintage) : ""),
-          country: f.country || data.country || "",
-          region: f.region || data.region || "",
-          grapes: f.grapes || (data.grapes?.join(", ") ?? ""),
-          producer: f.producer || data.producer || "",
-          type: f.type || (data.type as WineType) || "",
-        }));
-      })
-      .catch(() => {})
-      .finally(() => setAiLoading(false));
-  }
-
-  async function handleManualSearch(e?: React.SyntheticEvent) {
+  async function handleSearch(e?: React.SyntheticEvent) {
     e?.preventDefault();
-    if (!naverQuery.trim()) return;
-    setNaverLoading(true);
-    setAiDone(false);
+    if (!query.trim() || query.trim().length < 2) return;
+    setSuggestLoading(true);
+    setSuggestions(null);
+    setSelectedWine(null);
     setError(null);
     try {
-      const res = await fetch("/api/naver/extract?q=" + encodeURIComponent(naverQuery));
-      const data: LabelAnalysisResult = await res.json();
-      if ("error" in data) {
-        setError((data as { error: string }).error);
-        return;
-      }
-      setAiResult(data);
-      setAiDone(true);
-      setForm((f) => ({
-        ...f,
-        name: f.name || data.name || "",
-        vintage: f.vintage || (data.vintage ? String(data.vintage) : ""),
-        country: f.country || data.country || "",
-        region: f.region || data.region || "",
-        grapes: f.grapes || (data.grapes?.join(", ") ?? ""),
-        producer: f.producer || data.producer || "",
-        type: f.type || (data.type as WineType) || "",
-      }));
-    } catch (e) {
-      console.error("[naver extract] failed", e);
+      const res = await fetch("/api/ai/suggest?q=" + encodeURIComponent(query));
+      const data = await res.json();
+      setSuggestions(data.wines ?? []);
+    } catch {
       setError("검색 중 오류가 발생했습니다.");
+      setSuggestions([]);
     } finally {
-      setNaverLoading(false);
+      setSuggestLoading(false);
     }
+  }
+
+  function selectWine(wine: WineSuggestion) {
+    setSelectedWine(wine);
+    setSuggestions(null);
+    setQuery(wine.name_ko || wine.name);
+  }
+
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    setPhotoUploading(true);
+
+    const newPreviews: string[] = [];
+    const newUrls: string[] = [];
+
+    for (const file of files) {
+      newPreviews.push(URL.createObjectURL(file));
+      let blob: Blob;
+      try { blob = await compressImage(file); } catch { blob = file; }
+
+      const fd = new FormData();
+      fd.append("file", blob, "photo.jpg");
+      try {
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        if (res.ok) {
+          const { url } = await res.json();
+          if (url) newUrls.push(url);
+        }
+      } catch { /* keep going */ }
+    }
+
+    setPhotoPreviews((p) => [...p, ...newPreviews]);
+    setPhotos((p) => [...p, ...newUrls]);
+    setPhotoUploading(false);
+    e.target.value = "";
+  }
+
+  function removePhoto(i: number) {
+    setPhotoPreviews((p) => p.filter((_, idx) => idx !== i));
+    setPhotos((p) => p.filter((_, idx) => idx !== i));
+  }
+
+  function addFood() {
+    const v = foodInput.trim();
+    if (v && !foods.includes(v)) setFoods((f) => [...f, v]);
+    setFoodInput("");
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.name) { setError("와인 이름을 입력해 주세요."); return; }
+    if (!selectedWine) { setError("와인을 검색하여 선택해 주세요."); return; }
     setSaving(true);
     setError(null);
 
     const result = await createWineRecord({
-      name: form.name,
-      vintage: form.vintage ? parseInt(form.vintage) : null,
-      country: form.country || null,
-      region: form.region || null,
-      grapes: form.grapes ? form.grapes.split(",").map((s) => s.trim()).filter(Boolean) : null,
-      producer: form.producer || null,
-      type: (form.type as WineType) || null,
-      location: form.location || null,
-      drunk_at: form.drunk_at,
-      price: form.price ? parseFloat(form.price) : null,
-      memo: form.memo || null,
-      balance: form.balance, complexity: form.complexity,
-      value_score: form.value_score, rating: form.rating,
-      label_image_url: uploadedUrl || null,
-      visibility: "private", foods: [],
+      name: selectedWine.name_ko || selectedWine.name,
+      wine_vivino_url: selectedWine.vivino_url,
+      photos,
+      drunk_at: drunkAt,
+      location: location || null,
+      companions: companions ? companions.split(",").map((s) => s.trim()).filter(Boolean) : null,
+      foods: foods.map((name) => ({ name })),
+      rating,
+      pairing_score: foods.length > 0 ? pairingScore : null,
+      memo: memo || null,
+      visibility,
     });
 
     setSaving(false);
     if (result?.error) setError(result.error);
   }
 
-  const confidence = aiResult?.confidence ?? {};
+  const iCls = "w-full rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3 text-zinc-100 focus:outline-none focus:border-rose-600 transition-colors text-sm";
 
   return (
     <>
       {saving && <LoadingOverlay message="기록 저장 중…" subMessage="잠시만 기다려 주세요" />}
-      {ocrLoading && <LoadingOverlay message="라벨 읽는 중…" subMessage="5초 내로 완료됩니다" />}
+      {photoUploading && <LoadingOverlay message="사진 업로드 중…" />}
 
       <div className="flex flex-col">
         <header className="px-5 pt-12 pb-4 flex items-center gap-3">
           <button onClick={() => router.back()} className="text-zinc-400 hover:text-zinc-200 text-2xl">←</button>
-          <h1 className="text-xl font-bold">새 와인 기록</h1>
+          <h1 className="text-xl font-bold">새 와인 경험 기록</h1>
         </header>
 
-        <form onSubmit={handleSubmit} className="px-4 pb-8 flex flex-col gap-5">
+        <form onSubmit={handleSubmit} className="px-4 pb-8 flex flex-col gap-6">
           {error && <p className="text-rose-400 text-sm bg-rose-950/40 rounded-xl px-4 py-3">{error}</p>}
 
-          {/* ── 라벨 촬영 ── */}
-          <section className="flex flex-col items-center gap-3">
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              className="relative w-32 h-40 rounded-2xl bg-zinc-900 border-2 border-dashed border-zinc-700 hover:border-rose-600 transition-colors flex flex-col items-center justify-center overflow-hidden"
-            >
-              {uploadedUrl || previewUrl ? (
-                <img src={uploadedUrl || previewUrl!} alt="label" className="absolute inset-0 w-full h-full object-cover" />
-              ) : (
-                <>
-                  <span className="text-3xl">📷</span>
-                  <span className="text-xs text-zinc-500 mt-1">라벨 촬영</span>
-                </>
-              )}
-            </button>
-            <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageChange} />
-            {previewUrl && (
-              <button type="button" onClick={() => fileRef.current?.click()} className="text-xs text-zinc-500 hover:text-zinc-300 underline">
-                다시 촬영
-              </button>
-            )}
-          </section>
+          {/* ── 와인 검색 ── */}
+          <section className="flex flex-col gap-3">
+            <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">와인 선택 *</h2>
 
-          {/* ── 검색창 ── */}
-          <section className="flex flex-col gap-2">
             <div className="flex gap-2">
               <input
-                value={naverQuery}
-                onChange={(e) => setNaverQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleManualSearch(e as never))}
-                placeholder="와인 이름으로 검색…"
-                className="flex-1 rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-rose-600"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleSearch())}
+                placeholder="와인 이름 검색 (예: 샤또 마고, 오퍼스 원)"
+                className={iCls}
               />
               <button
                 type="button"
-                onClick={handleManualSearch}
-                disabled={naverLoading}
-                className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-200 text-sm font-medium transition-colors"
+                onClick={handleSearch}
+                disabled={suggestLoading || query.trim().length < 2}
+                className="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-200 text-sm font-medium transition-colors whitespace-nowrap"
               >
-                {naverLoading ? "분석 중…" : "검색"}
+                {suggestLoading ? "…" : "검색"}
               </button>
             </div>
-            {naverLoading && (
-              <p className="text-xs text-zinc-500 animate-pulse px-1">블로그 검색 결과를 분석하고 있습니다…</p>
+
+            {/* 제안 목록 */}
+            {suggestLoading && (
+              <p className="text-xs text-zinc-500 animate-pulse px-1">와인 목록을 불러오는 중…</p>
             )}
-            {aiDone && !naverLoading && (
-              <p className="text-xs text-emerald-500 px-1">정보가 자동으로 입력되었습니다. 확인 후 수정하세요.</p>
+
+            {suggestions !== null && suggestions.length === 0 && (
+              <p className="text-sm text-zinc-500 px-1">검색 결과가 없습니다. 다른 이름으로 검색해보세요.</p>
             )}
-            {aiLoading && (
-              <p className="text-xs text-zinc-500 animate-pulse px-1">AI가 라벨 정보를 분석 중입니다…</p>
+
+            {suggestions && suggestions.length > 0 && (
+              <ul className="flex flex-col gap-2">
+                {suggestions.map((wine, i) => (
+                  <li key={i}>
+                    <button
+                      type="button"
+                      onClick={() => selectWine(wine)}
+                      className="w-full flex flex-col gap-0.5 p-3 rounded-xl border border-zinc-700 bg-zinc-900 hover:border-rose-600 text-left transition-colors"
+                    >
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-zinc-100">{wine.name_ko}</span>
+                        <span className="text-xs text-zinc-500">{wine.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-zinc-500">
+                        <span>{wine.producer}</span>
+                        <span>·</span>
+                        <span>{wine.country}</span>
+                        <span>·</span>
+                        <span>{TYPE_KO[wine.type] ?? wine.type}</span>
+                        {wine.vintage_range && <><span>·</span><span>{wine.vintage_range}</span></>}
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
-            {rawText && (
-              <button type="button" onClick={() => setShowRawText((v) => !v)} className="text-xs text-zinc-600 hover:text-zinc-400 underline text-left px-1">
-                {showRawText ? "라벨 텍스트 접기 ▲" : "라벨에서 읽은 텍스트 보기 ▼"}
-              </button>
-            )}
-            {showRawText && (
-              <pre className="text-xs text-zinc-300 bg-zinc-900 rounded-xl p-3 whitespace-pre-wrap font-mono leading-relaxed max-h-36 overflow-y-auto">{rawText}</pre>
-            )}
-          </section>
 
-          {/* ── 기본 정보 폼 ── */}
-          <section className="flex flex-col gap-4">
-            <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">기본 정보</h2>
-
-            <Field label="와인 이름 *" confidence={confidence.name}>
-              <input value={form.name} onChange={(e) => set("name", e.target.value)} required className={iCls} placeholder="Château Margaux" />
-            </Field>
-
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="빈티지" confidence={confidence.vintage}>
-                <input value={form.vintage} onChange={(e) => set("vintage", e.target.value)} className={iCls} placeholder="2018" inputMode="numeric" />
-              </Field>
-              <Field label="종류" confidence={confidence.type}>
-                <select value={form.type} onChange={(e) => set("type", e.target.value as WineType)} className={iCls}>
-                  <option value="">선택</option>
-                  {WINE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
-              </Field>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="생산국" confidence={confidence.country}>
-                <input value={form.country} onChange={(e) => set("country", e.target.value)} className={iCls} placeholder="France" />
-              </Field>
-              <Field label="지역" confidence={confidence.region}>
-                <input value={form.region} onChange={(e) => set("region", e.target.value)} className={iCls} placeholder="Bordeaux" />
-              </Field>
-            </div>
-
-            <Field label="품종" confidence={confidence.grapes}>
-              <input value={form.grapes} onChange={(e) => set("grapes", e.target.value)} className={iCls} placeholder="Cabernet Sauvignon, Merlot" />
-            </Field>
-
-            <Field label="생산자" confidence={confidence.producer}>
-              <input value={form.producer} onChange={(e) => set("producer", e.target.value)} className={iCls} placeholder="Château Margaux" />
-            </Field>
-          </section>
-
-          {/* ── 음용 정보 ── */}
-          <section className="flex flex-col gap-4">
-            <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">음용 정보</h2>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="날짜">
-                <input type="date" value={form.drunk_at} onChange={(e) => set("drunk_at", e.target.value)} className={iCls} />
-              </Field>
-              <Field label="가격 (원)">
-                <input value={form.price} onChange={(e) => set("price", e.target.value)} className={iCls} placeholder="50000" inputMode="numeric" />
-              </Field>
-            </div>
-            <Field label="장소">
-              <input value={form.location} onChange={(e) => set("location", e.target.value)} className={iCls} placeholder="강남 와인바" />
-            </Field>
-            <Field label="메모">
-              <textarea value={form.memo} onChange={(e) => set("memo", e.target.value)} rows={3} className={iCls + " resize-none"} placeholder="자유롭게 기록해 보세요…" />
-            </Field>
-          </section>
-
-          {/* ── 품평 (접기/펼치기) ── */}
-          <section>
-            <button
-              type="button"
-              onClick={() => setShowEval((v) => !v)}
-              className="w-full flex items-center justify-between py-3 text-sm font-semibold text-zinc-400 uppercase tracking-wider"
-            >
-              <span>품평 (선택)</span>
-              <span className="text-zinc-600">{showEval ? "▲ 접기" : "▼ 펼치기"}</span>
-            </button>
-
-            {showEval && (
-              <div className="flex flex-col gap-5 mt-2">
-                <RatingSlider label="종합 평점" emoji="⭐" value={form.rating} max={5} step={0.5} onChange={(v) => set("rating", v)} />
-                <RatingSlider label="밸런스" emoji="⚖️" value={form.balance} max={5} step={1} onChange={(v) => set("balance", v)} />
-                <RatingSlider label="복잡성" emoji="🌸" value={form.complexity} max={5} step={1} onChange={(v) => set("complexity", v)} />
-                <RatingSlider label="가성비" emoji="💰" value={form.value_score} max={5} step={1} onChange={(v) => set("value_score", v)} />
+            {/* 선택된 와인 */}
+            {selectedWine && (
+              <div className="flex items-start justify-between gap-3 p-3 rounded-xl border border-rose-700 bg-rose-950/30">
+                <div className="flex flex-col gap-0.5">
+                  <p className="font-semibold text-zinc-100">{selectedWine.name_ko}</p>
+                  <p className="text-xs text-zinc-400">{selectedWine.name} · {selectedWine.producer} · {selectedWine.country}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <a
+                    href={selectedWine.vivino_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs px-3 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-600 text-white transition-colors"
+                  >
+                    Vivino →
+                  </a>
+                  <button type="button" onClick={() => { setSelectedWine(null); setSuggestions(null); }} className="text-zinc-500 hover:text-zinc-300 text-lg">×</button>
+                </div>
               </div>
             )}
           </section>
+
+          {/* ── 사진 ── */}
+          <section className="flex flex-col gap-3">
+            <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">사진</h2>
+            <div className="flex gap-2 flex-wrap">
+              {photoPreviews.map((src, i) => (
+                <div key={i} className="relative w-20 h-20">
+                  <img src={src} alt="" className="w-20 h-20 rounded-xl object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(i)}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-zinc-700 hover:bg-zinc-600 text-zinc-200 text-xs flex items-center justify-center"
+                  >×</button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                className="w-20 h-20 rounded-xl border-2 border-dashed border-zinc-700 hover:border-rose-600 flex flex-col items-center justify-center gap-1 text-zinc-500 hover:text-rose-400 transition-colors"
+              >
+                <span className="text-2xl">+</span>
+                <span className="text-xs">사진 추가</span>
+              </button>
+            </div>
+            <input ref={photoInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handlePhotoChange} />
+          </section>
+
+          {/* ── 기본 정보 ── */}
+          <section className="flex flex-col gap-4">
+            <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">경험 정보</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm text-zinc-400">날짜</label>
+                <input type="date" value={drunkAt} onChange={(e) => setDrunkAt(e.target.value)} className={iCls} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm text-zinc-400">장소</label>
+                <input value={location} onChange={(e) => setLocation(e.target.value)} className={iCls} placeholder="레스토랑, 집…" />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm text-zinc-400">함께한 사람</label>
+              <input value={companions} onChange={(e) => setCompanions(e.target.value)} className={iCls} placeholder="쉼표로 구분 (예: 지연, 민준)" />
+            </div>
+          </section>
+
+          {/* ── 페어링 음식 ── */}
+          <section className="flex flex-col gap-3">
+            <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">페어링 음식</h2>
+            <div className="flex gap-2">
+              <input
+                value={foodInput}
+                onChange={(e) => setFoodInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addFood())}
+                placeholder="음식 이름 입력 후 추가"
+                className={iCls}
+              />
+              <button
+                type="button"
+                onClick={addFood}
+                disabled={!foodInput.trim()}
+                className="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-200 text-sm font-medium transition-colors"
+              >
+                추가
+              </button>
+            </div>
+            {foods.length > 0 && (
+              <div className="flex gap-2 flex-wrap">
+                {foods.map((food, i) => (
+                  <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-800 text-zinc-200 text-sm">
+                    {food}
+                    <button type="button" onClick={() => setFoods((f) => f.filter((_, idx) => idx !== i))} className="text-zinc-500 hover:text-zinc-300 text-base leading-none">×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* ── 평점 ── */}
+          <section className="flex flex-col gap-4">
+            <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">평점</h2>
+            <RatingSlider label="와인 평점" emoji="⭐" value={rating} max={5} step={0.5} onChange={setRating} />
+            {foods.length > 0 && (
+              <RatingSlider label="음식 궁합" emoji="🍽️" value={pairingScore} max={5} step={1} onChange={setPairingScore} />
+            )}
+          </section>
+
+          {/* ── 메모 ── */}
+          <section className="flex flex-col gap-2">
+            <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">메모</h2>
+            <textarea
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+              rows={4}
+              className={iCls + " resize-none"}
+              placeholder="이 와인에 대한 인상, 향, 맛, 분위기를 자유롭게 적어보세요…"
+            />
+          </section>
+
+          {/* ── 공개 범위 ── */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm text-zinc-400">공개 범위</label>
+            <select value={visibility} onChange={(e) => setVisibility(e.target.value as "private" | "link" | "public")} className={iCls}>
+              <option value="private">비공개</option>
+              <option value="link">링크 공유</option>
+              <option value="public">전체 공개</option>
+            </select>
+          </div>
 
           <button
             type="submit"
             className="w-full py-4 rounded-2xl bg-rose-700 hover:bg-rose-600 text-white font-semibold text-base transition-colors"
           >
-            기록 저장
+            경험 기록 저장
           </button>
         </form>
       </div>
     </>
-  );
-}
-
-const iCls = "w-full rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3 text-zinc-100 focus:outline-none focus:border-rose-600 transition-colors text-sm";
-
-function Field({ label, children, confidence }: { label: string; children: React.ReactNode; confidence?: string }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-sm text-zinc-400 flex items-center gap-1.5">
-        {label}
-        {confidence === "high" && <span className="text-xs text-emerald-500 bg-emerald-950/40 px-1.5 py-0.5 rounded">인식됨</span>}
-        {confidence === "medium" && <span className="text-xs text-sky-500 bg-sky-950/40 px-1.5 py-0.5 rounded">확인 필요</span>}
-        {confidence === "low" && <span className="text-xs text-amber-500 bg-amber-950/40 px-1.5 py-0.5 rounded">추정</span>}
-      </label>
-      {children}
-    </div>
   );
 }
 

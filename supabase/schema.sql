@@ -8,26 +8,18 @@ create table profiles (
 alter table profiles enable row level security;
 create policy "profiles: own" on profiles for all using (auth.uid() = id);
 
--- wine_records
+-- wine_records (v2: experience-first)
 create table wine_records (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references profiles(id) on delete cascade not null,
   name text not null,
-  vintage integer,
-  country text,
-  region text,
-  grapes text[],
-  producer text,
-  type text check (type in ('red','white','rose','sparkling','fortified','other')),
-  label_image_url text,
+  wine_vivino_url text,
+  photos text[] default '{}',
   location text,
   drunk_at date default current_date,
-  price numeric,
-  memo text,
   companions text[],
-  balance numeric(3,1),
-  complexity numeric(3,1),
-  value_score numeric(3,1),
+  memo text,
+  pairing_score integer check (pairing_score between 1 and 5),
   rating numeric(3,1),
   foods jsonb default '[]',
   visibility text default 'private' check (visibility in ('private','link','public')),

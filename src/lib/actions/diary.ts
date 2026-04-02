@@ -51,27 +51,3 @@ export async function deleteWineRecord(id: string) {
   if (error) return { error: error.message };
   redirect("/diary");
 }
-
-export async function uploadLabelImage(formData: FormData): Promise<{ url?: string; error?: string }> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Unauthorized" };
-
-  const file = formData.get("file") as File;
-  if (!file) return { error: "No file" };
-
-  const ext = file.name.split(".").pop();
-  const path = `${user.id}/${Date.now()}.${ext}`;
-
-  const { error } = await supabase.storage
-    .from("labels")
-    .upload(path, file, { upsert: true });
-
-  if (error) return { error: error.message };
-
-  const { data: { publicUrl } } = supabase.storage
-    .from("labels")
-    .getPublicUrl(path);
-
-  return { url: publicUrl };
-}

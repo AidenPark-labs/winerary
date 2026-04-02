@@ -84,8 +84,6 @@ export default function NewDiaryPage() {
     if (!file) return;
 
     setPreviewUrl(URL.createObjectURL(file));
-    setNaverItems(null);
-    setSelectedNaver(null);
     setAiResult(null);
     setAiDone(false);
     setError(null);

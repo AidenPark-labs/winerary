@@ -72,5 +72,8 @@ export interface LabelAnalysisResult {
   grapes: string[] | null
   producer: string | null
   type: WineType | null
+  alcohol: string | null
+  raw_text: string | null
+  notes: string | null
   confidence: Record<string, 'high' | 'medium' | 'low'>
 }

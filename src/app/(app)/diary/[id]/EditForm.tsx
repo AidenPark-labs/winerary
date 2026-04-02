@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { updateWineRecord } from "@/lib/actions/diary";
 import type { WineRecord, WineType } from "@/types";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 const WINE_TYPES: { value: WineType; label: string }[] = [
   { value: "red", label: "레드" },
@@ -64,7 +65,9 @@ export default function EditForm({ record }: { record: WineRecord }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
+    <>
+      {saving && <LoadingOverlay message="기록 수정 중…" subMessage="잠시만 기다려 주세요" />}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold">기록 수정</h3>
         <button type="button" onClick={() => setOpen(false)} className="text-zinc-500 hover:text-zinc-300 text-xl">×</button>
@@ -113,8 +116,9 @@ export default function EditForm({ record }: { record: WineRecord }) {
       </div>
 
       <button type="submit" disabled={saving} className="w-full py-3 rounded-xl bg-rose-700 hover:bg-rose-600 disabled:opacity-50 text-white font-semibold transition-colors">
-        {saving ? "저장 중…" : "저장"}
+        저장
       </button>
     </form>
+    </>
   );
 }

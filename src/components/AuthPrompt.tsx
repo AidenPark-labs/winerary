@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 
-export default function AuthPrompt({ message }: { message?: string }) {
+export default function AuthPrompt({ message, returnUrl }: { message?: string; returnUrl?: string }) {
+  const loginHref = returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : "/login";
+  const registerHref = returnUrl ? `/register?returnUrl=${encodeURIComponent(returnUrl)}` : "/register";
+
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center pb-24 bg-black/50 backdrop-blur-sm">
       <div className="mx-5 w-full max-w-sm rounded-2xl bg-zinc-900 border border-zinc-800 p-6 text-center shadow-2xl">
@@ -13,13 +16,13 @@ export default function AuthPrompt({ message }: { message?: string }) {
         </p>
         <div className="flex flex-col gap-2.5 mt-5">
           <Link
-            href="/login"
+            href={loginHref}
             className="w-full py-3 rounded-xl bg-rose-700 hover:bg-rose-600 text-white font-semibold transition-colors text-sm"
           >
             로그인
           </Link>
           <Link
-            href="/register"
+            href={registerHref}
             className="w-full py-3 rounded-xl border border-zinc-700 hover:border-zinc-500 text-zinc-200 font-semibold transition-colors text-sm"
           >
             회원가입

@@ -1,15 +1,19 @@
 "use client";
 
 import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { register } from "@/lib/actions/auth";
 
 export default function RegisterPage() {
   const [state, action, pending] = useActionState(register, undefined);
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get("returnUrl") ?? "";
 
   return (
     <form action={action} className="flex flex-col gap-4">
       <h2 className="text-xl font-semibold mb-2">회원가입</h2>
+      {returnUrl && <input type="hidden" name="returnUrl" value={returnUrl} />}
 
       {state?.error && (
         <p className="text-rose-400 text-sm bg-rose-950/40 rounded-lg px-3 py-2">{state.error}</p>
@@ -64,7 +68,7 @@ export default function RegisterPage() {
 
       <p className="text-center text-sm text-zinc-500">
         이미 계정이 있으신가요?{" "}
-        <Link href="/login" className="text-rose-400 hover:underline">로그인</Link>
+        <Link href={returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : "/login"} className="text-rose-400 hover:underline">로그인</Link>
       </p>
     </form>
   );

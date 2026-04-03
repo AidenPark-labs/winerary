@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { extractPhotoDate } from "@/lib/exif";
-import { checkAuth } from "@/lib/auth-guard";
+import { checkAuth, setPendingAction, consumePendingAction } from "@/lib/auth-guard";
 import Toast from "@/components/Toast";
 import AuthPrompt from "@/components/AuthPrompt";
 
@@ -77,10 +77,39 @@ export default function FindPage() {
   const [wishSaving, setWishSaving] = useState(false);
   const [toast, setToast] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [authReturnUrl, setAuthReturnUrl] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const fileBlob = useRef<Blob | null>(null);
   const photoDateRef = useRef<string | null>(null);
+
+  // 로그인 후 돌아왔을 때 대기 액션 실행
+  useEffect(() => {
+    async function runPending() {
+      if (!(await checkAuth())) return;
+
+      // 위시리스트 추가 대기 액션
+      const pending = consumePendingAction();
+      if (pending?.type === "wishlist_add") {
+        await fetch("/api/wishlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name_ko: pending.name_ko, name_en: pending.name_en }),
+        });
+        setWishSaved(true);
+        setToast(true);
+        return;
+      }
+
+      // 기록하기 대기 액션
+      const pendingRecord = sessionStorage.getItem("winerary_pending_record");
+      if (pendingRecord && window.location.search.includes("resume=record")) {
+        sessionStorage.removeItem("winerary_pending_record");
+        router.push(`/diary/new?${pendingRecord}`);
+      }
+    }
+    runPending();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleFile(file: File) {
     // Extract date from original File BEFORE resize (resize strips EXIF + lastModified)
@@ -140,12 +169,8 @@ export default function FindPage() {
     photoDateRef.current = null;
   }
 
-  // 기록하기: 사진 업로드 후 diary/new 로 이동
-  async function handleRecord() {
-    if (!result || result.error) return;
-    if (!(await checkAuth())) { setShowAuthPrompt(true); return; }
-    setRecording(true);
-
+  function buildWineParams() {
+    if (!result || result.error) return null;
     const p = new URLSearchParams();
     if (notNull(result.name)) p.set("name", result.name!);
     if (notNull(result.name_original)) p.set("name_original", result.name_original!);
@@ -154,6 +179,24 @@ export default function FindPage() {
     if (notNull(result.grape_variety)) p.set("grape", result.grape_variety!);
     if (result.vintage) p.set("vintage", String(result.vintage));
     if (notNull(result.vivino_url)) p.set("vivino_url", result.vivino_url!);
+    return p;
+  }
+
+  // 기록하기: 사진 업로드 후 diary/new 로 이동
+  async function handleRecord() {
+    if (!result || result.error) return;
+    if (!(await checkAuth())) {
+      const p = buildWineParams();
+      if (p) {
+        sessionStorage.setItem("winerary_pending_record", p.toString());
+        setAuthReturnUrl("/find?resume=record");
+      }
+      setShowAuthPrompt(true);
+      return;
+    }
+    setRecording(true);
+
+    const p = buildWineParams()!;
     if (photoDateRef.current) p.set("date", photoDateRef.current);
 
     // 분석에 사용한 사진을 스토리지에 업로드해서 파라미터로 전달
@@ -174,7 +217,7 @@ export default function FindPage() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      {showAuthPrompt && <AuthPrompt message="와인을 저장하거나 기록하려면 로그인이 필요합니다" />}
+      {showAuthPrompt && <AuthPrompt message="와인을 저장하거나 기록하려면 로그인이 필요합니다" returnUrl={authReturnUrl} />}
       <Toast message="내 와인에 추가되었어요!" visible={toast} onHide={() => setToast(false)} />
       <header className="px-5 pt-12 pb-4 flex-shrink-0">
         <h1 className="text-2xl font-bold">와인 검색</h1>
@@ -410,7 +453,16 @@ export default function FindPage() {
               <button
                 onClick={async () => {
                   if (wishSaved || wishSaving) return;
-                  if (!(await checkAuth())) { setShowAuthPrompt(true); return; }
+                  if (!(await checkAuth())) {
+                    setPendingAction({
+                      type: "wishlist_add",
+                      name_ko: result.name || result.name_original || "",
+                      name_en: result.name_original || result.name || "",
+                    });
+                    setAuthReturnUrl("/find");
+                    setShowAuthPrompt(true);
+                    return;
+                  }
                   setWishSaving(true);
                   await fetch("/api/wishlist", {
                     method: "POST",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { checkAuth } from "@/lib/auth-guard";
+import { checkAuth, setPendingAction, consumePendingAction } from "@/lib/auth-guard";
 import Toast from "@/components/Toast";
 import AuthPrompt from "@/components/AuthPrompt";
 
@@ -55,7 +55,11 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded }: {
 
   async function handleSave() {
     if (saved || saving) return;
-    if (!(await checkAuth())) { onAuthNeeded(); return; }
+    if (!(await checkAuth())) {
+      setPendingAction({ type: "wishlist_add", name_ko: nameKo, name_en: nameEn });
+      onAuthNeeded();
+      return;
+    }
     setSaving(true);
     await onSave(nameKo, nameEn);
     setSaved(true);
@@ -180,9 +184,27 @@ export default function RecommendPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const initRef = useRef(false);
 
-  // 위시리스트 로드
+  // 위시리스트 로드 + 로그인 후 대기 액션 실행
   useEffect(() => {
-    fetch("/api/wishlist").then((r) => r.json()).then((d) => setWishlist(d.items ?? [])).catch(() => {});
+    async function init() {
+      const authed = await checkAuth();
+      if (authed) {
+        fetch("/api/wishlist").then((r) => r.json()).then((d) => setWishlist(d.items ?? [])).catch(() => {});
+      }
+      // 대기 액션 처리
+      const pending = consumePendingAction();
+      if (pending?.type === "wishlist_add" && authed) {
+        const res = await fetch("/api/wishlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name_ko: pending.name_ko, name_en: pending.name_en }),
+        });
+        const data = await res.json();
+        if (data.item) setWishlist((prev) => [data.item, ...prev]);
+        setToast(true);
+      }
+    }
+    init();
   }, []);
 
   // 첫 진입 시 AI 인사 메시지
@@ -322,7 +344,7 @@ export default function RecommendPage() {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {showAuthPrompt && <AuthPrompt message="와인을 저장하려면 로그인이 필요합니다" />}
+      {showAuthPrompt && <AuthPrompt message="와인을 저장하려면 로그인이 필요합니다" returnUrl="/recommend" />}
       <Toast message="내 와인에 추가되었어요!" visible={toast} onHide={() => setToast(false)} />
       {/* 헤더 */}
       <header className="px-5 pt-12 pb-3 flex items-center justify-between flex-shrink-0">

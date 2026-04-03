@@ -31,7 +31,8 @@ export async function login(_prevState: { error: string } | undefined, formData:
     password: formData.get("password") as string,
   });
   if (error) return { error: toKorean(error.message) };
-  redirect("/diary");
+  const returnUrl = formData.get("returnUrl") as string;
+  redirect(returnUrl || "/diary");
 }
 
 export async function register(_prevState: { error: string } | undefined, formData: FormData) {
@@ -49,7 +50,8 @@ export async function register(_prevState: { error: string } | undefined, formDa
       .insert({ id: data.user.id, nickname });
     if (profileError) return { error: "프로필 생성에 실패했습니다. 다시 시도해 주세요" };
   }
-  redirect("/diary");
+  const returnUrl = formData.get("returnUrl") as string;
+  redirect(returnUrl || "/diary");
 }
 
 export async function logout() {

@@ -130,7 +130,7 @@ export default function DiaryDetail({ record, readOnly = false }: { record: Wine
         </div>
 
         {/* ── 컨텐츠 영역 — 완전 블랙 배경 ── */}
-        <div className="flex flex-col gap-4 px-4 pt-5 pb-28 bg-black">
+        <div className={`flex flex-col gap-4 px-4 pt-5 bg-black ${readOnly ? "pb-36" : "pb-28"}`}>
 
           {/* 링크 공유 버튼 */}
           {!readOnly && record.visibility === "link" && (

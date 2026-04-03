@@ -46,9 +46,15 @@ export default async function SharePage({ params }: { params: Promise<{ id: stri
   return (
     <>
       <DiaryDetail record={record} readOnly />
-      {/* 하단 Winerary 워터마크 */}
-      <div className="fixed bottom-0 inset-x-0 z-50 pb-safe flex justify-center py-3 bg-gradient-to-t from-black/80 to-transparent pointer-events-none">
-        <p className="text-xs text-zinc-600 tracking-widest">powered by winerary</p>
+      {/* 하단 CTA */}
+      <div className="fixed bottom-0 inset-x-0 z-50 px-4 pb-8 pt-6 bg-gradient-to-t from-black via-black/90 to-transparent">
+        <a
+          href="/login"
+          className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-rose-700 hover:bg-rose-600 active:scale-95 transition-all text-white font-semibold text-sm shadow-lg shadow-rose-900/40"
+        >
+          🍷 나도 와인 기록해보기
+        </a>
+        <p className="text-center text-[11px] text-zinc-600 mt-2 tracking-widest">powered by winerary</p>
       </div>
     </>
   );

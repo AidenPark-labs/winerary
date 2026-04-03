@@ -113,14 +113,11 @@ export default function NewDiaryPage() {
         if (res.ok && data.url) {
           setPhotos((p) => [...p, data.url]);
         } else {
-          const msg = data.error ?? `HTTP ${res.status}`;
-          console.error("[photo upload] server error:", msg);
-          alert(`[업로드 오류] ${msg}`); // 임시: 실제 오류 확인용
+          console.error("[photo upload] server error:", data.error);
           failCount++;
         }
       } catch (err) {
         console.error("[photo upload] network error:", err);
-        alert(`[업로드 네트워크 오류] ${err}`);
         failCount++;
       }
     }

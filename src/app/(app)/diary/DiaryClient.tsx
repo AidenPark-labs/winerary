@@ -175,40 +175,36 @@ export default function DiaryClient({ records }: { records: WineRecord[] }) {
 
   return (
     <div className="flex flex-col flex-1">
-      <header className="px-5 pt-12 pb-4 flex items-center justify-between flex-shrink-0">
+      <header className="px-5 pt-12 pb-2 flex items-center justify-between flex-shrink-0">
         <h1 className="text-2xl font-bold">와인노트</h1>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={toggleView}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm transition-colors"
-            aria-label={viewMode === "feed" ? "달력으로 보기" : "목록으로 보기"}
-          >
-            {viewMode === "feed" ? (
-              // Calendar icon (simple SVG)
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <rect x="1.5" y="2.5" width="13" height="12" rx="1.5" />
-                <line x1="1.5" y1="6" x2="14.5" y2="6" />
-                <line x1="5" y1="1" x2="5" y2="4" />
-                <line x1="11" y1="1" x2="11" y2="4" />
-              </svg>
-            ) : (
-              // List icon
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <line x1="3" y1="4" x2="13" y2="4" />
-                <line x1="3" y1="8" x2="13" y2="8" />
-                <line x1="3" y1="12" x2="13" y2="12" />
-              </svg>
-            )}
-          </button>
-          <Link
-            href="/diary/new"
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-rose-700 hover:bg-rose-600 text-white text-2xl leading-none transition-colors"
-            aria-label="새 기록 추가"
-          >
-            +
-          </Link>
-        </div>
+        <Link
+          href="/diary/new"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-rose-700 hover:bg-rose-600 text-white text-2xl leading-none transition-colors"
+          aria-label="새 기록 추가"
+        >
+          +
+        </Link>
       </header>
+
+      {/* Segmented Control */}
+      <div className="mx-5 mb-4 flex p-1 rounded-xl bg-zinc-900 border border-zinc-800">
+        <button
+          onClick={() => viewMode !== "feed" && toggleView()}
+          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+            viewMode === "feed" ? "bg-zinc-700 text-white shadow-sm" : "text-zinc-500"
+          }`}
+        >
+          카드
+        </button>
+        <button
+          onClick={() => viewMode !== "calendar" && toggleView()}
+          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+            viewMode === "calendar" ? "bg-zinc-700 text-white shadow-sm" : "text-zinc-500"
+          }`}
+        >
+          달력
+        </button>
+      </div>
 
       {records.length === 0 ? (
         <div className="flex flex-col flex-1 items-center justify-center gap-4 text-center px-8">

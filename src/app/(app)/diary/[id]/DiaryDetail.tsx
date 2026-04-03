@@ -62,7 +62,7 @@ export default function DiaryDetail({ record, readOnly = false }: { record: Wine
               <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-black to-transparent pointer-events-none" />
 
               {/* 와인 이름 + 빈티지 + 원본명 + 날짜 */}
-              <div className="absolute bottom-0 inset-x-0 px-5 pb-7 z-10">
+              <div className="absolute bottom-0 inset-x-0 px-5 pb-7 z-10 pointer-events-none">
                 <div className="flex items-baseline gap-2 flex-wrap">
                   <h1 className="text-3xl font-bold text-white leading-tight drop-shadow-lg">{record.name}</h1>
                   {record.wine_vintage && (
@@ -79,7 +79,7 @@ export default function DiaryDetail({ record, readOnly = false }: { record: Wine
               </div>
 
               {photos.length > 1 && (
-                <div className="absolute bottom-4 inset-x-0 flex justify-center gap-1.5 z-10">
+                <div className="absolute bottom-4 inset-x-0 flex justify-center gap-1.5 z-10 pointer-events-none">
                   {photos.map((_, i) => (
                     <div key={i} className={`h-1 rounded-full transition-all duration-300 ${i === currentPhoto ? "w-5 bg-white" : "w-1 bg-white/40"}`} />
                   ))}
@@ -109,14 +109,14 @@ export default function DiaryDetail({ record, readOnly = false }: { record: Wine
           )}
 
           {/* 헤더 — 뒤로 / 수정 / 삭제 (또는 공유 브랜딩) */}
-          <div className="absolute top-0 inset-x-0 px-4 pt-12 flex items-center justify-between z-20">
+          <div className="absolute top-0 inset-x-0 px-4 pt-12 flex items-center justify-between z-20 pointer-events-none">
             {readOnly ? (
               <span className="text-sm font-semibold text-white/70 tracking-widest">winerary</span>
             ) : (
-              <a href="/diary" className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white text-lg hover:bg-black/60 transition-colors">←</a>
+              <a href="/diary" className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white text-lg hover:bg-black/60 transition-colors pointer-events-auto">←</a>
             )}
             {!readOnly && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 pointer-events-auto">
                 <Link
                   href={`/diary/${record.id}/edit`}
                   className="text-xs px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-sm text-zinc-300 hover:bg-black/60 transition-colors"

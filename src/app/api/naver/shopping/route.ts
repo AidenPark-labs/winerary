@@ -48,11 +48,12 @@ export async function GET(request: Request) {
     }
 
     const data = await res.json();
+    // 카테고리 디버깅용 로그
+    (data.items ?? []).slice(0, 3).forEach((item: NaverShoppingItem, i: number) => {
+      console.log(`[naver/shopping] item ${i}:`, item.title.replace(/<\/?b>/g, ""), "|", item.category1, ">", item.category2, ">", item.category3, ">", item.category4);
+    });
+
     const items = (data.items ?? [])
-      .filter((item: NaverShoppingItem) => {
-        const cats = [item.category1, item.category2, item.category3, item.category4];
-        return cats.some((c) => c === "수입주류");
-      })
       .map((item: NaverShoppingItem) => ({
         title: item.title.replace(/<\/?b>/g, ""),
         link: item.link,

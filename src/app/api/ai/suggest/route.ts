@@ -20,8 +20,9 @@ export async function GET(request: Request) {
     "name": "영어 와인명",
     "name_ko": "한국어 와인명",
     "producer": "생산자",
-    "country": "국가(영어)",
-    "type": "red 또는 white 또는 rose 또는 sparkling 또는 fortified",
+    "country": "생산국 (한국어, 예: 프랑스)",
+    "type": "red 또는 white 또는 rose 또는 sparkling 또는 fortified 또는 other",
+    "grapes": "주요 품종 (한국어, 예: 카베르네 소비뇽, 메를로)",
     "vintage_range": "예: 2015-2022",
     "vivino_url": "https://www.vivino.com/search/wines?q=영어+와인명+URL인코딩"
   }
@@ -36,20 +37,15 @@ export async function GET(request: Request) {
 
     const block = response.content.find((b) => b.type === "text");
     const text = block?.type === "text" ? block.text : "";
-    console.log("[ai/suggest] raw response:", text.slice(0, 300));
+    console.log("[ai/suggest] raw:", text.slice(0, 200));
 
-    // 마크다운 코드블록 또는 순수 JSON 배열 모두 처리
     const jsonMatch =
       text.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/) ||
       text.match(/(\[[\s\S]*\])/);
 
-    if (!jsonMatch) {
-      console.error("[ai/suggest] no JSON array found in response");
-      return Response.json({ wines: [] });
-    }
+    if (!jsonMatch) return Response.json({ wines: [] });
 
-    const jsonStr = jsonMatch[1] ?? jsonMatch[0];
-    const wines: WineSuggestion[] = JSON.parse(jsonStr);
+    const wines: WineSuggestion[] = JSON.parse(jsonMatch[1] ?? jsonMatch[0]);
     return Response.json({ wines });
   } catch (e) {
     console.error("[ai/suggest] error:", e);

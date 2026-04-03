@@ -2,11 +2,10 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import type { WineSuggestion } from "@/types";
+import type { WineSuggestion, WineType } from "@/types";
 import { createWineRecord } from "@/lib/actions/diary";
 import LoadingOverlay from "@/components/LoadingOverlay";
 
-// 최대 1280px, JPEG 0.80 품질로 압축 (일반 모바일 사진 기준 ~300KB)
 async function compressImage(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -25,32 +24,61 @@ async function compressImage(file: File): Promise<Blob> {
       URL.revokeObjectURL(url);
       canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob failed"))), "image/jpeg", 0.80);
     };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("image load failed")); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("load failed")); };
     img.src = url;
   });
 }
 
+const WINE_TYPES: { value: WineType; label: string }[] = [
+  { value: "red", label: "레드 🍷" },
+  { value: "white", label: "화이트 🥂" },
+  { value: "rose", label: "로제 🌸" },
+  { value: "sparkling", label: "스파클링 ✨" },
+  { value: "fortified", label: "주정강화 🏺" },
+  { value: "other", label: "기타" },
+];
+
 const TYPE_KO: Record<string, string> = {
-  red: "레드", white: "화이트", rose: "로제",
-  sparkling: "스파클링", fortified: "주정강화", other: "기타",
+  red: "레드 🍷", white: "화이트 🥂", rose: "로제 🌸",
+  sparkling: "스파클링 ✨", fortified: "주정강화 🏺", other: "기타",
 };
+
+const GRAPE_OPTIONS = [
+  // 레드
+  "카베르네 소비뇽", "메를로", "피노 누아", "시라/쉬라즈", "말벡",
+  "산지오베제", "템프라니요", "그르나슈", "카베르네 프랑", "네비올로",
+  "진판델", "무르베드르", "몬테풀치아노",
+  // 화이트
+  "샤르도네", "소비뇽 블랑", "리슬링", "피노 그리지오", "게뷔르츠트라미너",
+  "비오니에", "알바리뇨", "뮈스카", "세미용", "그뤼너 펠트리너",
+];
+
+const COUNTRY_OPTIONS = [
+  "프랑스", "이탈리아", "스페인", "포르투갈", "독일", "오스트리아",
+  "미국", "칠레", "아르헨티나", "호주", "뉴질랜드",
+  "남아프리카공화국", "조지아", "헝가리", "그리스", "한국",
+];
 
 export default function NewDiaryPage() {
   const router = useRouter();
   const photoInputRef = useRef<HTMLInputElement>(null);
 
-  // 검색 단계
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<WineSuggestion[] | null>(null);
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [selectedWine, setSelectedWine] = useState<WineSuggestion | null>(null);
 
-  // 사진
+  // 와인 정보 (프리필 후 수정 가능)
+  const [wineType, setWineType] = useState<WineType | "">("");
+  const [grape, setGrape] = useState(""); // "__custom__" 이면 직접입력
+  const [grapeCustom, setGrapeCustom] = useState("");
+  const [country, setCountry] = useState("");
+  const [countryCustom, setCountryCustom] = useState("");
+
   const [photos, setPhotos] = useState<string[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [photoUploading, setPhotoUploading] = useState(false);
 
-  // 폼
   const [drunkAt, setDrunkAt] = useState(new Date().toISOString().split("T")[0]);
   const [location, setLocation] = useState("");
   const [companions, setCompanions] = useState("");
@@ -87,6 +115,35 @@ export default function NewDiaryPage() {
     setSelectedWine(wine);
     setSuggestions(null);
     setQuery(wine.name_ko || wine.name);
+
+    // 종류 프리필
+    const typeMap: Record<string, WineType> = {
+      red: "red", white: "white", rose: "rose",
+      sparkling: "sparkling", fortified: "fortified", other: "other",
+    };
+    setWineType(typeMap[wine.type] ?? "");
+
+    // 품종 프리필 — 목록에 있으면 선택, 없으면 직접입력
+    if (wine.grapes) {
+      const match = GRAPE_OPTIONS.find((g) => wine.grapes.includes(g));
+      if (match) {
+        setGrape(match);
+      } else {
+        setGrape("__custom__");
+        setGrapeCustom(wine.grapes);
+      }
+    }
+
+    // 생산국 프리필
+    if (wine.country) {
+      const match = COUNTRY_OPTIONS.find((c) => wine.country.includes(c));
+      if (match) {
+        setCountry(match);
+      } else {
+        setCountry("__custom__");
+        setCountryCustom(wine.country);
+      }
+    }
   }
 
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -122,9 +179,7 @@ export default function NewDiaryPage() {
       }
     }
 
-    if (failCount > 0) {
-      setError(`사진 ${failCount}장 업로드에 실패했습니다.`);
-    }
+    if (failCount > 0) setError(`사진 ${failCount}장 업로드에 실패했습니다.`);
     setPhotoUploading(false);
     e.target.value = "";
   }
@@ -146,9 +201,15 @@ export default function NewDiaryPage() {
     setSaving(true);
     setError(null);
 
+    const finalGrape = grape === "__custom__" ? grapeCustom.trim() || null : grape || null;
+    const finalCountry = country === "__custom__" ? countryCustom.trim() || null : country || null;
+
     const result = await createWineRecord({
       name: selectedWine.name_ko || selectedWine.name,
       wine_vivino_url: selectedWine.vivino_url,
+      wine_type: (wineType as WineType) || null,
+      grape_variety: finalGrape,
+      wine_country: finalCountry,
       photos,
       drunk_at: drunkAt,
       location: location || null,
@@ -183,7 +244,6 @@ export default function NewDiaryPage() {
           {/* ── 와인 검색 ── */}
           <section className="flex flex-col gap-3">
             <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">와인 선택 *</h2>
-
             <div className="flex gap-2">
               <input
                 value={query}
@@ -202,11 +262,7 @@ export default function NewDiaryPage() {
               </button>
             </div>
 
-            {/* 제안 목록 */}
-            {suggestLoading && (
-              <p className="text-xs text-zinc-500 animate-pulse px-1">와인 목록을 불러오는 중…</p>
-            )}
-
+            {suggestLoading && <p className="text-xs text-zinc-500 animate-pulse px-1">와인 목록을 불러오는 중…</p>}
             {suggestions !== null && suggestions.length === 0 && (
               <p className="text-sm text-zinc-500 px-1">검색 결과가 없습니다. 다른 이름으로 검색해보세요.</p>
             )}
@@ -218,18 +274,16 @@ export default function NewDiaryPage() {
                     <button
                       type="button"
                       onClick={() => selectWine(wine)}
-                      className="w-full flex flex-col gap-0.5 p-3 rounded-xl border border-zinc-700 bg-zinc-900 hover:border-rose-600 text-left transition-colors"
+                      className="w-full flex flex-col gap-1 p-3 rounded-xl border border-zinc-700 bg-zinc-900 hover:border-rose-600 text-left transition-colors"
                     >
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-zinc-100">{wine.name_ko}</span>
                         <span className="text-xs text-zinc-500">{wine.name}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-zinc-500">
-                        <span>{wine.producer}</span>
-                        <span>·</span>
-                        <span>{wine.country}</span>
-                        <span>·</span>
-                        <span>{TYPE_KO[wine.type] ?? wine.type}</span>
+                      <div className="flex items-center gap-2 text-xs text-zinc-500 flex-wrap">
+                        {wine.country && <span>{wine.country}</span>}
+                        {wine.type && <><span>·</span><span>{TYPE_KO[wine.type] ?? wine.type}</span></>}
+                        {wine.grapes && <><span>·</span><span>{wine.grapes}</span></>}
                         {wine.vintage_range && <><span>·</span><span>{wine.vintage_range}</span></>}
                       </div>
                     </button>
@@ -243,22 +297,71 @@ export default function NewDiaryPage() {
               <div className="flex items-start justify-between gap-3 p-3 rounded-xl border border-rose-700 bg-rose-950/30">
                 <div className="flex flex-col gap-0.5">
                   <p className="font-semibold text-zinc-100">{selectedWine.name_ko}</p>
-                  <p className="text-xs text-zinc-400">{selectedWine.name} · {selectedWine.producer} · {selectedWine.country}</p>
+                  <p className="text-xs text-zinc-400">{selectedWine.name} · {selectedWine.producer}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <a
-                    href={selectedWine.vivino_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs px-3 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-600 text-white transition-colors"
-                  >
+                  <a href={selectedWine.vivino_url} target="_blank" rel="noopener noreferrer"
+                    className="text-xs px-3 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-600 text-white transition-colors">
                     Vivino →
                   </a>
-                  <button type="button" onClick={() => { setSelectedWine(null); setSuggestions(null); }} className="text-zinc-500 hover:text-zinc-300 text-lg">×</button>
+                  <button type="button" onClick={() => { setSelectedWine(null); setSuggestions(null); setWineType(""); setGrape(""); setCountry(""); }}
+                    className="text-zinc-500 hover:text-zinc-300 text-lg">×</button>
                 </div>
               </div>
             )}
           </section>
+
+          {/* ── 와인 정보 (선택 후 표시, 수정 가능) ── */}
+          {selectedWine && (
+            <section className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">와인 정보 <span className="text-zinc-600 normal-case font-normal">(수정 가능)</span></h2>
+
+              {/* 종류 */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-zinc-500">종류</label>
+                <select value={wineType} onChange={(e) => setWineType(e.target.value as WineType | "")} className={iCls}>
+                  <option value="">선택 안 함</option>
+                  {WINE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+
+              {/* 품종 */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-zinc-500">품종</label>
+                <select value={grape} onChange={(e) => setGrape(e.target.value)} className={iCls}>
+                  <option value="">선택 안 함</option>
+                  {GRAPE_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
+                  <option value="__custom__">직접입력</option>
+                </select>
+                {grape === "__custom__" && (
+                  <input
+                    value={grapeCustom}
+                    onChange={(e) => setGrapeCustom(e.target.value)}
+                    placeholder="예: 카베르네 소비뇽, 메를로"
+                    className={iCls}
+                  />
+                )}
+              </div>
+
+              {/* 생산국 */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-zinc-500">생산국</label>
+                <select value={country} onChange={(e) => setCountry(e.target.value)} className={iCls}>
+                  <option value="">선택 안 함</option>
+                  {COUNTRY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                  <option value="__custom__">직접입력</option>
+                </select>
+                {country === "__custom__" && (
+                  <input
+                    value={countryCustom}
+                    onChange={(e) => setCountryCustom(e.target.value)}
+                    placeholder="예: 조지아"
+                    className={iCls}
+                  />
+                )}
+              </div>
+            </section>
+          )}
 
           {/* ── 사진 ── */}
           <section className="flex flex-col gap-3">
@@ -267,18 +370,12 @@ export default function NewDiaryPage() {
               {photoPreviews.map((src, i) => (
                 <div key={i} className="relative w-20 h-20">
                   <img src={src} alt="" className="w-20 h-20 rounded-xl object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => removePhoto(i)}
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-zinc-700 hover:bg-zinc-600 text-zinc-200 text-xs flex items-center justify-center"
-                  >×</button>
+                  <button type="button" onClick={() => removePhoto(i)}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-zinc-700 hover:bg-zinc-600 text-zinc-200 text-xs flex items-center justify-center">×</button>
                 </div>
               ))}
-              <button
-                type="button"
-                onClick={() => photoInputRef.current?.click()}
-                className="w-20 h-20 rounded-xl border-2 border-dashed border-zinc-700 hover:border-rose-600 flex flex-col items-center justify-center gap-1 text-zinc-500 hover:text-rose-400 transition-colors"
-              >
+              <button type="button" onClick={() => photoInputRef.current?.click()}
+                className="w-20 h-20 rounded-xl border-2 border-dashed border-zinc-700 hover:border-rose-600 flex flex-col items-center justify-center gap-1 text-zinc-500 hover:text-rose-400 transition-colors">
                 <span className="text-2xl">+</span>
                 <span className="text-xs">사진 추가</span>
               </button>
@@ -286,7 +383,7 @@ export default function NewDiaryPage() {
             <input ref={photoInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handlePhotoChange} />
           </section>
 
-          {/* ── 기본 정보 ── */}
+          {/* ── 경험 정보 ── */}
           <section className="flex flex-col gap-4">
             <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">경험 정보</h2>
             <div className="grid grid-cols-2 gap-3">
@@ -309,21 +406,11 @@ export default function NewDiaryPage() {
           <section className="flex flex-col gap-3">
             <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">페어링 음식</h2>
             <div className="flex gap-2">
-              <input
-                value={foodInput}
-                onChange={(e) => setFoodInput(e.target.value)}
+              <input value={foodInput} onChange={(e) => setFoodInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addFood())}
-                placeholder="음식 이름 입력 후 추가"
-                className={iCls}
-              />
-              <button
-                type="button"
-                onClick={addFood}
-                disabled={!foodInput.trim()}
-                className="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-200 text-sm font-medium transition-colors"
-              >
-                추가
-              </button>
+                placeholder="음식 이름 입력 후 추가" className={iCls} />
+              <button type="button" onClick={addFood} disabled={!foodInput.trim()}
+                className="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-200 text-sm font-medium transition-colors">추가</button>
             </div>
             {foods.length > 0 && (
               <div className="flex gap-2 flex-wrap">
@@ -349,13 +436,8 @@ export default function NewDiaryPage() {
           {/* ── 메모 ── */}
           <section className="flex flex-col gap-2">
             <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">메모</h2>
-            <textarea
-              value={memo}
-              onChange={(e) => setMemo(e.target.value)}
-              rows={4}
-              className={iCls + " resize-none"}
-              placeholder="이 와인에 대한 인상, 향, 맛, 분위기를 자유롭게 적어보세요…"
-            />
+            <textarea value={memo} onChange={(e) => setMemo(e.target.value)} rows={4}
+              className={iCls + " resize-none"} placeholder="이 와인에 대한 인상, 향, 맛, 분위기를 자유롭게 적어보세요…" />
           </section>
 
           {/* ── 공개 범위 ── */}
@@ -368,10 +450,8 @@ export default function NewDiaryPage() {
             </select>
           </div>
 
-          <button
-            type="submit"
-            className="w-full py-4 rounded-2xl bg-rose-700 hover:bg-rose-600 text-white font-semibold text-base transition-colors"
-          >
+          <button type="submit"
+            className="w-full py-4 rounded-2xl bg-rose-700 hover:bg-rose-600 text-white font-semibold text-base transition-colors">
             경험 기록 저장
           </button>
         </form>

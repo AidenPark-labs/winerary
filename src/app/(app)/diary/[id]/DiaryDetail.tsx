@@ -2,6 +2,11 @@
 
 import { useState, useRef } from "react";
 import type { WineRecord } from "@/types";
+
+const TYPE_KO: Record<string, string> = {
+  red: "레드 🍷", white: "화이트 🥂", rose: "로제 🌸",
+  sparkling: "스파클링 ✨", fortified: "주정강화 🏺", other: "기타",
+};
 import DeleteButton from "./DeleteButton";
 import EditForm from "./EditForm";
 
@@ -120,18 +125,39 @@ export default function DiaryDetail({ record }: { record: WineRecord }) {
         {/* ── 컨텐츠 영역 ── */}
         <div className="flex flex-col gap-4 px-4 pt-5 pb-32">
 
-          {/* Vivino 링크 */}
-          {record.wine_vivino_url && (
-            <a
-              href={record.wine_vivino_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="self-start flex items-center gap-2 px-4 py-2 rounded-full border border-rose-800/60 bg-rose-950/30 backdrop-blur-sm text-rose-300 text-sm hover:bg-rose-900/40 transition-colors"
-            >
-              <span className="text-base">🍇</span>
-              Vivino에서 와인 보기 →
-            </a>
-          )}
+          {/* 와인 정보 태그 + Vivino */}
+          <div className="flex flex-col gap-2">
+            {(record.wine_type || record.wine_country || record.grape_variety) && (
+              <div className="flex flex-wrap gap-2">
+                {record.wine_type && (
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 text-zinc-300">
+                    {TYPE_KO[record.wine_type] ?? record.wine_type}
+                  </span>
+                )}
+                {record.wine_country && (
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 text-zinc-300">
+                    📍 {record.wine_country}
+                  </span>
+                )}
+                {record.grape_variety && (
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 text-zinc-300">
+                    🍇 {record.grape_variety}
+                  </span>
+                )}
+              </div>
+            )}
+            {record.wine_vivino_url && (
+              <a
+                href={record.wine_vivino_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="self-start flex items-center gap-2 px-4 py-2 rounded-full border border-rose-800/60 bg-rose-950/30 backdrop-blur-sm text-rose-300 text-sm hover:bg-rose-900/40 transition-colors"
+              >
+                <span className="text-base">🍇</span>
+                Vivino에서 와인 보기 →
+              </a>
+            )}
+          </div>
 
           {/* 평점 */}
           {(record.rating || record.pairing_score) && (

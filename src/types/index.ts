@@ -1,10 +1,15 @@
 export type Visibility = 'private' | 'link' | 'public'
 
+export type WineType = 'red' | 'white' | 'rose' | 'sparkling' | 'fortified' | 'other'
+
 export interface WineRecord {
   id: string
   user_id: string
   name: string
   wine_vivino_url: string | null
+  wine_type: WineType | null
+  grape_variety: string | null
+  wine_country: string | null
   photos: string[]
   location: string | null
   drunk_at: string
@@ -62,6 +67,7 @@ export interface WineSuggestion {
   producer: string
   country: string
   type: string
+  grapes: string
   vintage_range: string
   vivino_url: string
 }

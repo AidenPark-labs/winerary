@@ -4,7 +4,6 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { WineSuggestion } from "@/types";
 import { createWineRecord } from "@/lib/actions/diary";
-import { createClient } from "@/lib/supabase/client";
 import LoadingOverlay from "@/components/LoadingOverlay";
 
 // 최대 1280px, JPEG 0.80 품질로 압축 (일반 모바일 사진 기준 ~300KB)
@@ -96,10 +95,6 @@ export default function NewDiaryPage() {
     setPhotoUploading(true);
     setError(null);
 
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setError("로그인이 필요합니다."); setPhotoUploading(false); return; }
-
     let failCount = 0;
 
     for (const file of files) {
@@ -107,29 +102,29 @@ export default function NewDiaryPage() {
       setPhotoPreviews((p) => [...p, preview]);
 
       let blob: Blob;
+      try { blob = await compressImage(file); } catch { blob = file; }
+
+      const fd = new FormData();
+      fd.append("file", blob, "photo.jpg");
+
       try {
-        blob = await compressImage(file);
-      } catch {
-        blob = file;
-      }
-
-      const path = `${user.id}/${Date.now()}.jpg`;
-      const { error: uploadError } = await supabase.storage
-        .from("labels")
-        .upload(path, blob, { contentType: "image/jpeg", upsert: true });
-
-      if (uploadError) {
-        console.error("[photo upload] storage error:", uploadError.message);
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        const data = await res.json();
+        if (res.ok && data.url) {
+          setPhotos((p) => [...p, data.url]);
+        } else {
+          console.error("[photo upload] error:", data.error);
+          failCount++;
+          setError(`업로드 실패: ${data.error ?? "알 수 없는 오류"}`);
+        }
+      } catch (err) {
+        console.error("[photo upload] network error:", err);
         failCount++;
-        continue;
       }
-
-      const { data: { publicUrl } } = supabase.storage.from("labels").getPublicUrl(path);
-      setPhotos((p) => [...p, publicUrl]);
     }
 
-    if (failCount > 0) {
-      setError(`사진 ${failCount}장 업로드에 실패했습니다. (오류: Storage 정책 확인 필요)`);
+    if (failCount > 0 && !error) {
+      setError(`사진 ${failCount}장 업로드에 실패했습니다.`);
     }
     setPhotoUploading(false);
     e.target.value = "";

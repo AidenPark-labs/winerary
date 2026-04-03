@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTransition, useEffect, useState } from "react";
 
 const tabs = [
-  { href: "/diary", label: "다이어리", icon: "📔" },
+  { href: "/diary", label: "와인일기", icon: "📔" },
   { href: "/find", label: "와인검색", icon: "🔍" },
   { href: "/recommend", label: "와인추천", icon: "🍷" },
   { href: "/profile/wishlist", label: "내 와인", icon: "❤️" },

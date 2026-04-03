@@ -3,8 +3,9 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { extractPhotoDate } from "@/lib/exif";
-import { requireAuth } from "@/lib/auth-guard";
+import { checkAuth } from "@/lib/auth-guard";
 import Toast from "@/components/Toast";
+import AuthPrompt from "@/components/AuthPrompt";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드 🍷", white: "화이트 🥂", rose: "로제 🌸",
@@ -75,6 +76,7 @@ export default function FindPage() {
   const [wishSaved, setWishSaved] = useState(false);
   const [wishSaving, setWishSaving] = useState(false);
   const [toast, setToast] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const fileBlob = useRef<Blob | null>(null);
@@ -141,7 +143,7 @@ export default function FindPage() {
   // 기록하기: 사진 업로드 후 diary/new 로 이동
   async function handleRecord() {
     if (!result || result.error) return;
-    if (!(await requireAuth())) return;
+    if (!(await checkAuth())) { setShowAuthPrompt(true); return; }
     setRecording(true);
 
     const p = new URLSearchParams();
@@ -172,6 +174,7 @@ export default function FindPage() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
+      {showAuthPrompt && <AuthPrompt message="와인을 저장하거나 기록하려면 로그인이 필요합니다" />}
       <Toast message="내 와인에 추가되었어요!" visible={toast} onHide={() => setToast(false)} />
       <header className="px-5 pt-12 pb-4 flex-shrink-0">
         <h1 className="text-2xl font-bold">와인 검색</h1>
@@ -407,7 +410,7 @@ export default function FindPage() {
               <button
                 onClick={async () => {
                   if (wishSaved || wishSaving) return;
-                  if (!(await requireAuth())) return;
+                  if (!(await checkAuth())) { setShowAuthPrompt(true); return; }
                   setWishSaving(true);
                   await fetch("/api/wishlist", {
                     method: "POST",

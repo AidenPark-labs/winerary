@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { requireAuth } from "@/lib/auth-guard";
+import { checkAuth } from "@/lib/auth-guard";
 import Toast from "@/components/Toast";
+import AuthPrompt from "@/components/AuthPrompt";
 
 interface Message {
   role: "user" | "assistant";
@@ -22,10 +23,11 @@ interface WishlistItem {
 
 // ─── WineCard ────────────────────────────────────────────────────────────────
 
-function WineCard({ nameKo, nameEn, onSave }: {
+function WineCard({ nameKo, nameEn, onSave, onAuthNeeded }: {
   nameKo: string;
   nameEn: string;
   onSave: (nameKo: string, nameEn: string) => Promise<void>;
+  onAuthNeeded: () => void;
 }) {
   const [price, setPrice] = useState<number | null>(null);
   const [status, setStatus] = useState<"loading" | "found" | "notfound">("loading");
@@ -53,7 +55,7 @@ function WineCard({ nameKo, nameEn, onSave }: {
 
   async function handleSave() {
     if (saved || saving) return;
-    if (!(await requireAuth())) return;
+    if (!(await checkAuth())) { onAuthNeeded(); return; }
     setSaving(true);
     await onSave(nameKo, nameEn);
     setSaved(true);
@@ -173,6 +175,7 @@ export default function RecommendPage() {
   const [streaming, setStreaming] = useState(false);
   const [showWishlist, setShowWishlist] = useState(false);
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [toast, setToast] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const initRef = useRef(false);
@@ -223,7 +226,7 @@ export default function RecommendPage() {
       const match = part.match(/^\[\[([^|]+)\|([^\]]+)\]\]$/);
       if (!match) return <span key={i}>{part}</span>;
       const [, nameKo, nameEn] = match;
-      return <WineCard key={i} nameKo={nameKo.trim()} nameEn={nameEn.trim()} onSave={saveWine} />;
+      return <WineCard key={i} nameKo={nameKo.trim()} nameEn={nameEn.trim()} onSave={saveWine} onAuthNeeded={() => setShowAuthPrompt(true)} />;
     });
   }
 
@@ -319,6 +322,7 @@ export default function RecommendPage() {
 
   return (
     <div className="flex flex-col h-full min-h-0">
+      {showAuthPrompt && <AuthPrompt message="와인을 저장하려면 로그인이 필요합니다" />}
       <Toast message="내 와인에 추가되었어요!" visible={toast} onHide={() => setToast(false)} />
       {/* 헤더 */}
       <header className="px-5 pt-12 pb-3 flex items-center justify-between flex-shrink-0">
@@ -329,7 +333,7 @@ export default function RecommendPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={async () => {
-              if (!showWishlist && !(await requireAuth())) return;
+              if (!showWishlist && !(await checkAuth())) { setShowAuthPrompt(true); return; }
               setShowWishlist(!showWishlist);
             }}
             className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${

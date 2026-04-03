@@ -6,8 +6,10 @@ export interface WineRecord {
   id: string
   user_id: string
   name: string
+  wine_name_original: string | null
   wine_vivino_url: string | null
   wine_type: WineType | null
+  wine_vintage: number | null
   grape_variety: string | null
   wine_country: string | null
   photos: string[]

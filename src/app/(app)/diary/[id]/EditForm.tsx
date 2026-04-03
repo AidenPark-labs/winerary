@@ -21,6 +21,8 @@ export default function EditForm({ record, onClose }: { record: WineRecord; onCl
     const fd = new FormData(e.currentTarget);
 
     const result = await updateWineRecord(record.id, {
+      wine_name_original: (fd.get("wine_name_original") as string) || null,
+      wine_vintage: fd.get("wine_vintage") ? parseInt(fd.get("wine_vintage") as string) : null,
       location: (fd.get("location") as string) || null,
       drunk_at: fd.get("drunk_at") as string,
       companions: (fd.get("companions") as string)
@@ -53,10 +55,18 @@ export default function EditForm({ record, onClose }: { record: WineRecord; onCl
         {error && <p className="text-rose-400 text-sm">{error}</p>}
         {success && <p className="text-emerald-400 text-sm">✓ 저장되었습니다</p>}
 
+        <input name="wine_name_original" defaultValue={record.wine_name_original ?? ""} placeholder="원본 명칭 (영어/현지어)" className={iCls} />
+
         <div className="grid grid-cols-2 gap-2">
-          <input name="drunk_at" type="date" defaultValue={record.drunk_at} className={iCls} />
+          <select name="wine_vintage" defaultValue={record.wine_vintage ?? ""} className={iCls}>
+            <option value="">빈티지 선택 안 함</option>
+            {Array.from({ length: new Date().getFullYear() - 1949 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
           <input name="location" defaultValue={record.location ?? ""} placeholder="장소" className={iCls} />
         </div>
+        <input name="drunk_at" type="date" defaultValue={record.drunk_at} className={iCls} />
         <input name="companions" defaultValue={record.companions?.join(", ") ?? ""} placeholder="함께한 사람 (쉼표 구분)" className={iCls} />
 
         <div className="flex flex-col gap-2">

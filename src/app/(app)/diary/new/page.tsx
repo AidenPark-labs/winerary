@@ -69,11 +69,16 @@ export default function NewDiaryPage() {
   const [selectedWine, setSelectedWine] = useState<WineSuggestion | null>(null);
 
   // 와인 정보 (프리필 후 수정 가능)
+  const [wineNameOriginal, setWineNameOriginal] = useState("");
   const [wineType, setWineType] = useState<WineType | "">("");
+  const [wineVintage, setWineVintage] = useState<string>("");
   const [grape, setGrape] = useState(""); // "__custom__" 이면 직접입력
   const [grapeCustom, setGrapeCustom] = useState("");
   const [country, setCountry] = useState("");
   const [countryCustom, setCountryCustom] = useState("");
+
+  const currentYear = new Date().getFullYear();
+  const vintageYears = Array.from({ length: currentYear - 1949 }, (_, i) => currentYear - i);
 
   const [photos, setPhotos] = useState<string[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
@@ -115,6 +120,7 @@ export default function NewDiaryPage() {
     setSelectedWine(wine);
     setSuggestions(null);
     setQuery(wine.name_ko || wine.name);
+    setWineNameOriginal(wine.name);
 
     // 종류 프리필
     const typeMap: Record<string, WineType> = {
@@ -206,8 +212,10 @@ export default function NewDiaryPage() {
 
     const result = await createWineRecord({
       name: selectedWine.name_ko || selectedWine.name,
+      wine_name_original: wineNameOriginal || null,
       wine_vivino_url: selectedWine.vivino_url,
       wine_type: (wineType as WineType) || null,
+      wine_vintage: wineVintage ? parseInt(wineVintage) : null,
       grape_variety: finalGrape,
       wine_country: finalCountry,
       photos,
@@ -304,7 +312,7 @@ export default function NewDiaryPage() {
                     className="text-xs px-3 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-600 text-white transition-colors">
                     Vivino →
                   </a>
-                  <button type="button" onClick={() => { setSelectedWine(null); setSuggestions(null); setWineType(""); setGrape(""); setCountry(""); }}
+                  <button type="button" onClick={() => { setSelectedWine(null); setSuggestions(null); setWineNameOriginal(""); setWineType(""); setWineVintage(""); setGrape(""); setCountry(""); }}
                     className="text-zinc-500 hover:text-zinc-300 text-lg">×</button>
                 </div>
               </div>
@@ -315,6 +323,26 @@ export default function NewDiaryPage() {
           {selectedWine && (
             <section className="flex flex-col gap-3">
               <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">와인 정보 <span className="text-zinc-600 normal-case font-normal">(수정 가능)</span></h2>
+
+              {/* 원본 명칭 */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-zinc-500">원본 명칭 (영어/현지어)</label>
+                <input
+                  value={wineNameOriginal}
+                  onChange={(e) => setWineNameOriginal(e.target.value)}
+                  placeholder="예: Château Margaux"
+                  className={iCls}
+                />
+              </div>
+
+              {/* 빈티지 */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-zinc-500">빈티지</label>
+                <select value={wineVintage} onChange={(e) => setWineVintage(e.target.value)} className={iCls}>
+                  <option value="">선택 안 함</option>
+                  {vintageYears.map((y) => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
 
               {/* 종류 */}
               <div className="flex flex-col gap-1.5">

@@ -125,6 +125,19 @@ export default function DiaryDetail({ record }: { record: WineRecord }) {
         {/* ── 컨텐츠 영역 ── */}
         <div className="flex flex-col gap-4 px-4 pt-5 pb-32">
 
+          {/* 와인 이름 + 원본명 + 빈티지 */}
+          <div>
+            <div className="flex items-baseline gap-2 flex-wrap">
+              <h2 className="text-2xl font-bold">{record.name}</h2>
+              {record.wine_vintage && (
+                <span className="text-lg text-zinc-400 font-medium">{record.wine_vintage}</span>
+              )}
+            </div>
+            {record.wine_name_original && (
+              <p className="text-sm text-zinc-500 mt-0.5 italic">{record.wine_name_original}</p>
+            )}
+          </div>
+
           {/* 와인 정보 태그 + Vivino */}
           <div className="flex flex-col gap-2">
             {(record.wine_type || record.wine_country || record.grape_variety) && (

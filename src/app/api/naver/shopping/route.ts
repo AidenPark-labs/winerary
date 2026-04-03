@@ -51,7 +51,7 @@ export async function GET(request: Request) {
     const items = (data.items ?? [])
       .filter((item: NaverShoppingItem) => {
         const cats = [item.category1, item.category2, item.category3, item.category4];
-        return cats.some((c) => c === "식품");
+        return cats.some((c) => c === "수입와인");
       })
       .map((item: NaverShoppingItem) => ({
         title: item.title.replace(/<\/?b>/g, ""),

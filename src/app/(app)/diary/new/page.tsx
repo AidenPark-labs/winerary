@@ -220,10 +220,12 @@ export default function NewDiaryPage() {
     setPhotoUploading(true);
     setError(null);
 
-    // 첫 번째 사진의 EXIF 촬영 날짜로 음용 날짜 프리필
+    // 첫 번째 사진의 촬영 날짜로 음용 날짜 프리필
     if (photos.length === 0 && files[0]) {
-      const exifDate = await extractPhotoDate(files[0]);
-      if (exifDate) setDrunkAt(exifDate);
+      console.debug("[diary/new] extracting date from", files[0].name, files[0].type, files[0].size);
+      const photoDate = await extractPhotoDate(files[0]);
+      console.debug("[diary/new] extracted date:", photoDate);
+      if (photoDate) setDrunkAt(photoDate);
     }
 
     let failCount = 0;

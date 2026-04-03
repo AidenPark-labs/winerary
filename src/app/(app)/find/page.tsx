@@ -20,7 +20,6 @@ interface WineResult {
   vintage?: number | null;
   vivino_url?: string;
   description?: string;
-  price_range?: string;
   food_pairing?: string;
   error?: string;
 }
@@ -302,15 +301,24 @@ export default function FindPage() {
                   <p className="text-sm text-zinc-300 leading-relaxed">{result.description}</p>
                 )}
 
-                {/* 가격대 & 페어링 */}
-                {(result.price_range || result.food_pairing) && (
+                {/* 최저가 & 페어링 */}
+                {(shopItems.length > 0 || shopLoading || result.food_pairing) && (
                   <div className="flex flex-col gap-2 p-3 rounded-xl bg-white/5">
-                    {result.price_range && (
+                    {shopLoading && (
                       <div className="flex items-center gap-2">
                         <span className="text-sm">💰</span>
-                        <span className="text-sm text-zinc-300">예상 가격대 <span className="font-semibold text-white">{result.price_range}</span></span>
+                        <span className="text-sm text-zinc-500">최저가 검색 중…</span>
                       </div>
                     )}
+                    {!shopLoading && shopItems.length > 0 && (() => {
+                      const minPrice = Math.min(...shopItems.filter(i => i.lprice).map(i => i.lprice!));
+                      return (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">💰</span>
+                          <span className="text-sm text-zinc-300">네이버 최저가 <span className="font-semibold text-emerald-400">{minPrice.toLocaleString()}원</span></span>
+                        </div>
+                      );
+                    })()}
                     {result.food_pairing && (
                       <div className="flex items-start gap-2">
                         <span className="text-sm mt-0.5">🍽️</span>

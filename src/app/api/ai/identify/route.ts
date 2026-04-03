@@ -31,7 +31,6 @@ export async function POST(request: Request) {
   "vintage": 숫자 연도 또는 null,
   "vivino_url": "https://www.vivino.com/search/wines?q=URL인코딩된원본와인명",
   "description": "이 와인에 대한 간략한 한국어 설명 (2~3문장)",
-  "price_range": "한국 시장 기준 대략적인 가격대 (예: '2~3만원대', '5~7만원대')",
   "food_pairing": "이 와인과 잘 어울리는 음식 3~4가지를 간략히 (예: '소고기 스테이크, 양갈비, 숙성 치즈')"
 }`;
 

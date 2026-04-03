@@ -96,9 +96,9 @@ export default function FindPage() {
       setResult(data);
       setStep("result");
 
-      // AI 결과 성공 시 네이버 쇼핑 검색
-      if (!data.error && (data.name_original || data.name)) {
-        searchShopping(data.name_original || data.name!);
+      // AI 결과 성공 시 네이버 쇼핑 검색 (한국어 이름 우선)
+      if (!data.error && (data.name || data.name_original)) {
+        searchShopping(data.name || data.name_original!);
       }
     } catch {
       setResult({ error: "분석 중 오류가 발생했습니다. 다시 시도해주세요." });

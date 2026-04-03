@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 
 interface Message {
   role: "user" | "assistant";
@@ -11,10 +11,24 @@ interface ShopItem {
   lprice: number | null;
 }
 
-// 와인 카드: 네이버 쇼핑 실제 가격 자동 조회
-function WineCard({ nameKo, nameEn }: { nameKo: string; nameEn: string }) {
+interface WishlistItem {
+  id: string;
+  name_ko: string;
+  name_en: string;
+  created_at: string;
+}
+
+// ─── WineCard ────────────────────────────────────────────────────────────────
+
+function WineCard({ nameKo, nameEn, onSave }: {
+  nameKo: string;
+  nameEn: string;
+  onSave: (nameKo: string, nameEn: string) => Promise<void>;
+}) {
   const [price, setPrice] = useState<number | null>(null);
   const [status, setStatus] = useState<"loading" | "found" | "notfound">("loading");
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const fetchedRef = useRef(false);
 
   useEffect(() => {
@@ -35,13 +49,33 @@ function WineCard({ nameKo, nameEn }: { nameKo: string; nameEn: string }) {
       .catch(() => setStatus("notfound"));
   }, [nameKo]);
 
+  async function handleSave() {
+    if (saved || saving) return;
+    setSaving(true);
+    await onSave(nameKo, nameEn);
+    setSaved(true);
+    setSaving(false);
+  }
+
   const vivinoUrl = `https://www.vivino.com/search/wines?q=${encodeURIComponent(nameEn)}`;
   const naverUrl = `https://msearch.shopping.naver.com/search/all?query=${encodeURIComponent(nameKo)}`;
 
   return (
     <span className="block my-2 p-3 rounded-xl bg-zinc-900/80 border border-zinc-700/50">
-      <strong className="text-white text-sm">{nameKo}</strong>
-      <span className="block text-xs text-zinc-500 mt-0.5">{nameEn}</span>
+      <span className="flex items-start justify-between gap-2">
+        <span className="block">
+          <strong className="text-white text-sm">{nameKo}</strong>
+          <span className="block text-xs text-zinc-500 mt-0.5">{nameEn}</span>
+        </span>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className={`flex-shrink-0 text-lg transition-transform active:scale-125 ${saved ? "text-rose-400" : "text-zinc-600 hover:text-rose-400"}`}
+          title={saved ? "저장됨" : "저장하기"}
+        >
+          {saved ? "♥" : "♡"}
+        </button>
+      </span>
       <span className="block mt-1.5 text-xs">
         {status === "loading" && <span className="text-zinc-500">가격 확인 중…</span>}
         {status === "found" && price && (
@@ -57,7 +91,7 @@ function WineCard({ nameKo, nameEn }: { nameKo: string; nameEn: string }) {
           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-950/50 border border-rose-800/50 text-rose-300 text-xs hover:bg-rose-900/50 transition-colors"
           onClick={(e) => e.stopPropagation()}
         >
-          🍇 Vivino
+          Vivino
         </a>
         <a
           href={naverUrl}
@@ -66,33 +100,84 @@ function WineCard({ nameKo, nameEn }: { nameKo: string; nameEn: string }) {
           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-950/50 border border-emerald-800/50 text-emerald-300 text-xs hover:bg-emerald-900/50 transition-colors"
           onClick={(e) => e.stopPropagation()}
         >
-          💰 네이버에서 보기
+          네이버 최저가
         </a>
       </span>
     </span>
   );
 }
 
-// [[한국어 이름|영어 이름]] 패턴을 파싱해서 텍스트와 와인 카드로 분리
-function renderMessageContent(content: string) {
-  const parts = content.split(/(\[\[[^\]]+\]\])/g);
-  if (parts.length === 1) return content;
+// ─── 저장된 와인 목록 ─────────────────────────────────────────────────────────
 
-  return parts.map((part, i) => {
-    const match = part.match(/^\[\[([^|]+)\|([^\]]+)\]\]$/);
-    if (!match) return <span key={i}>{part}</span>;
-    const [, nameKo, nameEn] = match;
-    return <WineCard key={i} nameKo={nameKo.trim()} nameEn={nameEn.trim()} />;
-  });
+function WishlistPanel({ items, onDelete, onClose }: {
+  items: WishlistItem[];
+  onDelete: (id: string) => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="flex flex-col flex-1 overflow-y-auto px-4 pb-4">
+      <div className="flex items-center justify-between py-3">
+        <h2 className="font-semibold text-zinc-200">저장된 와인 ({items.length})</h2>
+        <button onClick={onClose} className="text-xs text-zinc-500 hover:text-zinc-300">닫기</button>
+      </div>
+      {items.length === 0 ? (
+        <div className="flex flex-col items-center justify-center flex-1 gap-2 py-16">
+          <span className="text-4xl">♡</span>
+          <p className="text-zinc-500 text-sm">추천받은 와인을 저장해보세요</p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {items.map((item) => {
+            const vivinoUrl = `https://www.vivino.com/search/wines?q=${encodeURIComponent(item.name_en)}`;
+            const naverUrl = `https://msearch.shopping.naver.com/search/all?query=${encodeURIComponent(item.name_ko)}`;
+            return (
+              <div key={item.id} className="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold text-white">{item.name_ko}</p>
+                    <p className="text-xs text-zinc-500">{item.name_en}</p>
+                  </div>
+                  <button
+                    onClick={() => onDelete(item.id)}
+                    className="text-zinc-600 hover:text-rose-400 text-lg flex-shrink-0"
+                  >
+                    ♥
+                  </button>
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <a href={vivinoUrl} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-950/50 border border-rose-800/50 text-rose-300 text-xs">
+                    Vivino
+                  </a>
+                  <a href={naverUrl} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-950/50 border border-emerald-800/50 text-emerald-300 text-xs">
+                    네이버 최저가
+                  </a>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
+
+// ─── Main ────────────────────────────────────────────────────────────────────
 
 export default function RecommendPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [showWishlist, setShowWishlist] = useState(false);
+  const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const initRef = useRef(false);
+
+  // 위시리스트 로드
+  useEffect(() => {
+    fetch("/api/wishlist").then((r) => r.json()).then((d) => setWishlist(d.items ?? [])).catch(() => {});
+  }, []);
 
   // 첫 진입 시 AI 인사 메시지
   useEffect(() => {
@@ -101,10 +186,42 @@ export default function RecommendPage() {
     startChat([]);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 새 메시지 시 스크롤
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  const saveWine = useCallback(async (nameKo: string, nameEn: string) => {
+    const res = await fetch("/api/wishlist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name_ko: nameKo, name_en: nameEn }),
+    });
+    const data = await res.json();
+    if (data.item) {
+      setWishlist((prev) => [data.item, ...prev]);
+    }
+  }, []);
+
+  async function deleteWine(id: string) {
+    await fetch("/api/wishlist", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    setWishlist((prev) => prev.filter((w) => w.id !== id));
+  }
+
+  // 메시지 렌더링: [[한국어|영어]] → WineCard
+  function renderMessageContent(content: string) {
+    const parts = content.split(/(\[\[[^\]]+\]\])/g);
+    if (parts.length === 1) return content;
+    return parts.map((part, i) => {
+      const match = part.match(/^\[\[([^|]+)\|([^\]]+)\]\]$/);
+      if (!match) return <span key={i}>{part}</span>;
+      const [, nameKo, nameEn] = match;
+      return <WineCard key={i} nameKo={nameKo.trim()} nameEn={nameEn.trim()} onSave={saveWine} />;
+    });
+  }
 
   async function startChat(chatMessages: Message[]) {
     setStreaming(true);
@@ -171,7 +288,6 @@ export default function RecommendPage() {
 
     const userMsg: Message = { role: "user", content: text };
     const newMessages = [...messages, userMsg];
-    // 첫 메시지가 AI 인사였으면 히스토리에서 초기 프롬프트 제외
     const apiMessages = messages.length > 0 && messages[0].role === "assistant"
       ? [{ role: "user" as const, content: "안녕하세요, 와인 추천을 받고 싶어요." }, ...newMessages]
       : newMessages;
@@ -205,71 +321,88 @@ export default function RecommendPage() {
           <h1 className="text-2xl font-bold">와인 추천</h1>
           <p className="text-zinc-500 text-sm mt-0.5">AI 소믈리에에게 추천받으세요</p>
         </div>
-        {messages.length > 1 && (
+        <div className="flex items-center gap-2">
           <button
-            onClick={handleNewChat}
-            disabled={streaming}
-            className="text-xs px-3 py-1.5 rounded-full border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors disabled:opacity-40"
+            onClick={() => setShowWishlist(!showWishlist)}
+            className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+              showWishlist
+                ? "border-rose-700 text-rose-400 bg-rose-950/30"
+                : "border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500"
+            }`}
           >
-            새 대화
+            ♥ {wishlist.length > 0 ? wishlist.length : ""}
           </button>
-        )}
+          {!showWishlist && messages.length > 1 && (
+            <button
+              onClick={handleNewChat}
+              disabled={streaming}
+              className="text-xs px-3 py-1.5 rounded-full border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors disabled:opacity-40"
+            >
+              새 대화
+            </button>
+          )}
+        </div>
       </header>
 
-      {/* 채팅 영역 */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pb-4 flex flex-col gap-3">
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
-                msg.role === "user"
-                  ? "bg-rose-700 text-white rounded-br-md"
-                  : "bg-zinc-800 text-zinc-200 rounded-bl-md"
-              }`}
-            >
-              {msg.content
-                ? (msg.role === "assistant" ? renderMessageContent(msg.content) : msg.content)
-                : (
-                  <span className="inline-flex gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: "300ms" }} />
-                  </span>
-                )
-              }
+      {showWishlist ? (
+        <WishlistPanel items={wishlist} onDelete={deleteWine} onClose={() => setShowWishlist(false)} />
+      ) : (
+        <>
+          {/* 채팅 영역 */}
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pb-4 flex flex-col gap-3">
+            {messages.map((msg, i) => (
+              <div
+                key={i}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                    msg.role === "user"
+                      ? "bg-rose-700 text-white rounded-br-md"
+                      : "bg-zinc-800 text-zinc-200 rounded-bl-md"
+                  }`}
+                >
+                  {msg.content
+                    ? (msg.role === "assistant" ? renderMessageContent(msg.content) : msg.content)
+                    : (
+                      <span className="inline-flex gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: "0ms" }} />
+                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: "150ms" }} />
+                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: "300ms" }} />
+                      </span>
+                    )
+                  }
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 입력 영역 */}
+          <div className="flex-shrink-0 px-4 pb-24 pt-2 bg-zinc-950 border-t border-zinc-800">
+            <div className="flex items-end gap-2">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="메시지를 입력하세요..."
+                rows={1}
+                className="flex-1 rounded-2xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-zinc-100 text-sm resize-none focus:outline-none focus:border-rose-600 transition-colors max-h-28"
+                style={{ minHeight: "44px" }}
+              />
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || streaming}
+                className="w-11 h-11 rounded-full bg-rose-700 hover:bg-rose-600 disabled:opacity-40 flex items-center justify-center text-white transition-colors flex-shrink-0"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13" />
+                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                </svg>
+              </button>
             </div>
           </div>
-        ))}
-      </div>
-
-      {/* 입력 영역 */}
-      <div className="flex-shrink-0 px-4 pb-24 pt-2 bg-zinc-950 border-t border-zinc-800">
-        <div className="flex items-end gap-2">
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="메시지를 입력하세요..."
-            rows={1}
-            className="flex-1 rounded-2xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-zinc-100 text-sm resize-none focus:outline-none focus:border-rose-600 transition-colors max-h-28"
-            style={{ minHeight: "44px" }}
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || streaming}
-            className="w-11 h-11 rounded-full bg-rose-700 hover:bg-rose-600 disabled:opacity-40 flex items-center justify-center text-white transition-colors flex-shrink-0"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
-          </button>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }

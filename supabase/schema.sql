@@ -33,6 +33,17 @@ alter table wine_records enable row level security;
 create policy "wine_records: own" on wine_records for all using (auth.uid() = user_id);
 create policy "wine_records: public read" on wine_records for select using (visibility = 'public' and deleted_at is null);
 
+-- wine_wishlist (추천 와인 저장)
+create table wine_wishlist (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references profiles(id) on delete cascade not null,
+  name_ko text not null,
+  name_en text not null,
+  created_at timestamptz default now()
+);
+alter table wine_wishlist enable row level security;
+create policy "wine_wishlist: own" on wine_wishlist for all using (auth.uid() = user_id);
+
 -- sessions (공유 세션)
 create table sessions (
   id uuid primary key default gen_random_uuid(),

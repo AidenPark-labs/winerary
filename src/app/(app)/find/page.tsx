@@ -62,9 +62,7 @@ export default function FindPage() {
 
   async function handleFile(file: File) {
     // Extract date from original File BEFORE resize (resize strips EXIF + lastModified)
-    console.debug("[find] file:", file.name, file.type, file.size, "lastModified:", file.lastModified, new Date(file.lastModified).toISOString());
     photoDateRef.current = await extractPhotoDate(file);
-    console.debug("[find] extracted photoDate:", photoDateRef.current);
     const blob = await resizeImage(file);
     fileBlob.current = blob;
     setPreviewUrl(URL.createObjectURL(blob));

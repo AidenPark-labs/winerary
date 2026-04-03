@@ -24,6 +24,11 @@ export default async function ProfilePage() {
     .select("*", { count: "exact", head: true })
     .eq("host_id", user.id);
 
+  const { count: wishlistCount } = await supabase
+    .from("wine_wishlist")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id);
+
   return (
     <div className="flex flex-col">
       <header className="px-5 pt-12 pb-6">
@@ -61,6 +66,13 @@ export default async function ProfilePage() {
             className="flex items-center justify-between px-4 py-3.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-colors"
           >
             <span className="text-sm">내 와인 다이어리</span>
+            <span className="text-zinc-500">→</span>
+          </a>
+          <a
+            href="/profile/wishlist"
+            className="flex items-center justify-between px-4 py-3.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-colors"
+          >
+            <span className="text-sm">내 와인 <span className="text-zinc-500 text-xs ml-1">{wishlistCount ?? 0}개 저장됨</span></span>
             <span className="text-zinc-500">→</span>
           </a>
           <a

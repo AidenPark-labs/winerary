@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { extractPhotoDate } from "@/lib/exif";
+import Toast from "@/components/Toast";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드 🍷", white: "화이트 🥂", rose: "로제 🌸",
@@ -70,6 +71,9 @@ export default function FindPage() {
   const [recording, setRecording] = useState(false);
   const [shopItems, setShopItems] = useState<ShoppingItem[]>([]);
   const [shopLoading, setShopLoading] = useState(false);
+  const [wishSaved, setWishSaved] = useState(false);
+  const [wishSaving, setWishSaving] = useState(false);
+  const [toast, setToast] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const fileBlob = useRef<Blob | null>(null);
@@ -127,6 +131,8 @@ export default function FindPage() {
     setResult(null);
     setShopItems([]);
     setShopLoading(false);
+    setWishSaved(false);
+    setWishSaving(false);
     fileBlob.current = null;
     photoDateRef.current = null;
   }
@@ -164,6 +170,7 @@ export default function FindPage() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
+      <Toast message="내 와인에 추가되었어요!" visible={toast} onHide={() => setToast(false)} />
       <header className="px-5 pt-12 pb-4 flex-shrink-0">
         <h1 className="text-2xl font-bold">와인 검색</h1>
         <p className="text-zinc-500 text-sm mt-1">라벨 사진으로 와인 정보와 최저가를 알아보세요</p>
@@ -393,6 +400,33 @@ export default function FindPage() {
                   </div>
                 )}
               </div>
+
+              {/* 내 와인에 추가 */}
+              <button
+                onClick={async () => {
+                  if (wishSaved || wishSaving) return;
+                  setWishSaving(true);
+                  await fetch("/api/wishlist", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      name_ko: result.name || result.name_original || "",
+                      name_en: result.name_original || result.name || "",
+                    }),
+                  });
+                  setWishSaved(true);
+                  setWishSaving(false);
+                  setToast(true);
+                }}
+                disabled={wishSaving || wishSaved}
+                className={`w-full py-3.5 rounded-2xl font-semibold text-sm transition-all active:scale-95 ${
+                  wishSaved
+                    ? "bg-rose-900/30 border border-rose-700/50 text-rose-300"
+                    : "bg-zinc-800 border border-zinc-700 text-zinc-200 hover:border-zinc-500"
+                }`}
+              >
+                {wishSaved ? "♥ 내 와인에 추가됨" : wishSaving ? "추가 중…" : "♡ 내 와인에 추가하기"}
+              </button>
 
               {/* 액션 버튼 */}
               <div className="flex gap-3 flex-shrink-0">

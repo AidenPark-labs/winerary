@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import Toast from "@/components/Toast";
 
 interface Message {
   role: "user" | "assistant";
@@ -62,20 +63,8 @@ function WineCard({ nameKo, nameEn, onSave }: {
 
   return (
     <span className="block my-2 p-3 rounded-xl bg-zinc-900/80 border border-zinc-700/50">
-      <span className="flex items-start justify-between gap-2">
-        <span className="block">
-          <strong className="text-white text-sm">{nameKo}</strong>
-          <span className="block text-xs text-zinc-500 mt-0.5">{nameEn}</span>
-        </span>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className={`flex-shrink-0 text-lg transition-transform active:scale-125 ${saved ? "text-rose-400" : "text-zinc-600 hover:text-rose-400"}`}
-          title={saved ? "저장됨" : "저장하기"}
-        >
-          {saved ? "♥" : "♡"}
-        </button>
-      </span>
+      <strong className="text-white text-sm">{nameKo}</strong>
+      <span className="block text-xs text-zinc-500 mt-0.5">{nameEn}</span>
       <span className="block mt-1.5 text-xs">
         {status === "loading" && <span className="text-zinc-500">가격 확인 중…</span>}
         {status === "found" && price && (
@@ -83,7 +72,7 @@ function WineCard({ nameKo, nameEn, onSave }: {
         )}
         {status === "notfound" && <span className="text-zinc-500">네이버 쇼핑 검색결과 없음</span>}
       </span>
-      <span className="flex gap-2 mt-2">
+      <span className="flex gap-2 mt-2 flex-wrap">
         <a
           href={vivinoUrl}
           target="_blank"
@@ -102,6 +91,17 @@ function WineCard({ nameKo, nameEn, onSave }: {
         >
           네이버 최저가
         </a>
+        <button
+          onClick={handleSave}
+          disabled={saving || saved}
+          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-colors ${
+            saved
+              ? "bg-rose-700/30 border border-rose-700/50 text-rose-300"
+              : "bg-amber-950/50 border border-amber-800/50 text-amber-300 hover:bg-amber-900/50"
+          }`}
+        >
+          {saved ? "♥ 추가됨" : saving ? "추가 중…" : "♡ 내 와인에 추가"}
+        </button>
       </span>
     </span>
   );
@@ -171,6 +171,7 @@ export default function RecommendPage() {
   const [streaming, setStreaming] = useState(false);
   const [showWishlist, setShowWishlist] = useState(false);
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
+  const [toast, setToast] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const initRef = useRef(false);
 
@@ -200,6 +201,7 @@ export default function RecommendPage() {
     if (data.item) {
       setWishlist((prev) => [data.item, ...prev]);
     }
+    setToast(true);
   }, []);
 
   async function deleteWine(id: string) {
@@ -315,6 +317,7 @@ export default function RecommendPage() {
 
   return (
     <div className="flex flex-col h-full min-h-0">
+      <Toast message="내 와인에 추가되었어요!" visible={toast} onHide={() => setToast(false)} />
       {/* 헤더 */}
       <header className="px-5 pt-12 pb-3 flex items-center justify-between flex-shrink-0">
         <div>
@@ -330,7 +333,7 @@ export default function RecommendPage() {
                 : "border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500"
             }`}
           >
-            ♥ {wishlist.length > 0 ? wishlist.length : ""}
+            내 와인{wishlist.length > 0 ? ` ${wishlist.length}` : ""}
           </button>
           {!showWishlist && messages.length > 1 && (
             <button

@@ -48,19 +48,25 @@ export async function GET(request: Request) {
     }
 
     const data = await res.json();
-    const items = (data.items ?? []).map((item: NaverShoppingItem) => ({
-      title: item.title.replace(/<\/?b>/g, ""),
-      link: item.link,
-      image: item.image,
-      lprice: item.lprice ? parseInt(item.lprice) : null,
-      hprice: item.hprice ? parseInt(item.hprice) : null,
-      mallName: item.mallName,
-      productId: item.productId,
-      brand: item.brand,
-      category: [item.category1, item.category2, item.category3, item.category4]
-        .filter(Boolean)
-        .join(" > "),
-    }));
+    const wineKeywords = ["와인", "wine", "레드", "화이트", "로제", "스파클링", "샴페인", "champagne"];
+    const items = (data.items ?? [])
+      .filter((item: NaverShoppingItem) => {
+        const text = (item.title + item.category1 + item.category2 + item.category3 + item.category4).toLowerCase();
+        return wineKeywords.some((kw) => text.includes(kw));
+      })
+      .map((item: NaverShoppingItem) => ({
+        title: item.title.replace(/<\/?b>/g, ""),
+        link: item.link,
+        image: item.image,
+        lprice: item.lprice ? parseInt(item.lprice) : null,
+        hprice: item.hprice ? parseInt(item.hprice) : null,
+        mallName: item.mallName,
+        productId: item.productId,
+        brand: item.brand,
+        category: [item.category1, item.category2, item.category3, item.category4]
+          .filter(Boolean)
+          .join(" > "),
+      }));
 
     return Response.json({ items });
   } catch (e) {

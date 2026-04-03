@@ -72,10 +72,18 @@ export default function DiaryDetail({ record }: { record: WineRecord }) {
               {/* 하단 페이드아웃 */}
               <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-black to-transparent pointer-events-none" />
 
-              {/* 사진 위에 와인 이름 + 날짜 */}
+              {/* 사진 위 오버레이 — 와인 이름 + 빈티지 + 원본명 + 날짜 */}
               <div className="absolute bottom-0 inset-x-0 px-5 pb-7 z-10">
-                <h1 className="text-3xl font-bold text-white leading-tight drop-shadow-lg">{record.name}</h1>
-                <p className="text-zinc-400 text-sm mt-1 drop-shadow">
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  <h1 className="text-3xl font-bold text-white leading-tight drop-shadow-lg">{record.name}</h1>
+                  {record.wine_vintage && (
+                    <span className="text-xl text-white/70 font-medium drop-shadow">{record.wine_vintage}</span>
+                  )}
+                </div>
+                {record.wine_name_original && (
+                  <p className="text-sm text-white/60 italic mt-0.5 drop-shadow">{record.wine_name_original}</p>
+                )}
+                <p className="text-zinc-400 text-sm mt-1.5 drop-shadow">
                   {new Date(record.drunk_at).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })}
                   {record.location && ` · ${record.location}`}
                 </p>
@@ -101,8 +109,16 @@ export default function DiaryDetail({ record }: { record: WineRecord }) {
               <div className="absolute inset-0 bg-gradient-to-br from-rose-950/60 via-zinc-900/40 to-black" />
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-7xl opacity-30">🍷</div>
               <div className="relative z-10">
-                <h1 className="text-3xl font-bold text-white leading-tight">{record.name}</h1>
-                <p className="text-zinc-400 text-sm mt-1">
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  <h1 className="text-3xl font-bold text-white leading-tight">{record.name}</h1>
+                  {record.wine_vintage && (
+                    <span className="text-xl text-white/70 font-medium">{record.wine_vintage}</span>
+                  )}
+                </div>
+                {record.wine_name_original && (
+                  <p className="text-sm text-white/60 italic mt-0.5">{record.wine_name_original}</p>
+                )}
+                <p className="text-zinc-400 text-sm mt-1.5">
                   {new Date(record.drunk_at).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })}
                   {record.location && ` · ${record.location}`}
                 </p>
@@ -124,19 +140,6 @@ export default function DiaryDetail({ record }: { record: WineRecord }) {
 
         {/* ── 컨텐츠 영역 ── */}
         <div className="flex flex-col gap-4 px-4 pt-5 pb-32">
-
-          {/* 와인 이름 + 원본명 + 빈티지 */}
-          <div>
-            <div className="flex items-baseline gap-2 flex-wrap">
-              <h2 className="text-2xl font-bold">{record.name}</h2>
-              {record.wine_vintage && (
-                <span className="text-lg text-zinc-400 font-medium">{record.wine_vintage}</span>
-              )}
-            </div>
-            {record.wine_name_original && (
-              <p className="text-sm text-zinc-500 mt-0.5 italic">{record.wine_name_original}</p>
-            )}
-          </div>
 
           {/* 와인 정보 태그 + Vivino */}
           <div className="flex flex-col gap-2">

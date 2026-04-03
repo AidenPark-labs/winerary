@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드 🍷", white: "화이트 🥂", rose: "로제 🌸",
@@ -24,6 +24,11 @@ interface WineResult {
 
 type Step = "select" | "preview" | "analyzing" | "result";
 
+function notNull(v: string | null | undefined): string | null {
+  if (!v || v === "null" || v === "undefined") return null;
+  return v;
+}
+
 // 클라이언트에서 이미지 리사이즈 (1200px 이하, JPEG 0.85)
 function resizeImage(file: File): Promise<Blob> {
   return new Promise((resolve) => {
@@ -44,9 +49,11 @@ function resizeImage(file: File): Promise<Blob> {
 }
 
 export default function FindPage() {
+  const router = useRouter();
   const [step, setStep] = useState<Step>("select");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [result, setResult] = useState<WineResult | null>(null);
+  const [recording, setRecording] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const fileBlob = useRef<Blob | null>(null);
@@ -83,18 +90,34 @@ export default function FindPage() {
     fileBlob.current = null;
   }
 
-  // 기록하기 링크용 파라미터 생성
-  function buildRecordLink() {
-    if (!result) return "/diary/new";
+  // 기록하기: 사진 업로드 후 diary/new 로 이동
+  async function handleRecord() {
+    if (!result || result.error) return;
+    setRecording(true);
+
     const p = new URLSearchParams();
-    if (result.name) p.set("name", result.name);
-    if (result.name_original) p.set("name_original", result.name_original);
-    if (result.wine_type) p.set("wine_type", result.wine_type);
-    if (result.country) p.set("country", result.country);
-    if (result.grape_variety) p.set("grape", result.grape_variety);
+    if (notNull(result.name)) p.set("name", result.name!);
+    if (notNull(result.name_original)) p.set("name_original", result.name_original!);
+    if (notNull(result.wine_type)) p.set("wine_type", result.wine_type!);
+    if (notNull(result.country)) p.set("country", result.country!);
+    if (notNull(result.grape_variety)) p.set("grape", result.grape_variety!);
     if (result.vintage) p.set("vintage", String(result.vintage));
-    if (result.vivino_url) p.set("vivino_url", result.vivino_url);
-    return `/diary/new?${p.toString()}`;
+    if (notNull(result.vivino_url)) p.set("vivino_url", result.vivino_url!);
+
+    // 분석에 사용한 사진을 스토리지에 업로드해서 파라미터로 전달
+    if (fileBlob.current) {
+      try {
+        const fd = new FormData();
+        fd.append("file", fileBlob.current, "wine.jpg");
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        const data = await res.json();
+        if (res.ok && data.url) p.set("photo", data.url);
+      } catch {
+        // 업로드 실패해도 진행
+      }
+    }
+
+    router.push(`/diary/new?${p.toString()}`);
   }
 
   return (
@@ -224,7 +247,7 @@ export default function FindPage() {
                       {TYPE_KO[result.wine_type] ?? result.wine_type}
                     </span>
                   )}
-                  {result.grape_variety && (
+                  {notNull(result.grape_variety) && (
                     <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 text-zinc-300">
                       🍇 {result.grape_variety}
                     </span>
@@ -247,14 +270,14 @@ export default function FindPage() {
 
               {/* 액션 버튼 */}
               <div className="flex gap-3 flex-shrink-0">
-                <button onClick={reset}
-                  className="flex-1 py-3.5 rounded-2xl border border-zinc-700 text-zinc-300 font-medium active:scale-95 transition-all">
+                <button onClick={reset} disabled={recording}
+                  className="flex-1 py-3.5 rounded-2xl border border-zinc-700 text-zinc-300 font-medium active:scale-95 transition-all disabled:opacity-40">
                   다시 찾기
                 </button>
-                <Link href={buildRecordLink()}
-                  className="flex-[2] py-3.5 rounded-2xl bg-rose-700 hover:bg-rose-600 active:scale-95 transition-all text-white font-semibold text-center">
-                  ✍️ 이 와인 기록하기
-                </Link>
+                <button onClick={handleRecord} disabled={recording}
+                  className="flex-[2] py-3.5 rounded-2xl bg-rose-700 hover:bg-rose-600 active:scale-95 transition-all text-white font-semibold disabled:opacity-60">
+                  {recording ? "준비 중…" : "✍️ 이 와인 기록하기"}
+                </button>
               </div>
             </>
           )}

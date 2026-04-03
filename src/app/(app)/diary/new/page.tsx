@@ -134,20 +134,27 @@ export default function NewDiaryPage() {
     const wt = searchParams.get("wine_type");
     if (wt) setWineType(typeMap[wt] ?? "");
 
-    // 품종
+    // 품종 (null 문자열 방어)
     const grapeParam = searchParams.get("grape");
-    if (grapeParam) {
+    if (grapeParam && grapeParam !== "null") {
       const match = GRAPE_OPTIONS.find((g) => grapeParam.includes(g));
       if (match) setGrape(match);
       else { setGrape("__custom__"); setGrapeCustom(grapeParam); }
     }
 
-    // 생산국
+    // 생산국 (null 문자열 방어)
     const countryParam = searchParams.get("country");
-    if (countryParam) {
+    if (countryParam && countryParam !== "null") {
       const match = COUNTRY_OPTIONS.find((c) => countryParam.includes(c));
       if (match) setCountry(match);
       else { setCountry("__custom__"); setCountryCustom(countryParam); }
+    }
+
+    // 와인찾기에서 찍은 사진
+    const photoParam = searchParams.get("photo");
+    if (photoParam) {
+      setPhotos([photoParam]);
+      setPhotoPreviews([photoParam]);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

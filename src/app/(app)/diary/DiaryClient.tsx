@@ -176,7 +176,7 @@ export default function DiaryClient({ records }: { records: WineRecord[] }) {
   return (
     <div className="flex flex-col flex-1">
       <header className="px-5 pt-12 pb-4 flex items-center justify-between flex-shrink-0">
-        <h1 className="text-2xl font-bold">와인일기</h1>
+        <h1 className="text-2xl font-bold">와인노트</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={toggleView}

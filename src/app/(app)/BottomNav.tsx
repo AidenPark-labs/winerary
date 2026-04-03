@@ -6,6 +6,7 @@ import { useTransition, useEffect, useState } from "react";
 const tabs = [
   { href: "/diary", label: "다이어리", icon: "📔" },
   { href: "/find", label: "와인검색", icon: "🔍" },
+  { href: "/recommend", label: "와인추천", icon: "🍷" },
   { href: "/stats", label: "통계", icon: "📊" },
   { href: "/profile", label: "프로필", icon: "👤" },
 ];

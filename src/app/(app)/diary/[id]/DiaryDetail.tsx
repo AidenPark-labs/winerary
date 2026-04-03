@@ -4,13 +4,14 @@ import { useState, useRef } from "react";
 import Link from "next/link";
 import type { WineRecord } from "@/types";
 import DeleteButton from "./DeleteButton";
+import ShareButton from "./ShareButton";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드 🍷", white: "화이트 🥂", rose: "로제 🌸",
   sparkling: "스파클링 ✨", fortified: "주정강화 🏺", other: "기타",
 };
 
-export default function DiaryDetail({ record }: { record: WineRecord }) {
+export default function DiaryDetail({ record, readOnly = false }: { record: WineRecord; readOnly?: boolean }) {
   const photos: string[] = record.photos ?? [];
   const foods: { name: string }[] = (record.foods as { name: string }[]) ?? [];
   const companions: string[] = record.companions ?? [];
@@ -107,23 +108,34 @@ export default function DiaryDetail({ record }: { record: WineRecord }) {
             </div>
           )}
 
-          {/* 헤더 — 뒤로 / 수정 / 삭제 */}
+          {/* 헤더 — 뒤로 / 수정 / 삭제 (또는 공유 브랜딩) */}
           <div className="absolute top-0 inset-x-0 px-4 pt-12 flex items-center justify-between z-20">
-            <a href="/diary" className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white text-lg hover:bg-black/60 transition-colors">←</a>
-            <div className="flex items-center gap-2">
-              <Link
-                href={`/diary/${record.id}/edit`}
-                className="text-xs px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-sm text-zinc-300 hover:bg-black/60 transition-colors"
-              >
-                수정
-              </Link>
-              <DeleteButton id={record.id} />
-            </div>
+            {readOnly ? (
+              <span className="text-sm font-semibold text-white/70 tracking-widest">winerary</span>
+            ) : (
+              <a href="/diary" className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white text-lg hover:bg-black/60 transition-colors">←</a>
+            )}
+            {!readOnly && (
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/diary/${record.id}/edit`}
+                  className="text-xs px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-sm text-zinc-300 hover:bg-black/60 transition-colors"
+                >
+                  수정
+                </Link>
+                <DeleteButton id={record.id} />
+              </div>
+            )}
           </div>
         </div>
 
         {/* ── 컨텐츠 영역 — 완전 블랙 배경 ── */}
         <div className="flex flex-col gap-4 px-4 pt-5 pb-28 bg-black">
+
+          {/* 링크 공유 버튼 */}
+          {!readOnly && record.visibility === "link" && (
+            <ShareButton id={record.id} />
+          )}
 
           {/* 와인 정보 태그 + Vivino */}
           <div className="flex flex-col gap-2">

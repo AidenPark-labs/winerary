@@ -7,6 +7,68 @@ interface Message {
   content: string;
 }
 
+// 와인 카드: 네이버 쇼핑 실제 가격 자동 조회
+function WineCard({ nameKo, nameEn }: { nameKo: string; nameEn: string }) {
+  const [price, setPrice] = useState<number | null>(null);
+  const [status, setStatus] = useState<"loading" | "found" | "notfound">("loading");
+  const fetched = useRef(false);
+
+  useEffect(() => {
+    if (fetched.current) return;
+    fetched.current = true;
+    fetch(`/api/naver/shopping?q=${encodeURIComponent(nameKo)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const items = data.items ?? [];
+        if (items.length > 0) {
+          const minPrice = Math.min(...items.filter((i: { lprice: number | null }) => i.lprice).map((i: { lprice: number }) => i.lprice));
+          setPrice(minPrice);
+          setStatus("found");
+        } else {
+          setStatus("notfound");
+        }
+      })
+      .catch(() => setStatus("notfound"));
+  }, [nameKo]);
+
+  const vivinoUrl = `https://www.vivino.com/search/wines?q=${encodeURIComponent(nameEn)}`;
+  const naverUrl = `https://msearch.shopping.naver.com/search/all?query=${encodeURIComponent(nameKo)}`;
+
+  return (
+    <span className="block my-2 p-3 rounded-xl bg-zinc-900/80 border border-zinc-700/50">
+      <strong className="text-white text-sm">{nameKo}</strong>
+      <span className="block text-xs text-zinc-500 mt-0.5">{nameEn}</span>
+      <span className="block mt-1.5 text-xs">
+        {status === "loading" && <span className="text-zinc-500">가격 확인 중…</span>}
+        {status === "found" && price && (
+          <span className="text-emerald-400 font-semibold">네이버 최저가 {price.toLocaleString()}원</span>
+        )}
+        {status === "notfound" && <span className="text-zinc-500">네이버 쇼핑 검색결과 없음</span>}
+      </span>
+      <span className="flex gap-2 mt-2">
+        <a
+          href={vivinoUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-950/50 border border-rose-800/50 text-rose-300 text-xs hover:bg-rose-900/50 transition-colors"
+          onClick={(e) => e.stopPropagation()}
+        >
+          🍇 Vivino
+        </a>
+        <a
+          href={naverUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-950/50 border border-emerald-800/50 text-emerald-300 text-xs hover:bg-emerald-900/50 transition-colors"
+          onClick={(e) => e.stopPropagation()}
+        >
+          💰 네이버에서 보기
+        </a>
+      </span>
+    </span>
+  );
+}
+
 // [[한국어 이름|영어 이름]] 패턴을 파싱해서 텍스트와 와인 카드로 분리
 function renderMessageContent(content: string) {
   const parts = content.split(/(\[\[[^\]]+\]\])/g);
@@ -15,36 +77,8 @@ function renderMessageContent(content: string) {
   return parts.map((part, i) => {
     const match = part.match(/^\[\[([^|]+)\|([^\]]+)\]\]$/);
     if (!match) return <span key={i}>{part}</span>;
-
     const [, nameKo, nameEn] = match;
-    const vivinoUrl = `https://www.vivino.com/search/wines?q=${encodeURIComponent(nameEn.trim())}`;
-    const naverUrl = `https://msearch.shopping.naver.com/search/all?query=${encodeURIComponent(nameKo.trim())}`;
-
-    return (
-      <span key={i} className="inline">
-        <strong className="text-white">{nameKo.trim()}</strong>
-        <span className="flex gap-2 mt-1.5 mb-2">
-          <a
-            href={vivinoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-950/50 border border-rose-800/50 text-rose-300 text-xs hover:bg-rose-900/50 transition-colors"
-            onClick={(e) => e.stopPropagation()}
-          >
-            🍇 Vivino
-          </a>
-          <a
-            href={naverUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-950/50 border border-emerald-800/50 text-emerald-300 text-xs hover:bg-emerald-900/50 transition-colors"
-            onClick={(e) => e.stopPropagation()}
-          >
-            💰 네이버 최저가
-          </a>
-        </span>
-      </span>
-    );
+    return <WineCard key={i} nameKo={nameKo.trim()} nameEn={nameEn.trim()} />;
   });
 }
 

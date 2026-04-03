@@ -20,6 +20,8 @@ interface WineResult {
   vintage?: number | null;
   vivino_url?: string;
   description?: string;
+  price_range?: string;
+  food_pairing?: string;
   error?: string;
 }
 
@@ -298,6 +300,24 @@ export default function FindPage() {
                 {/* 설명 */}
                 {result.description && (
                   <p className="text-sm text-zinc-300 leading-relaxed">{result.description}</p>
+                )}
+
+                {/* 가격대 & 페어링 */}
+                {(result.price_range || result.food_pairing) && (
+                  <div className="flex flex-col gap-2 p-3 rounded-xl bg-white/5">
+                    {result.price_range && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">💰</span>
+                        <span className="text-sm text-zinc-300">예상 가격대 <span className="font-semibold text-white">{result.price_range}</span></span>
+                      </div>
+                    )}
+                    {result.food_pairing && (
+                      <div className="flex items-start gap-2">
+                        <span className="text-sm mt-0.5">🍽️</span>
+                        <span className="text-sm text-zinc-300">{result.food_pairing}</span>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {/* Vivino 링크 */}

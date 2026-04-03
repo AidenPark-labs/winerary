@@ -7,6 +7,47 @@ interface Message {
   content: string;
 }
 
+// [[한국어 이름|영어 이름]] 패턴을 파싱해서 텍스트와 와인 카드로 분리
+function renderMessageContent(content: string) {
+  const parts = content.split(/(\[\[[^\]]+\]\])/g);
+  if (parts.length === 1) return content;
+
+  return parts.map((part, i) => {
+    const match = part.match(/^\[\[([^|]+)\|([^\]]+)\]\]$/);
+    if (!match) return <span key={i}>{part}</span>;
+
+    const [, nameKo, nameEn] = match;
+    const vivinoUrl = `https://www.vivino.com/search/wines?q=${encodeURIComponent(nameEn.trim())}`;
+    const naverUrl = `https://msearch.shopping.naver.com/search/all?query=${encodeURIComponent(nameKo.trim())}`;
+
+    return (
+      <span key={i} className="inline">
+        <strong className="text-white">{nameKo.trim()}</strong>
+        <span className="flex gap-2 mt-1.5 mb-2">
+          <a
+            href={vivinoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-950/50 border border-rose-800/50 text-rose-300 text-xs hover:bg-rose-900/50 transition-colors"
+            onClick={(e) => e.stopPropagation()}
+          >
+            🍇 Vivino
+          </a>
+          <a
+            href={naverUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-950/50 border border-emerald-800/50 text-emerald-300 text-xs hover:bg-emerald-900/50 transition-colors"
+            onClick={(e) => e.stopPropagation()}
+          >
+            💰 네이버 최저가
+          </a>
+        </span>
+      </span>
+    );
+  });
+}
+
 export default function RecommendPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -151,13 +192,16 @@ export default function RecommendPage() {
                   : "bg-zinc-800 text-zinc-200 rounded-bl-md"
               }`}
             >
-              {msg.content || (
-                <span className="inline-flex gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: "300ms" }} />
-                </span>
-              )}
+              {msg.content
+                ? (msg.role === "assistant" ? renderMessageContent(msg.content) : msg.content)
+                : (
+                  <span className="inline-flex gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </span>
+                )
+              }
             </div>
           </div>
         ))}

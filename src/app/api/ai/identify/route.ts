@@ -16,8 +16,12 @@ export async function POST(request: Request) {
   const base64 = Buffer.from(arrayBuffer).toString("base64");
   const mediaType = (file.type || "image/jpeg") as "image/jpeg" | "image/png" | "image/webp" | "image/gif";
 
-  const prompt = `이 사진에서 와인 라벨을 분석해 와인 정보를 알려주세요.
+  const prompt = `사진에서 와인 라벨의 텍스트를 읽고, 와인 이름을 추출하세요.
 와인 라벨이 없거나 와인이 아닌 경우 {"error": "와인 라벨을 인식하지 못했습니다"} 만 반환하세요.
+
+중요: 사진의 시각적 요소(색상, 배경, 분위기 등)를 해석하지 마세요.
+라벨에서 와인 이름을 추출한 뒤, 해당 와인에 대해 알고 있는 지식을 바탕으로 정보를 작성하세요.
+description과 food_pairing은 사진이 아닌, 해당 와인 자체의 알려진 특징을 기반으로 작성하세요.
 
 아래 JSON 형식으로만 응답하세요. 설명 없이 JSON만 출력하세요:
 {
@@ -30,7 +34,7 @@ export async function POST(request: Request) {
   "grape_variety": "포도 품종 (한국어, 모르면 null)",
   "vintage": 숫자 연도 또는 null,
   "vivino_url": "https://www.vivino.com/search/wines?q=URL인코딩된원본와인명",
-  "description": "이 와인에 대한 간략한 한국어 설명 (2~3문장)",
+  "description": "이 와인의 알려진 특징 (맛, 향, 바디감 등)을 2~3문장으로 설명",
   "food_pairing": "이 와인과 잘 어울리는 음식 3~4가지를 간략히 (예: '소고기 스테이크, 양갈비, 숙성 치즈')"
 }`;
 

@@ -23,6 +23,18 @@ interface WineResult {
   error?: string;
 }
 
+interface ShoppingItem {
+  title: string;
+  link: string;
+  image: string;
+  lprice: number | null;
+  hprice: number | null;
+  mallName: string;
+  productId: string;
+  brand: string;
+  category: string;
+}
+
 type Step = "select" | "preview" | "analyzing" | "result";
 
 function notNull(v: string | null | undefined): string | null {
@@ -55,6 +67,8 @@ export default function FindPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [result, setResult] = useState<WineResult | null>(null);
   const [recording, setRecording] = useState(false);
+  const [shopItems, setShopItems] = useState<ShoppingItem[]>([]);
+  const [shopLoading, setShopLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const fileBlob = useRef<Blob | null>(null);
@@ -81,9 +95,28 @@ export default function FindPage() {
       const data: WineResult = await res.json();
       setResult(data);
       setStep("result");
+
+      // AI 결과 성공 시 네이버 쇼핑 검색
+      if (!data.error && (data.name_original || data.name)) {
+        searchShopping(data.name_original || data.name!);
+      }
     } catch {
       setResult({ error: "분석 중 오류가 발생했습니다. 다시 시도해주세요." });
       setStep("result");
+    }
+  }
+
+  async function searchShopping(query: string) {
+    setShopLoading(true);
+    setShopItems([]);
+    try {
+      const res = await fetch(`/api/naver/shopping?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      setShopItems(data.items ?? []);
+    } catch {
+      // 쇼핑 검색 실패해도 무시
+    } finally {
+      setShopLoading(false);
     }
   }
 
@@ -91,6 +124,8 @@ export default function FindPage() {
     setStep("select");
     setPreviewUrl(null);
     setResult(null);
+    setShopItems([]);
+    setShopLoading(false);
     fileBlob.current = null;
     photoDateRef.current = null;
   }
@@ -129,8 +164,8 @@ export default function FindPage() {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <header className="px-5 pt-12 pb-4 flex-shrink-0">
-        <h1 className="text-2xl font-bold">와인 찾기</h1>
-        <p className="text-zinc-500 text-sm mt-1">라벨 사진으로 와인을 바로 알아보세요</p>
+        <h1 className="text-2xl font-bold">와인 검색</h1>
+        <p className="text-zinc-500 text-sm mt-1">라벨 사진으로 와인 정보와 최저가를 알아보세요</p>
       </header>
 
       {/* ── 사진 선택 ── */}
@@ -274,11 +309,60 @@ export default function FindPage() {
                 )}
               </div>
 
+              {/* 네이버 쇼핑 결과 */}
+              <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-5 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">네이버 쇼핑 최저가</h3>
+                  {shopLoading && (
+                    <div className="w-4 h-4 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+                  )}
+                </div>
+
+                {shopLoading && shopItems.length === 0 && (
+                  <p className="text-sm text-zinc-500">가격 정보를 검색하고 있어요…</p>
+                )}
+
+                {!shopLoading && shopItems.length === 0 && (
+                  <p className="text-sm text-zinc-500">검색 결과가 없습니다</p>
+                )}
+
+                {shopItems.length > 0 && (
+                  <div className="flex flex-col gap-2.5">
+                    {shopItems.slice(0, 5).map((item) => (
+                      <a
+                        key={item.productId || item.link}
+                        href={item.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-2.5 rounded-xl bg-zinc-800/60 hover:bg-zinc-800 transition-colors"
+                      >
+                        {item.image && (
+                          <img
+                            src={item.image}
+                            alt=""
+                            className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-zinc-700"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-zinc-200 line-clamp-2 leading-snug">{item.title}</p>
+                          <p className="text-xs text-zinc-500 mt-0.5">{item.mallName}</p>
+                        </div>
+                        <div className="flex-shrink-0 text-right">
+                          {item.lprice && (
+                            <p className="text-sm font-bold text-emerald-400">{item.lprice.toLocaleString()}원</p>
+                          )}
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* 액션 버튼 */}
               <div className="flex gap-3 flex-shrink-0">
                 <button onClick={reset} disabled={recording}
                   className="flex-1 py-3.5 rounded-2xl border border-zinc-700 text-zinc-300 font-medium active:scale-95 transition-all disabled:opacity-40">
-                  다시 찾기
+                  다시 검색
                 </button>
                 <button onClick={handleRecord} disabled={recording}
                   className="flex-[2] py-3.5 rounded-2xl bg-rose-700 hover:bg-rose-600 active:scale-95 transition-all text-white font-semibold disabled:opacity-60">

@@ -1,12 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import type { WineRecord } from "@/types";
 import DiaryClient from "./DiaryClient";
+import AuthPrompt from "@/components/AuthPrompt";
 
 export default async function DiaryPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+
+  if (!user) {
+    return (
+      <>
+        <DiaryClient records={[]} />
+        <AuthPrompt message="와인을 기록하고 나만의 노트를 관리해보세요" />
+      </>
+    );
+  }
 
   const { data: records } = await supabase
     .from("wine_records")

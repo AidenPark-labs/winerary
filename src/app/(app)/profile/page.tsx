@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import type { WineRecord } from "@/types";
 import LogoutButton from "./LogoutButton";
+import AuthPrompt from "@/components/AuthPrompt";
 
 const TYPE_META: Record<string, { label: string; color: string }> = {
   red:       { label: "레드",    color: "#be123c" },
@@ -15,7 +15,32 @@ const TYPE_META: Record<string, { label: string; color: string }> = {
 export default async function MyWinePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+
+  if (!user) {
+    return (
+      <>
+        <div className="flex flex-col">
+          <header className="px-5 pt-12 pb-6">
+            <h1 className="text-2xl font-bold">마이페이지</h1>
+          </header>
+          <div className="px-4 pb-28 flex flex-col gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center text-lg">🍷</div>
+              <div>
+                <div className="h-5 w-24 rounded bg-zinc-800" />
+                <div className="h-3 w-36 rounded bg-zinc-800 mt-2" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <StatCard label="기록" value="-" emoji="🍾" />
+              <StatCard label="종합 평점" value="-" emoji="⭐" />
+            </div>
+          </div>
+        </div>
+        <AuthPrompt message="나의 와인 통계와 프로필을 확인하려면 로그인이 필요합니다" />
+      </>
+    );
+  }
 
   const [
     { data: profile },

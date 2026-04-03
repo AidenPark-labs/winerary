@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Toast from "@/components/Toast";
+import AuthPrompt from "@/components/AuthPrompt";
 
 interface WishlistItem {
   id: string;
@@ -25,10 +26,18 @@ export default function MyWinePage() {
   const [frequentWines, setFrequentWines] = useState<FrequentWine[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(false);
+  const [needsAuth, setNeedsAuth] = useState(false);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setNeedsAuth(true);
+        setLoading(false);
+        return;
+      }
       await Promise.all([loadFrequent(), loadWishlist()]);
       setLoading(false);
     }
@@ -114,6 +123,8 @@ export default function MyWinePage() {
           </button>
         ))}
       </div>
+
+      {needsAuth && <AuthPrompt message="저장한 와인과 자주 마신 와인을 확인하려면 로그인이 필요합니다" />}
 
       <div className="px-4 pb-28">
         {loading ? (

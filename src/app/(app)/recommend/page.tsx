@@ -7,22 +7,26 @@ interface Message {
   content: string;
 }
 
+interface ShopItem {
+  lprice: number | null;
+}
+
 // 와인 카드: 네이버 쇼핑 실제 가격 자동 조회
 function WineCard({ nameKo, nameEn }: { nameKo: string; nameEn: string }) {
   const [price, setPrice] = useState<number | null>(null);
   const [status, setStatus] = useState<"loading" | "found" | "notfound">("loading");
-  const fetched = useRef(false);
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
-    if (fetched.current) return;
-    fetched.current = true;
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
     fetch(`/api/naver/shopping?q=${encodeURIComponent(nameKo)}`)
       .then((r) => r.json())
       .then((data) => {
-        const items = data.items ?? [];
-        if (items.length > 0) {
-          const minPrice = Math.min(...items.filter((i: { lprice: number | null }) => i.lprice).map((i: { lprice: number }) => i.lprice));
-          setPrice(minPrice);
+        const items: ShopItem[] = data.items ?? [];
+        const priced = items.filter((i) => i.lprice != null).map((i) => i.lprice as number);
+        if (priced.length > 0) {
+          setPrice(Math.min(...priced));
           setStatus("found");
         } else {
           setStatus("notfound");
@@ -95,7 +99,7 @@ export default function RecommendPage() {
     if (initRef.current) return;
     initRef.current = true;
     startChat([]);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 새 메시지 시 스크롤
   useEffect(() => {

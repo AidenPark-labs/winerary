@@ -49,7 +49,7 @@ export default function DiaryDetail({ record, readOnly = false }: { record: Wine
                 ref={scrollRef}
                 onScroll={handleScroll}
                 className="flex snap-x snap-mandatory"
-                style={{ overflowX: "scroll", scrollbarWidth: "none", touchAction: "pan-x pinch-zoom" } as React.CSSProperties}
+                style={{ overflowX: "scroll", scrollbarWidth: "none", touchAction: "pan-x pan-y" } as React.CSSProperties}
               >
                 {photos.map((url, i) => (
                   <div key={i} className="relative flex-shrink-0 snap-center" style={{ width: "100svw", height: "68vh" }}>

@@ -30,20 +30,14 @@ export default function ProfileLoading() {
         </div>
 
         {/* 요약 카드 */}
-        <div className="grid grid-cols-3 gap-3">
-          {[0, 1, 2].map((i) => (
+        <div className="grid grid-cols-2 gap-3">
+          {[0, 1].map((i) => (
             <div key={i} className="p-3 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col items-center gap-2">
               <div className="w-6 h-6 rounded bg-zinc-700" />
               <div className="h-5 w-8 rounded bg-zinc-700" />
               <div className="h-2 w-10 rounded bg-zinc-800" />
             </div>
           ))}
-        </div>
-
-        {/* 바로가기 */}
-        <div className="flex gap-2">
-          <div className="flex-1 h-11 rounded-xl bg-zinc-900 border border-zinc-800" />
-          <div className="flex-1 h-11 rounded-xl bg-zinc-900 border border-zinc-800" />
         </div>
 
         {/* 도넛 차트 */}

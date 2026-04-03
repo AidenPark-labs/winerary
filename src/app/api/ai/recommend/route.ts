@@ -1,5 +1,4 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { createClient } from "@/lib/supabase/server";
 
 const client = new Anthropic();
 
@@ -38,9 +37,6 @@ const SYSTEM_PROMPT = `당신은 친절하고 전문적인 소믈리에입니다
 - 마크다운 문법(**, ##, 백틱 등)은 절대 사용하지 마세요. 일반 텍스트와 [[]] 태그만 사용하세요.`;
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return Response.json({ error: "로그인이 필요합니다" }, { status: 401 });
 
   const { messages } = await request.json();
   if (!messages || !Array.isArray(messages)) {

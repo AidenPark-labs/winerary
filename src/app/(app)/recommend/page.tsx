@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { requireAuth } from "@/lib/auth-guard";
 import Toast from "@/components/Toast";
 
 interface Message {
@@ -52,6 +53,7 @@ function WineCard({ nameKo, nameEn, onSave }: {
 
   async function handleSave() {
     if (saved || saving) return;
+    if (!(await requireAuth())) return;
     setSaving(true);
     await onSave(nameKo, nameEn);
     setSaved(true);
@@ -326,7 +328,10 @@ export default function RecommendPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowWishlist(!showWishlist)}
+            onClick={async () => {
+              if (!showWishlist && !(await requireAuth())) return;
+              setShowWishlist(!showWishlist);
+            }}
             className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
               showWishlist
                 ? "border-rose-700 text-rose-400 bg-rose-950/30"

@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { extractPhotoDate } from "@/lib/exif";
+import { requireAuth } from "@/lib/auth-guard";
 import Toast from "@/components/Toast";
 
 const TYPE_KO: Record<string, string> = {
@@ -140,6 +141,7 @@ export default function FindPage() {
   // 기록하기: 사진 업로드 후 diary/new 로 이동
   async function handleRecord() {
     if (!result || result.error) return;
+    if (!(await requireAuth())) return;
     setRecording(true);
 
     const p = new URLSearchParams();
@@ -405,6 +407,7 @@ export default function FindPage() {
               <button
                 onClick={async () => {
                   if (wishSaved || wishSaving) return;
+                  if (!(await requireAuth())) return;
                   setWishSaving(true);
                   await fetch("/api/wishlist", {
                     method: "POST",

@@ -27,6 +27,12 @@ export default async function Home() {
         >
           회원가입
         </Link>
+        <Link
+          href="/find"
+          className="w-full py-3 rounded-xl text-zinc-500 hover:text-zinc-300 text-sm transition-colors mt-2"
+        >
+          로그인 없이 둘러보기 →
+        </Link>
       </div>
     </main>
   );

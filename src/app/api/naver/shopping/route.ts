@@ -1,5 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
-
 interface NaverShoppingItem {
   title: string;
   link: string;
@@ -17,10 +15,6 @@ interface NaverShoppingItem {
 }
 
 export async function GET(request: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return Response.json({ error: "로그인이 필요합니다" }, { status: 401 });
-
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
   if (!query) return Response.json({ error: "검색어가 필요합니다" }, { status: 400 });

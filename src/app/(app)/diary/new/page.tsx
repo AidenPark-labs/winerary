@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { extractPhotoDate } from "@/lib/exif";
 import type { WineSuggestion, WineType } from "@/types";
 import { createWineRecord } from "@/lib/actions/diary";
 import LoadingOverlay from "@/components/LoadingOverlay";
@@ -218,6 +219,12 @@ export default function NewDiaryPage() {
     if (!files.length) return;
     setPhotoUploading(true);
     setError(null);
+
+    // 첫 번째 사진의 EXIF 촬영 날짜로 음용 날짜 프리필
+    if (photos.length === 0 && files[0]) {
+      const exifDate = await extractPhotoDate(files[0]);
+      if (exifDate) setDrunkAt(exifDate);
+    }
 
     let failCount = 0;
 

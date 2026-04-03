@@ -2,6 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import type { WineRecord } from "@/types";
 
+const TYPE_KO: Record<string, string> = {
+  red: "레드", white: "화이트", rose: "로제",
+  sparkling: "스파클링", fortified: "주정강화", other: "기타",
+};
+
 export default async function DiaryPage() {
   const supabase = await createClient();
   const { data: records } = await supabase
@@ -33,45 +38,57 @@ export default async function DiaryPage() {
           </Link>
         </div>
       ) : (
-        <ul className="px-4 pb-4 flex flex-col gap-3">
+        <div className="px-3 pb-28 grid grid-cols-2 gap-2.5">
           {records.map((record: WineRecord) => {
             const photos: string[] = record.photos ?? [];
-            const foods: { name: string }[] = (record.foods as { name: string }[]) ?? [];
+            const thumb = photos[0];
             return (
-              <li key={record.id}>
-                <Link
-                  href={`/diary/${record.id}`}
-                  className="flex gap-4 p-4 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-colors"
-                >
-                  {photos[0] ? (
-                    <img src={photos[0]} alt={record.name} className="w-16 h-20 object-cover rounded-lg flex-shrink-0" />
-                  ) : (
-                    <div className="w-16 h-20 rounded-lg bg-zinc-800 flex items-center justify-center text-2xl flex-shrink-0">🍷</div>
-                  )}
-                  <div className="flex flex-col gap-1 min-w-0">
-                    <p className="font-semibold truncate">{record.name}</p>
-                    {foods.length > 0 && (
-                      <p className="text-xs text-zinc-500 truncate">{foods.map((f) => f.name).join(" · ")}</p>
-                    )}
-                    <p className="text-xs text-zinc-600 mt-auto">
-                      {new Date(record.drunk_at).toLocaleDateString("ko-KR")}
-                      {record.location && ` · ${record.location}`}
-                    </p>
-                    {record.rating && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-yellow-400 text-sm">★</span>
-                        <span className="text-sm text-zinc-300">{record.rating.toFixed(1)}</span>
-                        {record.pairing_score && (
-                          <span className="text-xs text-zinc-500 ml-1">페어링 {record.pairing_score}/5</span>
-                        )}
-                      </div>
-                    )}
+              <Link
+                key={record.id}
+                href={`/diary/${record.id}`}
+                className="relative rounded-2xl overflow-hidden bg-zinc-900 active:scale-95 transition-transform"
+                style={{ aspectRatio: "3/4" }}
+              >
+                {/* 사진 or 플레이스홀더 */}
+                {thumb ? (
+                  <img src={thumb} alt={record.name} className="absolute inset-0 w-full h-full object-cover" />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-rose-950/60 via-zinc-900 to-black flex items-center justify-center text-5xl opacity-60">🍷</div>
+                )}
+
+                {/* 그라디언트 오버레이 */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+
+                {/* 상단 태그 */}
+                {record.wine_type && (
+                  <div className="absolute top-2.5 left-2.5">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-sm text-zinc-300">
+                      {TYPE_KO[record.wine_type] ?? record.wine_type}
+                    </span>
                   </div>
-                </Link>
-              </li>
+                )}
+
+                {/* 하단 정보 */}
+                <div className="absolute bottom-0 inset-x-0 px-3 pb-3 flex flex-col gap-0.5">
+                  {record.rating && (
+                    <div className="flex items-center gap-0.5 mb-0.5">
+                      <span className="text-yellow-400 text-xs">★</span>
+                      <span className="text-xs text-white/80 font-medium">{Number(record.rating).toFixed(1)}</span>
+                    </div>
+                  )}
+                  <p className="text-sm font-semibold text-white leading-tight line-clamp-2">{record.name}</p>
+                  {record.wine_vintage && (
+                    <p className="text-xs text-white/50">{record.wine_vintage}</p>
+                  )}
+                  <p className="text-[11px] text-white/40 mt-0.5">
+                    {new Date(record.drunk_at).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })}
+                    {record.location && ` · ${record.location}`}
+                  </p>
+                </div>
+              </Link>
             );
           })}
-        </ul>
+        </div>
       )}
     </div>
   );

@@ -70,12 +70,6 @@ export default async function MyWinePage() {
   const recentMonths = Object.entries(monthCounts).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 6).reverse();
   const maxMonthCount = recentMonths.length ? Math.max(...recentMonths.map(([, c]) => c)) : 1;
 
-  // 가성비 Top 5
-  const valueSorted = all
-    .filter((r) => r.value_score != null && r.price != null)
-    .sort((a, b) => Number(b.value_score) - Number(a.value_score))
-    .slice(0, 5);
-
   // 자주 페어링한 음식
   const foodCount: Record<string, number> = {};
   all.forEach((r) => { (r.foods ?? []).forEach((f) => { foodCount[f.name] = (foodCount[f.name] ?? 0) + 1; }); });
@@ -175,31 +169,6 @@ export default async function MyWinePage() {
                       </div>
                       <div className="h-1.5 rounded-full bg-zinc-800 ml-6">
                         <div className="h-1.5 rounded-full bg-amber-600" style={{ width: `${(count / topCountries[0][1]) * 100}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* 가성비 좋은 와인 */}
-            {valueSorted.length > 0 && (
-              <section className="rounded-2xl bg-zinc-900 border border-zinc-800 p-5">
-                <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">가성비 좋은 와인</h2>
-                <div className="flex flex-col gap-3">
-                  {valueSorted.map((r, i) => (
-                    <div key={r.id} className="flex items-center gap-3">
-                      <span className="text-xs font-bold text-zinc-600 w-4">{i + 1}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-zinc-200 truncate">{r.name}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-xs text-zinc-500">{r.price!.toLocaleString()}원</span>
-                          <span className="flex items-center gap-0.5 text-amber-400 text-xs">
-                            {"★".repeat(Math.floor(Number(r.value_score)))}
-                            {Number(r.value_score) % 1 >= 0.5 ? "½" : ""}
-                            <span className="text-zinc-500 ml-0.5">{Number(r.value_score).toFixed(1)}</span>
-                          </span>
-                        </div>
                       </div>
                     </div>
                   ))}

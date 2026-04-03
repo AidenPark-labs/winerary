@@ -98,28 +98,21 @@ export default function MyWinePage() {
         <h1 className="text-2xl font-bold">내 와인</h1>
       </header>
 
-      {/* 탭 */}
-      <div className="flex px-5 gap-1 mb-4">
-        <button
-          onClick={() => setTab("frequent")}
-          className={`flex-1 py-2.5 text-sm font-medium rounded-xl transition-colors ${
-            tab === "frequent"
-              ? "bg-rose-700 text-white"
-              : "bg-zinc-900 text-zinc-400 border border-zinc-800"
-          }`}
-        >
-          자주마신 와인
-        </button>
-        <button
-          onClick={() => setTab("wishlist")}
-          className={`flex-1 py-2.5 text-sm font-medium rounded-xl transition-colors ${
-            tab === "wishlist"
-              ? "bg-rose-700 text-white"
-              : "bg-zinc-900 text-zinc-400 border border-zinc-800"
-          }`}
-        >
-          위시리스트
-        </button>
+      {/* Segmented Control */}
+      <div className="mx-5 mb-4 flex p-1 rounded-xl bg-zinc-900 border border-zinc-800">
+        {([["frequent", "자주마신 와인"], ["wishlist", "위시리스트"]] as const).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+              tab === key
+                ? "bg-zinc-700 text-white shadow-sm"
+                : "text-zinc-500"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       <div className="px-4 pb-28">

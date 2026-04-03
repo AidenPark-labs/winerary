@@ -157,6 +157,10 @@ export default function NewDiaryPage() {
       setPhotos([photoParam]);
       setPhotoPreviews([photoParam]);
     }
+
+    // 와인찾기에서 추출한 촬영 날짜
+    const dateParam = searchParams.get("date");
+    if (dateParam) setDrunkAt(dateParam);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSearch(e?: React.SyntheticEvent) {

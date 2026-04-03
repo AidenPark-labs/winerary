@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { extractPhotoDate } from "@/lib/exif";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드 🍷", white: "화이트 🥂", rose: "로제 🌸",
@@ -57,8 +58,13 @@ export default function FindPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const fileBlob = useRef<Blob | null>(null);
+  const photoDateRef = useRef<string | null>(null);
 
   async function handleFile(file: File) {
+    // Extract date from original File BEFORE resize (resize strips EXIF + lastModified)
+    console.debug("[find] file:", file.name, file.type, file.size, "lastModified:", file.lastModified, new Date(file.lastModified).toISOString());
+    photoDateRef.current = await extractPhotoDate(file);
+    console.debug("[find] extracted photoDate:", photoDateRef.current);
     const blob = await resizeImage(file);
     fileBlob.current = blob;
     setPreviewUrl(URL.createObjectURL(blob));
@@ -88,6 +94,7 @@ export default function FindPage() {
     setPreviewUrl(null);
     setResult(null);
     fileBlob.current = null;
+    photoDateRef.current = null;
   }
 
   // 기록하기: 사진 업로드 후 diary/new 로 이동
@@ -103,6 +110,7 @@ export default function FindPage() {
     if (notNull(result.grape_variety)) p.set("grape", result.grape_variety!);
     if (result.vintage) p.set("vintage", String(result.vintage));
     if (notNull(result.vivino_url)) p.set("vivino_url", result.vivino_url!);
+    if (photoDateRef.current) p.set("date", photoDateRef.current);
 
     // 분석에 사용한 사진을 스토리지에 업로드해서 파라미터로 전달
     if (fileBlob.current) {

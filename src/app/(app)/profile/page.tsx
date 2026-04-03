@@ -20,13 +20,9 @@ export default async function MyWinePage() {
   const [
     { data: profile },
     { data: records },
-    { count: sessionCount },
-    { count: wishlistCount },
   ] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single(),
     supabase.from("wine_records").select("*").eq("user_id", user.id).is("deleted_at", null).order("drunk_at", { ascending: false }),
-    supabase.from("sessions").select("*", { count: "exact", head: true }).eq("host_id", user.id),
-    supabase.from("wine_wishlist").select("*", { count: "exact", head: true }).eq("user_id", user.id),
   ]);
 
   const all = (records ?? []) as WineRecord[];
@@ -107,26 +103,9 @@ export default async function MyWinePage() {
         </div>
 
         {/* 요약 카드 */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <StatCard label="기록" value={`${total}`} emoji="🍾" />
           <StatCard label="종합 평점" value={avgOverall ? avgOverall.toFixed(1) : "-"} emoji="⭐" />
-          <StatCard label="세션" value={`${sessionCount ?? 0}`} emoji="🤝" />
-        </div>
-
-        {/* 바로가기 */}
-        <div className="flex gap-2">
-          <a
-            href="/diary"
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-colors text-sm"
-          >
-            📔 다이어리
-          </a>
-          <a
-            href="/profile/wishlist"
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-colors text-sm"
-          >
-            🍷 위시리스트 <span className="text-zinc-500 text-xs">{wishlistCount ?? 0}</span>
-          </a>
         </div>
 
         {total === 0 ? (

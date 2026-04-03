@@ -37,9 +37,8 @@ export default function WishlistPage() {
     <div className="flex flex-col min-h-screen">
       <Toast message="내 와인에서 삭제되었어요" visible={toast} onHide={() => setToast(false)} />
 
-      <header className="px-5 pt-12 pb-4 flex items-center gap-3">
-        <a href="/profile" className="text-zinc-400 hover:text-zinc-200 text-2xl w-8">←</a>
-        <h1 className="text-xl font-bold">내 와인</h1>
+      <header className="px-5 pt-12 pb-4">
+        <h1 className="text-2xl font-bold">내 와인</h1>
       </header>
 
       <div className="px-4 pb-28">

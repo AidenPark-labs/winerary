@@ -29,7 +29,7 @@ export default function DiaryDetail({ record, readOnly = false }: { record: Wine
   const hasPhoto = photos.length > 0;
 
   return (
-    <div className="relative min-h-screen bg-black overflow-x-hidden">
+    <div className="relative min-h-screen bg-black">
 
       {/* ── 블러 배경 (사진 컬러 확장) ── */}
       {bgPhoto && (

@@ -382,6 +382,14 @@ export default function FindPage() {
                         </div>
                       </a>
                     ))}
+                    <a
+                      href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(result.name_original || result.name || "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 py-3 rounded-xl border border-zinc-700 text-zinc-400 text-sm hover:text-zinc-200 hover:border-zinc-500 transition-colors"
+                    >
+                      네이버에서 전체 가격 확인하기 →
+                    </a>
                   </div>
                 )}
               </div>

@@ -13,7 +13,7 @@ const tabs = [
 export default function BottomNav() {
   const path = usePathname();
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-zinc-950 border-t border-zinc-800 flex">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-950 border-t border-zinc-800 flex">
       {tabs.map((tab) => {
         const active = path === tab.href || (tab.href === "/diary" && path.startsWith("/diary"));
         return (

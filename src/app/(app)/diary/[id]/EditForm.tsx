@@ -1,13 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { updateWineRecord } from "@/lib/actions/diary";
 import type { WineRecord } from "@/types";
 import LoadingOverlay from "@/components/LoadingOverlay";
 
 const iCls = "w-full rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-zinc-100 focus:outline-none focus:border-rose-600 transition-colors text-sm";
 
-export default function EditForm({ record, onClose }: { record: WineRecord; onClose?: () => void }) {
+export default function EditForm({ record, onClose, redirectAfterSave }: {
+  record: WineRecord;
+  onClose?: () => void;
+  redirectAfterSave?: string;
+}) {
+  const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -38,7 +44,10 @@ export default function EditForm({ record, onClose }: { record: WineRecord; onCl
     setSaving(false);
     if (result?.error) { setError(result.error); return; }
     setSuccess(true);
-    setTimeout(() => { setSuccess(false); onClose?.(); }, 1200);
+    setTimeout(() => {
+      if (redirectAfterSave) router.push(redirectAfterSave);
+      else { setSuccess(false); onClose?.(); }
+    }, 800);
   }
 
   return (

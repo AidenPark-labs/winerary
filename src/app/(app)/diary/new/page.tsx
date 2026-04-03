@@ -113,17 +113,19 @@ export default function NewDiaryPage() {
         if (res.ok && data.url) {
           setPhotos((p) => [...p, data.url]);
         } else {
-          console.error("[photo upload] error:", data.error);
+          const msg = data.error ?? `HTTP ${res.status}`;
+          console.error("[photo upload] server error:", msg);
+          alert(`[업로드 오류] ${msg}`); // 임시: 실제 오류 확인용
           failCount++;
-          setError(`업로드 실패: ${data.error ?? "알 수 없는 오류"}`);
         }
       } catch (err) {
         console.error("[photo upload] network error:", err);
+        alert(`[업로드 네트워크 오류] ${err}`);
         failCount++;
       }
     }
 
-    if (failCount > 0 && !error) {
+    if (failCount > 0) {
       setError(`사진 ${failCount}장 업로드에 실패했습니다.`);
     }
     setPhotoUploading(false);

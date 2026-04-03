@@ -188,45 +188,57 @@ export default function DiaryDetail({ record, readOnly = false }: { record: Wine
             )}
           </div>
 
-          {/* 평점 */}
-          {(record.rating || record.pairing_score || record.price != null) && (
-            <div className="grid grid-cols-2 gap-3">
-              {record.rating && (
-                <div className="flex flex-col items-center gap-1 py-4 rounded-2xl bg-white/5 border border-white/10">
-                  <span className="text-2xl">⭐</span>
-                  <div className="flex items-center gap-0.5">
-                    {renderStars(Number(record.rating))}
+          {/* 종합 평점 */}
+          {(record.rating || record.value_score) && (() => {
+            const scores = [record.rating, record.value_score, record.pairing_score]
+              .filter((v): v is number => v != null);
+            const avg = scores.length ? scores.reduce((a, b) => a + Number(b), 0) / scores.length : null;
+            return (
+              <div className="flex flex-col gap-3">
+                {avg != null && (
+                  <div className="flex flex-col items-center gap-1.5 py-5 rounded-2xl bg-white/5 border border-white/10">
+                    <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">종합 평점</span>
+                    <span className="text-3xl font-bold text-white">{avg.toFixed(1)}</span>
+                    <div className="flex items-center gap-0.5">
+                      {renderStars(avg)}
+                    </div>
                   </div>
-                  <span className="text-xs text-zinc-500">와인 평점 {Number(record.rating).toFixed(1)}</span>
+                )}
+                <div className="grid grid-cols-2 gap-3">
+                  {record.rating && (
+                    <div className="flex flex-col items-center gap-1 py-4 rounded-2xl bg-white/5 border border-white/10">
+                      <div className="flex items-center gap-0.5">
+                        {renderStars(Number(record.rating))}
+                      </div>
+                      <span className="text-xs text-zinc-500">와인 평점 {Number(record.rating).toFixed(1)}</span>
+                    </div>
+                  )}
+                  {record.value_score && (
+                    <div className="flex flex-col items-center gap-1 py-4 rounded-2xl bg-white/5 border border-white/10">
+                      <div className="flex items-center gap-0.5">
+                        {renderStars(Number(record.value_score))}
+                      </div>
+                      <span className="text-xs text-zinc-500">가성비 {Number(record.value_score).toFixed(1)}</span>
+                    </div>
+                  )}
+                  {record.pairing_score && (
+                    <div className="flex flex-col items-center gap-1 py-4 rounded-2xl bg-white/5 border border-white/10">
+                      <div className="flex items-center gap-0.5">
+                        {renderStars(record.pairing_score)}
+                      </div>
+                      <span className="text-xs text-zinc-500">음식 궁합 {record.pairing_score}/5</span>
+                    </div>
+                  )}
+                  {record.price != null && (
+                    <div className="flex flex-col items-center gap-1 py-4 rounded-2xl bg-white/5 border border-white/10">
+                      <span className="text-lg font-bold text-white">{record.price.toLocaleString()}원</span>
+                      <span className="text-xs text-zinc-500">구매 가격</span>
+                    </div>
+                  )}
                 </div>
-              )}
-              {record.pairing_score && (
-                <div className="flex flex-col items-center gap-1 py-4 rounded-2xl bg-white/5 border border-white/10">
-                  <span className="text-2xl">🍽️</span>
-                  <div className="flex items-center gap-0.5">
-                    {renderStars(record.pairing_score)}
-                  </div>
-                  <span className="text-xs text-zinc-500">음식 궁합 {record.pairing_score}/5</span>
-                </div>
-              )}
-              {record.price != null && (
-                <div className="flex flex-col items-center gap-1 py-4 rounded-2xl bg-white/5 border border-white/10">
-                  <span className="text-2xl">💰</span>
-                  <span className="text-lg font-bold text-white">{record.price.toLocaleString()}원</span>
-                  <span className="text-xs text-zinc-500">구매 가격</span>
-                </div>
-              )}
-              {record.value_score && (
-                <div className="flex flex-col items-center gap-1 py-4 rounded-2xl bg-white/5 border border-white/10">
-                  <span className="text-2xl">✨</span>
-                  <div className="flex items-center gap-0.5">
-                    {renderStars(Number(record.value_score))}
-                  </div>
-                  <span className="text-xs text-zinc-500">가성비 {Number(record.value_score).toFixed(1)}</span>
-                </div>
-              )}
-            </div>
-          )}
+              </div>
+            );
+          })()}
 
           {/* 페어링 음식 */}
           {foods.length > 0 && (

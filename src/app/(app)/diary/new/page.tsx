@@ -371,7 +371,7 @@ export default function NewDiaryPage() {
       rating,
       pairing_score: foods.length > 0 ? pairingScore : null,
       price: price ? parseInt(price) : null,
-      value_score: price ? valueScore : null,
+      value_score: valueScore,
       memo: memo || null,
       visibility,
     });
@@ -736,20 +736,27 @@ export default function NewDiaryPage() {
                   inputMode="numeric"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  placeholder="구매 가격"
+                  placeholder="구매 가격 (선택)"
                   className={iCls + " pr-8"}
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">원</span>
               </div>
-              {price && (
-                <StarRating label="가성비 만족도" emoji="💰" value={valueScore} max={5} step={0.5} onChange={setValueScore} />
-              )}
             </section>
 
             {/* 평점 */}
             <section className="flex flex-col gap-4">
-              <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">평점</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">평점</h2>
+                <span className="text-sm font-semibold text-rose-400">
+                  종합 {(() => {
+                    const scores = [rating, valueScore];
+                    if (foods.length > 0) scores.push(pairingScore);
+                    return (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
+                  })()}점
+                </span>
+              </div>
               <StarRating label="와인 평점" emoji="⭐" value={rating} max={5} step={0.5} onChange={setRating} />
+              <StarRating label="가성비 만족도" emoji="💰" value={valueScore} max={5} step={0.5} onChange={setValueScore} />
               {foods.length > 0 && (
                 <StarRating label="음식 궁합" emoji="🍽️" value={pairingScore} max={5} step={1} onChange={setPairingScore} />
               )}

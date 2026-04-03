@@ -24,6 +24,13 @@ export default async function StatsPage() {
   const ratings = all.map((r) => r.rating).filter((v): v is number => v != null);
   const avgRating = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
 
+  // 종합 평점 (와인평점 + 가성비 + 음식궁합 평균)
+  const overallScores = all.map((r) => {
+    const scores = [r.rating, r.value_score, r.pairing_score].filter((v): v is number => v != null).map(Number);
+    return scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
+  }).filter((v): v is number => v != null);
+  const avgOverall = overallScores.length ? overallScores.reduce((a, b) => a + b, 0) / overallScores.length : null;
+
   // 와인 종류 분포
   const typeCounts: Record<string, number> = {};
   all.forEach((r) => {
@@ -99,7 +106,7 @@ export default async function StatsPage() {
           {/* 요약 */}
           <div className="grid grid-cols-2 gap-3">
             <StatCard label="총 기록" value={`${total}번`} emoji="🍾" />
-            <StatCard label="평균 평점" value={avgRating ? avgRating.toFixed(1) : "-"} emoji="⭐" />
+            <StatCard label="종합 평점" value={avgOverall ? avgOverall.toFixed(1) : "-"} emoji="⭐" />
             {avgPrice && <StatCard label="평균 가격" value={`${avgPrice.toLocaleString()}원`} emoji="💰" />}
           </div>
 

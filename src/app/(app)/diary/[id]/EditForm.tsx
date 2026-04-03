@@ -43,7 +43,7 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
       rating,
       pairing_score: foods.length > 0 ? pairingScore : null,
       price: price ? parseInt(price) : null,
-      value_score: price ? valueScore : null,
+      value_score: valueScore,
       foods: foods.map((name) => ({ name })),
       visibility: (fd.get("visibility") as "private" | "link" | "public") || "private",
     });
@@ -107,14 +107,12 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
 
         <div className="relative">
           <input type="number" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)}
-            placeholder="구매 가격" className={iCls + " pr-8"} />
+            placeholder="구매 가격 (선택)" className={iCls + " pr-8"} />
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">원</span>
         </div>
-        {price && (
-          <StarRating label="가성비 만족도" emoji="💰" value={valueScore} max={5} step={0.5} onChange={setValueScore} />
-        )}
 
         <StarRating label="와인 평점" emoji="⭐" value={rating} max={5} step={0.5} onChange={setRating} />
+        <StarRating label="가성비 만족도" emoji="💰" value={valueScore} max={5} step={0.5} onChange={setValueScore} />
         {foods.length > 0 && (
           <StarRating label="음식 궁합" emoji="🍽️" value={pairingScore} max={5} step={1} onChange={setPairingScore} />
         )}

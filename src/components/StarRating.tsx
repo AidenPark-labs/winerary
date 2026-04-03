@@ -42,7 +42,7 @@ export default function StarRating({
           {value.toFixed(step < 1 ? 1 : 0)} / {max}
         </span>
       </div>
-      <div className="flex gap-1">
+      <div className="flex w-full">
         {stars.map((star) => {
           const filled = value >= star;
           const half = !filled && value >= star - 0.5;
@@ -51,20 +51,17 @@ export default function StarRating({
               key={star}
               type="button"
               onClick={(e) => handleTap(star, e)}
-              className="relative w-9 h-9 text-2xl select-none transition-transform active:scale-110"
+              className="relative flex-1 aspect-square text-3xl select-none transition-transform active:scale-110"
               aria-label={`${star}점`}
             >
-              {/* 빈 별 배경 */}
               <span className="absolute inset-0 flex items-center justify-center text-zinc-700">
                 ★
               </span>
-              {/* 채워진 별 */}
               {filled && (
                 <span className="absolute inset-0 flex items-center justify-center text-amber-400">
                   ★
                 </span>
               )}
-              {/* 반 별 */}
               {half && (
                 <span
                   className="absolute inset-0 flex items-center justify-center text-amber-400 overflow-hidden"

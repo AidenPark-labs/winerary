@@ -4,14 +4,16 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { WineSuggestion } from "@/types";
 import { createWineRecord } from "@/lib/actions/diary";
+import { createClient } from "@/lib/supabase/client";
 import LoadingOverlay from "@/components/LoadingOverlay";
 
+// 최대 1280px, JPEG 0.80 품질로 압축 (일반 모바일 사진 기준 ~300KB)
 async function compressImage(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
-      const MAX = 1920;
+      const MAX = 1280;
       let { width, height } = img;
       if (width > MAX || height > MAX) {
         const r = Math.min(MAX / width, MAX / height);
@@ -22,9 +24,9 @@ async function compressImage(file: File): Promise<Blob> {
       canvas.width = width; canvas.height = height;
       canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
       URL.revokeObjectURL(url);
-      canvas.toBlob((b) => (b ? resolve(b) : reject()), "image/jpeg", 0.88);
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob failed"))), "image/jpeg", 0.80);
     };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("image load failed")); };
     img.src = url;
   });
 }
@@ -94,6 +96,10 @@ export default function NewDiaryPage() {
     setPhotoUploading(true);
     setError(null);
 
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setError("로그인이 필요합니다."); setPhotoUploading(false); return; }
+
     let failCount = 0;
 
     for (const file of files) {
@@ -101,27 +107,29 @@ export default function NewDiaryPage() {
       setPhotoPreviews((p) => [...p, preview]);
 
       let blob: Blob;
-      try { blob = await compressImage(file); } catch { blob = file; }
-
-      const fd = new FormData();
-      fd.append("file", blob, "photo.jpg");
       try {
-        const res = await fetch("/api/upload", { method: "POST", body: fd });
-        const data = await res.json();
-        if (res.ok && data.url) {
-          setPhotos((p) => [...p, data.url]);
-        } else {
-          console.error("[photo upload] failed:", data.error);
-          failCount++;
-        }
-      } catch (err) {
-        console.error("[photo upload] network error:", err);
-        failCount++;
+        blob = await compressImage(file);
+      } catch {
+        blob = file;
       }
+
+      const path = `${user.id}/${Date.now()}.jpg`;
+      const { error: uploadError } = await supabase.storage
+        .from("labels")
+        .upload(path, blob, { contentType: "image/jpeg", upsert: true });
+
+      if (uploadError) {
+        console.error("[photo upload] storage error:", uploadError.message);
+        failCount++;
+        continue;
+      }
+
+      const { data: { publicUrl } } = supabase.storage.from("labels").getPublicUrl(path);
+      setPhotos((p) => [...p, publicUrl]);
     }
 
     if (failCount > 0) {
-      setError(`사진 ${failCount}장 업로드에 실패했습니다. 네트워크를 확인해 주세요.`);
+      setError(`사진 ${failCount}장 업로드에 실패했습니다. (오류: Storage 정책 확인 필요)`);
     }
     setPhotoUploading(false);
     e.target.value = "";

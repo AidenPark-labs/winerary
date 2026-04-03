@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { updateWineRecord } from "@/lib/actions/diary";
 import type { WineRecord } from "@/types";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import StarRating from "@/components/StarRating";
 
 const iCls = "w-full rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-zinc-100 focus:outline-none focus:border-rose-600 transition-colors text-sm";
 
@@ -19,6 +20,10 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
   const [success, setSuccess] = useState(false);
   const [foods, setFoods] = useState<string[]>((record.foods ?? []).map((f) => f.name));
   const [foodInput, setFoodInput] = useState("");
+  const [rating, setRating] = useState(record.rating ?? 3);
+  const [pairingScore, setPairingScore] = useState(record.pairing_score ?? 3);
+  const [price, setPrice] = useState(record.price != null ? String(record.price) : "");
+  const [valueScore, setValueScore] = useState(record.value_score ?? 3);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -35,8 +40,10 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
         ? (fd.get("companions") as string).split(",").map((s) => s.trim()).filter(Boolean)
         : null,
       memo: (fd.get("memo") as string) || null,
-      rating: parseFloat(fd.get("rating") as string),
-      pairing_score: foods.length > 0 ? parseInt(fd.get("pairing_score") as string) : null,
+      rating,
+      pairing_score: foods.length > 0 ? pairingScore : null,
+      price: price ? parseInt(price) : null,
+      value_score: price ? valueScore : null,
       foods: foods.map((name) => ({ name })),
       visibility: (fd.get("visibility") as "private" | "link" | "public") || "private",
     });
@@ -98,15 +105,18 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
           )}
         </div>
 
-        <label className="flex items-center gap-3 text-sm text-zinc-400">
-          <span className="w-20 flex-shrink-0">와인 평점</span>
-          <input type="range" name="rating" min="0.5" max="5" step="0.5" defaultValue={record.rating ?? 3} className="flex-1 accent-rose-600" />
-        </label>
+        <div className="relative">
+          <input type="number" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)}
+            placeholder="구매 가격" className={iCls + " pr-8"} />
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">원</span>
+        </div>
+        {price && (
+          <StarRating label="가성비 만족도" emoji="💰" value={valueScore} max={5} step={0.5} onChange={setValueScore} />
+        )}
+
+        <StarRating label="와인 평점" emoji="⭐" value={rating} max={5} step={0.5} onChange={setRating} />
         {foods.length > 0 && (
-          <label className="flex items-center gap-3 text-sm text-zinc-400">
-            <span className="w-20 flex-shrink-0">음식 궁합</span>
-            <input type="range" name="pairing_score" min="1" max="5" step="1" defaultValue={record.pairing_score ?? 3} className="flex-1 accent-amber-600" />
-          </label>
+          <StarRating label="음식 궁합" emoji="🍽️" value={pairingScore} max={5} step={1} onChange={setPairingScore} />
         )}
 
         <textarea name="memo" defaultValue={record.memo ?? ""} rows={3} placeholder="메모" className={iCls + " resize-none"} />

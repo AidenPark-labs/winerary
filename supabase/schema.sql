@@ -22,6 +22,8 @@ create table wine_records (
   pairing_score integer check (pairing_score between 1 and 5),
   rating numeric(3,1),
   foods jsonb default '[]',
+  price integer,
+  value_score numeric(3,1) check (value_score between 1 and 5),
   visibility text default 'private' check (visibility in ('private','link','public')),
   deleted_at timestamptz,
   created_at timestamptz default now(),

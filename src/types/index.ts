@@ -19,6 +19,8 @@ export interface WineRecord {
   memo: string | null
   pairing_score: number | null
   rating: number | null
+  price: number | null
+  value_score: number | null
   foods: FoodRecord[]
   visibility: Visibility
   deleted_at: string | null

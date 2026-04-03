@@ -11,6 +11,23 @@ const TYPE_KO: Record<string, string> = {
   sparkling: "스파클링 ✨", fortified: "주정강화 🏺", other: "기타",
 };
 
+function renderStars(score: number, max = 5) {
+  return Array.from({ length: max }, (_, i) => {
+    const star = i + 1;
+    const filled = score >= star;
+    const half = !filled && score >= star - 0.5;
+    return (
+      <span key={i} className="relative text-sm w-4 h-4 inline-flex items-center justify-center">
+        <span className="text-zinc-700">★</span>
+        {filled && <span className="absolute inset-0 flex items-center justify-center text-amber-400">★</span>}
+        {half && (
+          <span className="absolute inset-0 flex items-center justify-center text-amber-400 overflow-hidden" style={{ clipPath: "inset(0 50% 0 0)" }}>★</span>
+        )}
+      </span>
+    );
+  });
+}
+
 export default function DiaryDetail({ record, readOnly = false }: { record: WineRecord; readOnly?: boolean }) {
   const photos: string[] = record.photos ?? [];
   const foods: { name: string }[] = (record.foods as { name: string }[]) ?? [];
@@ -172,20 +189,40 @@ export default function DiaryDetail({ record, readOnly = false }: { record: Wine
           </div>
 
           {/* 평점 */}
-          {(record.rating || record.pairing_score) && (
-            <div className="flex gap-3">
+          {(record.rating || record.pairing_score || record.price != null) && (
+            <div className="grid grid-cols-2 gap-3">
               {record.rating && (
-                <div className="flex-1 flex flex-col items-center gap-1 py-4 rounded-2xl bg-white/5 border border-white/10">
+                <div className="flex flex-col items-center gap-1 py-4 rounded-2xl bg-white/5 border border-white/10">
                   <span className="text-2xl">⭐</span>
-                  <span className="text-2xl font-bold text-white">{Number(record.rating).toFixed(1)}</span>
-                  <span className="text-xs text-zinc-500">와인 평점</span>
+                  <div className="flex items-center gap-0.5">
+                    {renderStars(Number(record.rating))}
+                  </div>
+                  <span className="text-xs text-zinc-500">와인 평점 {Number(record.rating).toFixed(1)}</span>
                 </div>
               )}
               {record.pairing_score && (
-                <div className="flex-1 flex flex-col items-center gap-1 py-4 rounded-2xl bg-white/5 border border-white/10">
+                <div className="flex flex-col items-center gap-1 py-4 rounded-2xl bg-white/5 border border-white/10">
                   <span className="text-2xl">🍽️</span>
-                  <span className="text-2xl font-bold text-white">{record.pairing_score}<span className="text-base text-zinc-500">/5</span></span>
-                  <span className="text-xs text-zinc-500">음식 궁합</span>
+                  <div className="flex items-center gap-0.5">
+                    {renderStars(record.pairing_score)}
+                  </div>
+                  <span className="text-xs text-zinc-500">음식 궁합 {record.pairing_score}/5</span>
+                </div>
+              )}
+              {record.price != null && (
+                <div className="flex flex-col items-center gap-1 py-4 rounded-2xl bg-white/5 border border-white/10">
+                  <span className="text-2xl">💰</span>
+                  <span className="text-lg font-bold text-white">{record.price.toLocaleString()}원</span>
+                  <span className="text-xs text-zinc-500">구매 가격</span>
+                </div>
+              )}
+              {record.value_score && (
+                <div className="flex flex-col items-center gap-1 py-4 rounded-2xl bg-white/5 border border-white/10">
+                  <span className="text-2xl">✨</span>
+                  <div className="flex items-center gap-0.5">
+                    {renderStars(Number(record.value_score))}
+                  </div>
+                  <span className="text-xs text-zinc-500">가성비 {Number(record.value_score).toFixed(1)}</span>
                 </div>
               )}
             </div>

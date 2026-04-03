@@ -6,6 +6,7 @@ import { extractPhotoDate } from "@/lib/exif";
 import type { WineSuggestion, WineType } from "@/types";
 import { createWineRecord } from "@/lib/actions/diary";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import StarRating from "@/components/StarRating";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -196,6 +197,8 @@ export default function NewDiaryPage() {
   const [foods, setFoods] = useState<string[]>([]);
   const [rating, setRating] = useState(3);
   const [pairingScore, setPairingScore] = useState(3);
+  const [price, setPrice] = useState("");
+  const [valueScore, setValueScore] = useState(3);
   const [memo, setMemo] = useState("");
   const [visibility, setVisibility] = useState<"private" | "link" | "public">("private");
 
@@ -367,6 +370,8 @@ export default function NewDiaryPage() {
       foods: foods.map((name) => ({ name })),
       rating,
       pairing_score: foods.length > 0 ? pairingScore : null,
+      price: price ? parseInt(price) : null,
+      value_score: price ? valueScore : null,
       memo: memo || null,
       visibility,
     });
@@ -722,12 +727,31 @@ export default function NewDiaryPage() {
               )}
             </section>
 
+            {/* 가격 */}
+            <section className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">가격</h2>
+              <div className="relative">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="구매 가격"
+                  className={iCls + " pr-8"}
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">원</span>
+              </div>
+              {price && (
+                <StarRating label="가성비 만족도" emoji="💰" value={valueScore} max={5} step={0.5} onChange={setValueScore} />
+              )}
+            </section>
+
             {/* 평점 */}
             <section className="flex flex-col gap-4">
               <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">평점</h2>
-              <RatingSlider label="와인 평점" emoji="⭐" value={rating} max={5} step={0.5} onChange={setRating} />
+              <StarRating label="와인 평점" emoji="⭐" value={rating} max={5} step={0.5} onChange={setRating} />
               {foods.length > 0 && (
-                <RatingSlider label="음식 궁합" emoji="🍽️" value={pairingScore} max={5} step={1} onChange={setPairingScore} />
+                <StarRating label="음식 궁합" emoji="🍽️" value={pairingScore} max={5} step={1} onChange={setPairingScore} />
               )}
             </section>
 
@@ -759,19 +783,3 @@ export default function NewDiaryPage() {
   );
 }
 
-// ─── Rating Slider ────────────────────────────────────────────────────────────
-
-function RatingSlider({ label, emoji, value, max, step, onChange }: {
-  label: string; emoji: string; value: number; max: number; step: number; onChange: (v: number) => void;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-zinc-300">{emoji} {label}</span>
-        <span className="text-rose-400 font-semibold text-sm">{value.toFixed(step < 1 ? 1 : 0)} / {max}</span>
-      </div>
-      <input type="range" min={step} max={max} step={step} value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))} className="w-full accent-rose-600" />
-    </div>
-  );
-}

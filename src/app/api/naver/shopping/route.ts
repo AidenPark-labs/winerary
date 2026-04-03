@@ -48,11 +48,10 @@ export async function GET(request: Request) {
     }
 
     const data = await res.json();
-    const wineKeywords = ["와인", "wine", "레드", "화이트", "로제", "스파클링", "샴페인", "champagne"];
     const items = (data.items ?? [])
       .filter((item: NaverShoppingItem) => {
-        const text = (item.title + item.category1 + item.category2 + item.category3 + item.category4).toLowerCase();
-        return wineKeywords.some((kw) => text.includes(kw));
+        const cats = [item.category1, item.category2, item.category3, item.category4];
+        return cats.some((c) => c === "수입주류");
       })
       .map((item: NaverShoppingItem) => ({
         title: item.title.replace(/<\/?b>/g, ""),

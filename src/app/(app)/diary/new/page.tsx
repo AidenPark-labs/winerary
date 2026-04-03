@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { WineSuggestion, WineType } from "@/types";
 import { createWineRecord } from "@/lib/actions/diary";
 import LoadingOverlay from "@/components/LoadingOverlay";
@@ -61,6 +61,7 @@ const COUNTRY_OPTIONS = [
 
 export default function NewDiaryPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const [query, setQuery] = useState("");
@@ -96,6 +97,59 @@ export default function NewDiaryPage() {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 와인찾기에서 넘어온 경우 파라미터로 프리필
+  useEffect(() => {
+    const name = searchParams.get("name");
+    if (!name) return;
+
+    const nameOriginal = searchParams.get("name_original") || name;
+    const vivinoUrl = searchParams.get("vivino_url") ||
+      `https://www.vivino.com/search/wines?q=${encodeURIComponent(nameOriginal)}`;
+
+    const identified: WineSuggestion = {
+      name: nameOriginal,
+      name_ko: name,
+      producer: "",
+      country: searchParams.get("country") || "",
+      type: searchParams.get("wine_type") || "",
+      grapes: searchParams.get("grape") || "",
+      vintage_range: "",
+      vivino_url: vivinoUrl,
+    };
+
+    setQuery(name);
+    setSelectedWine(identified);
+    setWineNameOriginal(nameOriginal);
+
+    // 빈티지
+    const vintage = searchParams.get("vintage");
+    if (vintage) setWineVintage(vintage);
+
+    // 와인 종류
+    const typeMap: Record<string, WineType> = {
+      red: "red", white: "white", rose: "rose",
+      sparkling: "sparkling", fortified: "fortified", other: "other",
+    };
+    const wt = searchParams.get("wine_type");
+    if (wt) setWineType(typeMap[wt] ?? "");
+
+    // 품종
+    const grapeParam = searchParams.get("grape");
+    if (grapeParam) {
+      const match = GRAPE_OPTIONS.find((g) => grapeParam.includes(g));
+      if (match) setGrape(match);
+      else { setGrape("__custom__"); setGrapeCustom(grapeParam); }
+    }
+
+    // 생산국
+    const countryParam = searchParams.get("country");
+    if (countryParam) {
+      const match = COUNTRY_OPTIONS.find((c) => countryParam.includes(c));
+      if (match) setCountry(match);
+      else { setCountry("__custom__"); setCountryCustom(countryParam); }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSearch(e?: React.SyntheticEvent) {
     e?.preventDefault();
@@ -252,6 +306,9 @@ export default function NewDiaryPage() {
           {/* ── 와인 검색 ── */}
           <section className="flex flex-col gap-3">
             <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">와인 선택 *</h2>
+            {searchParams.get("name") && !selectedWine && (
+              <p className="text-xs text-zinc-500 px-1">와인찾기 결과가 적용됐습니다. 아래에서 확인하세요.</p>
+            )}
             <div className="flex gap-2">
               <input
                 value={query}

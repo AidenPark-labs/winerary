@@ -8,7 +8,7 @@ const tabs = [
   { href: "/find", label: "와인검색", icon: "🔍" },
   { href: "/recommend", label: "와인추천", icon: "🍷" },
   { href: "/profile/wishlist", label: "내 와인", icon: "❤️" },
-  { href: "/profile", label: "나의 와인", icon: "👤" },
+  { href: "/profile", label: "마이페이지", icon: "👤" },
 ];
 
 export default function BottomNav() {

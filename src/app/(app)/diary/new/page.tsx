@@ -92,12 +92,14 @@ export default function NewDiaryPage() {
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
     setPhotoUploading(true);
+    setError(null);
 
-    const newPreviews: string[] = [];
-    const newUrls: string[] = [];
+    let failCount = 0;
 
     for (const file of files) {
-      newPreviews.push(URL.createObjectURL(file));
+      const preview = URL.createObjectURL(file);
+      setPhotoPreviews((p) => [...p, preview]);
+
       let blob: Blob;
       try { blob = await compressImage(file); } catch { blob = file; }
 
@@ -105,15 +107,22 @@ export default function NewDiaryPage() {
       fd.append("file", blob, "photo.jpg");
       try {
         const res = await fetch("/api/upload", { method: "POST", body: fd });
-        if (res.ok) {
-          const { url } = await res.json();
-          if (url) newUrls.push(url);
+        const data = await res.json();
+        if (res.ok && data.url) {
+          setPhotos((p) => [...p, data.url]);
+        } else {
+          console.error("[photo upload] failed:", data.error);
+          failCount++;
         }
-      } catch { /* keep going */ }
+      } catch (err) {
+        console.error("[photo upload] network error:", err);
+        failCount++;
+      }
     }
 
-    setPhotoPreviews((p) => [...p, ...newPreviews]);
-    setPhotos((p) => [...p, ...newUrls]);
+    if (failCount > 0) {
+      setError(`사진 ${failCount}장 업로드에 실패했습니다. 네트워크를 확인해 주세요.`);
+    }
     setPhotoUploading(false);
     e.target.value = "";
   }

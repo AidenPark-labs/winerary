@@ -20,8 +20,12 @@ export async function POST(request: Request) {
     .from("labels")
     .upload(path, arrayBuffer, { contentType: file.type || "image/jpeg", upsert: true });
 
-  if (error) return Response.json({ error: `이미지 업로드 실패: ${error.message}` }, { status: 500 });
+  if (error) {
+    console.error("[upload] storage error:", error.message);
+    return Response.json({ error: `이미지 업로드 실패: ${error.message}` }, { status: 500 });
+  }
 
   const { data: { publicUrl } } = supabase.storage.from("labels").getPublicUrl(path);
+  console.log("[upload] success:", publicUrl);
   return Response.json({ url: publicUrl });
 }

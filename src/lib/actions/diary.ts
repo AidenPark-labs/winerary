@@ -16,7 +16,10 @@ export async function createWineRecord(data: Partial<WineRecord>) {
     .select()
     .single();
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("[createWineRecord] error:", error.message, "data keys:", Object.keys(data));
+    return { error: error.message };
+  }
   redirect(`/diary/${record.id}`);
 }
 

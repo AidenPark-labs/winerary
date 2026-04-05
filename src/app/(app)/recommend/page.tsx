@@ -181,24 +181,10 @@ export default function RecommendPage() {
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [toast, setToast] = useState(false);
-  const [inputBottom, setInputBottom] = useState(80); // BottomNav 높이만큼 기본 오프셋
   const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLDivElement>(null);
+  const scrollEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const initRef = useRef(false);
-
-  // 모바일 키보드 대응: visualViewport 리사이즈 감지
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    function onResize() {
-      const vv = window.visualViewport!;
-      const keyboardHeight = window.innerHeight - vv.height;
-      // 키보드가 올라오면 BottomNav(80px) 대신 키보드 높이만큼 올림
-      setInputBottom(keyboardHeight > 0 ? keyboardHeight : 80);
-    }
-    vv.addEventListener("resize", onResize);
-    return () => vv.removeEventListener("resize", onResize);
-  }, []);
 
   // 위시리스트 로드 + 로그인 후 대기 액션 실행
   useEffect(() => {
@@ -230,9 +216,10 @@ export default function RecommendPage() {
     startChat([]);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // 메시지 변경 시 항상 맨 아래로 스크롤 (스트리밍 포함)
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, inputBottom]);
+    scrollEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const saveWine = useCallback(async (nameKo: string, nameEn: string) => {
     const res = await fetch("/api/wishlist", {
@@ -359,7 +346,7 @@ export default function RecommendPage() {
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="flex flex-col" style={{ height: "100dvh" }}>
       {showAuthPrompt && <AuthPrompt message="와인을 저장하려면 로그인이 필요합니다" returnUrl="/recommend" />}
       <Toast message="내 와인에 추가되었어요!" visible={toast} onHide={() => setToast(false)} />
       {/* 헤더 */}
@@ -399,7 +386,9 @@ export default function RecommendPage() {
       ) : (
         <>
           {/* 채팅 영역 */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 flex flex-col gap-3" style={{ paddingBottom: `${inputBottom + 60}px` }}>
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 flex flex-col gap-3">
+            {/* 메시지가 적을 때 아래로 밀어주는 스페이서 */}
+            <div className="flex-1" />
             {messages.map((msg, i) => (
               <div
                 key={i}
@@ -425,15 +414,18 @@ export default function RecommendPage() {
                 </div>
               </div>
             ))}
+            <div ref={scrollEndRef} />
           </div>
 
           {/* 입력 영역 */}
-          <div ref={inputRef} className="fixed left-0 right-0 px-4 pt-2 pb-3 bg-zinc-950 border-t border-zinc-800 z-30 transition-[bottom] duration-150" style={{ bottom: `${inputBottom}px` }}>
+          <div className="flex-shrink-0 px-4 pt-2 pb-2 bg-zinc-950 border-t border-zinc-800">
             <div className="flex items-end gap-2">
               <textarea
+                ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onFocus={() => setTimeout(() => scrollEndRef.current?.scrollIntoView({ behavior: "smooth" }), 300)}
                 placeholder="메시지를 입력하세요..."
                 rows={1}
                 className="flex-1 rounded-2xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-zinc-100 text-sm resize-none focus:outline-none focus:border-rose-600 transition-colors max-h-28"

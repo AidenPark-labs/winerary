@@ -28,6 +28,8 @@ interface WineResult {
   db_match?: boolean;
   db_price?: number;
   db_image?: string;
+  vivino_rating?: number;
+  vivino_reviews?: number;
 }
 
 interface ShoppingItem {
@@ -59,6 +61,8 @@ interface DbWine {
   naver_link: string | null;
   naver_image: string | null;
   vivino_url: string | null;
+  vivino_rating: number | null;
+  vivino_reviews: number | null;
 }
 
 function notNull(v: string | null | undefined): string | null {
@@ -162,6 +166,8 @@ export default function FindPage() {
       producer: wine.producer ?? undefined,
       description: wine.description ?? undefined,
       vivino_url: wine.vivino_url ?? (wine.name_en ? `https://www.vivino.com/search/wines?q=${encodeURIComponent(wine.name_en)}` : undefined),
+      vivino_rating: wine.vivino_rating ?? undefined,
+      vivino_reviews: wine.vivino_reviews ?? undefined,
       db_match: true,
       db_price: wine.price ?? undefined,
       db_image: wine.naver_image ?? undefined,
@@ -345,8 +351,9 @@ export default function FindPage() {
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-white text-sm truncate">{wine.name_ko}</p>
                     {wine.name_en && <p className="text-xs text-zinc-500 mt-0.5 truncate">{wine.name_en}</p>}
-                    <div className="flex items-center gap-3 mt-1.5 text-xs text-zinc-400">
+                    <div className="flex items-center gap-2.5 mt-1.5 text-xs text-zinc-400">
                       {wine.price && <span className="text-emerald-400 font-semibold">{wine.price.toLocaleString()}원</span>}
+                      {wine.vivino_rating && <span className="text-purple-300">★ {wine.vivino_rating}</span>}
                       {wine.wine_type && <span>{TYPE_KO[wine.wine_type] ?? wine.wine_type}</span>}
                       {wine.country && <span>{wine.country}</span>}
                     </div>
@@ -545,12 +552,25 @@ export default function FindPage() {
                   </div>
                 )}
 
-                {/* Vivino 링크 */}
-                {result.vivino_url && (
-                  <a href={result.vivino_url} target="_blank" rel="noopener noreferrer"
-                    className="self-start flex items-center gap-2 px-4 py-2 rounded-full border border-rose-800/60 bg-rose-950/30 text-rose-300 text-sm hover:bg-rose-900/40 transition-colors">
-                    🍇 Vivino에서 더 보기 →
-                  </a>
+                {/* Vivino 별점 + 링크 */}
+                {(result.vivino_rating || result.vivino_url) && (
+                  <div className="flex items-center gap-3">
+                    {result.vivino_rating && (
+                      <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-950/30 border border-purple-800/40">
+                        <span className="text-purple-300 text-sm font-bold">★ {result.vivino_rating.toFixed(1)}</span>
+                        {result.vivino_reviews && (
+                          <span className="text-purple-400/60 text-xs">({result.vivino_reviews.toLocaleString()})</span>
+                        )}
+                        <span className="text-purple-400/40 text-xs ml-0.5">Vivino</span>
+                      </div>
+                    )}
+                    {result.vivino_url && (
+                      <a href={result.vivino_url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-1 px-3 py-2 rounded-xl border border-rose-800/60 bg-rose-950/30 text-rose-300 text-xs hover:bg-rose-900/40 transition-colors">
+                        Vivino에서 보기 →
+                      </a>
+                    )}
+                  </div>
                 )}
               </div>
 

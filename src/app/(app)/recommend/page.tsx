@@ -346,7 +346,7 @@ export default function RecommendPage() {
   }
 
   return (
-    <div className="flex flex-col" style={{ height: "100dvh" }}>
+    <div className="flex flex-col" style={{ height: "calc(100dvh - 5rem)" }}>
       {showAuthPrompt && <AuthPrompt message="와인을 저장하려면 로그인이 필요합니다" returnUrl="/recommend" />}
       <Toast message="내 와인에 추가되었어요!" visible={toast} onHide={() => setToast(false)} />
       {/* 헤더 */}

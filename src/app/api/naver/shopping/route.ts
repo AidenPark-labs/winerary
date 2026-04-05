@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 
   try {
     const res = await fetch(
-      `https://openapi.naver.com/v1/search/shop.json?query=${encodeURIComponent(query)}&display=10&sort=sim`,
+      `https://openapi.naver.com/v1/search/shop.json?query=${encodeURIComponent(`"${query}"`)}&display=10&sort=sim&exclude=used:cbshop`,
       {
         headers: {
           "X-Naver-Client-Id": clientId,

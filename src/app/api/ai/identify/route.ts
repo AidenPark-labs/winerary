@@ -55,10 +55,16 @@ export async function POST(request: Request) {
   const base64 = Buffer.from(arrayBuffer).toString("base64");
   const mediaType = (file.type || "image/jpeg") as "image/jpeg" | "image/png" | "image/webp" | "image/gif";
 
-  const prompt = `사진에서 와인 라벨의 텍스트를 읽고, 와인 이름을 추출하세요.
+  const prompt = `이 사진에서 와인병이나 와인 라벨을 찾아 텍스트를 읽고, 와인 이름을 추출하세요.
+
+라벨 인식 우선순위:
+1. 사진에 여러 물체가 있더라도 와인병/와인 라벨에 집중하세요
+2. 라벨에 적힌 와인 이름, 생산자, 빈티지, 지역명을 우선적으로 읽으세요
+3. 배경, 테이블, 음식, 사람 등 와인이 아닌 요소는 무시하세요
+4. 라벨이 일부만 보이더라도 읽을 수 있는 텍스트로 와인을 식별하세요
+
 와인 라벨이 없거나 와인이 아닌 경우 {"error": "와인 라벨을 인식하지 못했습니다"} 만 반환하세요.
 
-중요: 사진의 시각적 요소(색상, 배경, 분위기 등)를 해석하지 마세요.
 라벨에서 와인 이름을 추출한 뒤, 해당 와인에 대해 알고 있는 지식을 바탕으로 정보를 작성하세요.
 description과 food_pairing은 사진이 아닌, 해당 와인 자체의 알려진 특징을 기반으로 작성하세요.
 

@@ -107,6 +107,11 @@ export default function FindPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<DbWine[]>([]);
   const [searching, setSearching] = useState(false);
+  // 줌/패닝 상태
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const imgContainerRef = useRef<HTMLDivElement>(null);
+  const touchRef = useRef<{ dist: number; cx: number; cy: number; px: number; py: number; z: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const fileBlob = useRef<Blob | null>(null);
@@ -139,6 +144,91 @@ export default function FindPage() {
     }
     runPending();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 핀치 줌/패닝 터치 핸들러
+  function handleTouchStart(e: React.TouchEvent) {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      touchRef.current = {
+        dist: Math.hypot(dx, dy),
+        cx: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+        cy: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+        px: pan.x, py: pan.y, z: zoom,
+      };
+    } else if (e.touches.length === 1 && zoom > 1) {
+      touchRef.current = {
+        dist: 0,
+        cx: e.touches[0].clientX, cy: e.touches[0].clientY,
+        px: pan.x, py: pan.y, z: zoom,
+      };
+    }
+  }
+
+  function handleTouchMove(e: React.TouchEvent) {
+    if (!touchRef.current) return;
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const newDist = Math.hypot(dx, dy);
+      const scale = Math.min(Math.max(touchRef.current.z * (newDist / touchRef.current.dist), 1), 5);
+      setZoom(scale);
+      if (scale === 1) setPan({ x: 0, y: 0 });
+    } else if (e.touches.length === 1 && zoom > 1) {
+      const dx = e.touches[0].clientX - touchRef.current.cx;
+      const dy = e.touches[0].clientY - touchRef.current.cy;
+      setPan({ x: touchRef.current.px + dx, y: touchRef.current.py + dy });
+    }
+  }
+
+  function handleTouchEnd() {
+    touchRef.current = null;
+  }
+
+  // 확대된 영역만 크롭하여 Blob 반환
+  function cropVisibleArea(): Promise<Blob> {
+    return new Promise((resolve) => {
+      if (!fileBlob.current || zoom <= 1) {
+        resolve(fileBlob.current!);
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        const container = imgContainerRef.current;
+        if (!container) { resolve(fileBlob.current!); return; }
+
+        const cw = container.clientWidth;
+        const ch = container.clientHeight;
+        // 이미지가 object-contain으로 표시된 실제 크기 계산
+        const imgRatio = img.width / img.height;
+        const containerRatio = cw / ch;
+        let displayW: number, displayH: number;
+        if (imgRatio > containerRatio) {
+          displayW = cw; displayH = cw / imgRatio;
+        } else {
+          displayH = ch; displayW = ch * imgRatio;
+        }
+
+        // 보이는 영역의 이미지 좌표 계산
+        const scale = img.width / (displayW * zoom);
+        const offsetX = ((cw / 2 - pan.x) - displayW * zoom / 2) * (img.width / (displayW * zoom));
+        const offsetY = ((ch / 2 - pan.y) - displayH * zoom / 2) * (img.height / (displayH * zoom));
+        const cropW = cw * scale;
+        const cropH = ch * scale;
+
+        const sx = Math.max(0, Math.min(offsetX, img.width - cropW));
+        const sy = Math.max(0, Math.min(offsetY, img.height - cropH));
+
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.min(cropW, img.width);
+        canvas.height = Math.min(cropH, img.height);
+        canvas.getContext("2d")!.drawImage(img, sx, sy, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => resolve(blob!), "image/jpeg", 0.9);
+      };
+      img.src = URL.createObjectURL(fileBlob.current!);
+    });
+  }
 
   async function handleTextSearch() {
     const q = searchQuery.trim();
@@ -192,8 +282,10 @@ export default function FindPage() {
     if (!fileBlob.current) return;
     setStep("analyzing");
 
+    // 줌이 적용된 경우 보이는 영역만 크롭
+    const imageBlob = zoom > 1 ? await cropVisibleArea() : fileBlob.current;
     const fd = new FormData();
-    fd.append("file", fileBlob.current, "wine.jpg");
+    fd.append("file", imageBlob, "wine.jpg");
 
     try {
       const res = await fetch("/api/ai/identify", { method: "POST", body: fd });
@@ -237,6 +329,8 @@ export default function FindPage() {
     setWishSaved(false);
     setWishSaving(false);
     setSearchResults([]);
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
     fileBlob.current = null;
     photoDateRef.current = null;
   }
@@ -422,20 +516,47 @@ export default function FindPage() {
         </div>
       )}
 
-      {/* ── 미리보기 ── */}
+      {/* ── 미리보기 (핀치 줌/패닝 지원) ── */}
       {step === "preview" && previewUrl && (
-        <div className="flex flex-col flex-1 px-4 pb-28 gap-4">
-          <div className="relative rounded-2xl overflow-hidden flex-1 bg-zinc-900 min-h-0">
-            <img src={previewUrl} alt="선택한 사진" className="w-full h-full object-contain" />
+        <div className="flex flex-col flex-1 px-4 pb-28 gap-3">
+          <div
+            ref={imgContainerRef}
+            className="relative rounded-2xl overflow-hidden flex-1 bg-zinc-900 min-h-0 touch-none"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <img
+              src={previewUrl}
+              alt="선택한 사진"
+              className="w-full h-full object-contain transition-transform duration-75"
+              style={{ transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)` }}
+              draggable={false}
+            />
+            {zoom <= 1 && (
+              <div className="absolute bottom-3 left-0 right-0 flex justify-center">
+                <span className="px-3 py-1.5 rounded-full bg-black/60 text-zinc-300 text-xs">
+                  두 손가락으로 확대하여 라벨에 집중하세요
+                </span>
+              </div>
+            )}
+            {zoom > 1 && (
+              <button
+                onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
+                className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/60 text-zinc-300 text-xs"
+              >
+                원본 보기
+              </button>
+            )}
           </div>
           <div className="flex gap-3 flex-shrink-0">
-            <button onClick={reset}
+            <button onClick={() => { reset(); setZoom(1); setPan({ x: 0, y: 0 }); }}
               className="flex-1 py-3.5 rounded-2xl border border-zinc-700 text-zinc-300 font-medium active:scale-95 transition-all">
               다시 선택
             </button>
             <button onClick={analyze}
-              className="flex-2 flex-[2] py-3.5 rounded-2xl bg-rose-700 hover:bg-rose-600 active:scale-95 transition-all text-white font-semibold">
-              🤖 AI로 분석하기
+              className="flex-[2] py-3.5 rounded-2xl bg-rose-700 hover:bg-rose-600 active:scale-95 transition-all text-white font-semibold">
+              {zoom > 1 ? "🔍 선택 영역 분석하기" : "🤖 AI로 분석하기"}
             </button>
           </div>
         </div>

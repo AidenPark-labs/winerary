@@ -97,6 +97,7 @@ export default function FindPage() {
   const [recording, setRecording] = useState(false);
   const [shopItems, setShopItems] = useState<ShoppingItem[]>([]);
   const [shopLoading, setShopLoading] = useState(false);
+  const [shopPriceRange, setShopPriceRange] = useState<{ min: number; max: number } | null>(null);
   const [wishSaved, setWishSaved] = useState(false);
   const [wishSaving, setWishSaving] = useState(false);
   const [toast, setToast] = useState(false);
@@ -213,10 +214,12 @@ export default function FindPage() {
   async function searchShopping(query: string) {
     setShopLoading(true);
     setShopItems([]);
+    setShopPriceRange(null);
     try {
       const res = await fetch(`/api/naver/shopping?q=${encodeURIComponent(query)}`);
       const data = await res.json();
       setShopItems(data.items ?? []);
+      setShopPriceRange(data.priceRange ?? null);
     } catch {
       // 쇼핑 검색 실패해도 무시
     } finally {
@@ -230,6 +233,7 @@ export default function FindPage() {
     setResult(null);
     setShopItems([]);
     setShopLoading(false);
+    setShopPriceRange(null);
     setWishSaved(false);
     setWishSaving(false);
     setSearchResults([]);
@@ -519,30 +523,37 @@ export default function FindPage() {
                 )}
 
                 {/* 가격 & 페어링 */}
-                {(result.db_price || shopItems.length > 0 || shopLoading || result.food_pairing) && (
+                {(shopItems.length > 0 || shopLoading || result.food_pairing) && (
                   <div className="flex flex-col gap-2 p-3 rounded-xl bg-white/5">
-                    {result.db_match && result.db_price && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">✅</span>
-                        <span className="text-sm text-zinc-300">한국 판매가 <span className="font-semibold text-emerald-400">{result.db_price.toLocaleString()}원</span></span>
-                        <span className="text-[10px] text-zinc-600 bg-zinc-800 px-1.5 py-0.5 rounded">DB 확인</span>
-                      </div>
-                    )}
                     {shopLoading && (
                       <div className="flex items-center gap-2">
                         <span className="text-sm">💰</span>
-                        <span className="text-sm text-zinc-500">최저가 검색 중…</span>
+                        <span className="text-sm text-zinc-500">가격 검색 중… (750ml 기준)</span>
                       </div>
                     )}
-                    {!shopLoading && shopItems.length > 0 && (() => {
-                      const minPrice = Math.min(...shopItems.filter(i => i.lprice).map(i => i.lprice!));
+                    {!shopLoading && shopPriceRange && (() => {
+                      const { min, max } = shopPriceRange;
+                      const isSame = min === max;
                       return (
                         <div className="flex items-center gap-2">
                           <span className="text-sm">💰</span>
-                          <span className="text-sm text-zinc-300">네이버 최저가 <span className="font-semibold text-emerald-400">{minPrice.toLocaleString()}원</span></span>
+                          <span className="text-sm text-zinc-300">
+                            {isSame ? (
+                              <>네이버 최저가 <span className="font-semibold text-emerald-400">{min.toLocaleString()}원</span></>
+                            ) : (
+                              <>판매가 <span className="font-semibold text-emerald-400">{min.toLocaleString()}~{max.toLocaleString()}원</span></>
+                            )}
+                          </span>
+                          <span className="text-[10px] text-zinc-600">750ml</span>
                         </div>
                       );
                     })()}
+                    {!shopLoading && !shopPriceRange && shopItems.length === 0 && result.db_price && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">💰</span>
+                        <span className="text-sm text-zinc-300">참고가 <span className="font-semibold text-emerald-400">{result.db_price.toLocaleString()}원</span></span>
+                      </div>
+                    )}
                     {result.food_pairing && (
                       <div className="flex items-start gap-2">
                         <span className="text-sm mt-0.5">🍽️</span>

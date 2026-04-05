@@ -14,6 +14,9 @@ interface NaverShoppingItem {
   category4: string;
 }
 
+// 750ml가 아닌 용량 패턴 (187ml, 375ml, 1L, 1.5L, 3L, 미니, 하프, 매그넘, 세트 등)
+const NON_STANDARD_VOLUME = /187\s*ml|375\s*ml|200\s*ml|250\s*ml|500\s*ml|1[.,]5\s*[lL]|1000\s*ml|3\s*[lL]|5\s*[lL]|미니|하프|매그넘|세트|묶음|박스|[2-9]\s*병/i;
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
@@ -27,7 +30,7 @@ export async function GET(request: Request) {
 
   try {
     const res = await fetch(
-      `https://openapi.naver.com/v1/search/shop.json?query=${encodeURIComponent(`"${query}"`)}&display=10&sort=sim&exclude=used:cbshop`,
+      `https://openapi.naver.com/v1/search/shop.json?query=${encodeURIComponent(`"${query}"`)}&display=20&sort=sim&exclude=used:cbshop`,
       {
         headers: {
           "X-Naver-Client-Id": clientId,
@@ -42,7 +45,7 @@ export async function GET(request: Request) {
     }
 
     const data = await res.json();
-    const items = (data.items ?? [])
+    const allItems = (data.items ?? [])
       .filter((item: NaverShoppingItem) => {
         const cats = [item.category1, item.category2, item.category3, item.category4];
         return cats.some((c) => c === "수입와인");
@@ -61,7 +64,24 @@ export async function GET(request: Request) {
           .join(" > "),
       }));
 
-    return Response.json({ items });
+    // 750ml 기준 필터링 (비표준 용량 제외)
+    const standardItems = allItems.filter(
+      (item: { title: string }) => !NON_STANDARD_VOLUME.test(item.title)
+    );
+
+    // 750ml 기준 상품이 있으면 그것만, 없으면 전체
+    const items = standardItems.length > 0 ? standardItems : allItems;
+
+    // 가격 범위 계산
+    const prices = items
+      .map((i: { lprice: number | null }) => i.lprice)
+      .filter((p: number | null): p is number => p != null && p > 0);
+
+    const priceRange = prices.length > 0
+      ? { min: Math.min(...prices), max: Math.max(...prices) }
+      : null;
+
+    return Response.json({ items: items.slice(0, 10), priceRange });
   } catch (e) {
     console.error("[naver/shopping] error:", e);
     return Response.json({ error: "네이버 쇼핑 검색 중 오류가 발생했습니다" }, { status: 500 });

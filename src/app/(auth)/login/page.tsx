@@ -1,11 +1,19 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { login } from "@/lib/actions/auth";
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const [state, action, pending] = useActionState(login, undefined);
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get("returnUrl") ?? "";

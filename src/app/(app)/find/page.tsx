@@ -27,6 +27,7 @@ interface WineResult {
   error?: string;
   db_match?: boolean;
   db_price?: number;
+  db_image?: string;
 }
 
 interface ShoppingItem {
@@ -53,9 +54,11 @@ interface DbWine {
   region: string | null;
   grape_variety: string | null;
   producer: string | null;
+  description: string | null;
   price: number | null;
   naver_link: string | null;
   naver_image: string | null;
+  vivino_url: string | null;
 }
 
 function notNull(v: string | null | undefined): string | null {
@@ -157,10 +160,13 @@ export default function FindPage() {
       region: wine.region ?? undefined,
       grape_variety: wine.grape_variety,
       producer: wine.producer ?? undefined,
-      vivino_url: wine.name_en ? `https://www.vivino.com/search/wines?q=${encodeURIComponent(wine.name_en)}` : undefined,
+      description: wine.description ?? undefined,
+      vivino_url: wine.vivino_url ?? (wine.name_en ? `https://www.vivino.com/search/wines?q=${encodeURIComponent(wine.name_en)}` : undefined),
       db_match: true,
       db_price: wine.price ?? undefined,
+      db_image: wine.naver_image ?? undefined,
     });
+    setPreviewUrl(wine.naver_image ?? null);
     setStep("result");
     // 네이버 쇼핑 검색도 실행
     if (wine.name_ko) searchShopping(wine.name_ko);
@@ -331,15 +337,19 @@ export default function FindPage() {
                 <button
                   key={wine.id}
                   onClick={() => selectDbWine(wine)}
-                  className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 text-left hover:border-zinc-600 transition-colors"
+                  className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-900 border border-zinc-800 text-left hover:border-zinc-600 transition-colors"
                 >
-                  <p className="font-semibold text-white text-sm">{wine.name_ko}</p>
-                  {wine.name_en && <p className="text-xs text-zinc-500 mt-0.5">{wine.name_en}</p>}
-                  <div className="flex items-center gap-3 mt-2 text-xs text-zinc-400">
-                    {wine.price && <span className="text-emerald-400 font-semibold">{wine.price.toLocaleString()}원</span>}
-                    {wine.wine_type && <span>{TYPE_KO[wine.wine_type] ?? wine.wine_type}</span>}
-                    {wine.country && <span>{wine.country}</span>}
-                    {wine.grape_variety && <span>{wine.grape_variety}</span>}
+                  {wine.naver_image && (
+                    <img src={wine.naver_image} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-zinc-800" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-white text-sm truncate">{wine.name_ko}</p>
+                    {wine.name_en && <p className="text-xs text-zinc-500 mt-0.5 truncate">{wine.name_en}</p>}
+                    <div className="flex items-center gap-3 mt-1.5 text-xs text-zinc-400">
+                      {wine.price && <span className="text-emerald-400 font-semibold">{wine.price.toLocaleString()}원</span>}
+                      {wine.wine_type && <span>{TYPE_KO[wine.wine_type] ?? wine.wine_type}</span>}
+                      {wine.country && <span>{wine.country}</span>}
+                    </div>
                   </div>
                 </button>
               ))}

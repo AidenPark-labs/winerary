@@ -16,7 +16,7 @@ export async function GET(request: Request) {
 
   const { data } = await supabase
     .from("wines")
-    .select("id, name_ko, name_en, wine_type, country, region, grape_variety, producer, price, naver_link, naver_image")
+    .select("id, name_ko, name_en, wine_type, country, region, grape_variety, producer, description, price, naver_link, naver_image, vivino_url")
     .or([
       `name_ko.ilike.${exact}`,
       `name_en.ilike.${exact}`,

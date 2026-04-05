@@ -514,7 +514,7 @@ export default function FindPage() {
                 </div>
 
                 {/* 설명 */}
-                {result.description && (
+                {result.description && !/예상됩니다|것으로 보입니다|추정됩니다|부족하|알 수 없|명확한 정보|정보가 제한/.test(result.description) && (
                   <p className="text-sm text-zinc-300 leading-relaxed">{result.description}</p>
                 )}
 

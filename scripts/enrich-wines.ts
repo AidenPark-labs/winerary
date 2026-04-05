@@ -43,9 +43,15 @@ async function fetchWinesWithoutDescription(offset: number, limit: number): Prom
 async function generateDescriptions(wines: Wine[]): Promise<Record<string, string>> {
   const prompt = `다음 와인 목록에 대해 각각 한국어로 1~2문장의 간결한 설명을 작성하세요.
 설명에는 맛의 특징, 향, 바디감, 어울리는 음식 등을 포함하세요.
-와인의 이름, 품종, 국가, 타입 정보를 기반으로 해당 와인의 일반적 특징을 설명하세요.
+해당 와인에 대해 확실히 아는 정보만 작성하세요.
 
-반드시 JSON 객체만 응답하세요. 키는 와인 ID, 값은 설명 문자열입니다.
+중요 규칙:
+- 와인에 대해 구체적인 정보를 모르면 해당 ID의 값을 null로 설정하세요
+- "예상됩니다", "것으로 보입니다", "추정됩니다", "일 수 있습니다" 같은 추측성 표현은 절대 사용하지 마세요
+- "정보가 부족", "알 수 없" 같은 면책 문구도 사용하지 마세요
+- 확실한 정보만 단정적으로 서술하세요 (예: "체리와 자두의 풍미가 돋보이는 미디엄 바디 레드 와인입니다")
+
+반드시 JSON 객체만 응답하세요. 키는 와인 ID, 값은 설명 문자열 또는 null입니다.
 
 와인 목록:
 ${wines.map((w) => `- ID: ${w.id} | ${w.name_ko} | ${w.name_en ?? ""} | 타입: ${w.wine_type ?? "?"} | 국가: ${w.country ?? "?"} | 품종: ${w.grape_variety ?? "?"} | 생산자: ${w.producer ?? "?"}`).join("\n")}`;

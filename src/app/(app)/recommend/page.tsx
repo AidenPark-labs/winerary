@@ -23,11 +23,12 @@ interface WishlistItem {
 
 // ─── WineCard ────────────────────────────────────────────────────────────────
 
-function WineCard({ nameKo, nameEn, onSave, onAuthNeeded }: {
+function WineCard({ nameKo, nameEn, onSave, onAuthNeeded, priceRange }: {
   nameKo: string;
   nameEn: string;
   onSave: (nameKo: string, nameEn: string) => Promise<void>;
   onAuthNeeded: () => void;
+  priceRange?: { min: number; max: number } | null;
 }) {
   const [price, setPrice] = useState<number | null>(null);
   const [status, setStatus] = useState<"loading" | "found" | "notfound">("loading");
@@ -76,7 +77,12 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded }: {
       <span className="block mt-1.5 text-xs">
         {status === "loading" && <span className="text-zinc-500">가격 확인 중…</span>}
         {status === "found" && price && (
-          <span className="text-emerald-400 font-semibold">네이버 최저가 {price.toLocaleString()}원</span>
+          <>
+            <span className="text-emerald-400 font-semibold">네이버 최저가 {price.toLocaleString()}원</span>
+            {priceRange && (price < priceRange.min || price > priceRange.max) && (
+              <span className="block mt-1 text-amber-400">⚠ 요청하신 가격대({(priceRange.min / 10000).toFixed(0)}~{(priceRange.max / 10000).toFixed(0)}만원)와 다를 수 있어요</span>
+            )}
+          </>
         )}
         {status === "notfound" && <span className="text-zinc-500">네이버 쇼핑 검색결과 없음</span>}
       </span>
@@ -243,15 +249,37 @@ export default function RecommendPage() {
     setWishlist((prev) => prev.filter((w) => w.id !== id));
   }
 
+  // 대화에서 사용자가 언급한 가격대 추출
+  function extractPriceRange(): { min: number; max: number } | null {
+    const userMessages = messages.filter((m) => m.role === "user").map((m) => m.content);
+    for (let i = userMessages.length - 1; i >= 0; i--) {
+      const text = userMessages[i];
+      // "3만원대" → 30000~39999
+      const m1 = text.match(/(\d+)\s*만\s*원\s*대/);
+      if (m1) { const v = parseInt(m1[1]) * 10000; return { min: v, max: v + 9999 }; }
+      // "3~5만원" → 30000~59999
+      const m2 = text.match(/(\d+)\s*~\s*(\d+)\s*만\s*원/);
+      if (m2) return { min: parseInt(m2[1]) * 10000, max: parseInt(m2[2]) * 10000 + 9999 };
+      // "3만원 이하" → 0~30000
+      const m3 = text.match(/(\d+)\s*만\s*원\s*이하/);
+      if (m3) return { min: 0, max: parseInt(m3[1]) * 10000 };
+      // "3만원 이상" → 30000~infinity
+      const m4 = text.match(/(\d+)\s*만\s*원\s*이상/);
+      if (m4) return { min: parseInt(m4[1]) * 10000, max: Infinity };
+    }
+    return null;
+  }
+
   // 메시지 렌더링: [[한국어|영어]] → WineCard
   function renderMessageContent(content: string) {
+    const range = extractPriceRange();
     const parts = content.split(/(\[\[[^\]]+\]\])/g);
     if (parts.length === 1) return content;
     return parts.map((part, i) => {
       const match = part.match(/^\[\[([^|]+)\|([^\]]+)\]\]$/);
       if (!match) return <span key={i}>{part}</span>;
       const [, nameKo, nameEn] = match;
-      return <WineCard key={i} nameKo={nameKo.trim()} nameEn={nameEn.trim()} onSave={saveWine} onAuthNeeded={() => setShowAuthPrompt(true)} />;
+      return <WineCard key={i} nameKo={nameKo.trim()} nameEn={nameEn.trim()} onSave={saveWine} onAuthNeeded={() => setShowAuthPrompt(true)} priceRange={range} />;
     });
   }
 

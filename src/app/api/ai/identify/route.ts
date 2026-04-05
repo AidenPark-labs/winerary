@@ -1,6 +1,49 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { createClient } from "@/lib/supabase/server";
 
 const client = new Anthropic();
+
+// DB에서 와인 매칭 시도
+async function matchFromDB(name: string, nameOriginal: string | null) {
+  const supabase = await createClient();
+
+  // 1차: 영어 원본명으로 정확 매칭
+  if (nameOriginal) {
+    const { data } = await supabase
+      .from("wines")
+      .select("*")
+      .ilike("name_en", `%${nameOriginal}%`)
+      .limit(1)
+      .single();
+    if (data) return data;
+  }
+
+  // 2차: 한국어명으로 매칭
+  if (name) {
+    const { data } = await supabase
+      .from("wines")
+      .select("*")
+      .ilike("name_ko", `%${name}%`)
+      .limit(1)
+      .single();
+    if (data) return data;
+  }
+
+  // 3차: 원본명의 주요 키워드로 유사 검색
+  if (nameOriginal) {
+    const keywords = nameOriginal.split(/[\s\-]+/).filter((w) => w.length > 3).slice(0, 3);
+    for (const keyword of keywords) {
+      const { data } = await supabase
+        .from("wines")
+        .select("*")
+        .or(`name_en.ilike.%${keyword}%,name_ko.ilike.%${keyword}%`)
+        .limit(5);
+      if (data && data.length === 1) return data[0];
+    }
+  }
+
+  return null;
+}
 
 export async function POST(request: Request) {
 
@@ -63,6 +106,21 @@ description과 food_pairing은 사진이 아닌, 해당 와인 자체의 알려�
     if (!jsonMatch) return Response.json({ error: "분석 결과를 파싱할 수 없습니다" }, { status: 500 });
 
     const result = JSON.parse(jsonMatch[1] ?? jsonMatch[0]);
+
+    // DB 매칭 시도 — 성공하면 정확한 가격/정보로 보강
+    if (!result.error) {
+      const dbWine = await matchFromDB(result.name, result.name_original);
+      if (dbWine) {
+        result.db_match = true;
+        result.db_price = dbWine.price;
+        if (dbWine.wine_type) result.wine_type = dbWine.wine_type;
+        if (dbWine.country) result.country = dbWine.country;
+        if (dbWine.grape_variety) result.grape_variety = dbWine.grape_variety;
+        if (dbWine.producer) result.producer = dbWine.producer;
+        if (dbWine.name_en && !result.name_original) result.name_original = dbWine.name_en;
+      }
+    }
+
     return Response.json(result);
   } catch (e) {
     console.error("[ai/identify] error:", e);

@@ -25,6 +25,8 @@ interface WineResult {
   description?: string;
   food_pairing?: string;
   error?: string;
+  db_match?: boolean;
+  db_price?: number;
 }
 
 interface ShoppingItem {
@@ -40,6 +42,21 @@ interface ShoppingItem {
 }
 
 type Step = "select" | "preview" | "analyzing" | "result";
+type SearchMode = "photo" | "text";
+
+interface DbWine {
+  id: string;
+  name_ko: string;
+  name_en: string | null;
+  wine_type: string | null;
+  country: string | null;
+  region: string | null;
+  grape_variety: string | null;
+  producer: string | null;
+  price: number | null;
+  naver_link: string | null;
+  naver_image: string | null;
+}
 
 function notNull(v: string | null | undefined): string | null {
   if (!v || v === "null" || v === "undefined") return null;
@@ -78,6 +95,10 @@ export default function FindPage() {
   const [toast, setToast] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [authReturnUrl, setAuthReturnUrl] = useState("");
+  const [searchMode, setSearchMode] = useState<SearchMode>("photo");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<DbWine[]>([]);
+  const [searching, setSearching] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const fileBlob = useRef<Blob | null>(null);
@@ -110,6 +131,40 @@ export default function FindPage() {
     }
     runPending();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleTextSearch() {
+    const q = searchQuery.trim();
+    if (!q || q.length < 2) return;
+    setSearching(true);
+    try {
+      const res = await fetch(`/api/wines/search?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      setSearchResults(data.wines ?? []);
+    } catch {
+      setSearchResults([]);
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  // 텍스트 검색 결과에서 와인 선택 → 상세 결과로 전환
+  function selectDbWine(wine: DbWine) {
+    setResult({
+      name: wine.name_ko,
+      name_original: wine.name_en ?? undefined,
+      wine_type: wine.wine_type ?? undefined,
+      country: wine.country ?? undefined,
+      region: wine.region ?? undefined,
+      grape_variety: wine.grape_variety,
+      producer: wine.producer ?? undefined,
+      vivino_url: wine.name_en ? `https://www.vivino.com/search/wines?q=${encodeURIComponent(wine.name_en)}` : undefined,
+      db_match: true,
+      db_price: wine.price ?? undefined,
+    });
+    setStep("result");
+    // 네이버 쇼핑 검색도 실행
+    if (wine.name_ko) searchShopping(wine.name_ko);
+  }
 
   async function handleFile(file: File) {
     // Extract date from original File BEFORE resize (resize strips EXIF + lastModified)
@@ -165,6 +220,7 @@ export default function FindPage() {
     setShopLoading(false);
     setWishSaved(false);
     setWishSaving(false);
+    setSearchResults([]);
     fileBlob.current = null;
     photoDateRef.current = null;
   }
@@ -219,13 +275,102 @@ export default function FindPage() {
     <div className="flex flex-col flex-1 min-h-0">
       {showAuthPrompt && <AuthPrompt message="와인을 저장하거나 기록하려면 로그인이 필요합니다" returnUrl={authReturnUrl} />}
       <Toast message="내 와인에 추가되었어요!" visible={toast} onHide={() => setToast(false)} />
-      <header className="px-5 pt-12 pb-4 flex-shrink-0">
+      <header className="px-5 pt-12 pb-2 flex-shrink-0">
         <h1 className="text-2xl font-bold">와인 검색</h1>
-        <p className="text-zinc-500 text-sm mt-1">라벨 사진으로 와인 정보와 최저가를 알아보세요</p>
+        <p className="text-zinc-500 text-sm mt-1">사진 또는 이름으로 와인을 검색하세요</p>
       </header>
 
-      {/* ── 사진 선택 ── */}
+      {/* 세그먼티드 컨트롤 - select 단계에서만 표시 */}
       {step === "select" && (
+        <div className="mx-5 mb-4 flex p-1 rounded-xl bg-zinc-900 border border-zinc-800 flex-shrink-0">
+          {([["photo", "사진 검색"], ["text", "이름 검색"]] as const).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setSearchMode(key)}
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                searchMode === key ? "bg-zinc-700 text-white shadow-sm" : "text-zinc-500"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ── 텍스트 검색 ── */}
+      {step === "select" && searchMode === "text" && (
+        <div className="flex flex-col flex-1 px-4 pb-28 gap-4">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleTextSearch()}
+              placeholder="와인 이름을 입력하세요"
+              className="flex-1 rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3 text-zinc-100 text-sm focus:outline-none focus:border-rose-600 transition-colors"
+            />
+            <button
+              onClick={handleTextSearch}
+              disabled={searching || searchQuery.trim().length < 2}
+              className="px-4 py-3 rounded-xl bg-rose-700 hover:bg-rose-600 disabled:opacity-40 text-white font-semibold text-sm transition-colors"
+            >
+              {searching ? "…" : "검색"}
+            </button>
+          </div>
+
+          {searching && (
+            <div className="flex items-center justify-center py-10">
+              <div className="w-8 h-8 rounded-full border-2 border-rose-600 border-t-transparent animate-spin" />
+            </div>
+          )}
+
+          {!searching && searchResults.length > 0 && (
+            <div className="flex flex-col gap-2.5 overflow-y-auto">
+              <p className="text-zinc-500 text-sm">{searchResults.length}개의 와인을 찾았어요</p>
+              {searchResults.map((wine) => (
+                <button
+                  key={wine.id}
+                  onClick={() => selectDbWine(wine)}
+                  className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 text-left hover:border-zinc-600 transition-colors"
+                >
+                  <p className="font-semibold text-white text-sm">{wine.name_ko}</p>
+                  {wine.name_en && <p className="text-xs text-zinc-500 mt-0.5">{wine.name_en}</p>}
+                  <div className="flex items-center gap-3 mt-2 text-xs text-zinc-400">
+                    {wine.price && <span className="text-emerald-400 font-semibold">{wine.price.toLocaleString()}원</span>}
+                    {wine.wine_type && <span>{TYPE_KO[wine.wine_type] ?? wine.wine_type}</span>}
+                    {wine.country && <span>{wine.country}</span>}
+                    {wine.grape_variety && <span>{wine.grape_variety}</span>}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {!searching && searchResults.length === 0 && searchQuery.trim().length >= 2 && (
+            <div className="flex flex-col items-center justify-center py-10 gap-3">
+              <span className="text-4xl">🔍</span>
+              <p className="text-zinc-500 text-sm">검색 결과가 없습니다</p>
+              <p className="text-zinc-600 text-xs">사진 검색으로 AI가 분석해볼 수 있어요</p>
+              <button
+                onClick={() => setSearchMode("photo")}
+                className="text-rose-400 text-sm hover:underline"
+              >
+                사진으로 검색하기 →
+              </button>
+            </div>
+          )}
+
+          {!searching && searchQuery.trim().length < 2 && (
+            <div className="flex flex-col items-center justify-center flex-1 gap-3">
+              <span className="text-5xl">🍷</span>
+              <p className="text-zinc-400 text-sm">와인 이름, 품종, 생산자로 검색하세요</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── 사진 선택 ── */}
+      {step === "select" && searchMode === "photo" && (
         <div className="flex flex-col flex-1 px-4 pb-28 gap-4">
           {/* 히든 파일 인풋 */}
           <input ref={fileRef} type="file" accept="image/*" className="hidden"
@@ -356,9 +501,16 @@ export default function FindPage() {
                   <p className="text-sm text-zinc-300 leading-relaxed">{result.description}</p>
                 )}
 
-                {/* 최저가 & 페어링 */}
-                {(shopItems.length > 0 || shopLoading || result.food_pairing) && (
+                {/* 가격 & 페어링 */}
+                {(result.db_price || shopItems.length > 0 || shopLoading || result.food_pairing) && (
                   <div className="flex flex-col gap-2 p-3 rounded-xl bg-white/5">
+                    {result.db_match && result.db_price && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">✅</span>
+                        <span className="text-sm text-zinc-300">한국 판매가 <span className="font-semibold text-emerald-400">{result.db_price.toLocaleString()}원</span></span>
+                        <span className="text-[10px] text-zinc-600 bg-zinc-800 px-1.5 py-0.5 rounded">DB 확인</span>
+                      </div>
+                    )}
                     {shopLoading && (
                       <div className="flex items-center gap-2">
                         <span className="text-sm">💰</span>

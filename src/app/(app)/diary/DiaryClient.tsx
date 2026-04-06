@@ -182,7 +182,7 @@ function FeedCard({ record }: { record: WineRecord }) {
       {/* 엣지투엣지 이미지 오버레이 영역 */}
       <div className="absolute inset-0 z-0">
         {thumb ? (
-          <img src={thumb} alt={record.name} className="w-full h-full object-cover object-[center_15%] transition-transform duration-700 group-hover:scale-105" />
+          <img src={thumb} alt={record.name} className="w-full h-full object-cover object-[center_5%] transition-transform duration-700 group-hover:scale-105" />
         ) : (
           <div className="w-full h-full bg-surface flex items-center justify-center">
             <WineIcon className="text-white/10" size={80} strokeWidth={1} />
@@ -191,7 +191,7 @@ function FeedCard({ record }: { record: WineRecord }) {
       </div>
 
       {/* 하단 텍스트 가독성용 그라데이션 (하단만) */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent z-10 pointer-events-none" />
 
       {/* 상단 액션 바 (와인 타입 도트 & 메뉴) */}
       <div className="relative z-20 flex justify-between items-start p-5 pointer-events-none">

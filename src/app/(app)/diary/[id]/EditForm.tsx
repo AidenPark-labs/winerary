@@ -226,17 +226,26 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
           <input value={wineNameOriginal} onChange={(e) => setWineNameOriginal(e.target.value)} placeholder="원본 명칭 (영어/현지어)" className={iCls} />
 
           <div className="grid grid-cols-2 gap-2">
-            <select value={wineType} onChange={(e) => setWineType(e.target.value as WineType | "")} className={iCls}>
-              <option value="">종류 선택 안 함</option>
-              {WINE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-            </select>
             <select value={wineVintage} onChange={(e) => setWineVintage(e.target.value)} className={iCls}>
               <option value="">빈티지 선택 안 함</option>
               {Array.from({ length: new Date().getFullYear() - 1949 }, (_, i) => new Date().getFullYear() - i).map((y) => (
                 <option key={y} value={y}>{y}</option>
               ))}
             </select>
+            <select value={country} onChange={(e) => setCountry(e.target.value)} className={iCls}>
+              <option value="">생산국 선택 안 함</option>
+              {COUNTRY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+              <option value="__custom__">직접입력</option>
+            </select>
           </div>
+          {country === "__custom__" && (
+            <input value={countryCustom} onChange={(e) => setCountryCustom(e.target.value)} placeholder="생산국" className={iCls} />
+          )}
+
+          <select value={wineType} onChange={(e) => setWineType(e.target.value as WineType | "")} className={iCls}>
+            <option value="">종류 선택 안 함</option>
+            {WINE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
 
           {/* 품종 */}
           <GrapeCombobox
@@ -247,16 +256,6 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
           />
           {grape === "__blend__" && (
             <BlendGrapeSelector grapes={blendGrapes} onChange={setBlendGrapes} wineType={wineType} />
-          )}
-
-          {/* 국가 */}
-          <select value={country} onChange={(e) => setCountry(e.target.value)} className={iCls}>
-            <option value="">생산국 선택 안 함</option>
-            {COUNTRY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
-            <option value="__custom__">직접입력</option>
-          </select>
-          {country === "__custom__" && (
-            <input value={countryCustom} onChange={(e) => setCountryCustom(e.target.value)} placeholder="생산국" className={iCls} />
           )}
         </section>
 

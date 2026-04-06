@@ -607,19 +607,32 @@ export default function NewDiaryPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs text-zinc-500">종류</label>
-                  <select value={wineType} onChange={(e) => setWineType(e.target.value as WineType | "")} className={iCls}>
-                    <option value="">선택 안 함</option>
-                    {WINE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1.5">
                   <label className="text-xs text-zinc-500">빈티지</label>
                   <select value={wineVintage} onChange={(e) => setWineVintage(e.target.value)} className={iCls}>
                     <option value="">선택 안 함</option>
                     {vintageYears.map((y) => <option key={y} value={y}>{y}</option>)}
                   </select>
                 </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-500">생산국</label>
+                  <select value={country} onChange={(e) => setCountry(e.target.value)} className={iCls}>
+                    <option value="">선택 안 함</option>
+                    {COUNTRY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                    <option value="__custom__">직접입력</option>
+                  </select>
+                </div>
+              </div>
+              {country === "__custom__" && (
+                <input value={countryCustom} onChange={(e) => setCountryCustom(e.target.value)}
+                  placeholder="예: 조지아" className={iCls} />
+              )}
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-zinc-500">종류</label>
+                <select value={wineType} onChange={(e) => setWineType(e.target.value as WineType | "")} className={iCls}>
+                  <option value="">선택 안 함</option>
+                  {WINE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -632,19 +645,6 @@ export default function NewDiaryPage() {
                 />
                 {grape === "__blend__" && (
                   <BlendGrapeSelector grapes={blendGrapes} onChange={setBlendGrapes} wineType={wineType} />
-                )}
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-zinc-500">생산국</label>
-                <select value={country} onChange={(e) => setCountry(e.target.value)} className={iCls}>
-                  <option value="">선택 안 함</option>
-                  {COUNTRY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
-                  <option value="__custom__">직접입력</option>
-                </select>
-                {country === "__custom__" && (
-                  <input value={countryCustom} onChange={(e) => setCountryCustom(e.target.value)}
-                    placeholder="예: 조지아" className={iCls} />
                 )}
               </div>
             </div>

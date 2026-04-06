@@ -257,6 +257,16 @@ export default function DiaryDetail({ record, readOnly = false, wineDescription 
                 </span>
               </div>
             )}
+
+            {/* 4. 재구매 의사 */}
+            {record.repurchase_intent && (
+              <div className="col-span-2 flex items-center justify-between p-5 rounded-3xl bg-surface/60 border border-white/5 backdrop-blur-xl shadow-lg mt-1">
+                <span className="text-xs font-medium text-zinc-400 tracking-wider">재구매 의사</span>
+                <span className="text-lg font-medium text-white">
+                  {{ yes: "🔄 완전 있음", maybe: "🤔 중간", no: "👋 안마실듯" }[record.repurchase_intent]}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* 페어링 음식 */}

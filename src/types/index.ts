@@ -28,6 +28,7 @@ export interface WineRecord {
   price_type: 'market' | 'retail' | null
   price_unit: 'bottle' | 'glass' | null
   value_score: number | null
+  repurchase_intent: 'yes' | 'maybe' | 'no' | null
   foods: FoodRecord[]
   tags: string[] | null
   visibility: Visibility

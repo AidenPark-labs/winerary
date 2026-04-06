@@ -202,6 +202,7 @@ export default function NewDiaryPage() {
   const [priceType, setPriceType] = useState<"market" | "retail">("retail");
   const [priceUnit, setPriceUnit] = useState<"bottle" | "glass">("bottle");
   const [valueScore, setValueScore] = useState(3);
+  const [repurchaseIntent, setRepurchaseIntent] = useState<"yes" | "maybe" | "no" | null>(null);
   const [memo, setMemo] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
@@ -386,6 +387,7 @@ export default function NewDiaryPage() {
       price_type: price ? priceType : null,
       price_unit: price ? priceUnit : null,
       value_score: valueScore,
+      repurchase_intent: repurchaseIntent,
       memo: memo || null,
       tags: tags.length > 0 ? tags : null,
       visibility,
@@ -843,6 +845,21 @@ export default function NewDiaryPage() {
               {foods.length > 0 && (
                 <StarRating label="음식 궁합" emoji="🍽️" value={pairingScore} max={5} step={1} onChange={setPairingScore} />
               )}
+            </section>
+
+            {/* 재구매 의사 */}
+            <section className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">재구매 의사</h2>
+              <div className="flex gap-2">
+                {([["yes", "완전 있음", "🔄"], ["maybe", "중간", "🤔"], ["no", "안마실듯", "👋"]] as const).map(([val, label, emoji]) => (
+                  <button key={val} type="button"
+                    onClick={() => setRepurchaseIntent(repurchaseIntent === val ? null : val)}
+                    className={`flex-1 py-3 rounded-2xl text-sm font-medium border transition-all ${repurchaseIntent === val ? "bg-accent/20 border-accent text-accent" : "bg-surface/60 border-white/5 text-zinc-400 hover:bg-white/5"}`}>
+                    <span className="block text-lg mb-0.5">{emoji}</span>
+                    {label}
+                  </button>
+                ))}
+              </div>
             </section>
 
             {/* 메모 */}

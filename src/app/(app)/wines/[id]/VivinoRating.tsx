@@ -40,6 +40,8 @@ export default function VivinoRating({
       .finally(() => setLoading(false));
   }, [nameEn, wineId, rating]);
 
+  const vivinoHref = pageUrl || (nameEn ? `https://www.vivino.com/search/wines?q=${encodeURIComponent(nameEn)}` : null);
+
   if (loading) {
     return (
       <div className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-purple-950/30 border border-purple-800/40">
@@ -49,13 +51,10 @@ export default function VivinoRating({
     );
   }
 
-  if (!rating) return null;
-
-  const vivinoHref = pageUrl || (nameEn ? `https://www.vivino.com/search/wines?q=${encodeURIComponent(nameEn)}` : null);
-
-  return (
-    <div className="flex flex-col gap-1">
-      {vivinoHref ? (
+  // 별점이 있는 경우 — 별점 + 링크
+  if (rating && vivinoHref) {
+    return (
+      <div className="flex flex-col gap-1">
         <a
           href={vivinoHref}
           target="_blank"
@@ -69,18 +68,27 @@ export default function VivinoRating({
           <span className="text-purple-400/40 text-xs ml-0.5">Vivino</span>
           <span className="text-purple-400/40 text-xs ml-auto">→</span>
         </a>
-      ) : (
-        <div className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-purple-950/30 border border-purple-800/40">
-          <span className="text-purple-300 font-bold text-lg">★ {rating.toFixed(1)}</span>
-          {reviews && (
-            <span className="text-purple-400/60 text-xs">({reviews.toLocaleString()})</span>
-          )}
-          <span className="text-purple-400/40 text-xs ml-0.5">Vivino</span>
-        </div>
-      )}
-      {vivinoName && nameEn && vivinoName.toLowerCase() !== nameEn.toLowerCase() && (
-        <p className="text-[11px] text-purple-400/50 px-1">Vivino 등록명: {vivinoName}</p>
-      )}
-    </div>
-  );
+        {vivinoName && nameEn && vivinoName.toLowerCase() !== nameEn.toLowerCase() && (
+          <p className="text-[11px] text-purple-400/50 px-1">Vivino 등록명: {vivinoName}</p>
+        )}
+      </div>
+    );
+  }
+
+  // 별점은 없지만 Vivino 링크는 있는 경우 — 링크만
+  if (vivinoHref) {
+    return (
+      <a
+        href={vivinoHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-purple-950/30 border border-purple-800/40 hover:bg-purple-900/30 transition-colors"
+      >
+        <span className="text-purple-400/60 text-xs">🍇 Vivino에서 보기</span>
+        <span className="text-purple-400/40 text-xs ml-auto">→</span>
+      </a>
+    );
+  }
+
+  return null;
 }

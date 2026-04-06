@@ -78,7 +78,7 @@ function MapView({ records }: { records: WineRecord[] }) {
         </div>
       )}
       {selected && (
-        <div className="absolute bottom-4 left-4 right-4 z-[1000] bg-zinc-900 border border-zinc-700 rounded-2xl p-4 shadow-xl">
+        <div className="absolute bottom-20 left-4 right-4 z-[1000] bg-zinc-900 border border-zinc-700 rounded-2xl p-4 shadow-xl">
           <button onClick={() => setSelected(null)} className="absolute top-3 right-3 text-zinc-500 hover:text-zinc-300 text-lg w-6 h-6 flex items-center justify-center">×</button>
           <Link href={`/diary/${selected.id}`} className="block">
             <div className="flex items-start gap-3">

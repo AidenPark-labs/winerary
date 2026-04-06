@@ -34,6 +34,8 @@ interface Props {
   totalCount: number;
   page: number;
   totalPages: number;
+  search: string;
+  filterType: string;
 }
 
 function InfoCell({ label, children }: { label: string; children: React.ReactNode }) {
@@ -45,27 +47,26 @@ function InfoCell({ label, children }: { label: string; children: React.ReactNod
   );
 }
 
-export default function WinesClient({ wines, totalCount, page, totalPages }: Props) {
+export default function WinesClient({ wines, totalCount, page, totalPages, search: initialSearch, filterType: initialType }: Props) {
   const router = useRouter();
-  const [search, setSearch] = useState("");
-  const [filterType, setFilterType] = useState("all");
+  const [search, setSearch] = useState(initialSearch);
+  const [filterType, setFilterType] = useState(initialType);
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  function goToPage(p: number) {
-    router.push(`/admin/wines?page=${p}`);
+  function navigate(overrides: { page?: number; q?: string; type?: string }) {
+    const params = new URLSearchParams();
+    const q = overrides.q ?? search;
+    const type = overrides.type ?? filterType;
+    const p = overrides.page ?? 1;
+    if (q) params.set("q", q);
+    if (type && type !== "all") params.set("type", type);
+    if (p > 1) params.set("page", String(p));
+    router.push(`/admin/wines${params.toString() ? `?${params}` : ""}`);
   }
 
-  const filtered = wines.filter((w) => {
-    const q = search.toLowerCase();
-    const matchSearch = !search ||
-      w.name_ko.toLowerCase().includes(q) ||
-      w.name_en?.toLowerCase().includes(q) ||
-      w.producer?.toLowerCase().includes(q) ||
-      w.country?.toLowerCase().includes(q) ||
-      w.grape_variety?.toLowerCase().includes(q);
-    const matchType = filterType === "all" || w.wine_type === filterType;
-    return matchSearch && matchType;
-  });
+  function handleSearch() {
+    navigate({ q: search, page: 1 });
+  }
 
   return (
     <div>
@@ -79,12 +80,19 @@ export default function WinesClient({ wines, totalCount, page, totalPages }: Pro
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             placeholder="이름, 생산자, 국가, 품종 검색…"
             className="rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-200 w-64"
           />
+          <button
+            onClick={handleSearch}
+            className="px-3 py-2 rounded-lg bg-rose-500 text-white text-sm font-medium hover:bg-rose-600 transition-colors"
+          >
+            검색
+          </button>
           <select
             value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
+            onChange={(e) => { setFilterType(e.target.value); navigate({ type: e.target.value, page: 1 }); }}
             className="rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-200"
           >
             <option value="all">전체 타입</option>
@@ -96,7 +104,7 @@ export default function WinesClient({ wines, totalCount, page, totalPages }: Pro
       </div>
 
       <div className="flex flex-col gap-2">
-        {filtered.map((w) => (
+        {wines.map((w) => (
           <div
             key={w.id}
             className="rounded-2xl bg-zinc-900 border border-zinc-800 overflow-hidden cursor-pointer hover:border-zinc-700 transition-colors"
@@ -218,7 +226,7 @@ export default function WinesClient({ wines, totalCount, page, totalPages }: Pro
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-8">
           <button
-            onClick={() => goToPage(page - 1)}
+            onClick={() => navigate({ page: page - 1 })}
             disabled={page <= 1}
             className="px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-sm text-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-zinc-700 transition-colors"
           >
@@ -237,7 +245,7 @@ export default function WinesClient({ wines, totalCount, page, totalPages }: Pro
               ) : (
                 <button
                   key={p}
-                  onClick={() => goToPage(p)}
+                  onClick={() => navigate({ page: p })}
                   className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${p === page ? "bg-rose-500 text-white" : "bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-zinc-700"}`}
                 >
                   {p}
@@ -245,7 +253,7 @@ export default function WinesClient({ wines, totalCount, page, totalPages }: Pro
               )
             )}
           <button
-            onClick={() => goToPage(page + 1)}
+            onClick={() => navigate({ page: page + 1 })}
             disabled={page >= totalPages}
             className="px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-sm text-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-zinc-700 transition-colors"
           >

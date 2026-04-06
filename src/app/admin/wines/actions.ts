@@ -13,3 +13,15 @@ export async function updateWine(id: string, data: { vivino_url?: string | null;
   if (error) return { error: error.message };
   return { success: true };
 }
+
+export async function deleteWine(id: string) {
+  const { supabase } = await requireAdmin();
+
+  const { error } = await supabase
+    .from("wines")
+    .delete()
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { updateWine } from "./actions";
+import { updateWine, deleteWine } from "./actions";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드 🍷", white: "화이트 🥂", rose: "로제 🌸",
@@ -37,6 +37,7 @@ interface Props {
   totalPages: number;
   search: string;
   filterType: string;
+  vivinoFilter: string;
 }
 
 function InfoCell({ label, children }: { label: string; children: React.ReactNode }) {
@@ -48,10 +49,11 @@ function InfoCell({ label, children }: { label: string; children: React.ReactNod
   );
 }
 
-export default function WinesClient({ wines, totalCount, page, totalPages, search: initialSearch, filterType: initialType }: Props) {
+export default function WinesClient({ wines, totalCount, page, totalPages, search: initialSearch, filterType: initialType, vivinoFilter: initialVivino }: Props) {
   const router = useRouter();
   const [search, setSearch] = useState(initialSearch);
   const [filterType, setFilterType] = useState(initialType);
+  const [vivinoFilter, setVivinoFilter] = useState(initialVivino);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [editUrl, setEditUrl] = useState("");
@@ -86,13 +88,15 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
     }
   }
 
-  function navigate(overrides: { page?: number; q?: string; type?: string }) {
+  function navigate(overrides: { page?: number; q?: string; type?: string; vivino?: string }) {
     const params = new URLSearchParams();
     const q = overrides.q ?? search;
     const type = overrides.type ?? filterType;
+    const viv = overrides.vivino ?? vivinoFilter;
     const p = overrides.page ?? 1;
     if (q) params.set("q", q);
     if (type && type !== "all") params.set("type", type);
+    if (viv && viv !== "all") params.set("vivino", viv);
     if (p > 1) params.set("page", String(p));
     router.push(`/admin/wines${params.toString() ? `?${params}` : ""}`);
   }
@@ -123,6 +127,18 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
           >
             검색
           </button>
+          <select
+            value={vivinoFilter}
+            onChange={(e) => { setVivinoFilter(e.target.value); navigate({ vivino: e.target.value, page: 1 }); }}
+            className="rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-200"
+          >
+            <option value="all">Vivino 전체</option>
+            <option value="has_both">평점+URL 있음</option>
+            <option value="has_rating">평점만 있음</option>
+            <option value="has_url">URL만 있음</option>
+            <option value="no_rating">평점 없음</option>
+            <option value="no_url">URL 없음</option>
+          </select>
           <select
             value={filterType}
             onChange={(e) => { setFilterType(e.target.value); navigate({ type: e.target.value, page: 1 }); }}
@@ -300,7 +316,20 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
                   </div>
                 )}
 
-                <p className="text-[10px] text-zinc-600 mt-4 font-mono select-all">ID: {w.id}</p>
+                <div className="flex items-center justify-between mt-4 pt-3 border-t border-zinc-800" onClick={(e) => e.stopPropagation()}>
+                  <p className="text-[10px] text-zinc-600 font-mono select-all">ID: {w.id}</p>
+                  <button
+                    onClick={async () => {
+                      if (!confirm(`"${w.name_ko}" 를 정말 삭제하시겠습니까?`)) return;
+                      const result = await deleteWine(w.id);
+                      if (result.error) alert(`삭제 실패: ${result.error}`);
+                      else router.refresh();
+                    }}
+                    className="text-[11px] px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors"
+                  >
+                    삭제
+                  </button>
+                </div>
               </div>
             )}
           </div>

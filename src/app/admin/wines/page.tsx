@@ -3,8 +3,8 @@ import WinesClient from "./WinesClient";
 
 const PAGE_SIZE = 200;
 
-export default async function AdminWinesPage({ searchParams }: { searchParams: Promise<{ page?: string; q?: string; type?: string }> }) {
-  const { page: pageStr, q, type } = await searchParams;
+export default async function AdminWinesPage({ searchParams }: { searchParams: Promise<{ page?: string; q?: string; type?: string; vivino?: string }> }) {
+  const { page: pageStr, q, type, vivino } = await searchParams;
   const page = Math.max(1, parseInt(pageStr ?? "1", 10) || 1);
   const { supabase: admin } = await requireAdmin();
 
@@ -24,11 +24,22 @@ export default async function AdminWinesPage({ searchParams }: { searchParams: P
   if (type && type !== "all") {
     query = query.eq("wine_type", type);
   }
+  if (vivino === "has_both") {
+    query = query.not("vivino_rating", "is", null).not("vivino_url", "is", null);
+  } else if (vivino === "has_rating") {
+    query = query.not("vivino_rating", "is", null);
+  } else if (vivino === "no_rating") {
+    query = query.is("vivino_rating", null);
+  } else if (vivino === "has_url") {
+    query = query.not("vivino_url", "is", null);
+  } else if (vivino === "no_url") {
+    query = query.is("vivino_url", null);
+  }
 
   const { data: wines, count } = await query.range(from, to);
 
   const totalCount = count ?? 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  return <WinesClient wines={wines ?? []} totalCount={totalCount} page={page} totalPages={totalPages} search={q ?? ""} filterType={type ?? "all"} />;
+  return <WinesClient wines={wines ?? []} totalCount={totalCount} page={page} totalPages={totalPages} search={q ?? ""} filterType={type ?? "all"} vivinoFilter={vivino ?? "all"} />;
 }

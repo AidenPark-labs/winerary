@@ -296,13 +296,6 @@ export default function DiaryDetail({ record, readOnly = false }: { record: Wine
       {/* ── 풀스크린 라이트박스 ── */}
       {lightbox !== null && (
         <div className="fixed inset-0 z-50 bg-black/95 flex flex-col" onClick={() => setLightbox(null)}>
-          {/* 닫기 버튼 */}
-          <div className="flex justify-end p-4">
-            <button className="text-white/70 hover:text-white text-sm px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10">
-              닫기
-            </button>
-          </div>
-
           {/* 사진 스와이프 */}
           <div
             ref={lbRef}
@@ -322,14 +315,19 @@ export default function DiaryDetail({ record, readOnly = false }: { record: Wine
             ))}
           </div>
 
-          {/* 인디케이터 */}
-          {photos.length > 1 && (
-            <div className="flex justify-center gap-1.5 pb-8 pt-4">
-              {photos.map((_, i) => (
-                <div key={i} className={`h-1 rounded-full transition-all duration-300 ${i === lightbox ? "w-5 bg-white" : "w-1 bg-white/40"}`} />
-              ))}
-            </div>
-          )}
+          {/* 인디케이터 + 닫기 버튼 */}
+          <div className="flex flex-col items-center gap-3 pb-10 pt-4">
+            {photos.length > 1 && (
+              <div className="flex justify-center gap-1.5">
+                {photos.map((_, i) => (
+                  <div key={i} className={`h-1 rounded-full transition-all duration-300 ${i === lightbox ? "w-5 bg-white" : "w-1 bg-white/40"}`} />
+                ))}
+              </div>
+            )}
+            <button className="text-white/70 hover:text-white text-sm px-5 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10">
+              닫기
+            </button>
+          </div>
         </div>
       )}
     </div>

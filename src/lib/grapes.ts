@@ -23,4 +23,17 @@ const OTHER = [
   "피노 뫼니에", "글레라", "마카베오", "파렐라다", "차렐로",
 ];
 
+export const RED_GRAPES = RED;
+export const WHITE_GRAPES = WHITE;
+export const OTHER_GRAPES = OTHER;
 export const GRAPE_OPTIONS = [...RED, ...WHITE, ...OTHER];
+
+export function getGrapesByType(wineType: string | null | undefined): string[] {
+  switch (wineType) {
+    case "red": return RED;
+    case "white": return WHITE;
+    case "rose": return [...RED, ...WHITE];
+    case "sparkling": return [...WHITE, ...OTHER, ...RED];
+    default: return GRAPE_OPTIONS;
+  }
+}

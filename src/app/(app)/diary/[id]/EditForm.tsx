@@ -242,10 +242,11 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
           <GrapeCombobox
             value={grape}
             onChange={(v) => { setGrape(v); if (v !== "__blend__") setBlendGrapes([]); }}
+            wineType={wineType}
             className={iCls}
           />
           {grape === "__blend__" && (
-            <BlendGrapeSelector grapes={blendGrapes} onChange={setBlendGrapes} />
+            <BlendGrapeSelector grapes={blendGrapes} onChange={setBlendGrapes} wineType={wineType} />
           )}
 
           {/* 국가 */}

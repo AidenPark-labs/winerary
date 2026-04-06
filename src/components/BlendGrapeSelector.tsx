@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { GRAPE_OPTIONS } from "@/lib/grapes";
+import { getGrapesByType } from "@/lib/grapes";
 
 const iCls = "w-full rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-zinc-100 focus:outline-none focus:border-rose-600 transition-colors text-sm";
 
-export default function BlendGrapeSelector({ grapes, onChange }: { grapes: string[]; onChange: (v: string[]) => void }) {
+export default function BlendGrapeSelector({ grapes, onChange, wineType }: { grapes: string[]; onChange: (v: string[]) => void; wineType?: string | null }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -18,7 +18,8 @@ export default function BlendGrapeSelector({ grapes, onChange }: { grapes: strin
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const available = GRAPE_OPTIONS.filter((g) => !grapes.includes(g));
+  const options = getGrapesByType(wineType);
+  const available = options.filter((g) => !grapes.includes(g));
   const filtered = query ? available.filter((g) => g.includes(query)) : available;
 
   function handleAdd(g: string) {

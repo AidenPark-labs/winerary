@@ -1,17 +1,16 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { GRAPE_OPTIONS } from "@/lib/grapes";
+import { getGrapesByType } from "@/lib/grapes";
 
 interface GrapeComboboxProps {
   value: string;
   onChange: (value: string) => void;
-  onBlendGrapesChange?: (grapes: string[]) => void;
-  blendGrapes?: string[];
+  wineType?: string | null;
   className?: string;
 }
 
-export default function GrapeCombobox({ value, onChange, onBlendGrapesChange, blendGrapes = [], className }: GrapeComboboxProps) {
+export default function GrapeCombobox({ value, onChange, wineType, className }: GrapeComboboxProps) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -24,26 +23,14 @@ export default function GrapeCombobox({ value, onChange, onBlendGrapesChange, bl
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const displayValue = value === "__blend__" ? "블렌드" : value === "__custom__" ? "" : value;
-
-  const filtered = query
-    ? GRAPE_OPTIONS.filter((g) => g.includes(query))
-    : GRAPE_OPTIONS;
+  const displayValue = value === "__blend__" ? "블렌드" : value;
+  const options = getGrapesByType(wineType);
+  const filtered = query ? options.filter((g) => g.includes(query)) : options;
 
   function handleSelect(v: string) {
     onChange(v);
     setQuery("");
     setOpen(false);
-    if (v !== "__blend__" && onBlendGrapesChange) onBlendGrapesChange([]);
-  }
-
-  function handleInputChange(v: string) {
-    setQuery(v);
-    setOpen(true);
-  }
-
-  function handleInputFocus() {
-    setOpen(true);
   }
 
   return (
@@ -52,8 +39,8 @@ export default function GrapeCombobox({ value, onChange, onBlendGrapesChange, bl
         <div className="relative flex-1">
           <input
             value={open ? query : displayValue}
-            onChange={(e) => handleInputChange(e.target.value)}
-            onFocus={() => { handleInputFocus(); setQuery(""); }}
+            onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+            onFocus={() => { setOpen(true); setQuery(""); }}
             placeholder="품종 검색…"
             className={className}
             autoComplete="off"

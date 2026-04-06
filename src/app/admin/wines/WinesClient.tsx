@@ -23,8 +23,16 @@ interface Wine {
   naver_link: string | null;
   naver_image: string | null;
   vivino_url: string | null;
+  vivino_page_url: string | null;
   vivino_rating: number | null;
   vivino_reviews: number | null;
+  vivino_winery: string | null;
+  vivino_grapes: string | null;
+  vivino_region: string | null;
+  vivino_style: string | null;
+  vivino_alcohol: string | null;
+  vivino_allergens: string | null;
+  vivino_description: string | null;
   data_source: string | null;
   created_at: string;
   updated_at: string;
@@ -268,23 +276,65 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
                       </div>
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-1 text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="text-zinc-500 text-xs w-12">URL</span>
-                        {w.vivino_url ? (
-                          <a href={w.vivino_url} target="_blank" rel="noopener noreferrer" className="text-rose-400 hover:underline truncate">{w.vivino_url}</a>
+                    <div className="flex flex-col gap-1.5 text-sm">
+                      <div className="flex items-start gap-2">
+                        <span className="text-zinc-500 text-xs w-20 flex-shrink-0 pt-0.5">URL</span>
+                        {(w.vivino_page_url || w.vivino_url) ? (
+                          <a href={w.vivino_page_url || w.vivino_url!} target="_blank" rel="noopener noreferrer" className="text-rose-400 hover:underline truncate">{w.vivino_page_url || w.vivino_url}</a>
                         ) : (
                           <span className="text-zinc-600 italic">없음</span>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-zinc-500 text-xs w-12">평점</span>
+                        <span className="text-zinc-500 text-xs w-20 flex-shrink-0">평점</span>
                         {w.vivino_rating != null ? (
                           <span className="text-amber-400">★ {w.vivino_rating}{w.vivino_reviews != null && <span className="text-zinc-500 ml-1">({w.vivino_reviews.toLocaleString()}개 리뷰)</span>}</span>
                         ) : (
                           <span className="text-zinc-600 italic">없음</span>
                         )}
                       </div>
+                      {w.vivino_winery && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-zinc-500 text-xs w-20 flex-shrink-0">Winery</span>
+                          <span className="text-zinc-200">{w.vivino_winery}</span>
+                        </div>
+                      )}
+                      {w.vivino_grapes && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-zinc-500 text-xs w-20 flex-shrink-0">Grapes</span>
+                          <span className="text-zinc-200">{w.vivino_grapes}</span>
+                        </div>
+                      )}
+                      {w.vivino_region && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-zinc-500 text-xs w-20 flex-shrink-0">Region</span>
+                          <span className="text-zinc-200">{w.vivino_region}</span>
+                        </div>
+                      )}
+                      {w.vivino_style && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-zinc-500 text-xs w-20 flex-shrink-0">Style</span>
+                          <span className="text-zinc-200">{w.vivino_style}</span>
+                        </div>
+                      )}
+                      {w.vivino_alcohol && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-zinc-500 text-xs w-20 flex-shrink-0">Alcohol</span>
+                          <span className="text-zinc-200">{w.vivino_alcohol}</span>
+                        </div>
+                      )}
+                      {w.vivino_allergens && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-zinc-500 text-xs w-20 flex-shrink-0">Allergens</span>
+                          <span className="text-zinc-200">{w.vivino_allergens}</span>
+                        </div>
+                      )}
+                      {w.vivino_description && (
+                        <div className="flex items-start gap-2 mt-1">
+                          <span className="text-zinc-500 text-xs w-20 flex-shrink-0 pt-0.5">Description</span>
+                          <p className="text-zinc-300 text-xs leading-relaxed">{w.vivino_description}</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

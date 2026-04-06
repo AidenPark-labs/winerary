@@ -108,6 +108,7 @@ export default function FindPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<DbWine[]>([]);
   const [searching, setSearching] = useState(false);
+  const [aiSearchResult, setAiSearchResult] = useState<WineResult | null>(null);
   // 줌/패닝 상태
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -235,10 +236,26 @@ export default function FindPage() {
     const q = searchQuery.trim();
     if (!q || q.length < 2) return;
     setSearching(true);
+    setSearchResults([]);
+    setAiSearchResult(null);
     try {
+      // 1차: DB 검색
       const res = await fetch(`/api/wines/search?q=${encodeURIComponent(q)}`);
       const data = await res.json();
-      setSearchResults(data.wines ?? []);
+      if (data.wines?.length > 0) {
+        setSearchResults(data.wines);
+      } else {
+        // 2차: AI 검색 폴백
+        const aiRes = await fetch(`/api/ai/identify-by-name`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: q }),
+        });
+        const aiData = await aiRes.json();
+        if (aiData && !aiData.error) {
+          setAiSearchResult(aiData);
+        }
+      }
     } catch {
       setSearchResults([]);
     } finally {
@@ -330,6 +347,7 @@ export default function FindPage() {
     setWishSaved(false);
     setWishSaving(false);
     setSearchResults([]);
+    setAiSearchResult(null);
     setZoom(1);
     setPan({ x: 0, y: 0 });
     fileBlob.current = null;
@@ -462,11 +480,56 @@ export default function FindPage() {
             </div>
           )}
 
-          {!searching && searchResults.length === 0 && searchQuery.trim().length >= 2 && (
+          {/* AI 검색 결과 */}
+          {!searching && searchResults.length === 0 && aiSearchResult && !aiSearchResult.error && (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-rose-900/50 text-rose-300">AI 검색</span>
+                <p className="text-zinc-500 text-sm">DB에 없지만 AI가 찾았어요</p>
+              </div>
+              <button
+                onClick={() => {
+                  setResult(aiSearchResult);
+                  setStep("result");
+                  if (aiSearchResult.name || aiSearchResult.name_original) {
+                    searchShopping(aiSearchResult.name || aiSearchResult.name_original!);
+                  }
+                }}
+                className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 text-left hover:border-zinc-600 transition-colors"
+              >
+                <p className="font-semibold text-white text-sm">{aiSearchResult.name}</p>
+                {aiSearchResult.name_original && (
+                  <p className="text-xs text-zinc-500 mt-0.5">{aiSearchResult.name_original}</p>
+                )}
+                <div className="flex items-center gap-2.5 mt-1.5 text-xs text-zinc-400">
+                  {aiSearchResult.wine_type && <span>{TYPE_KO[aiSearchResult.wine_type] ?? aiSearchResult.wine_type}</span>}
+                  {aiSearchResult.country && <span>{aiSearchResult.country}</span>}
+                  {aiSearchResult.grape_variety && <span>{aiSearchResult.grape_variety}</span>}
+                </div>
+              </button>
+            </div>
+          )}
+
+          {/* 검색 결과 없음 */}
+          {!searching && searchResults.length === 0 && !aiSearchResult && searchQuery.trim().length >= 2 && (
             <div className="flex flex-col items-center justify-center py-10 gap-3">
               <span className="text-4xl">🔍</span>
               <p className="text-zinc-500 text-sm">검색 결과가 없습니다</p>
               <p className="text-zinc-600 text-xs">사진 검색으로 AI가 분석해볼 수 있어요</p>
+              <button
+                onClick={() => setSearchMode("photo")}
+                className="text-rose-400 text-sm hover:underline"
+              >
+                사진으로 검색하기 →
+              </button>
+            </div>
+          )}
+
+          {/* AI도 못 찾은 경우 */}
+          {!searching && searchResults.length === 0 && aiSearchResult?.error && searchQuery.trim().length >= 2 && (
+            <div className="flex flex-col items-center justify-center py-10 gap-3">
+              <span className="text-4xl">🤷</span>
+              <p className="text-zinc-500 text-sm">DB와 AI 모두에서 찾지 못했어요</p>
               <button
                 onClick={() => setSearchMode("photo")}
                 className="text-rose-400 text-sm hover:underline"

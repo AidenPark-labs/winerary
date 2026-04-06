@@ -3,6 +3,7 @@ import type { WineRecord } from "@/types";
 import LogoutButton from "./LogoutButton";
 import AuthPrompt from "@/components/AuthPrompt";
 import { User, Book, Star, BarChart3 } from "lucide-react";
+import { GRAPE_OPTIONS } from "@/lib/grapes";
 
 const TYPE_META: Record<string, { label: string; color: string }> = {
   red:       { label: "레드",    color: "#be123c" },
@@ -90,12 +91,23 @@ export default async function MyWinePage() {
   const typeTotal = typeSegments.reduce((s, x) => s + x.count, 0);
 
   // 선호 품종 Top 6
+  // 드롭다운에서 "시라/쉬라즈" 같이 슬래시로 묶인 품종은 동일 그룹으로 카운트
+  const grapeAliasMap: Record<string, string> = {};
+  GRAPE_OPTIONS.forEach((opt) => {
+    if (opt.includes("/")) {
+      opt.split("/").forEach((alias) => { grapeAliasMap[alias.trim()] = opt; });
+    }
+  });
+  const normalizeGrape = (g: string) => grapeAliasMap[g] ?? g;
+
   const grapeCounts: Record<string, number> = {};
   all.forEach((r) => {
-    if (r.grape_variety) {
-      r.grape_variety.split(/[,\/·&]+/).map((g) => g.trim()).filter(Boolean).forEach((g) => {
-        grapeCounts[g] = (grapeCounts[g] ?? 0) + 1;
-      });
+    if (!r.grape_variety) return;
+    // 블렌드인 경우 개별 품종 대신 "블렌드"로 카운트
+    if (r.grape_variety.startsWith("블렌드")) {
+      grapeCounts["블렌드"] = (grapeCounts["블렌드"] ?? 0) + 1;
+    } else {
+      grapeCounts[normalizeGrape(r.grape_variety)] = (grapeCounts[normalizeGrape(r.grape_variety)] ?? 0) + 1;
     }
   });
   const topGrapes = Object.entries(grapeCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);

@@ -216,32 +216,6 @@ function FeedCard({ record }: { record: WineRecord }) {
       {/* 사진 영역 확보 */}
       <div className="flex-1 z-10 pointer-events-none min-h-[220px]" />
 
-      {/* 태그 (글라스 패널 바로 위) */}
-      <div className="relative z-20 flex items-center gap-1.5 flex-wrap px-5 pb-2 pointer-events-none">
-        {record.wine_type && (
-          <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-zinc-200 font-medium shadow-sm">
-            <span className={`w-1.5 h-1.5 rounded-full ${WINE_TYPE_COLORS[record.wine_type] ?? "bg-zinc-500"}`} />
-            {TYPE_KO[record.wine_type] ?? record.wine_type}
-          </span>
-        )}
-        {record.wine_vintage && (
-          <span className="px-2 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-zinc-200 font-medium shadow-sm">
-            {record.wine_vintage}
-          </span>
-        )}
-        {record.wine_country && (
-          <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-zinc-200 font-medium shadow-sm">
-            <MapPin size={10} className="text-zinc-300" />
-            {record.wine_country}
-          </span>
-        )}
-        {record.grape_variety && (
-          <span className="px-2 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-zinc-200 font-medium shadow-sm">
-            🍇 {/블렌드|blend/i.test(record.grape_variety) ? '블렌드' : record.grape_variety}
-          </span>
-        )}
-      </div>
-
       {/* 하단 슬림 글라스 패널 */}
       <div className="relative z-20 mt-auto px-5 py-4 bg-black/40 backdrop-blur-2xl border-t border-white/10 pointer-events-none">
         <h2 className="font-serif font-medium text-white text-lg tracking-wide leading-tight line-clamp-1 drop-shadow-md">
@@ -255,6 +229,30 @@ function FeedCard({ record }: { record: WineRecord }) {
           {record.location && ` · ${record.location}`}
           {foods.length > 0 && ` · 🍽 ${foods.map(f => f.name).join(", ")}`}
         </p>
+        <div className="flex items-center gap-1.5 flex-wrap mt-2">
+          {record.wine_type && (
+            <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium">
+              <span className={`w-1.5 h-1.5 rounded-full ${WINE_TYPE_COLORS[record.wine_type] ?? "bg-zinc-500"}`} />
+              {TYPE_KO[record.wine_type] ?? record.wine_type}
+            </span>
+          )}
+          {record.grape_variety && (
+            <span className="px-2 py-1 rounded-full bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium">
+              🍇 {/블렌드|blend/i.test(record.grape_variety) ? '블렌드' : record.grape_variety}
+            </span>
+          )}
+          {record.wine_country && (
+            <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium">
+              <MapPin size={10} className="text-zinc-400" />
+              {record.wine_country}
+            </span>
+          )}
+          {record.wine_vintage && (
+            <span className="px-2 py-1 rounded-full bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium">
+              {record.wine_vintage}
+            </span>
+          )}
+        </div>
       </div>
     </Link>
   );

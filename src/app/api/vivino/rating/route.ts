@@ -20,7 +20,7 @@ export async function GET(request: Request) {
       if (wine?.vivino_page_url) {
         const result = await extractRatingFromJsonLd(wine.vivino_page_url);
         if (result) {
-          cacheRating(supabase, wineId, result.rating, result.reviews);
+          cacheRating(supabase, wineId, result.rating, result.reviews, undefined, undefined, result.vivinoName);
           return Response.json(result);
         }
       }
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     const result = await extractRatingFromJsonLd(found.url);
     if (result) {
       if (wineId) {
-        cacheRating(supabase, wineId, result.rating, result.reviews, found.url, found.vivinoWineId);
+        cacheRating(supabase, wineId, result.rating, result.reviews, found.url, found.vivinoWineId, result.vivinoName);
       }
       return Response.json(result);
     }
@@ -96,7 +96,7 @@ async function findVivinoWinePage(query: string): Promise<{ url: string; vivinoW
   return null;
 }
 
-async function extractRatingFromJsonLd(url: string): Promise<{ rating: number; reviews: number } | null> {
+async function extractRatingFromJsonLd(url: string): Promise<{ rating: number; reviews: number; vivinoName?: string } | null> {
   try {
     const res = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36" },
@@ -110,7 +110,7 @@ async function extractRatingFromJsonLd(url: string): Promise<{ rating: number; r
         if (d.aggregateRating) {
           const rating = parseFloat(d.aggregateRating.ratingValue);
           const reviews = parseInt(d.aggregateRating.ratingCount);
-          if (rating > 0 && reviews > 0) return { rating, reviews };
+          if (rating > 0 && reviews > 0) return { rating, reviews, vivinoName: d.name };
         }
       } catch {}
     }
@@ -119,11 +119,34 @@ async function extractRatingFromJsonLd(url: string): Promise<{ rating: number; r
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function cacheRating(supabase: any, wineId: string, rating: number, reviews: number, pageUrl?: string, vivinoWineId?: number) {
+async function cacheRating(supabase: any, wineId: string, rating: number, reviews: number, pageUrl?: string, vivinoWineId?: number, vivinoName?: string) {
   try {
     const update: Record<string, unknown> = { vivino_rating: rating, vivino_reviews: reviews };
     if (pageUrl) update.vivino_page_url = pageUrl;
     if (vivinoWineId) update.vivino_wine_id = vivinoWineId;
+    // Vivino 원본명이 있으면 vivino_url도 갱신 (정확한 이름 기반)
+    if (vivinoName) {
+      update.vivino_url = `https://www.vivino.com/search/wines?q=${encodeURIComponent(vivinoName)}`;
+    }
     await supabase.from("wines").update(update).eq("id", wineId);
   } catch {}
+}
+
+// Vivino 페이지에서 원본 와인명도 추출하여 DB 교정
+async function correctOriginalName(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36" },
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const matches = [...html.matchAll(/<script type="application\/ld\+json">\s*([\s\S]*?)<\/script>/g)];
+    for (const m of matches) {
+      try {
+        const d = JSON.parse(m[1]);
+        if (d["@type"] === "Product" && d.name) return d.name;
+      } catch {}
+    }
+  } catch {}
+  return null;
 }

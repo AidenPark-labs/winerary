@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import VivinoRating from "./VivinoRating";
+import WineActions from "./WineActions";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드", white: "화이트", rose: "로제",
@@ -103,6 +104,9 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
             💰 네이버에서 구매하기
           </a>
         )}
+
+        {/* 내 와인에 추가 / 기록하기 */}
+        <WineActions wine={wine} />
 
         {/* 유사 와인 */}
         {similar && similar.length > 0 && (

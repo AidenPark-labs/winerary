@@ -97,7 +97,7 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
         )}
 
         {selected && (
-          <div className="absolute bottom-4 left-4 right-4 bg-zinc-900 border border-zinc-700 rounded-2xl p-4 shadow-xl">
+          <div className="absolute bottom-4 left-4 right-4 z-[1000] bg-zinc-900 border border-zinc-700 rounded-2xl p-4 shadow-xl">
             <button
               onClick={() => setSelected(null)}
               className="absolute top-3 right-3 text-zinc-500 hover:text-zinc-300 text-lg w-6 h-6 flex items-center justify-center"

@@ -84,6 +84,7 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
             nameEn={wine.name_en}
             initialRating={wine.vivino_rating}
             initialReviews={wine.vivino_reviews}
+            initialPageUrl={wine.vivino_page_url}
           />
         </div>
 
@@ -96,20 +97,12 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
         )}
 
         {/* 외부 링크 */}
-        <div className="flex gap-2">
-          {wine.vivino_url && (
-            <a href={wine.vivino_url} target="_blank" rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl border border-rose-800/60 bg-rose-950/30 text-rose-300 text-sm hover:bg-rose-900/40 transition-colors">
-              🍇 Vivino
-            </a>
-          )}
-          {wine.naver_link && (
-            <a href={wine.naver_link} target="_blank" rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl border border-emerald-800/60 bg-emerald-950/30 text-emerald-300 text-sm hover:bg-emerald-900/40 transition-colors">
-              💰 네이버 최저가
-            </a>
-          )}
-        </div>
+        {wine.naver_link && (
+          <a href={wine.naver_link} target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-center gap-1.5 py-3 rounded-xl border border-emerald-800/60 bg-emerald-950/30 text-emerald-300 text-sm hover:bg-emerald-900/40 transition-colors">
+            💰 네이버에서 구매하기
+          </a>
+        )}
 
         {/* 유사 와인 */}
         {similar && similar.length > 0 && (

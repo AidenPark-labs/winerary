@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
   const { data } = await supabase
     .from("wines")
-    .select("id, name_ko, name_en, wine_type, country, region, grape_variety, producer, description, price, naver_link, naver_image, vivino_url, vivino_rating, vivino_reviews")
+    .select("id, name_ko, name_en, wine_type, country, region, grape_variety, producer, description, price, naver_link, naver_image, vivino_url, vivino_page_url, vivino_rating, vivino_reviews")
     .or(filters.join(","))
     .order("price", { ascending: true, nullsFirst: false })
     .limit(20);

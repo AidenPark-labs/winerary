@@ -21,7 +21,7 @@ export async function GET(request: Request) {
         const result = await extractRatingFromJsonLd(wine.vivino_page_url);
         if (result) {
           cacheRating(supabase, wineId, result.rating, result.reviews, undefined, undefined, result.vivinoName);
-          return Response.json(result);
+          return Response.json({ ...result, vivinoPageUrl: wine.vivino_page_url });
         }
       }
     }
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       if (wineId) {
         cacheRating(supabase, wineId, result.rating, result.reviews, found.url, found.vivinoWineId, result.vivinoName);
       }
-      return Response.json(result);
+      return Response.json({ ...result, vivinoPageUrl: found.url });
     }
 
     return Response.json({ rating: null });

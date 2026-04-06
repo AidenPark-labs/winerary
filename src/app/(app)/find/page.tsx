@@ -62,6 +62,7 @@ interface DbWine {
   naver_link: string | null;
   naver_image: string | null;
   vivino_url: string | null;
+  vivino_page_url: string | null;
   vivino_rating: number | null;
   vivino_reviews: number | null;
 }
@@ -274,7 +275,7 @@ export default function FindPage() {
       grape_variety: wine.grape_variety,
       producer: wine.producer ?? undefined,
       description: wine.description ?? undefined,
-      vivino_url: wine.vivino_url ?? (wine.name_en ? `https://www.vivino.com/search/wines?q=${encodeURIComponent(wine.name_en)}` : undefined),
+      vivino_url: wine.vivino_page_url ?? wine.vivino_url ?? (wine.name_en ? `https://www.vivino.com/search/wines?q=${encodeURIComponent(wine.name_en)}` : undefined),
       vivino_rating: wine.vivino_rating ?? undefined,
       vivino_reviews: wine.vivino_reviews ?? undefined,
       db_match: true,

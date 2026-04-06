@@ -177,7 +177,7 @@ function FeedCard({ record }: { record: WineRecord }) {
     <Link
       href={`/diary/${record.id}`}
       className="group relative rounded-[24px] overflow-hidden bg-background border border-white/5 active:scale-[0.98] transition-all duration-300 shadow-xl flex flex-col"
-      style={{ height: "400px" }}
+      style={{ minHeight: "400px" }}
     >
       {/* 엣지투엣지 이미지 오버레이 영역 */}
       <div className="absolute inset-0 z-0">
@@ -195,14 +195,12 @@ function FeedCard({ record }: { record: WineRecord }) {
 
       {/* 상단 액션 바 (와인 타입 도트 & 메뉴) */}
       <div className="relative z-20 flex justify-between items-start p-5 pointer-events-none">
-        {record.wine_type && (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 shadow-lg pointer-events-auto">
-            <span className={`w-2 h-2 rounded-full ${WINE_TYPE_COLORS[record.wine_type] ?? "bg-zinc-500"} shadow-sm`} />
-            <span className="text-[11px] text-zinc-100 font-medium tracking-wide">
-              {TYPE_KO[record.wine_type] ?? record.wine_type}
-            </span>
+        {record.rating ? (
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 shadow-lg pointer-events-auto">
+            <span className="text-accent text-[11px]">★</span>
+            <span className="text-xs font-bold text-accent">{Number(record.rating).toFixed(1)}</span>
           </div>
-        )}
+        ) : <div />}
         <div className="flex items-center gap-2 pointer-events-auto">
           {photos.length > 1 && (
             <span className="flex items-center gap-1.5 text-[10px] px-2.5 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white shadow-lg">
@@ -215,30 +213,31 @@ function FeedCard({ record }: { record: WineRecord }) {
         </div>
       </div>
 
-      <div className="flex-1 z-10 pointer-events-none" />
+      {/* 사진이 온전히 보일 수 있도록 상단 빈 영역(최소 220px) 강제 확보 */}
+      <div className="flex-1 z-10 pointer-events-none min-h-[220px]" />
 
       {/* 하단 글래스모피즘 정보 패널 (카드 인 카드 느낌 제거, 하단 밀착형 블러) */}
       <div className="relative z-20 mt-auto p-6 bg-black/40 backdrop-blur-2xl border-t border-white/10 flex flex-col gap-2 pointer-events-none">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <h2 className="font-serif font-medium text-white text-xl tracking-wide leading-tight line-clamp-2 drop-shadow-md">
-              {record.name}
-            </h2>
-            {record.wine_name_original && (
-              <p className="text-xs text-zinc-300/80 italic mt-0.5 font-light truncate drop-shadow-sm">{record.wine_name_original}</p>
-            )}
-          </div>
-          {record.rating && (
-            <div className="flex items-center gap-1.5 flex-shrink-0 bg-accent/10 px-2.5 py-1 rounded-xl shadow-inner">
-              <span className="text-accent text-xs">★</span>
-              <span className="text-sm font-bold text-accent">{Number(record.rating).toFixed(1)}</span>
-            </div>
+        <div className="flex flex-col gap-0.5 min-w-0">
+          <h2 className="font-serif font-medium text-white text-xl tracking-wide leading-tight line-clamp-2 drop-shadow-md">
+            {record.name}
+          </h2>
+          {record.wine_name_original && (
+            <p className="text-xs text-zinc-300/80 italic font-light truncate drop-shadow-sm w-full">{record.wine_name_original}</p>
           )}
         </div>
         
-        <div className="flex items-center gap-3 flex-wrap mt-1">
+        <div className="flex items-center gap-2.5 flex-wrap mt-1">
+          {record.wine_type && (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/5">
+              <span className={`w-1.5 h-1.5 rounded-full ${WINE_TYPE_COLORS[record.wine_type] ?? "bg-zinc-500"} shadow-sm`} />
+              <span className="text-[10px] text-zinc-300 font-medium tracking-wide">
+                {TYPE_KO[record.wine_type] ?? record.wine_type}
+              </span>
+            </div>
+          )}
           {record.wine_vintage && (
-            <span className="text-xs font-semibold text-white/80 bg-white/10 px-2 py-0.5 rounded-md backdrop-blur-sm">
+            <span className="text-[11px] font-semibold text-white/80 bg-white/10 px-2 py-0.5 rounded-md backdrop-blur-sm">
               {record.wine_vintage}
             </span>
           )}

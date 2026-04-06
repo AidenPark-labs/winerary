@@ -8,6 +8,7 @@ import { createWineRecord } from "@/lib/actions/diary";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import StarRating from "@/components/StarRating";
 import PlaceSearch from "@/components/PlaceSearch";
+import BlendGrapeSelector from "@/components/BlendGrapeSelector";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -639,22 +640,7 @@ export default function NewDiaryPage() {
                     placeholder="예: 카베르네 소비뇽" className={iCls} />
                 )}
                 {grape === "__blend__" && (
-                  <div className="flex flex-col gap-2 mt-1">
-                    <p className="text-xs text-zinc-500">블렌드 구성 품종을 선택하세요</p>
-                    <div className="flex gap-1.5 flex-wrap">
-                      {GRAPE_OPTIONS.map((g) => (
-                        <button key={g} type="button"
-                          onClick={() => setBlendGrapes((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g])}
-                          className={`text-xs px-2.5 py-1.5 rounded-full border transition-colors ${
-                            blendGrapes.includes(g) ? "bg-rose-700 border-rose-600 text-white" : "bg-zinc-800 border-zinc-700 text-zinc-400"
-                          }`}
-                        >{g}</button>
-                      ))}
-                    </div>
-                    {blendGrapes.length > 0 && (
-                      <p className="text-xs text-zinc-400">선택: {blendGrapes.join(", ")}</p>
-                    )}
-                  </div>
+                  <BlendGrapeSelector grapes={blendGrapes} onChange={setBlendGrapes} />
                 )}
               </div>
 

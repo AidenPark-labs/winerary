@@ -7,6 +7,7 @@ import type { WineRecord, WineType } from "@/types";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import StarRating from "@/components/StarRating";
 import PlaceSearch from "@/components/PlaceSearch";
+import BlendGrapeSelector from "@/components/BlendGrapeSelector";
 
 const iCls = "w-full rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-zinc-100 focus:outline-none focus:border-rose-600 transition-colors text-sm";
 
@@ -253,20 +254,7 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
             <input value={grapeCustom} onChange={(e) => setGrapeCustom(e.target.value)} placeholder="품종명" className={iCls} />
           )}
           {grape === "__blend__" && (
-            <div className="flex flex-col gap-2">
-              <p className="text-xs text-zinc-500">블렌드 구성 품종</p>
-              <div className="flex gap-1.5 flex-wrap">
-                {GRAPE_OPTIONS.map((g) => (
-                  <button key={g} type="button"
-                    onClick={() => setBlendGrapes((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g])}
-                    className={`text-xs px-2.5 py-1.5 rounded-full border transition-colors ${
-                      blendGrapes.includes(g) ? "bg-rose-700 border-rose-600 text-white" : "bg-zinc-800 border-zinc-700 text-zinc-400"
-                    }`}
-                  >{g}</button>
-                ))}
-              </div>
-              {blendGrapes.length > 0 && <p className="text-xs text-zinc-400">선택: {blendGrapes.join(", ")}</p>}
-            </div>
+            <BlendGrapeSelector grapes={blendGrapes} onChange={setBlendGrapes} />
           )}
 
           {/* 국가 */}

@@ -316,9 +316,22 @@ export default function DiaryClient({ records }: { records: WineRecord[] }) {
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+
+  // 전체 태그 수집 (빈도순)
+  const tagCounts = records.reduce<Record<string, number>>((acc, r) => {
+    (r.tags ?? []).forEach((t) => { acc[t] = (acc[t] ?? 0) + 1; });
+    return acc;
+  }, {});
+  const allTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).map(([t]) => t);
+
+  // 태그 필터 적용
+  const filteredRecords = selectedTag
+    ? records.filter((r) => (r.tags ?? []).includes(selectedTag))
+    : records;
 
   // date -> records 맵
-  const recordsByDate = records.reduce<Record<string, WineRecord[]>>((acc, r) => {
+  const recordsByDate = filteredRecords.reduce<Record<string, WineRecord[]>>((acc, r) => {
     const date = r.drunk_at.slice(0, 10); // "YYYY-MM-DD"
     (acc[date] ??= []).push(r);
     return acc;
@@ -379,6 +392,28 @@ export default function DiaryClient({ records }: { records: WineRecord[] }) {
         ))}
       </div>
 
+      {/* 태그 필터 */}
+      {allTags.length > 0 && (
+        <div className="flex gap-2 px-5 mb-3 overflow-x-auto no-scrollbar" style={{ scrollbarWidth: "none" }}>
+          <button
+            onClick={() => setSelectedTag(null)}
+            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${!selectedTag ? "bg-white/10 text-white border-white/20" : "bg-transparent text-zinc-500 border-white/5 hover:text-zinc-300"}`}
+          >
+            전체
+          </button>
+          {allTags.map((tag) => (
+            <button
+              key={tag}
+              onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${selectedTag === tag ? "bg-accent/20 text-accent border-accent/30" : "bg-transparent text-zinc-500 border-white/5 hover:text-zinc-300"}`}
+            >
+              #{tag}
+              <span className="ml-1 text-[10px] opacity-60">{tagCounts[tag]}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {records.length === 0 ? (
         <div className="flex flex-col flex-1 items-center justify-center gap-5 text-center px-8 z-10 relative">
           <div className="w-24 h-24 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-2 shadow-2xl backdrop-blur-xl">
@@ -392,12 +427,12 @@ export default function DiaryClient({ records }: { records: WineRecord[] }) {
 
       ) : viewMode === "map" ? (
         /* ── 지도 뷰 ── */
-        <MapView records={records} />
+        <MapView records={filteredRecords} />
 
       ) : viewMode === "feed" ? (
         /* ── 피드 뷰 ── */
         <div className="flex flex-col gap-3 px-4 pb-28 overflow-y-auto">
-          {records.map((r) => <FeedCard key={r.id} record={r} />)}
+          {filteredRecords.map((r) => <FeedCard key={r.id} record={r} />)}
         </div>
 
       ) : (

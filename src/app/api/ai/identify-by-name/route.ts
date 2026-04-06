@@ -8,8 +8,11 @@ export async function POST(request: Request) {
     return Response.json({ error: "검색어가 필요합니다" }, { status: 400 });
   }
 
-  const prompt = `"${query}"라는 와인에 대해 알고 있다면 정보를 알려주세요.
-이 이름의 와인이 존재하지 않거나 모르겠으면 {"error": "해당 와인을 찾을 수 없습니다"} 만 반환하세요.
+  const prompt = `"${query}"라는 와인을 찾아주세요.
+정확한 이름이 아닐 수 있습니다. 발음이 비슷하거나 철자가 유사한 와인이 있다면 그 와인의 정보를 알려주세요.
+예: "gricmon" → "Manoir Grignon", "몬테스알파" → "Montes Alpha"
+
+해당하는 와인을 전혀 추정할 수 없으면 {"error": "해당 와인을 찾을 수 없습니다"} 만 반환하세요.
 
 아래 JSON 형식으로만 응답하세요. 설명 없이 JSON만 출력하세요:
 {

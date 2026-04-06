@@ -605,6 +605,27 @@ export default function NewDiaryPage() {
                   placeholder="예: Château Margaux" className={iCls} />
               </div>
 
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-zinc-500">종류</label>
+                <select value={wineType} onChange={(e) => setWineType(e.target.value as WineType | "")} className={iCls}>
+                  <option value="">선택 안 함</option>
+                  {WINE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-zinc-500">품종</label>
+                <GrapeCombobox
+                  value={grape}
+                  onChange={(v) => { setGrape(v); if (v !== "__blend__") setBlendGrapes([]); }}
+                  wineType={wineType}
+                  className={iCls}
+                />
+                {grape === "__blend__" && (
+                  <BlendGrapeSelector grapes={blendGrapes} onChange={setBlendGrapes} wineType={wineType} />
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs text-zinc-500">빈티지</label>
@@ -626,27 +647,6 @@ export default function NewDiaryPage() {
                 <input value={countryCustom} onChange={(e) => setCountryCustom(e.target.value)}
                   placeholder="예: 조지아" className={iCls} />
               )}
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-zinc-500">종류</label>
-                <select value={wineType} onChange={(e) => setWineType(e.target.value as WineType | "")} className={iCls}>
-                  <option value="">선택 안 함</option>
-                  {WINE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-zinc-500">품종</label>
-                <GrapeCombobox
-                  value={grape}
-                  onChange={(v) => { setGrape(v); if (v !== "__blend__") setBlendGrapes([]); }}
-                  wineType={wineType}
-                  className={iCls}
-                />
-                {grape === "__blend__" && (
-                  <BlendGrapeSelector grapes={blendGrapes} onChange={setBlendGrapes} wineType={wineType} />
-                )}
-              </div>
             </div>
 
             <button

@@ -225,6 +225,22 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="와인 이름" className={iCls} />
           <input value={wineNameOriginal} onChange={(e) => setWineNameOriginal(e.target.value)} placeholder="원본 명칭 (영어/현지어)" className={iCls} />
 
+          <select value={wineType} onChange={(e) => setWineType(e.target.value as WineType | "")} className={iCls}>
+            <option value="">종류 선택 안 함</option>
+            {WINE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+
+          {/* 품종 */}
+          <GrapeCombobox
+            value={grape}
+            onChange={(v) => { setGrape(v); if (v !== "__blend__") setBlendGrapes([]); }}
+            wineType={wineType}
+            className={iCls}
+          />
+          {grape === "__blend__" && (
+            <BlendGrapeSelector grapes={blendGrapes} onChange={setBlendGrapes} wineType={wineType} />
+          )}
+
           <div className="grid grid-cols-2 gap-2">
             <select value={wineVintage} onChange={(e) => setWineVintage(e.target.value)} className={iCls}>
               <option value="">빈티지 선택 안 함</option>
@@ -240,22 +256,6 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
           </div>
           {country === "__custom__" && (
             <input value={countryCustom} onChange={(e) => setCountryCustom(e.target.value)} placeholder="생산국" className={iCls} />
-          )}
-
-          <select value={wineType} onChange={(e) => setWineType(e.target.value as WineType | "")} className={iCls}>
-            <option value="">종류 선택 안 함</option>
-            {WINE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-
-          {/* 품종 */}
-          <GrapeCombobox
-            value={grape}
-            onChange={(v) => { setGrape(v); if (v !== "__blend__") setBlendGrapes([]); }}
-            wineType={wineType}
-            className={iCls}
-          />
-          {grape === "__blend__" && (
-            <BlendGrapeSelector grapes={blendGrapes} onChange={setBlendGrapes} wineType={wineType} />
           )}
         </section>
 

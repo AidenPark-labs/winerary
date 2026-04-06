@@ -9,6 +9,7 @@ import LoadingOverlay from "@/components/LoadingOverlay";
 import StarRating from "@/components/StarRating";
 import PlaceSearch from "@/components/PlaceSearch";
 import BlendGrapeSelector from "@/components/BlendGrapeSelector";
+import GrapeCombobox from "@/components/GrapeCombobox";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -356,7 +357,7 @@ export default function NewDiaryPage() {
     setError(null);
     const finalGrape = grape === "__blend__"
       ? (blendGrapes.length > 0 ? `블렌드 (${blendGrapes.join(", ")})` : "블렌드")
-      : grape === "__custom__" ? grapeCustom.trim() || null : grape || null;
+      : grape || null;
     const finalCountry = country === "__custom__" ? countryCustom.trim() || null : country || null;
     const result = await createWineRecord({
       name: wineName,
@@ -623,16 +624,11 @@ export default function NewDiaryPage() {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-zinc-500">품종</label>
-                <select value={grape} onChange={(e) => { setGrape(e.target.value); if (e.target.value !== "__blend__") setBlendGrapes([]); }} className={iCls}>
-                  <option value="">선택 안 함</option>
-                  {GRAPE_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
-                  <option value="__blend__">블렌드</option>
-                  <option value="__custom__">직접입력</option>
-                </select>
-                {grape === "__custom__" && (
-                  <input value={grapeCustom} onChange={(e) => setGrapeCustom(e.target.value)}
-                    placeholder="예: 카베르네 소비뇽" className={iCls} />
-                )}
+                <GrapeCombobox
+                  value={grape}
+                  onChange={(v) => { setGrape(v); if (v !== "__blend__") setBlendGrapes([]); }}
+                  className={iCls}
+                />
                 {grape === "__blend__" && (
                   <BlendGrapeSelector grapes={blendGrapes} onChange={setBlendGrapes} />
                 )}

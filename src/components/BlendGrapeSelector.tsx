@@ -1,41 +1,75 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { GRAPE_OPTIONS } from "@/lib/grapes";
 
 const iCls = "w-full rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-zinc-100 focus:outline-none focus:border-rose-600 transition-colors text-sm";
 
 export default function BlendGrapeSelector({ grapes, onChange }: { grapes: string[]; onChange: (v: string[]) => void }) {
-  const [selected, setSelected] = useState("");
-  const [customInput, setCustomInput] = useState("");
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   const available = GRAPE_OPTIONS.filter((g) => !grapes.includes(g));
+  const filtered = query ? available.filter((g) => g.includes(query)) : available;
 
-  function handleAdd() {
-    if (selected === "__custom__") {
-      const v = customInput.trim();
-      if (v && !grapes.includes(v)) { onChange([...grapes, v]); setCustomInput(""); setSelected(""); }
-    } else if (selected && !grapes.includes(selected)) {
-      onChange([...grapes, selected]);
-      setSelected("");
-    }
+  function handleAdd(g: string) {
+    if (!grapes.includes(g)) onChange([...grapes, g]);
+    setQuery("");
+    setOpen(false);
   }
 
   return (
-    <div className="flex flex-col gap-2 mt-1">
+    <div ref={wrapperRef} className="flex flex-col gap-2 mt-1">
       <div className="flex gap-2">
-        <select value={selected} onChange={(e) => setSelected(e.target.value)} className={iCls + " flex-1"}>
-          <option value="">품종 선택</option>
-          {available.map((g) => <option key={g} value={g}>{g}</option>)}
-          <option value="__custom__">직접입력</option>
-        </select>
-        <button type="button" onClick={handleAdd} disabled={!selected}
-          className="px-4 py-3 rounded-xl bg-zinc-700 hover:bg-zinc-600 disabled:opacity-40 text-zinc-200 text-sm font-medium transition-colors whitespace-nowrap">추가</button>
+        <div className="relative flex-1">
+          <input
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+            onFocus={() => setOpen(true)}
+            placeholder="품종 검색 후 추가…"
+            className={iCls}
+            autoComplete="off"
+          />
+        </div>
+        <button type="button" onClick={() => setOpen(!open)}
+          className="px-3 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors text-sm flex-shrink-0">
+          {open ? "▲" : "▼"}
+        </button>
       </div>
-      {selected === "__custom__" && (
-        <input value={customInput} onChange={(e) => setCustomInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } }}
-          placeholder="품종명 입력" className={iCls} />
+      {open && (
+        <ul className="bg-zinc-900 border border-zinc-700 rounded-xl overflow-hidden shadow-lg max-h-40 overflow-y-auto">
+          {filtered.map((g) => (
+            <li key={g}>
+              <button type="button" onClick={() => handleAdd(g)}
+                className="w-full text-left px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800 transition-colors">{g}</button>
+            </li>
+          ))}
+          {query && !filtered.length && (
+            <li>
+              <button type="button" onClick={() => handleAdd(query.trim())}
+                className="w-full text-left px-4 py-2 text-sm text-zinc-400 hover:bg-zinc-800">
+                &quot;{query}&quot; 직접 추가
+              </button>
+            </li>
+          )}
+          {query && filtered.length > 0 && !available.includes(query) && !grapes.includes(query) && (
+            <li>
+              <button type="button" onClick={() => handleAdd(query.trim())}
+                className="w-full text-left px-4 py-2 text-sm text-zinc-500 hover:bg-zinc-800 border-t border-zinc-800">
+                &quot;{query}&quot; 직접 추가
+              </button>
+            </li>
+          )}
+        </ul>
       )}
       {grapes.length > 0 && (
         <div className="flex gap-1.5 flex-wrap">

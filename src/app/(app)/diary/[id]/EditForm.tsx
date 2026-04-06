@@ -8,6 +8,7 @@ import LoadingOverlay from "@/components/LoadingOverlay";
 import StarRating from "@/components/StarRating";
 import PlaceSearch from "@/components/PlaceSearch";
 import BlendGrapeSelector from "@/components/BlendGrapeSelector";
+import GrapeCombobox from "@/components/GrapeCombobox";
 
 const iCls = "w-full rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-zinc-100 focus:outline-none focus:border-rose-600 transition-colors text-sm";
 
@@ -35,7 +36,7 @@ function initGrapeState(val: string | null) {
   if (val === "블렌드") return { grape: "__blend__", grapeCustom: "", blendGrapes: [] as string[] };
   const match = GRAPE_OPTIONS.find((g) => val.includes(g));
   if (match) return { grape: match, grapeCustom: "", blendGrapes: [] as string[] };
-  return { grape: "__custom__", grapeCustom: val, blendGrapes: [] as string[] };
+  return { grape: val, grapeCustom: "", blendGrapes: [] as string[] };
 }
 
 function initCountryState(val: string | null) {
@@ -146,7 +147,7 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
 
     const finalGrape = grape === "__blend__"
       ? (blendGrapes.length > 0 ? `블렌드 (${blendGrapes.join(", ")})` : "블렌드")
-      : grape === "__custom__" ? grapeCustom.trim() || null : grape || null;
+      : grape || null;
     const finalCountry = country === "__custom__" ? countryCustom.trim() || null : country || null;
 
     const result = await updateWineRecord(record.id, {
@@ -238,15 +239,11 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
           </div>
 
           {/* 품종 */}
-          <select value={grape} onChange={(e) => { setGrape(e.target.value); if (e.target.value !== "__blend__") setBlendGrapes([]); }} className={iCls}>
-            <option value="">품종 선택 안 함</option>
-            {GRAPE_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
-            <option value="__blend__">블렌드</option>
-            <option value="__custom__">직접입력</option>
-          </select>
-          {grape === "__custom__" && (
-            <input value={grapeCustom} onChange={(e) => setGrapeCustom(e.target.value)} placeholder="품종명" className={iCls} />
-          )}
+          <GrapeCombobox
+            value={grape}
+            onChange={(v) => { setGrape(v); if (v !== "__blend__") setBlendGrapes([]); }}
+            className={iCls}
+          />
           {grape === "__blend__" && (
             <BlendGrapeSelector grapes={blendGrapes} onChange={setBlendGrapes} />
           )}

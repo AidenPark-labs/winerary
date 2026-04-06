@@ -118,12 +118,17 @@ export default async function MyWinePage() {
   const topCountries = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
   const countryTotal = topCountries.reduce((s, [, c]) => s + c, 0);
 
-  // 2. 자주 마신 와인
-  const wineCounts: Record<string, number> = {};
-  all.forEach((r) => { wineCounts[r.name] = (wineCounts[r.name] ?? 0) + 1; });
-  const topWines = Object.entries(wineCounts)
-    .sort((a, b) => b[1] - a[1])
-    .filter(([, count]) => count >= 2)
+  // 2. 자주 마신 와인 (공백/특수문자 제거 후 소문자로 정규화해서 비교)
+  const normalizeWineName = (n: string) => n.replace(/[\s·\-_''""()（）]/g, "").toLowerCase();
+  const wineGroups: Record<string, { displayName: string; count: number }> = {};
+  all.forEach((r) => {
+    const key = normalizeWineName(r.name);
+    if (!wineGroups[key]) wineGroups[key] = { displayName: r.name, count: 0 };
+    wineGroups[key].count += 1;
+  });
+  const topWines = Object.values(wineGroups)
+    .sort((a, b) => b.count - a.count)
+    .filter((w) => w.count >= 2)
     .slice(0, 8);
 
   // 3. 같이 마신 사람
@@ -262,7 +267,7 @@ export default async function MyWinePage() {
             <section className="rounded-2xl bg-surface/80 border border-white/5 p-5 backdrop-blur-md shadow-sm">
               <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">자주 마신 와인</h2>
               {topWines.length > 0 ? (
-                <RankedBarList items={topWines.map(([name, count]) => ({ label: name, value: count }))} color="#e11d48" />
+                <RankedBarList items={topWines.map((w) => ({ label: w.displayName, value: w.count }))} color="#e11d48" />
               ) : (
                 <p className="text-sm text-zinc-600 text-center py-4">아직 재음한 와인이 없어요</p>
               )}

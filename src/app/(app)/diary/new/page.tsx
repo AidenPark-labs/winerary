@@ -13,7 +13,7 @@ import GrapeCombobox from "@/components/GrapeCombobox";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Step = "photo" | "wine" | "review";
+type Step = "photo" | "wine" | "review" | "rate";
 
 interface AiResult {
   name?: string;
@@ -202,6 +202,8 @@ export default function NewDiaryPage() {
   const [priceUnit, setPriceUnit] = useState<"bottle" | "glass">("bottle");
   const [valueScore, setValueScore] = useState(3);
   const [memo, setMemo] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
   const [visibility, setVisibility] = useState<"private" | "link" | "public">("private");
 
   const [saving, setSaving] = useState(false);
@@ -382,6 +384,7 @@ export default function NewDiaryPage() {
       price_unit: price ? priceUnit : null,
       value_score: valueScore,
       memo: memo || null,
+      tags: tags.length > 0 ? tags : null,
       visibility,
     });
     setSaving(false);
@@ -393,9 +396,10 @@ export default function NewDiaryPage() {
     if (step === "photo") router.back();
     else if (step === "wine") { setStep("photo"); setAiResult(null); setAiNotFound(false); setShowSearch(false); }
     else if (step === "review") setStep("wine");
+    else if (step === "rate") setStep("review");
   }
 
-  const stepIndex = step === "photo" ? 0 : step === "wine" ? 1 : 2;
+  const stepIndex = step === "photo" ? 0 : step === "wine" ? 1 : step === "review" ? 2 : 3;
 
   return (
     <>
@@ -412,11 +416,12 @@ export default function NewDiaryPage() {
               {step === "photo" && "와인 사진 찍기"}
               {step === "wine" && "와인 정보 확인"}
               {step === "review" && "감상 기록"}
+              {step === "rate" && "평가하기"}
             </h1>
           </div>
           {/* Step dots */}
           <div className="flex items-center gap-1.5">
-            {[0, 1, 2].map((i) => (
+            {[0, 1, 2, 3].map((i) => (
               <div key={i} className={`rounded-full transition-all ${
                 i === stepIndex ? "w-5 h-2 bg-rose-500" :
                 i < stepIndex ? "w-2 h-2 bg-zinc-500" : "w-2 h-2 bg-zinc-700"
@@ -771,6 +776,50 @@ export default function NewDiaryPage() {
                 </div>
               )}
             </section>
+
+            {/* 태그 */}
+            <section className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">태그</h2>
+              <div className="flex gap-2">
+                <input value={tagInput} onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const v = tagInput.trim().replace(/^#/, "");
+                      if (v && !tags.includes(v)) { setTags((t) => [...t, v]); setTagInput(""); }
+                    }
+                  }}
+                  placeholder="#태그 입력 후 추가" className={iCls} />
+                <button type="button"
+                  onClick={() => { const v = tagInput.trim().replace(/^#/, ""); if (v && !tags.includes(v)) { setTags((t) => [...t, v]); setTagInput(""); } }}
+                  disabled={!tagInput.trim()}
+                  className="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-200 text-sm font-medium transition-colors">추가</button>
+              </div>
+              {tags.length > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                  {tags.map((tag, i) => (
+                    <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-900/40 border border-violet-800/50 text-violet-200 text-sm">
+                      #{tag}
+                      <button type="button" onClick={() => setTags((t) => t.filter((_, idx) => idx !== i))} className="text-violet-400 hover:text-violet-200 text-base leading-none">×</button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <button type="button" onClick={() => setStep("rate")}
+              className="w-full py-4 rounded-2xl bg-rose-700 hover:bg-rose-600 text-white font-semibold text-base transition-colors mt-auto">
+              다음 — 평가하기 →
+            </button>
+          </form>
+        )}
+
+        {/* ══════════════════════════════════════════════ */}
+        {/* Step 4 — 평가하기                              */}
+        {/* ══════════════════════════════════════════════ */}
+        {step === "rate" && (
+          <form onSubmit={handleSubmit} className="flex flex-col px-4 pb-8 gap-6 overflow-y-auto">
+            {error && <p className="text-rose-400 text-sm bg-rose-950/40 rounded-xl px-4 py-3">{error}</p>}
 
             {/* 평점 */}
             <section className="flex flex-col gap-4">

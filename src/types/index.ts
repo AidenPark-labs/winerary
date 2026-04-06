@@ -27,6 +27,7 @@ export interface WineRecord {
   price_unit: 'bottle' | 'glass' | null
   value_score: number | null
   foods: FoodRecord[]
+  tags: string[] | null
   visibility: Visibility
   deleted_at: string | null
   created_at: string

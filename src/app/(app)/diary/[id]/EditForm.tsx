@@ -119,6 +119,8 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
   const [priceUnit, setPriceUnit] = useState<"bottle" | "glass">(record.price_unit ?? "bottle");
   const [valueScore, setValueScore] = useState(record.value_score ?? 3);
   const [memo, setMemo] = useState(record.memo ?? "");
+  const [tags, setTags] = useState<string[]>(record.tags ?? []);
+  const [tagInput, setTagInput] = useState("");
   const [visibility, setVisibility] = useState(record.visibility);
 
   async function handlePhotoAdd(e: React.ChangeEvent<HTMLInputElement>) {
@@ -165,6 +167,7 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
       drunk_at: drunkAt,
       companions: companions ? companions.split(",").map((s) => s.trim()).filter(Boolean) : null,
       memo: memo || null,
+      tags: tags.length > 0 ? tags : null,
       rating,
       pairing_score: foods.length > 0 ? pairingScore : null,
       price: price ? parseInt(price) : null,
@@ -336,6 +339,36 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
 
         {/* ── 메모 ── */}
         <textarea value={memo} onChange={(e) => setMemo(e.target.value)} rows={3} placeholder="메모" className={iCls + " resize-none"} />
+
+        {/* ── 태그 ── */}
+        <section className="flex flex-col gap-2">
+          <label className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">태그</label>
+          <div className="flex gap-2">
+            <input value={tagInput} onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  const v = tagInput.trim().replace(/^#/, "");
+                  if (v && !tags.includes(v)) { setTags((t) => [...t, v]); setTagInput(""); }
+                }
+              }}
+              placeholder="#태그 입력" className={iCls} />
+            <button type="button"
+              onClick={() => { const v = tagInput.trim().replace(/^#/, ""); if (v && !tags.includes(v)) { setTags((t) => [...t, v]); setTagInput(""); } }}
+              disabled={!tagInput.trim()}
+              className="px-3 py-3 rounded-xl bg-zinc-700 hover:bg-zinc-600 disabled:opacity-40 text-zinc-200 text-sm whitespace-nowrap">추가</button>
+          </div>
+          {tags.length > 0 && (
+            <div className="flex gap-2 flex-wrap">
+              {tags.map((tag, i) => (
+                <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-900/40 border border-violet-800/50 text-violet-200 text-sm">
+                  #{tag}
+                  <button type="button" onClick={() => setTags((t) => t.filter((_, idx) => idx !== i))} className="text-violet-400 hover:text-violet-200">×</button>
+                </span>
+              ))}
+            </div>
+          )}
+        </section>
 
         {/* ── 공개 범위 ── */}
         <select value={visibility} onChange={(e) => setVisibility(e.target.value as "private" | "link" | "public")} className={iCls}>

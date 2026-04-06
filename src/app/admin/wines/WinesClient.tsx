@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { updateWine } from "./actions";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드 🍷", white: "화이트 🥂", rose: "로제 🌸",
@@ -52,6 +53,38 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
   const [search, setSearch] = useState(initialSearch);
   const [filterType, setFilterType] = useState(initialType);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editUrl, setEditUrl] = useState("");
+  const [editRating, setEditRating] = useState("");
+  const [editReviews, setEditReviews] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+
+  function startEdit(w: Wine) {
+    setEditing(w.id);
+    setEditUrl(w.vivino_url ?? "");
+    setEditRating(w.vivino_rating != null ? String(w.vivino_rating) : "");
+    setEditReviews(w.vivino_reviews != null ? String(w.vivino_reviews) : "");
+    setSaveMsg(null);
+  }
+
+  async function handleSave(id: string) {
+    setSaving(true);
+    setSaveMsg(null);
+    const result = await updateWine(id, {
+      vivino_url: editUrl.trim() || null,
+      vivino_rating: editRating ? parseFloat(editRating) : null,
+      vivino_reviews: editReviews ? parseInt(editReviews) : null,
+    });
+    setSaving(false);
+    if (result.error) {
+      setSaveMsg(`오류: ${result.error}`);
+    } else {
+      setSaveMsg("저장 완료");
+      setEditing(null);
+      router.refresh();
+    }
+  }
 
   function navigate(overrides: { page?: number; q?: string; type?: string }) {
     const params = new URLSearchParams();
@@ -179,23 +212,75 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
                   <InfoCell label="수정일">{new Date(w.updated_at).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })}</InfoCell>
                 </div>
 
-                {/* 외부 링크 */}
-                {(w.vivino_url || w.naver_link) && (
-                  <div className="flex gap-3 mt-4 pt-3 border-t border-zinc-800">
-                    {w.vivino_url && (
-                      <a href={w.vivino_url} target="_blank" rel="noopener noreferrer"
-                        className="text-xs px-3 py-1.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-colors"
-                        onClick={(e) => e.stopPropagation()}>
-                        Vivino에서 보기 →
-                      </a>
+                {/* Vivino 편집 */}
+                <div className="mt-4 pt-3 border-t border-zinc-800" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-zinc-500 text-[10px] uppercase tracking-wider font-semibold">Vivino 정보</span>
+                    {editing !== w.id ? (
+                      <button onClick={() => startEdit(w)} className="text-[11px] px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700 transition-colors">
+                        수정
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        {saveMsg && <span className="text-[11px] text-emerald-400">{saveMsg}</span>}
+                        <button onClick={() => setEditing(null)} className="text-[11px] px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-400 border border-zinc-700 hover:bg-zinc-700">취소</button>
+                        <button onClick={() => handleSave(w.id)} disabled={saving} className="text-[11px] px-2.5 py-1 rounded-lg bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-50">
+                          {saving ? "저장중…" : "저장"}
+                        </button>
+                      </div>
                     )}
-                    {w.naver_link && (
-                      <a href={w.naver_link} target="_blank" rel="noopener noreferrer"
-                        className="text-xs px-3 py-1.5 rounded-lg bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20 transition-colors"
-                        onClick={(e) => e.stopPropagation()}>
-                        네이버에서 보기 →
-                      </a>
-                    )}
+                  </div>
+
+                  {editing === w.id ? (
+                    <div className="flex flex-col gap-2">
+                      <div>
+                        <label className="text-zinc-500 text-[10px]">Vivino URL (상품 상세 페이지)</label>
+                        <input value={editUrl} onChange={(e) => setEditUrl(e.target.value)} placeholder="https://www.vivino.com/w/..."
+                          className="w-full mt-1 rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-200" />
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="flex-1">
+                          <label className="text-zinc-500 text-[10px]">평점 (0.0~5.0)</label>
+                          <input type="number" step="0.1" min="0" max="5" value={editRating} onChange={(e) => setEditRating(e.target.value)} placeholder="4.2"
+                            className="w-full mt-1 rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-200" />
+                        </div>
+                        <div className="flex-1">
+                          <label className="text-zinc-500 text-[10px]">리뷰 수</label>
+                          <input type="number" min="0" value={editReviews} onChange={(e) => setEditReviews(e.target.value)} placeholder="1234"
+                            className="w-full mt-1 rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-200" />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-1 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-zinc-500 text-xs w-12">URL</span>
+                        {w.vivino_url ? (
+                          <a href={w.vivino_url} target="_blank" rel="noopener noreferrer" className="text-rose-400 hover:underline truncate">{w.vivino_url}</a>
+                        ) : (
+                          <span className="text-zinc-600 italic">없음</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-zinc-500 text-xs w-12">평점</span>
+                        {w.vivino_rating != null ? (
+                          <span className="text-amber-400">★ {w.vivino_rating}{w.vivino_reviews != null && <span className="text-zinc-500 ml-1">({w.vivino_reviews.toLocaleString()}개 리뷰)</span>}</span>
+                        ) : (
+                          <span className="text-zinc-600 italic">없음</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 네이버 링크 */}
+                {w.naver_link && (
+                  <div className="mt-3 pt-3 border-t border-zinc-800">
+                    <a href={w.naver_link} target="_blank" rel="noopener noreferrer"
+                      className="text-xs px-3 py-1.5 rounded-lg bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20 transition-colors"
+                      onClick={(e) => e.stopPropagation()}>
+                      네이버에서 보기 →
+                    </a>
                   </div>
                 )}
 

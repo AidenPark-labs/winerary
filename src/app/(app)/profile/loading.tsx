@@ -12,6 +12,15 @@ function SkeletonBar({ width }: { width: string }) {
   );
 }
 
+function SkeletonSection({ title, children }: { title?: boolean; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-5">
+      {title !== false && <div className="h-4 w-20 rounded bg-zinc-700 mb-4" />}
+      {children}
+    </div>
+  );
+}
+
 export default function ProfileLoading() {
   return (
     <div className="flex flex-col">
@@ -40,9 +49,8 @@ export default function ProfileLoading() {
           ))}
         </div>
 
-        {/* 도넛 차트 */}
-        <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-5">
-          <div className="h-4 w-20 rounded bg-zinc-700 mb-4" />
+        {/* 1. 국가 도넛 */}
+        <SkeletonSection>
           <div className="flex items-center gap-6">
             <div className="w-[120px] h-[120px] rounded-full bg-zinc-800 flex-shrink-0" />
             <div className="flex flex-col gap-3 flex-1">
@@ -54,17 +62,75 @@ export default function ProfileLoading() {
               ))}
             </div>
           </div>
-        </div>
+        </SkeletonSection>
 
-        {/* 바 차트 */}
-        <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-5">
-          <div className="h-4 w-20 rounded bg-zinc-700 mb-4" />
+        {/* 2. 자주 마신 와인 */}
+        <SkeletonSection>
           <div className="flex flex-col gap-3">
-            {["90%", "65%", "45%", "30%"].map((w, i) => (
+            {["90%", "70%", "45%", "30%"].map((w, i) => (
               <SkeletonBar key={i} width={w} />
             ))}
           </div>
-        </div>
+        </SkeletonSection>
+
+        {/* 3. 같이 마신 사람 */}
+        <SkeletonSection>
+          <div className="flex flex-col gap-3">
+            {["85%", "55%", "35%"].map((w, i) => (
+              <SkeletonBar key={i} width={w} />
+            ))}
+          </div>
+        </SkeletonSection>
+
+        {/* 4. 가성비 분석 */}
+        <SkeletonSection>
+          <div className="flex flex-col gap-3">
+            {[70, 85, 60, 50].map((w, i) => (
+              <div key={i} className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <div className="h-3.5 w-16 rounded bg-zinc-700" />
+                  <div className="h-3.5 w-12 rounded bg-zinc-700" />
+                </div>
+                <div className="h-1.5 rounded-full bg-zinc-800">
+                  <div className="h-1.5 rounded-full bg-zinc-700" style={{ width: `${w}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </SkeletonSection>
+
+        {/* 5. 페어링 음식 */}
+        <SkeletonSection>
+          <div className="flex flex-col gap-3">
+            {["90%", "65%", "40%"].map((w, i) => (
+              <SkeletonBar key={i} width={w} />
+            ))}
+          </div>
+        </SkeletonSection>
+
+        {/* 6. 장소별 */}
+        <SkeletonSection>
+          <div className="flex flex-col gap-3">
+            {["80%", "50%"].map((w, i) => (
+              <SkeletonBar key={i} width={w} />
+            ))}
+          </div>
+        </SkeletonSection>
+
+        {/* 7. 가격대별 */}
+        <SkeletonSection>
+          <div className="h-2 rounded-full bg-zinc-800 mb-4" />
+          <div className="flex flex-col gap-2">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-zinc-700 flex-shrink-0" />
+                <div className="h-3 w-16 rounded bg-zinc-700" />
+                <div className="flex-1" />
+                <div className="h-3 w-6 rounded bg-zinc-700" />
+              </div>
+            ))}
+          </div>
+        </SkeletonSection>
       </div>
     </div>
   );

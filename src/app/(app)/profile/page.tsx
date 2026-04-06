@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { WineRecord } from "@/types";
 import LogoutButton from "./LogoutButton";
 import AuthPrompt from "@/components/AuthPrompt";
-import { User, Book, Star, BarChart3, Wine } from "lucide-react";
+import { User, Book, Star, BarChart3 } from "lucide-react";
 
 const TYPE_META: Record<string, { label: string; color: string }> = {
   red:       { label: "레드",    color: "#be123c" },
@@ -12,6 +12,23 @@ const TYPE_META: Record<string, { label: string; color: string }> = {
   fortified: { label: "주정강화", color: "#8b5cf6" },
   other:     { label: "기타",    color: "#52525b" },
 };
+
+const CHART_COLORS = ["#e11d48", "#d97706", "#16a34a", "#0ea5e9", "#8b5cf6", "#52525b"];
+
+const PRICE_RANGES = [
+  { label: "~1만원", min: 0, max: 10000, color: "#16a34a" },
+  { label: "1~3만원", min: 10000, max: 30000, color: "#0ea5e9" },
+  { label: "3~5만원", min: 30000, max: 50000, color: "#d97706" },
+  { label: "5~10만원", min: 50000, max: 100000, color: "#8b5cf6" },
+  { label: "10만원~", min: 100000, max: Infinity, color: "#e11d48" },
+];
+
+const VALUE_BUCKETS = [
+  { label: "~2만원", min: 0, max: 20000 },
+  { label: "2~5만원", min: 20000, max: 50000 },
+  { label: "5~10만원", min: 50000, max: 100000 },
+  { label: "10만원~", min: 100000, max: Infinity },
+];
 
 export default async function MyWinePage() {
   const supabase = await createClient();
@@ -56,16 +73,12 @@ export default async function MyWinePage() {
   const all = (records ?? []) as WineRecord[];
   const total = all.length;
 
-  // 평점
+  // 종합 평점
   const overallScores = all.map((r) => {
     const scores = [r.rating, r.value_score, r.pairing_score].filter((v): v is number => v != null).map(Number);
     return scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
   }).filter((v): v is number => v != null);
   const avgOverall = overallScores.length ? overallScores.reduce((a, b) => a + b, 0) / overallScores.length : null;
-
-  // 가격 통계
-  const priced = all.filter((r) => r.price != null && r.price > 0);
-  const avgPrice = priced.length ? Math.round(priced.reduce((s, r) => s + r.price!, 0) / priced.length) : null;
 
   // 와인 종류 분포
   const typeCounts: Record<string, number> = {};
@@ -87,21 +100,61 @@ export default async function MyWinePage() {
   });
   const topGrapes = Object.entries(grapeCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
 
-  // 생산 국가 Top 5
+  // 1. 국가별 통계
   const countryCounts: Record<string, number> = {};
   all.forEach((r) => { if (r.wine_country) countryCounts[r.wine_country] = (countryCounts[r.wine_country] ?? 0) + 1; });
-  const topCountries = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const topCountries = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const countryTotal = topCountries.reduce((s, [, c]) => s + c, 0);
 
-  // 월별 기록 (최근 6개월)
-  const monthCounts: Record<string, number> = {};
-  all.forEach((r) => { monthCounts[r.drunk_at.slice(0, 7)] = (monthCounts[r.drunk_at.slice(0, 7)] ?? 0) + 1; });
-  const recentMonths = Object.entries(monthCounts).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 6).reverse();
-  const maxMonthCount = recentMonths.length ? Math.max(...recentMonths.map(([, c]) => c)) : 1;
+  // 2. 자주 마신 와인
+  const wineCounts: Record<string, number> = {};
+  all.forEach((r) => { wineCounts[r.name] = (wineCounts[r.name] ?? 0) + 1; });
+  const topWines = Object.entries(wineCounts)
+    .sort((a, b) => b[1] - a[1])
+    .filter(([, count]) => count >= 2)
+    .slice(0, 8);
 
-  // 자주 페어링한 음식
-  const foodCount: Record<string, number> = {};
-  all.forEach((r) => { (r.foods ?? []).forEach((f) => { foodCount[f.name] = (foodCount[f.name] ?? 0) + 1; }); });
-  const topFoods = Object.entries(foodCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  // 3. 같이 마신 사람
+  const companionCounts: Record<string, number> = {};
+  all.forEach((r) => { (r.companions ?? []).forEach((c) => { companionCounts[c] = (companionCounts[c] ?? 0) + 1; }); });
+  const topCompanions = Object.entries(companionCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
+
+  // 4. 가성비 분석
+  const valuePairs = all.filter((r) => r.price != null && r.price > 0 && r.rating != null);
+  const bucketStats = VALUE_BUCKETS.map((b) => {
+    const items = valuePairs.filter((v) => v.price! >= b.min && v.price! < b.max);
+    const avgRating = items.length ? items.reduce((s, v) => s + Number(v.rating!), 0) / items.length : null;
+    return { ...b, count: items.length, avgRating };
+  }).filter((b) => b.count > 0);
+
+  // 5. 페어링 음식
+  const foodStats: Record<string, { count: number; totalScore: number; scored: number }> = {};
+  all.forEach((r) => {
+    (r.foods ?? []).forEach((f) => {
+      const entry = foodStats[f.name] ?? { count: 0, totalScore: 0, scored: 0 };
+      entry.count += 1;
+      if (r.pairing_score != null) { entry.totalScore += r.pairing_score; entry.scored += 1; }
+      foodStats[f.name] = entry;
+    });
+  });
+  const topFoods = Object.entries(foodStats)
+    .map(([name, s]) => ({ name, count: s.count, avgScore: s.scored > 0 ? s.totalScore / s.scored : null }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 6);
+
+  // 6. 장소별 통계
+  const placeCounts: Record<string, number> = {};
+  all.forEach((r) => { if (r.place_name) placeCounts[r.place_name] = (placeCounts[r.place_name] ?? 0) + 1; });
+  const topPlaces = Object.entries(placeCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  // 7. 가격대별 분석
+  const priceDistribution = PRICE_RANGES.map((range) => {
+    const count = all.filter((r) => r.price != null && r.price >= range.min && r.price < range.max).length;
+    return { ...range, count };
+  }).filter((r) => r.count > 0);
+  const priceTotal = priceDistribution.reduce((s, r) => s + r.count, 0);
+  const pricedRecords = all.filter((r) => r.price != null && r.price > 0);
+  const avgPrice = pricedRecords.length ? Math.round(pricedRecords.reduce((s, r) => s + r.price!, 0) / pricedRecords.length) : null;
 
   return (
     <div className="flex flex-col">
@@ -140,7 +193,7 @@ export default async function MyWinePage() {
           </div>
         ) : (
           <>
-            {/* 와인 종류 도넛 차트 */}
+            {/* 와인 종류 */}
             {typeSegments.length > 0 && (
               <section className="rounded-2xl bg-surface/80 border border-white/5 p-5 backdrop-blur-md shadow-sm">
                 <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">와인 종류</h2>
@@ -164,80 +217,105 @@ export default async function MyWinePage() {
             {topGrapes.length > 0 && (
               <section className="rounded-2xl bg-surface/80 border border-white/5 p-5 backdrop-blur-md shadow-sm">
                 <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">선호 품종</h2>
-                <div className="flex flex-col gap-3">
-                  {topGrapes.map(([grape, count], i) => (
-                    <div key={grape} className="flex flex-col gap-1">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-zinc-600 w-4">{i + 1}</span>
-                          <span className="text-sm text-zinc-200">{grape}</span>
-                        </div>
-                        <span className="text-sm font-semibold text-white">{count}번</span>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-zinc-800 ml-6">
-                        <div className="h-1.5 rounded-full bg-rose-600" style={{ width: `${(count / topGrapes[0][1]) * 100}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <RankedBarList items={topGrapes.map(([grape, count]) => ({ label: grape, value: count }))} color="#be123c" />
               </section>
             )}
 
-            {/* 생산 국가 */}
+            {/* 1. 국가 */}
             {topCountries.length > 0 && (
               <section className="rounded-2xl bg-surface/80 border border-white/5 p-5 backdrop-blur-md shadow-sm">
                 <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">생산 국가</h2>
-                <div className="flex flex-col gap-3">
-                  {topCountries.map(([country, count], i) => (
-                    <div key={country} className="flex flex-col gap-1">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-zinc-600 w-4">{i + 1}</span>
-                          <span className="text-sm text-zinc-200">{country}</span>
-                        </div>
-                        <span className="text-sm font-semibold text-white">{count}번</span>
+                <div className="flex items-center gap-6">
+                  <DonutChart
+                    segments={topCountries.map(([name, count], i) => ({
+                      label: name, value: count, color: CHART_COLORS[i % CHART_COLORS.length],
+                    }))}
+                    total={countryTotal}
+                  />
+                  <div className="flex flex-col gap-2 flex-1 min-w-0">
+                    {topCountries.map(([name, count], i) => (
+                      <div key={name} className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
+                        <span className="text-sm text-zinc-300 flex-1 truncate">{name}</span>
+                        <span className="text-sm font-semibold text-white">{count}</span>
+                        <span className="text-xs text-zinc-500 w-9 text-right">{Math.round((count / countryTotal) * 100)}%</span>
                       </div>
-                      <div className="h-1.5 rounded-full bg-zinc-800 ml-6">
-                        <div className="h-1.5 rounded-full bg-amber-600" style={{ width: `${(count / topCountries[0][1]) * 100}%` }} />
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </section>
             )}
 
-            {/* 월별 기록 */}
-            {recentMonths.length > 0 && (
+            {/* 2. 자주 마신 와인 */}
+            <section className="rounded-2xl bg-surface/80 border border-white/5 p-5 backdrop-blur-md shadow-sm">
+              <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">자주 마신 와인</h2>
+              {topWines.length > 0 ? (
+                <RankedBarList items={topWines.map(([name, count]) => ({ label: name, value: count }))} color="#e11d48" />
+              ) : (
+                <p className="text-sm text-zinc-600 text-center py-4">아직 재음한 와인이 없어요</p>
+              )}
+            </section>
+
+            {/* 3. 같이 마신 사람 */}
+            {topCompanions.length > 0 && (
               <section className="rounded-2xl bg-surface/80 border border-white/5 p-5 backdrop-blur-md shadow-sm">
-                <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">월별 기록</h2>
-                <div className="flex items-end gap-2 h-28">
-                  {recentMonths.map(([month, count]) => (
-                    <div key={month} className="flex-1 flex flex-col items-center gap-1">
-                      <span className="text-xs text-zinc-400">{count}</span>
-                      <div className="w-full rounded-t-md bg-rose-700/80" style={{ height: `${(count / maxMonthCount) * 72}px` }} />
-                      <span className="text-[10px] text-zinc-500">{month.slice(5)}월</span>
-                    </div>
-                  ))}
-                </div>
+                <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">같이 마신 사람</h2>
+                <RankedBarList items={topCompanions.map(([name, count]) => ({ label: name, value: count }))} color="#8b5cf6" />
               </section>
             )}
 
-            {/* 자주 페어링한 음식 */}
+            {/* 4. 가성비 분석 */}
+            {bucketStats.length >= 2 && (
+              <section className="rounded-2xl bg-surface/80 border border-white/5 p-5 backdrop-blur-md shadow-sm">
+                <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">가성비 분석</h2>
+                <div className="flex flex-col gap-3">
+                  {bucketStats.map((b) => (
+                    <div key={b.label} className="flex flex-col gap-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-zinc-300">{b.label}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-white">{b.avgRating!.toFixed(1)}</span>
+                          <span className="text-xs text-zinc-500">({b.count}건)</span>
+                        </div>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-zinc-800">
+                        <div className="h-1.5 rounded-full bg-amber-600" style={{ width: `${(b.avgRating! / 5) * 100}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {(() => {
+                  const best = bucketStats.reduce((a, b) => (b.avgRating ?? 0) > (a.avgRating ?? 0) ? b : a);
+                  return (
+                    <p className="text-xs text-zinc-500 mt-4 text-center">
+                      가장 높은 평점 가격대: <span className="text-amber-500 font-medium">{best.label}</span> ({best.avgRating!.toFixed(1)}점)
+                    </p>
+                  );
+                })()}
+              </section>
+            )}
+
+            {/* 5. 페어링 음식 */}
             {topFoods.length > 0 && (
               <section className="rounded-2xl bg-surface/80 border border-white/5 p-5 backdrop-blur-md shadow-sm">
-                <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">자주 페어링한 음식</h2>
+                <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">페어링 음식</h2>
                 <div className="flex flex-col gap-3">
-                  {topFoods.map(([food, count], i) => (
-                    <div key={food} className="flex flex-col gap-1">
+                  {topFoods.map((food, i) => (
+                    <div key={food.name} className="flex flex-col gap-1">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
                           <span className="text-xs font-bold text-zinc-600 w-4">{i + 1}</span>
-                          <span className="text-sm text-zinc-200">{food}</span>
+                          <span className="text-sm text-zinc-200 truncate">{food.name}</span>
                         </div>
-                        <span className="text-sm font-semibold text-white">{count}번</span>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {food.avgScore != null && (
+                            <span className="text-xs text-emerald-400 font-medium">★ {food.avgScore.toFixed(1)}</span>
+                          )}
+                          <span className="text-sm font-semibold text-white">{food.count}번</span>
+                        </div>
                       </div>
                       <div className="h-1.5 rounded-full bg-zinc-800 ml-6">
-                        <div className="h-1.5 rounded-full bg-emerald-600" style={{ width: `${(count / topFoods[0][1]) * 100}%` }} />
+                        <div className="h-1.5 rounded-full bg-emerald-600" style={{ width: `${(food.count / topFoods[0].count) * 100}%` }} />
                       </div>
                     </div>
                   ))}
@@ -245,11 +323,35 @@ export default async function MyWinePage() {
               </section>
             )}
 
-            {/* 평균 가격 */}
-            {avgPrice && (
-              <div className="text-center text-sm text-zinc-500">
-                평균 와인 가격: <span className="text-white font-semibold">{avgPrice.toLocaleString()}원</span>
-              </div>
+            {/* 6. 장소별 통계 */}
+            {topPlaces.length > 0 && (
+              <section className="rounded-2xl bg-surface/80 border border-white/5 p-5 backdrop-blur-md shadow-sm">
+                <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">자주 가는 장소</h2>
+                <RankedBarList items={topPlaces.map(([name, count]) => ({ label: name, value: count }))} color="#0ea5e9" />
+              </section>
+            )}
+
+            {/* 7. 가격대별 분석 */}
+            {priceDistribution.length > 0 && (
+              <section className="rounded-2xl bg-surface/80 border border-white/5 p-5 backdrop-blur-md shadow-sm">
+                <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">가격대별 분석</h2>
+                <StackedBar segments={priceDistribution.map((r) => ({ color: r.color, value: r.count }))} total={priceTotal} />
+                <div className="flex flex-col gap-2 mt-4">
+                  {priceDistribution.map((r) => (
+                    <div key={r.label} className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: r.color }} />
+                      <span className="text-sm text-zinc-300 flex-1">{r.label}</span>
+                      <span className="text-sm font-semibold text-white">{r.count}</span>
+                      <span className="text-xs text-zinc-500 w-9 text-right">{Math.round((r.count / priceTotal) * 100)}%</span>
+                    </div>
+                  ))}
+                </div>
+                {avgPrice && (
+                  <p className="text-xs text-zinc-500 mt-4 text-center">
+                    평균 가격: <span className="text-white font-semibold">{avgPrice.toLocaleString("ko-KR")}원</span>
+                  </p>
+                )}
+              </section>
             )}
           </>
         )}
@@ -257,6 +359,8 @@ export default async function MyWinePage() {
     </div>
   );
 }
+
+/* ── Inline Components ── */
 
 function StatCard({ label, value, icon: Icon }: { label: string; value: string; icon: any }) {
   return (
@@ -270,10 +374,7 @@ function StatCard({ label, value, icon: Icon }: { label: string; value: string; 
   );
 }
 
-function DonutChart({ segments, total }: {
-  segments: { label: string; value: number; color: string }[];
-  total: number;
-}) {
+function DonutChart({ segments, total }: { segments: { label: string; value: number; color: string }[]; total: number }) {
   const r = 54;
   const cx = 80;
   const cy = 80;
@@ -306,5 +407,41 @@ function DonutChart({ segments, total }: {
       <text x="80" y="74" textAnchor="middle" fontSize="26" fontWeight="700" fill="white">{total}</text>
       <text x="80" y="93" textAnchor="middle" fontSize="12" fill="#71717a">기록</text>
     </svg>
+  );
+}
+
+function RankedBarList({ items, color }: { items: { label: string; value: number }[]; color: string }) {
+  const max = items[0]?.value ?? 1;
+  return (
+    <div className="flex flex-col gap-3">
+      {items.map((item, i) => (
+        <div key={item.label} className="flex flex-col gap-1">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <span className="text-xs font-bold text-zinc-600 w-4">{i + 1}</span>
+              <span className="text-sm text-zinc-200 truncate">{item.label}</span>
+            </div>
+            <span className="text-sm font-semibold text-white flex-shrink-0">{item.value}번</span>
+          </div>
+          <div className="h-1.5 rounded-full bg-zinc-800 ml-6">
+            <div className="h-1.5 rounded-full" style={{ width: `${(item.value / max) * 100}%`, backgroundColor: color }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StackedBar({ segments, total }: { segments: { color: string; value: number }[]; total: number }) {
+  return (
+    <div className="h-2 rounded-full bg-zinc-800 flex overflow-hidden">
+      {segments.map((seg, i) => (
+        <div
+          key={i}
+          className="h-full first:rounded-l-full last:rounded-r-full"
+          style={{ width: `${(seg.value / total) * 100}%`, backgroundColor: seg.color }}
+        />
+      ))}
+    </div>
   );
 }

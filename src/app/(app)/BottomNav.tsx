@@ -7,7 +7,7 @@ const tabs = [
   { href: "/diary", label: "와인노트", icon: "📔" },
   { href: "/find", label: "와인검색", icon: "🔍" },
   { href: "/recommend", label: "와인추천", icon: "🍷" },
-  { href: "/wine-map", label: "와인지도", icon: "🗺️" },
+  { href: "/profile/wishlist", label: "내 와인", icon: "❤️" },
   { href: "/profile", label: "마이페이지", icon: "👤" },
 ];
 
@@ -38,7 +38,7 @@ export default function BottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-950 border-t border-zinc-800 flex">
       {tabs.map((tab) => {
-        const active = path === tab.href || (tab.href === "/diary" && path.startsWith("/diary")) || (tab.href === "/wine-map" && path.startsWith("/wine-map")) || (tab.href === "/profile" && path === "/profile");
+        const active = path === tab.href || (tab.href === "/diary" && path.startsWith("/diary")) || (tab.href === "/profile/wishlist" && path.startsWith("/profile/wishlist")) || (tab.href === "/profile" && path === "/profile");
         const loading = isPending && pendingHref === tab.href;
         return (
           <button

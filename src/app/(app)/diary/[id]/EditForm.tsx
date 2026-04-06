@@ -305,19 +305,21 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">원</span>
           </div>
           {price && (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-2">
               <div className="flex rounded-xl overflow-hidden border border-zinc-700">
-                {([["bottle", "바틀"], ["glass", "글라스"]] as const).map(([v, l]) => (
-                  <button key={v} type="button" onClick={() => setPriceUnit(v)}
-                    className={`flex-1 py-2 text-sm transition-colors ${priceUnit === v ? "bg-rose-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>{l}</button>
-                ))}
-              </div>
-              <div className="flex rounded-xl overflow-hidden border border-zinc-700">
-                {([["retail", "소매가"], ["market", "시장가"]] as const).map(([v, l]) => (
-                  <button key={v} type="button" onClick={() => setPriceType(v)}
+                {([["retail", "소매가"], ["market", "매장가"]] as const).map(([v, l]) => (
+                  <button key={v} type="button" onClick={() => { setPriceType(v); if (v === "retail") setPriceUnit("bottle"); }}
                     className={`flex-1 py-2 text-sm transition-colors ${priceType === v ? "bg-rose-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>{l}</button>
                 ))}
               </div>
+              {priceType === "market" && (
+                <div className="flex rounded-xl overflow-hidden border border-zinc-700">
+                  {([["bottle", "바틀"], ["glass", "글라스"]] as const).map(([v, l]) => (
+                    <button key={v} type="button" onClick={() => setPriceUnit(v)}
+                      className={`flex-1 py-2 text-sm transition-colors ${priceUnit === v ? "bg-rose-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>{l}</button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </section>

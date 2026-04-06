@@ -118,13 +118,21 @@ export default async function MyWinePage() {
   const topCountries = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
   const countryTotal = topCountries.reduce((s, [, c]) => s + c, 0);
 
-  // 2. 자주 마신 와인 (공백/특수문자 제거 후 소문자로 정규화해서 비교)
-  const normalizeWineName = (n: string) => n.replace(/[\s·\-_''""()（）]/g, "").toLowerCase();
+  // 2. 자주 마신 와인
+  // 한글명 정규화 + 영문 원어명(wine_name_original)으로도 매칭
+  const normalizeWineName = (n: string) => n.replace(/[\u200b\u200c\u200d\ufeff\s·\-_''""()（）]/g, "").toLowerCase();
   const wineGroups: Record<string, { displayName: string; count: number }> = {};
+  // 영문 원어명이 같으면 동일 와인으로 묶기 위한 맵
+  const originalNameToKey: Record<string, string> = {};
   all.forEach((r) => {
-    const key = normalizeWineName(r.name);
-    if (!wineGroups[key]) wineGroups[key] = { displayName: r.name, count: 0 };
+    const koKey = normalizeWineName(r.name);
+    const origKey = r.wine_name_original ? normalizeWineName(r.wine_name_original) : null;
+    // 영문 원어명이 있고, 이미 같은 원어명으로 등록된 그룹이 있으면 그 그룹에 합산
+    const existingKey = origKey ? originalNameToKey[origKey] : undefined;
+    const key = existingKey ?? koKey;
+    if (!wineGroups[key]) wineGroups[key] = { displayName: r.name.replace(/^\u200b/, ""), count: 0 };
     wineGroups[key].count += 1;
+    if (origKey && !originalNameToKey[origKey]) originalNameToKey[origKey] = key;
   });
   const topWines = Object.values(wineGroups)
     .sort((a, b) => b.count - a.count)

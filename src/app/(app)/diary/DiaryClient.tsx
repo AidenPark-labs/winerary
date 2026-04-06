@@ -107,7 +107,7 @@ function MapView({ records }: { records: WineRecord[] }) {
                     {new Date(selected.drunk_at).toLocaleDateString("ko-KR", { year: "numeric", month: "short", day: "numeric" })}
                   </span>
                   {selected.rating != null && (
-                    <span className="text-[10px] text-accent tracking-wider font-semibold">★ {Number(selected.rating).toFixed(1)}</span>
+                    <span className="text-[10px] text-amber-400 tracking-wider font-semibold">★ {Number(selected.rating).toFixed(1)}</span>
                   )}
                 </div>
               </div>
@@ -182,7 +182,7 @@ function FeedCard({ record }: { record: WineRecord }) {
       {/* 엣지투엣지 이미지 오버레이 영역 */}
       <div className="absolute inset-0 z-0">
         {thumb ? (
-          <img src={thumb} alt={record.name} className="w-full h-full object-cover object-[center_30%] transition-transform duration-700 group-hover:scale-105" />
+          <img src={thumb} alt={record.name} className="w-full h-full object-cover object-[center_15%] transition-transform duration-700 group-hover:scale-105" />
         ) : (
           <div className="w-full h-full bg-surface flex items-center justify-center">
             <WineIcon className="text-white/10" size={80} strokeWidth={1} />
@@ -190,13 +190,15 @@ function FeedCard({ record }: { record: WineRecord }) {
         )}
       </div>
 
+      {/* 하단 텍스트 가독성용 그라데이션 (하단만) */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 pointer-events-none" />
 
       {/* 상단 액션 바 (와인 타입 도트 & 메뉴) */}
       <div className="relative z-20 flex justify-between items-start p-5 pointer-events-none">
         {record.rating ? (
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 shadow-lg pointer-events-auto">
-            <span className="text-accent text-[11px]">★</span>
-            <span className="text-xs font-bold text-accent">{Number(record.rating).toFixed(1)}</span>
+            <span className="text-amber-400 text-[11px]">★</span>
+            <span className="text-xs font-bold text-amber-400">{Number(record.rating).toFixed(1)}</span>
           </div>
         ) : <div />}
         <div className="flex items-center gap-2 pointer-events-auto">
@@ -245,7 +247,7 @@ function FeedCard({ record }: { record: WineRecord }) {
           )}
           {record.grape_variety && (
             <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium tracking-wide shadow-sm backdrop-blur-md">
-              🍇 {record.grape_variety}
+              🍇 {/블렌드|blend/i.test(record.grape_variety) ? '블렌드' : record.grape_variety}
             </span>
           )}
         </div>
@@ -306,9 +308,9 @@ function CalendarRecordCard({ record }: { record: WineRecord }) {
         </div>
       </div>
       {record.rating && (
-        <div className="flex flex-col items-center justify-center gap-0.5 flex-shrink-0 pl-1 h-14 bg-accent/10 px-3 rounded-2xl">
-          <span className="text-accent text-[11px]">★</span>
-          <span className="text-sm font-bold text-accent">{Number(record.rating).toFixed(1)}</span>
+        <div className="flex flex-col items-center justify-center gap-0.5 flex-shrink-0 pl-1 h-14 bg-amber-400/10 px-3 rounded-2xl">
+          <span className="text-amber-400 text-[11px]">★</span>
+          <span className="text-sm font-bold text-amber-400">{Number(record.rating).toFixed(1)}</span>
         </div>
       )}
     </Link>

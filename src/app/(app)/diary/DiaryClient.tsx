@@ -70,8 +70,8 @@ function MapView({ records }: { records: WineRecord[] }) {
   }
 
   return (
-    <div className="flex-1 relative" style={{ minHeight: "calc(100dvh - 200px)" }}>
-      <div ref={mapRef} className="w-full h-full" />
+    <div className="relative" style={{ height: "calc(100dvh - 200px)" }}>
+      <div ref={mapRef} className="absolute inset-0" />
       {!loaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-zinc-950">
           <p className="text-zinc-500 text-sm">지도 로딩 중…</p>

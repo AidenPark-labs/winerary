@@ -51,6 +51,7 @@ async function findVivinoWinePage(query: string): Promise<{ url: string; vivinoW
     query.replace(/\s+(Red|White|Rosé|Rose|Brut|Tinto|Blanco|Blanc|Rouge)\s*$/i, "").trim(),
   ];
 
+  // DuckDuckGo 검색
   for (const q of searches) {
     if (q.length < 3) continue;
     try {
@@ -69,6 +70,29 @@ async function findVivinoWinePage(query: string): Promise<{ url: string; vivinoW
       }
     } catch {}
   }
+
+  // 폴백: Vivino 검색 페이지 접근 → JSON-LD가 있는 와인 페이지 리다이렉트 확인
+  try {
+    const vivinoSearch = `https://www.vivino.com/search/wines?q=${encodeURIComponent(searches[0])}`;
+    const res = await fetch(vivinoSearch, {
+      headers: { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36" },
+    });
+    if (res.ok) {
+      const html = await res.text();
+      // JSON-LD가 있으면 직접 추출 시도
+      const jsonld = [...html.matchAll(/<script type="application\/ld\+json">\s*([\s\S]*?)<\/script>/g)];
+      for (const m of jsonld) {
+        try {
+          const d = JSON.parse(m[1]);
+          if (d.aggregateRating && d.url) {
+            const idMatch = d.url.match(/\/w\/(\d+)/);
+            if (idMatch) return { url: d.url, vivinoWineId: parseInt(idMatch[1]) };
+          }
+        } catch {}
+      }
+    }
+  } catch {}
+
   return null;
 }
 

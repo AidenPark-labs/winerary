@@ -120,7 +120,7 @@ async function main() {
       }
 
       total++;
-      await sleep(2000); // DuckDuckGo rate limit 방지
+      await sleep(4000); // DuckDuckGo rate limit 방지
     }
 
     offset += BATCH;

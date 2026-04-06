@@ -182,7 +182,7 @@ function FeedCard({ record }: { record: WineRecord }) {
       {/* 엣지투엣지 이미지 오버레이 영역 */}
       <div className="absolute inset-0 z-0">
         {thumb ? (
-          <img src={thumb} alt={record.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+          <img src={thumb} alt={record.name} className="w-full h-full object-cover object-[center_30%] transition-transform duration-700 group-hover:scale-105" />
         ) : (
           <div className="w-full h-full bg-surface flex items-center justify-center">
             <WineIcon className="text-white/10" size={80} strokeWidth={1} />

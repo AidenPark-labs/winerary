@@ -190,8 +190,6 @@ function FeedCard({ record }: { record: WineRecord }) {
         )}
       </div>
 
-      {/* 그라데이션 하단 마스크 (가독성 확보) */}
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-black/20 z-10 pointer-events-none transition-opacity duration-300 group-hover:opacity-90" />
 
       {/* 상단 액션 바 (와인 타입 도트 & 메뉴) */}
       <div className="relative z-20 flex justify-between items-start p-5 pointer-events-none">

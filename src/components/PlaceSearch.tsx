@@ -12,20 +12,55 @@ interface PlaceResult {
 
 interface PlaceSearchProps {
   defaultValue?: string;
+  defaultLat?: number | null;
+  defaultLng?: number | null;
   onChange: (place: { name: string; lat: number | null; lng: number | null }) => void;
   className?: string;
   placeholder?: string;
 }
 
-export default function PlaceSearch({ defaultValue = "", onChange, className, placeholder = "장소 검색…" }: PlaceSearchProps) {
+function MiniMap({ lat, lng, name }: { lat: number; lng: number; name: string }) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if ((window as any).kakao?.maps) { setLoaded(true); return; }
+    const script = document.createElement("script");
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_KEY}&autoload=false`;
+    script.onload = () => (window as any).kakao.maps.load(() => setLoaded(true));
+    document.head.appendChild(script);
+  }, []);
+
+  useEffect(() => {
+    if (!loaded || !mapRef.current) return;
+    const kakao = (window as any).kakao;
+    const position = new kakao.maps.LatLng(lat, lng);
+    const map = new kakao.maps.Map(mapRef.current, { center: position, level: 3, draggable: false, zoomable: false });
+    new kakao.maps.Marker({ map, position, title: name });
+  }, [loaded, lat, lng, name]);
+
+  return (
+    <div className="mt-2 rounded-xl overflow-hidden border border-zinc-700">
+      <div ref={mapRef} className="w-full h-32" />
+      {!loaded && (
+        <div className="w-full h-32 flex items-center justify-center bg-zinc-900">
+          <span className="text-zinc-600 text-xs">지도 로딩 중…</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function PlaceSearch({ defaultValue = "", defaultLat = null, defaultLng = null, onChange, className, placeholder = "장소 검색…" }: PlaceSearchProps) {
   const [query, setQuery] = useState(defaultValue);
+  const [selectedLat, setSelectedLat] = useState<number | null>(defaultLat);
+  const [selectedLng, setSelectedLng] = useState<number | null>(defaultLng);
   const [results, setResults] = useState<PlaceResult[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) setOpen(false);
@@ -48,6 +83,8 @@ export default function PlaceSearch({ defaultValue = "", onChange, className, pl
 
   function handleInput(v: string) {
     setQuery(v);
+    setSelectedLat(null);
+    setSelectedLng(null);
     onChange({ name: v, lat: null, lng: null });
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => search(v), 400);
@@ -55,23 +92,38 @@ export default function PlaceSearch({ defaultValue = "", onChange, className, pl
 
   function handleSelect(place: PlaceResult) {
     setQuery(place.title);
+    setSelectedLat(place.lat);
+    setSelectedLng(place.lng);
     setOpen(false);
     onChange({ name: place.title, lat: place.lat, lng: place.lng });
   }
 
+  function handleClear() {
+    setQuery("");
+    setSelectedLat(null);
+    setSelectedLng(null);
+    onChange({ name: "", lat: null, lng: null });
+  }
+
   return (
     <div ref={wrapperRef} className="relative">
-      <input
-        value={query}
-        onChange={(e) => handleInput(e.target.value)}
-        onFocus={() => results.length > 0 && setOpen(true)}
-        className={className}
-        placeholder={placeholder}
-        autoComplete="off"
-      />
-      {loading && (
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs">검색중…</span>
-      )}
+      <div className="relative">
+        <input
+          value={query}
+          onChange={(e) => handleInput(e.target.value)}
+          onFocus={() => results.length > 0 && !selectedLat && setOpen(true)}
+          className={className}
+          placeholder={placeholder}
+          autoComplete="off"
+        />
+        {loading && (
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs">검색중…</span>
+        )}
+        {selectedLat && !loading && (
+          <button type="button" onClick={handleClear}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 text-sm">×</button>
+        )}
+      </div>
       {open && results.length > 0 && (
         <ul className="absolute z-50 left-0 right-0 top-full mt-1 bg-zinc-900 border border-zinc-700 rounded-xl overflow-hidden shadow-lg max-h-60 overflow-y-auto">
           {results.map((r, i) => (
@@ -87,6 +139,9 @@ export default function PlaceSearch({ defaultValue = "", onChange, className, pl
             </li>
           ))}
         </ul>
+      )}
+      {selectedLat != null && selectedLng != null && (
+        <MiniMap lat={selectedLat} lng={selectedLng} name={query} />
       )}
     </div>
   );

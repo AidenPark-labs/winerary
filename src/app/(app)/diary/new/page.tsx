@@ -183,6 +183,7 @@ export default function NewDiaryPage() {
   const [wineVintage, setWineVintage] = useState<string>("");
   const [grape, setGrape] = useState("");
   const [grapeCustom, setGrapeCustom] = useState("");
+  const [blendGrapes, setBlendGrapes] = useState<string[]>([]);
   const [country, setCountry] = useState("");
   const [countryCustom, setCountryCustom] = useState("");
 
@@ -201,6 +202,8 @@ export default function NewDiaryPage() {
   const [rating, setRating] = useState(3);
   const [pairingScore, setPairingScore] = useState(3);
   const [price, setPrice] = useState("");
+  const [priceType, setPriceType] = useState<"market" | "retail">("retail");
+  const [priceUnit, setPriceUnit] = useState<"bottle" | "glass">("bottle");
   const [valueScore, setValueScore] = useState(3);
   const [memo, setMemo] = useState("");
   const [visibility, setVisibility] = useState<"private" | "link" | "public">("private");
@@ -356,7 +359,9 @@ export default function NewDiaryPage() {
     if (!wineName) { setError("와인 이름을 입력해주세요."); return; }
     setSaving(true);
     setError(null);
-    const finalGrape = grape === "__custom__" ? grapeCustom.trim() || null : grape || null;
+    const finalGrape = grape === "__blend__"
+      ? (blendGrapes.length > 0 ? `블렌드 (${blendGrapes.join(", ")})` : "블렌드")
+      : grape === "__custom__" ? grapeCustom.trim() || null : grape || null;
     const finalCountry = country === "__custom__" ? countryCustom.trim() || null : country || null;
     const result = await createWineRecord({
       name: wineName,
@@ -377,6 +382,8 @@ export default function NewDiaryPage() {
       rating,
       pairing_score: foods.length > 0 ? pairingScore : null,
       price: price ? parseInt(price) : null,
+      price_type: price ? priceType : null,
+      price_unit: price ? priceUnit : null,
       value_score: valueScore,
       memo: memo || null,
       visibility,
@@ -621,14 +628,33 @@ export default function NewDiaryPage() {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-zinc-500">품종</label>
-                <select value={grape} onChange={(e) => setGrape(e.target.value)} className={iCls}>
+                <select value={grape} onChange={(e) => { setGrape(e.target.value); if (e.target.value !== "__blend__") setBlendGrapes([]); }} className={iCls}>
                   <option value="">선택 안 함</option>
                   {GRAPE_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
+                  <option value="__blend__">블렌드</option>
                   <option value="__custom__">직접입력</option>
                 </select>
                 {grape === "__custom__" && (
                   <input value={grapeCustom} onChange={(e) => setGrapeCustom(e.target.value)}
-                    placeholder="예: 카베르네 소비뇽, 메를로" className={iCls} />
+                    placeholder="예: 카베르네 소비뇽" className={iCls} />
+                )}
+                {grape === "__blend__" && (
+                  <div className="flex flex-col gap-2 mt-1">
+                    <p className="text-xs text-zinc-500">블렌드 구성 품종을 선택하세요</p>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {GRAPE_OPTIONS.map((g) => (
+                        <button key={g} type="button"
+                          onClick={() => setBlendGrapes((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g])}
+                          className={`text-xs px-2.5 py-1.5 rounded-full border transition-colors ${
+                            blendGrapes.includes(g) ? "bg-rose-700 border-rose-600 text-white" : "bg-zinc-800 border-zinc-700 text-zinc-400"
+                          }`}
+                        >{g}</button>
+                      ))}
+                    </div>
+                    {blendGrapes.length > 0 && (
+                      <p className="text-xs text-zinc-400">선택: {blendGrapes.join(", ")}</p>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -687,19 +713,17 @@ export default function NewDiaryPage() {
             {/* 경험 정보 */}
             <section className="flex flex-col gap-4">
               <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">경험 정보</h2>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm text-zinc-400">날짜</label>
-                  <input type="date" value={drunkAt} onChange={(e) => setDrunkAt(e.target.value)} className={iCls} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm text-zinc-400">장소</label>
-                  <PlaceSearch
-                    onChange={(p) => { setLocation(p.name); setPlaceLat(p.lat); setPlaceLng(p.lng); }}
-                    className={iCls}
-                    placeholder="장소 검색…"
-                  />
-                </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm text-zinc-400">날짜</label>
+                <input type="date" value={drunkAt} onChange={(e) => setDrunkAt(e.target.value)} className={iCls} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm text-zinc-400">장소</label>
+                <PlaceSearch
+                  onChange={(p) => { setLocation(p.name); setPlaceLat(p.lat); setPlaceLng(p.lng); }}
+                  className={iCls}
+                  placeholder="장소 검색…"
+                />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm text-zinc-400">함께한 사람</label>
@@ -746,11 +770,27 @@ export default function NewDiaryPage() {
                   inputMode="numeric"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  placeholder="구매 가격 (선택)"
+                  placeholder="가격 (선택)"
                   className={iCls + " pr-8"}
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">원</span>
               </div>
+              {price && (
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex rounded-xl overflow-hidden border border-zinc-700">
+                    {([["bottle", "바틀"], ["glass", "글라스"]] as const).map(([v, l]) => (
+                      <button key={v} type="button" onClick={() => setPriceUnit(v)}
+                        className={`flex-1 py-2 text-sm transition-colors ${priceUnit === v ? "bg-rose-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>{l}</button>
+                    ))}
+                  </div>
+                  <div className="flex rounded-xl overflow-hidden border border-zinc-700">
+                    {([["retail", "소매가"], ["market", "시장가"]] as const).map(([v, l]) => (
+                      <button key={v} type="button" onClick={() => setPriceType(v)}
+                        className={`flex-1 py-2 text-sm transition-colors ${priceType === v ? "bg-rose-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>{l}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </section>
 
             {/* 평점 */}

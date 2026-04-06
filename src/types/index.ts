@@ -23,6 +23,8 @@ export interface WineRecord {
   pairing_score: number | null
   rating: number | null
   price: number | null
+  price_type: 'market' | 'retail' | null
+  price_unit: 'bottle' | 'glass' | null
   value_score: number | null
   foods: FoodRecord[]
   visibility: Visibility

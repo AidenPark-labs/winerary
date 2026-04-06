@@ -7,6 +7,7 @@ import type { WineSuggestion, WineType } from "@/types";
 import { createWineRecord } from "@/lib/actions/diary";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import StarRating from "@/components/StarRating";
+import PlaceSearch from "@/components/PlaceSearch";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -192,6 +193,8 @@ export default function NewDiaryPage() {
   const [photoUploading, setPhotoUploading] = useState(false);
   const [drunkAt, setDrunkAt] = useState(new Date().toISOString().split("T")[0]);
   const [location, setLocation] = useState("");
+  const [placeLat, setPlaceLat] = useState<number | null>(null);
+  const [placeLng, setPlaceLng] = useState<number | null>(null);
   const [companions, setCompanions] = useState("");
   const [foodInput, setFoodInput] = useState("");
   const [foods, setFoods] = useState<string[]>([]);
@@ -366,6 +369,9 @@ export default function NewDiaryPage() {
       photos,
       drunk_at: drunkAt,
       location: location || null,
+      place_name: location || null,
+      latitude: placeLat,
+      longitude: placeLng,
       companions: companions ? companions.split(",").map((s) => s.trim()).filter(Boolean) : null,
       foods: foods.map((name) => ({ name })),
       rating,
@@ -688,7 +694,11 @@ export default function NewDiaryPage() {
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm text-zinc-400">장소</label>
-                  <input value={location} onChange={(e) => setLocation(e.target.value)} className={iCls} placeholder="레스토랑, 집…" />
+                  <PlaceSearch
+                    onChange={(p) => { setLocation(p.name); setPlaceLat(p.lat); setPlaceLng(p.lng); }}
+                    className={iCls}
+                    placeholder="장소 검색…"
+                  />
                 </div>
               </div>
               <div className="flex flex-col gap-1.5">

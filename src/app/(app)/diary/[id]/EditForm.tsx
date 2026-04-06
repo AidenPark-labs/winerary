@@ -6,6 +6,7 @@ import { updateWineRecord } from "@/lib/actions/diary";
 import type { WineRecord } from "@/types";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import StarRating from "@/components/StarRating";
+import PlaceSearch from "@/components/PlaceSearch";
 
 const iCls = "w-full rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-zinc-100 focus:outline-none focus:border-rose-600 transition-colors text-sm";
 
@@ -24,6 +25,9 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
   const [pairingScore, setPairingScore] = useState(record.pairing_score ?? 3);
   const [price, setPrice] = useState(record.price != null ? String(record.price) : "");
   const [valueScore, setValueScore] = useState(record.value_score ?? 3);
+  const [placeLocation, setPlaceLocation] = useState(record.location ?? "");
+  const [placeLat, setPlaceLat] = useState<number | null>(record.latitude ?? null);
+  const [placeLng, setPlaceLng] = useState<number | null>(record.longitude ?? null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -34,7 +38,10 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
     const result = await updateWineRecord(record.id, {
       wine_name_original: (fd.get("wine_name_original") as string) || null,
       wine_vintage: fd.get("wine_vintage") ? parseInt(fd.get("wine_vintage") as string) : null,
-      location: (fd.get("location") as string) || null,
+      location: placeLocation || null,
+      place_name: placeLocation || null,
+      latitude: placeLat,
+      longitude: placeLng,
       drunk_at: fd.get("drunk_at") as string,
       companions: (fd.get("companions") as string)
         ? (fd.get("companions") as string).split(",").map((s) => s.trim()).filter(Boolean)
@@ -80,7 +87,12 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
               <option key={y} value={y}>{y}</option>
             ))}
           </select>
-          <input name="location" defaultValue={record.location ?? ""} placeholder="장소" className={iCls} />
+          <PlaceSearch
+            defaultValue={placeLocation}
+            onChange={(p) => { setPlaceLocation(p.name); setPlaceLat(p.lat); setPlaceLng(p.lng); }}
+            className={iCls}
+            placeholder="장소 검색…"
+          />
         </div>
         <input name="drunk_at" type="date" defaultValue={record.drunk_at} className={iCls} />
         <input name="companions" defaultValue={record.companions?.join(", ") ?? ""} placeholder="함께한 사람 (쉼표 구분)" className={iCls} />

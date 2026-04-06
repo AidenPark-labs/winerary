@@ -14,6 +14,9 @@ export interface WineRecord {
   wine_country: string | null
   photos: string[]
   location: string | null
+  place_name: string | null
+  latitude: number | null
+  longitude: number | null
   drunk_at: string
   companions: string[] | null
   memo: string | null

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import type { WineRecord } from "@/types";
 import DeleteButton from "./DeleteButton";
@@ -34,7 +34,17 @@ export default function DiaryDetail({ record, readOnly = false }: { record: Wine
   const companions: string[] = record.companions ?? [];
 
   const [currentPhoto, setCurrentPhoto] = useState(0);
+  const [lightbox, setLightbox] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const lbScrollRef = useRef<HTMLDivElement>(null);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const lbRef = useCallback((node: HTMLDivElement | null) => {
+    lbScrollRef.current = node;
+    if (node && lightbox !== null) {
+      node.scrollTo({ left: lightbox * node.clientWidth, behavior: "instant" });
+    }
+  }, [lightbox === null]);
 
   function handleScroll() {
     if (!scrollRef.current) return;
@@ -69,7 +79,7 @@ export default function DiaryDetail({ record, readOnly = false }: { record: Wine
                 style={{ overflowX: "scroll", scrollbarWidth: "none", touchAction: "pan-x pan-y" } as React.CSSProperties}
               >
                 {photos.map((url, i) => (
-                  <div key={i} className="relative flex-shrink-0 snap-center" style={{ width: "100svw", height: "68vh" }}>
+                  <div key={i} className="relative flex-shrink-0 snap-center cursor-pointer" style={{ width: "100svw", height: "68vh" }} onClick={() => setLightbox(i)}>
                     <img src={url} alt="" className="w-full h-full object-cover" />
                   </div>
                 ))}
@@ -282,6 +292,46 @@ export default function DiaryDetail({ record, readOnly = false }: { record: Wine
         </div>
 
       </div>
+
+      {/* ── 풀스크린 라이트박스 ── */}
+      {lightbox !== null && (
+        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col" onClick={() => setLightbox(null)}>
+          {/* 닫기 버튼 */}
+          <div className="flex justify-end p-4">
+            <button className="text-white/70 hover:text-white text-sm px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10">
+              닫기
+            </button>
+          </div>
+
+          {/* 사진 스와이프 */}
+          <div
+            ref={lbRef}
+            className="flex-1 flex snap-x snap-mandatory overflow-x-auto"
+            style={{ scrollbarWidth: "none", touchAction: "pan-x pan-y" } as React.CSSProperties}
+            onClick={(e) => e.stopPropagation()}
+            onScroll={() => {
+              if (!lbScrollRef.current) return;
+              const { scrollLeft, clientWidth } = lbScrollRef.current;
+              setLightbox(Math.round(scrollLeft / clientWidth));
+            }}
+          >
+            {photos.map((url, i) => (
+              <div key={i} className="flex-shrink-0 snap-center w-full h-full flex items-center justify-center" style={{ minWidth: "100%" }}>
+                <img src={url} alt="" className="max-w-full max-h-full object-contain" />
+              </div>
+            ))}
+          </div>
+
+          {/* 인디케이터 */}
+          {photos.length > 1 && (
+            <div className="flex justify-center gap-1.5 pb-8 pt-4">
+              {photos.map((_, i) => (
+                <div key={i} className={`h-1 rounded-full transition-all duration-300 ${i === lightbox ? "w-5 bg-white" : "w-1 bg-white/40"}`} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

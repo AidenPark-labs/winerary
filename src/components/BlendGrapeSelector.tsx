@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
-const GRAPE_OPTIONS = [
-  "카베르네 소비뇽", "메를로", "피노 누아", "시라/쉬라즈", "말벡",
-  "산지오베제", "템프라니요", "그르나슈", "카베르네 프랑", "네비올로",
-  "진판델", "무르베드르", "몬테풀치아노",
-  "샤르도네", "소비뇽 블랑", "리슬링", "피노 그리지오", "게뷔르츠트라미너",
-  "비오니에", "알바리뇨", "뮈스카", "세미용", "그뤼너 펠트리너",
-];
+import { GRAPE_OPTIONS } from "@/lib/grapes";
 
 const iCls = "w-full rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-zinc-100 focus:outline-none focus:border-rose-600 transition-colors text-sm";
 

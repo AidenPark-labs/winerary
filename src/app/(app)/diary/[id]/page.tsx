@@ -15,5 +15,16 @@ export default async function DiaryDetailPage({ params }: { params: Promise<{ id
 
   if (!record) notFound();
 
-  return <DiaryDetail record={record as WineRecord} />;
+  // wines 테이블에서 description 조회 (이름 매칭)
+  let wineDescription: string | null = null;
+  if (record.name) {
+    const { data: wine } = await supabase
+      .from("wines")
+      .select("description")
+      .eq("name_ko", record.name)
+      .maybeSingle();
+    wineDescription = wine?.description ?? null;
+  }
+
+  return <DiaryDetail record={record as WineRecord} wineDescription={wineDescription} />;
 }

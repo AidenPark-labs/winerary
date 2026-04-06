@@ -28,7 +28,7 @@ function renderStars(score: number, max = 5) {
   });
 }
 
-export default function DiaryDetail({ record, readOnly = false }: { record: WineRecord; readOnly?: boolean }) {
+export default function DiaryDetail({ record, readOnly = false, wineDescription }: { record: WineRecord; readOnly?: boolean; wineDescription?: string | null }) {
   const photos: string[] = record.photos ?? [];
   const foods: { name: string }[] = (record.foods as { name: string }[]) ?? [];
   const companions: string[] = record.companions ?? [];
@@ -287,6 +287,14 @@ export default function DiaryDetail({ record, readOnly = false }: { record: Wine
               </div>
               <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em] mb-3 relative z-10">Tasting Note</p>
               <p className="text-zinc-200 text-[15px] font-light leading-relaxed whitespace-pre-wrap relative z-10 tracking-wide">{record.memo}</p>
+            </div>
+          )}
+
+          {/* 와인 설명 */}
+          {wineDescription && (
+            <div className="rounded-3xl bg-surface/40 backdrop-blur-xl border border-white/5 p-6 shadow-lg mt-2">
+              <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em] mb-3">About This Wine</p>
+              <p className="text-zinc-300 text-sm font-light leading-relaxed whitespace-pre-wrap tracking-wide">{wineDescription}</p>
             </div>
           )}
         </div>

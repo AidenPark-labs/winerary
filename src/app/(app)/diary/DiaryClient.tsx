@@ -227,22 +227,29 @@ function FeedCard({ record }: { record: WineRecord }) {
           )}
         </div>
         
-        <div className="flex items-center gap-2.5 flex-wrap mt-1">
+        <div className="flex items-center gap-2 flex-wrap mt-1.5">
           {record.wine_type && (
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/5">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium tracking-wide shadow-sm backdrop-blur-md">
               <span className={`w-1.5 h-1.5 rounded-full ${WINE_TYPE_COLORS[record.wine_type] ?? "bg-zinc-500"} shadow-sm`} />
-              <span className="text-[10px] text-zinc-300 font-medium tracking-wide">
-                {TYPE_KO[record.wine_type] ?? record.wine_type}
-              </span>
-            </div>
+              {TYPE_KO[record.wine_type] ?? record.wine_type}
+            </span>
           )}
           {record.wine_vintage && (
-            <span className="text-[11px] font-semibold text-white/80 bg-white/10 px-2 py-0.5 rounded-md backdrop-blur-sm">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium tracking-wide shadow-sm backdrop-blur-md">
               {record.wine_vintage}
             </span>
           )}
-          {record.wine_country && <span className="text-[11px] text-zinc-300 flex items-center gap-1 font-light"><MapPin size={10} /> {record.wine_country}</span>}
-          {record.grape_variety && <span className="text-[11px] text-zinc-300 flex items-center gap-1 font-light">🍇 {record.grape_variety}</span>}
+          {record.wine_country && (
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium tracking-wide shadow-sm backdrop-blur-md">
+              <MapPin size={10} className="text-zinc-400" />
+              {record.wine_country}
+            </span>
+          )}
+          {record.grape_variety && (
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium tracking-wide shadow-sm backdrop-blur-md">
+              🍇 {record.grape_variety}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center justify-between pt-3 border-t border-white/10 mt-1">

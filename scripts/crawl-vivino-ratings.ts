@@ -25,10 +25,18 @@ interface Wine {
 
 async function fetchWinesWithoutRating(offset: number, limit: number): Promise<Wine[]> {
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/wines?select=id,name_ko,name_en&vivino_rating=is.null&name_en=not.is.null&order=id&offset=${offset}&limit=${limit}`,
+    `${SUPABASE_URL}/rest/v1/wines?select=id,name_ko,name_en&vivino_rating=is.null&order=id&offset=${offset}&limit=${limit}`,
     { headers }
   );
   return res.json();
+}
+
+// 와인명에서 타입 접미사 제거 (Red, White, Rosé 등)
+function shortenName(name: string): string {
+  return name
+    .replace(/\s+(Red|White|Rosé|Rose|Brut|Tinto|Blanco|Rosado|Blanc|Rouge)\s*$/i, "")
+    .replace(/\s+(Cabernet Sauvignon|Merlot|Shiraz|Chardonnay|Pinot Noir|Sauvignon Blanc|Riesling)\s*$/i, "")
+    .trim();
 }
 
 async function fetchVivinoRating(query: string): Promise<{ rating: number; reviews: number } | null> {
@@ -47,17 +55,25 @@ async function fetchVivinoRating(query: string): Promise<{ rating: number; revie
     const html = await res.text();
     const decoded = html.replace(/&quot;/g, '"').replace(/&amp;/g, "&");
 
-    const ratings = [...decoded.matchAll(/"wine_ratings_average":([\d.]+)/g)];
-    const counts = [...decoded.matchAll(/"wine_ratings_count":(\d+)/g)];
+    const ratings = [...decoded.matchAll(/"wine_ratings_average":([\d.]+)/g)].map(m => parseFloat(m[1]));
+    const counts = [...decoded.matchAll(/"wine_ratings_count":(\d+)/g)].map(m => parseInt(m[1]));
+    const wineNames = [...decoded.matchAll(/"name":"([^"]+)"[^}]*?"seo_name"/g)].map(m => m[1]);
 
-    if (ratings.length > 0 && counts.length > 0) {
-      const rating = parseFloat(ratings[0][1]);
-      const reviews = parseInt(counts[0][1]);
-      // 리뷰 수가 일정 이상이어야 신뢰할 수 있음
-      if (reviews >= 10 && rating > 0) {
-        return { rating, reviews };
+    // 검색어 키워드와 일치하는 와인 찾기
+    const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+    for (let i = 0; i < Math.min(wineNames.length, ratings.length, counts.length); i++) {
+      const name = wineNames[i].toLowerCase();
+      const matchScore = queryWords.filter(w => name.includes(w)).length;
+      if (matchScore >= Math.ceil(queryWords.length / 2) && ratings[i] > 0 && counts[i] >= 10) {
+        return { rating: ratings[i], reviews: counts[i] };
       }
     }
+
+    // 정확 매칭 실패 시 첫 결과가 충분히 신뢰할 만하면 사용
+    if (ratings.length > 0 && counts.length > 0 && ratings[0] > 0 && counts[0] >= 100) {
+      return { rating: ratings[0], reviews: counts[0] };
+    }
+
   } catch {
     // 크롤링 실패 무시
   }
@@ -92,7 +108,17 @@ async function main() {
       const query = wine.name_en || wine.name_ko;
       process.stdout.write(`  [${total + 1}] ${query.substring(0, 40).padEnd(40)} `);
 
-      const result = await fetchVivinoRating(query);
+      let result = await fetchVivinoRating(query);
+
+      // 실패 시 짧은 이름으로 재시도 (Red, Cabernet Sauvignon 등 제거)
+      if (!result && wine.name_en) {
+        const short = shortenName(wine.name_en);
+        if (short !== wine.name_en && short.length >= 3) {
+          result = await fetchVivinoRating(short);
+          await sleep(1000);
+        }
+      }
+
       if (result) {
         await updateWineRating(wine.id, result.rating, result.reviews);
         console.log(`★ ${result.rating} (${result.reviews.toLocaleString()})`);
@@ -102,7 +128,7 @@ async function main() {
       }
 
       total++;
-      // Vivino rate limit 방지 (1~2초 간격)
+      // Vivino rate limit 방지
       await sleep(1500);
     }
 

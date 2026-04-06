@@ -316,7 +316,7 @@ export default function DiaryDetail({ record, readOnly = false }: { record: Wine
           </div>
 
           {/* 인디케이터 + 닫기 버튼 */}
-          <div className="flex flex-col items-center gap-3 pb-10 pt-4">
+          <div className="flex flex-col items-center gap-3 pb-24 pt-4">
             {photos.length > 1 && (
               <div className="flex justify-center gap-1.5">
                 {photos.map((_, i) => (

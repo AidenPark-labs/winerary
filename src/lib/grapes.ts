@@ -32,7 +32,7 @@ export function getGrapesByType(wineType: string | null | undefined): string[] {
   switch (wineType) {
     case "red": return RED;
     case "white": return WHITE;
-    case "rose": return [...RED, ...WHITE];
+    case "rose": return RED;
     case "sparkling": return [...WHITE, ...OTHER, ...RED];
     default: return GRAPE_OPTIONS;
   }

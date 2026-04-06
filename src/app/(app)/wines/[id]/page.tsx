@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import VivinoRating from "./VivinoRating";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드", white: "화이트", rose: "로제",
@@ -78,15 +79,12 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
               <span className="text-emerald-400/50 text-xs ml-1">750ml</span>
             </div>
           )}
-          {wine.vivino_rating && (
-            <div className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-purple-950/30 border border-purple-800/40">
-              <span className="text-purple-300 font-bold text-lg">★ {Number(wine.vivino_rating).toFixed(1)}</span>
-              {wine.vivino_reviews && (
-                <span className="text-purple-400/60 text-xs">({wine.vivino_reviews.toLocaleString()})</span>
-              )}
-              <span className="text-purple-400/40 text-xs ml-0.5">Vivino</span>
-            </div>
-          )}
+          <VivinoRating
+            wineId={wine.id}
+            nameEn={wine.name_en}
+            initialRating={wine.vivino_rating}
+            initialReviews={wine.vivino_reviews}
+          />
         </div>
 
         {/* 설명 */}

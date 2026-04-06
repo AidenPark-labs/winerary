@@ -17,7 +17,9 @@ export default async function AdminWinesPage({ searchParams }: { searchParams: P
     .order("created_at", { ascending: false });
 
   if (q) {
-    query = query.or(`name_ko.ilike.%${q}%,name_en.ilike.%${q}%,producer.ilike.%${q}%,country.ilike.%${q}%,grape_variety.ilike.%${q}%`);
+    // 각 글자 사이에 %를 넣어 띄어쓰기 차이 무시 (e.g. "무초마스" → "%무%초%마%스%")
+    const fuzzy = q.trim().replace(/\s+/g, "").split("").join("%");
+    query = query.or(`name_ko.ilike.%${fuzzy}%,name_en.ilike.%${fuzzy}%,producer.ilike.%${fuzzy}%,country.ilike.%${fuzzy}%,grape_variety.ilike.%${fuzzy}%`);
   }
   if (type && type !== "all") {
     query = query.eq("wine_type", type);

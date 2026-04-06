@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { deleteWineRecord } from "@/lib/actions/diary";
 import type { WineRecord } from "@/types";
 
 const TYPE_KO: Record<string, string> = {
@@ -107,6 +109,53 @@ function MapView({ records }: { records: WineRecord[] }) {
   );
 }
 
+// ─── Card Menu ───────────────────────────────────────────────────────────────
+
+function CardMenu({ recordId }: { recordId: string }) {
+  const [open, setOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  return (
+    <div ref={menuRef} className="relative" onClick={(e) => e.preventDefault()}>
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(!open); }}
+        className="w-8 h-8 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-sm text-zinc-300 hover:text-white transition-colors"
+      >
+        ⋮
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 z-50 bg-zinc-900 border border-zinc-700 rounded-xl overflow-hidden shadow-lg min-w-[100px]">
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(false); router.push(`/diary/${recordId}/edit`); }}
+            className="w-full text-left px-4 py-2.5 text-sm text-zinc-200 hover:bg-zinc-800 transition-colors"
+          >수정</button>
+          <button
+            onClick={async (e) => {
+              e.preventDefault(); e.stopPropagation();
+              if (!confirm("이 기록을 삭제하시겠습니까?")) { setOpen(false); return; }
+              setDeleting(true);
+              try { await deleteWineRecord(recordId); } catch { /* redirect throws */ }
+            }}
+            disabled={deleting}
+            className="w-full text-left px-4 py-2.5 text-sm text-rose-400 hover:bg-rose-950/40 transition-colors disabled:opacity-40"
+          >{deleting ? "삭제 중…" : "삭제"}</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Feed Card ────────────────────────────────────────────────────────────────
 
 function FeedCard({ record }: { record: WineRecord }) {
@@ -128,20 +177,26 @@ function FeedCard({ record }: { record: WineRecord }) {
               {TYPE_KO[record.wine_type] ?? record.wine_type}
             </span>
           )}
-          {photos.length > 1 && (
-            <span className="absolute top-3 right-3 text-[11px] px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-sm text-zinc-300">
-              📷 {photos.length}
-            </span>
-          )}
+          <div className="absolute top-3 right-3 flex items-center gap-1.5">
+            {photos.length > 1 && (
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-sm text-zinc-300">
+                📷 {photos.length}
+              </span>
+            )}
+            <CardMenu recordId={record.id} />
+          </div>
         </div>
       ) : (
-        <div className="w-full flex items-center justify-center bg-gradient-to-br from-rose-950/40 via-zinc-900 to-zinc-950" style={{ height: "100px" }}>
+        <div className="relative w-full flex items-center justify-center bg-gradient-to-br from-rose-950/40 via-zinc-900 to-zinc-950" style={{ height: "100px" }}>
           <span className="text-4xl opacity-30">🍷</span>
           {record.wine_type && (
             <span className="absolute top-3 left-3 text-[11px] px-2.5 py-0.5 rounded-full bg-white/10 text-zinc-400">
               {TYPE_KO[record.wine_type] ?? record.wine_type}
             </span>
           )}
+          <div className="absolute top-3 right-3">
+            <CardMenu recordId={record.id} />
+          </div>
         </div>
       )}
       <div className="px-4 py-3 flex flex-col gap-1.5">

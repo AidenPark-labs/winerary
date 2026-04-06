@@ -13,6 +13,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/admin" className="text-zinc-400 hover:text-zinc-200 transition-colors">대시보드</Link>
             <Link href="/admin/users" className="text-zinc-400 hover:text-zinc-200 transition-colors">유저</Link>
             <Link href="/admin/records" className="text-zinc-400 hover:text-zinc-200 transition-colors">기록</Link>
+            <Link href="/admin/wines" className="text-zinc-400 hover:text-zinc-200 transition-colors">와인 DB</Link>
             <Link href="/admin/pending-wines" className="text-zinc-400 hover:text-zinc-200 transition-colors">편입 대기</Link>
           </div>
         </div>

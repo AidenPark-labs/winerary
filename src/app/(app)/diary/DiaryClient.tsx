@@ -247,6 +247,9 @@ function FeedCard({ record }: { record: WineRecord }) {
         <h2 className="font-serif font-medium text-white text-lg tracking-wide leading-tight line-clamp-1 drop-shadow-md">
           {record.name}
         </h2>
+        {record.wine_name_original && (
+          <p className="text-xs text-zinc-300/80 italic font-light truncate drop-shadow-sm">{record.wine_name_original}</p>
+        )}
         <p className="text-[11px] text-zinc-400 font-light tracking-wide mt-1">
           {new Date(record.drunk_at).toLocaleDateString("ko-KR", { year: "numeric", month: "short", day: "numeric" })}
           {record.location && ` · ${record.location}`}

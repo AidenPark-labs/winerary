@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { WineRecord } from "@/types";
 import LogoutButton from "./LogoutButton";
 import AuthPrompt from "@/components/AuthPrompt";
+import { User, Book, Star, BarChart3, Wine } from "lucide-react";
 
 const TYPE_META: Record<string, { label: string; color: string }> = {
   red:       { label: "레드",    color: "#be123c" },
@@ -24,16 +25,18 @@ export default async function MyWinePage() {
             <h1 className="text-2xl font-bold">마이페이지</h1>
           </header>
           <div className="px-4 pb-28 flex flex-col gap-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center text-lg">🍷</div>
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-surface border border-white/5 flex items-center justify-center text-lg shadow-sm backdrop-blur-md">
+                <User className="w-6 h-6 text-zinc-600" />
+              </div>
               <div>
-                <div className="h-5 w-24 rounded bg-zinc-800" />
-                <div className="h-3 w-36 rounded bg-zinc-800 mt-2" />
+                <div className="h-5 w-24 rounded bg-surface border border-white/5" />
+                <div className="h-3 w-36 rounded bg-surface mt-2 border border-white/5" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <StatCard label="기록" value="-" emoji="🍾" />
-              <StatCard label="종합 평점" value="-" emoji="⭐" />
+              <StatCard label="기록" value="-" icon={Book} />
+              <StatCard label="종합 평점" value="-" icon={Star} />
             </div>
           </div>
         </div>
@@ -109,13 +112,15 @@ export default async function MyWinePage() {
       <div className="px-4 pb-28 flex flex-col gap-6">
         {/* 프로필 카드 */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-rose-900 flex items-center justify-center text-lg">
-              {profile?.nickname?.[0] ?? "🍷"}
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-surface border border-white/5 flex items-center justify-center text-xl font-serif text-white shadow-lg backdrop-blur-md">
+              <span className="bg-clip-text text-transparent bg-gradient-to-br from-accent to-rose-400">
+                {profile?.nickname?.[0] ?? "U"}
+              </span>
             </div>
             <div>
-              <p className="text-lg font-bold">{profile?.nickname ?? "사용자"}</p>
-              <p className="text-xs text-zinc-500">{user.email}</p>
+              <p className="text-lg font-serif text-white">{profile?.nickname ?? "사용자"}</p>
+              <p className="text-xs text-zinc-500 font-light mt-0.5">{user.email}</p>
             </div>
           </div>
           <LogoutButton />
@@ -123,21 +128,21 @@ export default async function MyWinePage() {
 
         {/* 요약 카드 */}
         <div className="grid grid-cols-2 gap-3">
-          <StatCard label="기록" value={`${total}`} emoji="🍾" />
-          <StatCard label="종합 평점" value={avgOverall ? avgOverall.toFixed(1) : "-"} emoji="⭐" />
+          <StatCard label="기록" value={`${total}`} icon={Book} />
+          <StatCard label="종합 평점" value={avgOverall ? avgOverall.toFixed(1) : "-"} icon={Star} />
         </div>
 
         {total === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-12">
-            <span className="text-5xl">📊</span>
-            <p className="text-zinc-400">아직 기록된 와인이 없어요</p>
-            <a href="/diary/new" className="text-rose-400 text-sm hover:underline">첫 와인 기록하기 →</a>
+          <div className="flex flex-col items-center justify-center gap-3 py-16">
+            <BarChart3 className="w-16 h-16 text-zinc-800" strokeWidth={1} />
+            <p className="text-zinc-500 text-sm font-light">아직 기록된 와인이 없어요</p>
+            <a href="/diary/new" className="text-accent text-sm hover:underline font-light mt-1">첫 와인 기록하기 →</a>
           </div>
         ) : (
           <>
             {/* 와인 종류 도넛 차트 */}
             {typeSegments.length > 0 && (
-              <section className="rounded-2xl bg-zinc-900 border border-zinc-800 p-5">
+              <section className="rounded-2xl bg-surface/80 border border-white/5 p-5 backdrop-blur-md shadow-sm">
                 <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">와인 종류</h2>
                 <div className="flex items-center gap-6">
                   <DonutChart segments={typeSegments.map((s) => ({ label: s.label, value: s.count, color: s.color }))} total={typeTotal} />
@@ -157,7 +162,7 @@ export default async function MyWinePage() {
 
             {/* 선호 품종 */}
             {topGrapes.length > 0 && (
-              <section className="rounded-2xl bg-zinc-900 border border-zinc-800 p-5">
+              <section className="rounded-2xl bg-surface/80 border border-white/5 p-5 backdrop-blur-md shadow-sm">
                 <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">선호 품종</h2>
                 <div className="flex flex-col gap-3">
                   {topGrapes.map(([grape, count], i) => (
@@ -180,7 +185,7 @@ export default async function MyWinePage() {
 
             {/* 생산 국가 */}
             {topCountries.length > 0 && (
-              <section className="rounded-2xl bg-zinc-900 border border-zinc-800 p-5">
+              <section className="rounded-2xl bg-surface/80 border border-white/5 p-5 backdrop-blur-md shadow-sm">
                 <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">생산 국가</h2>
                 <div className="flex flex-col gap-3">
                   {topCountries.map(([country, count], i) => (
@@ -203,7 +208,7 @@ export default async function MyWinePage() {
 
             {/* 월별 기록 */}
             {recentMonths.length > 0 && (
-              <section className="rounded-2xl bg-zinc-900 border border-zinc-800 p-5">
+              <section className="rounded-2xl bg-surface/80 border border-white/5 p-5 backdrop-blur-md shadow-sm">
                 <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">월별 기록</h2>
                 <div className="flex items-end gap-2 h-28">
                   {recentMonths.map(([month, count]) => (
@@ -219,7 +224,7 @@ export default async function MyWinePage() {
 
             {/* 자주 페어링한 음식 */}
             {topFoods.length > 0 && (
-              <section className="rounded-2xl bg-zinc-900 border border-zinc-800 p-5">
+              <section className="rounded-2xl bg-surface/80 border border-white/5 p-5 backdrop-blur-md shadow-sm">
                 <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">자주 페어링한 음식</h2>
                 <div className="flex flex-col gap-3">
                   {topFoods.map(([food, count], i) => (
@@ -253,12 +258,14 @@ export default async function MyWinePage() {
   );
 }
 
-function StatCard({ label, value, emoji }: { label: string; value: string; emoji: string }) {
+function StatCard({ label, value, icon: Icon }: { label: string; value: string; icon: any }) {
   return (
-    <div className="p-3 rounded-2xl bg-zinc-900 border border-zinc-800 flex flex-col items-center gap-0.5">
-      <span className="text-xl">{emoji}</span>
-      <span className="text-lg font-bold">{value}</span>
-      <span className="text-[10px] text-zinc-500">{label}</span>
+    <div className="p-4 rounded-2xl bg-surface/80 border border-white/5 backdrop-blur-md flex flex-col justify-center items-center gap-1.5 shadow-sm">
+      <div className="flex items-center gap-2">
+        <Icon className="w-4 h-4 text-accent" />
+        <span className="text-2xl font-serif text-white drop-shadow-sm leading-none">{value}</span>
+      </div>
+      <span className="text-[11px] text-zinc-500 font-light tracking-wide uppercase">{label}</span>
     </div>
   );
 }

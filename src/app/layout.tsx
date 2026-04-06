@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 
 export const metadata: Metadata = {
   title: "Winerary",
@@ -11,8 +12,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" className={geist.variable}>
-      <body className="min-h-dvh flex flex-col">{children}</body>
+    <html lang="ko" className={`${inter.variable} ${playfair.variable}`}>
+      <body className="min-h-dvh flex flex-col selection:bg-rose-900 selection:text-rose-100">{children}</body>
     </html>
   );
 }

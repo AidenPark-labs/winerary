@@ -23,23 +23,23 @@ export default function NewSessionPage() {
 
         <form action={action} className="flex flex-col gap-4">
           {state?.error && (
-            <p className="text-rose-400 text-sm bg-rose-950/40 rounded-xl px-4 py-3">{state.error}</p>
+            <p className="text-accent text-sm bg-accent/20 rounded-xl px-4 py-3 border border-accent/40">{state.error}</p>
           )}
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="title" className="text-sm text-zinc-400">세션 제목 (선택)</label>
+            <label htmlFor="title" className="text-sm text-zinc-400 font-light">세션 제목 (선택)</label>
             <input
               id="title"
               name="title"
-              className="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3 text-zinc-100 focus:outline-none focus:border-rose-600 transition-colors"
-              placeholder="예: 오늘의 와인 파티 🍾"
+              className="rounded-xl bg-surface border border-white/10 px-4 py-3 text-zinc-100 font-light focus:outline-none focus:border-accent transition-all shadow-sm"
+              placeholder="예: 오늘의 와인 파티 🍷"
             />
           </div>
 
           <button
             type="submit"
             disabled={pending}
-            className="w-full py-4 rounded-2xl bg-rose-700 hover:bg-rose-600 disabled:opacity-50 text-white font-semibold text-base transition-colors mt-4"
+            className="w-full py-4 rounded-2xl bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-medium text-base transition-all mt-4 shadow-lg shadow-accent/20 active:scale-[0.98]"
           >
             {pending ? "세션 생성 중…" : "세션 시작하기"}
           </button>

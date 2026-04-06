@@ -30,17 +30,17 @@ interface AiResult {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const WINE_TYPES: { value: WineType; label: string }[] = [
-  { value: "red", label: "레드 🍷" },
-  { value: "white", label: "화이트 🥂" },
-  { value: "rose", label: "로제 🌸" },
-  { value: "sparkling", label: "스파클링 ✨" },
-  { value: "fortified", label: "주정강화 🏺" },
+  { value: "red", label: "레드" },
+  { value: "white", label: "화이트" },
+  { value: "rose", label: "로제" },
+  { value: "sparkling", label: "스파클링" },
+  { value: "fortified", label: "주정강화" },
   { value: "other", label: "기타" },
 ];
 
 const TYPE_KO: Record<string, string> = {
-  red: "레드 🍷", white: "화이트 🥂", rose: "로제 🌸",
-  sparkling: "스파클링 ✨", fortified: "주정강화 🏺", other: "기타",
+  red: "레드", white: "화이트", rose: "로제",
+  sparkling: "스파클링", fortified: "주정강화", other: "기타",
 };
 
 import { GRAPE_OPTIONS } from "@/lib/grapes";
@@ -209,7 +209,7 @@ export default function NewDiaryPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const iCls = "w-full rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3 text-zinc-100 focus:outline-none focus:border-rose-600 transition-colors text-sm";
+  const iCls = "w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3.5 text-zinc-100 focus:outline-none focus:border-accent focus:bg-black/60 transition-all font-light text-sm";
   const currentYear = new Date().getFullYear();
   const vintageYears = Array.from({ length: currentYear - 1949 }, (_, i) => currentYear - i);
 
@@ -423,8 +423,8 @@ export default function NewDiaryPage() {
           <div className="flex items-center gap-1.5">
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className={`rounded-full transition-all ${
-                i === stepIndex ? "w-5 h-2 bg-rose-500" :
-                i < stepIndex ? "w-2 h-2 bg-zinc-500" : "w-2 h-2 bg-zinc-700"
+                i === stepIndex ? "w-5 h-2 bg-accent shadow-sm shadow-accent/50" :
+                i < stepIndex ? "w-2 h-2 bg-white/20" : "w-2 h-2 bg-white/5"
               }`} />
             ))}
           </div>
@@ -444,13 +444,13 @@ export default function NewDiaryPage() {
               /* 분석 중 */
               <div className="flex-1 flex flex-col items-center justify-center gap-4">
                 {localPreview && (
-                  <div className="relative w-full rounded-2xl overflow-hidden bg-zinc-900" style={{ height: "280px" }}>
+                  <div className="relative w-full rounded-[24px] overflow-hidden bg-surface" style={{ height: "280px" }}>
                     <img src={localPreview} alt="분석 중" className="w-full h-full object-contain opacity-40" />
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                      <div className="w-16 h-16 rounded-full border-4 border-rose-600 border-t-transparent animate-spin" />
+                      <div className="w-16 h-16 rounded-full border-4 border-accent border-t-transparent animate-spin shadow-xl shadow-accent/20" />
                       <div className="text-center">
-                        <p className="text-white font-semibold">AI가 와인을 분석하고 있어요</p>
-                        <p className="text-zinc-400 text-sm mt-1">라벨 정보를 읽는 중…</p>
+                        <p className="text-white font-serif tracking-wide">AI가 와인을 분석하고 있어요</p>
+                        <p className="text-zinc-500 text-sm mt-1 font-light">라벨 정보를 읽는 중…</p>
                       </div>
                     </div>
                   </div>
@@ -461,20 +461,22 @@ export default function NewDiaryPage() {
               <>
                 <button
                   onClick={() => fileRef.current?.click()}
-                  className="flex-1 flex flex-col items-center justify-center gap-4 rounded-3xl border-2 border-dashed border-zinc-700 bg-zinc-900/50 active:bg-zinc-800/60 transition-colors min-h-[240px]"
+                  className="flex-1 flex flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-white/20 bg-surface/50 active:bg-surface/80 transition-all min-h-[240px]"
                 >
-                  <div className="w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center text-4xl">🍾</div>
+                  <div className="w-20 h-20 rounded-full bg-white/5 border border-white/5 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                  </div>
                   <div className="text-center px-6">
-                    <p className="text-zinc-200 font-semibold">갤러리에서 사진 선택</p>
-                    <p className="text-zinc-500 text-sm mt-1">와인 라벨이 잘 보이는 사진을 선택하면<br />AI가 자동으로 와인 정보를 찾아드려요</p>
+                    <p className="text-zinc-200 font-semibold tracking-wide">갤러리에서 사진 선택</p>
+                    <p className="text-zinc-500 text-sm mt-1 font-light">와인 라벨이 잘 보이는 사진을 선택하면<br />AI가 자동으로 와인 정보를 찾아드려요</p>
                   </div>
                 </button>
 
                 <button
                   onClick={() => cameraRef.current?.click()}
-                  className="flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-rose-700 hover:bg-rose-600 active:scale-95 transition-all text-white font-semibold"
+                  className="flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-accent hover:bg-accent/90 active:scale-[0.98] transition-all text-white font-medium shadow-lg shadow-accent/20"
                 >
-                  <span className="text-xl">📸</span> 지금 사진 찍기
+                  지금 사진 찍기
                 </button>
 
                 <button
@@ -496,11 +498,11 @@ export default function NewDiaryPage() {
 
             {/* AI 인식 실패 알림 */}
             {aiNotFound && (
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-800/80 border border-zinc-700">
-                <span className="text-xl">😅</span>
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-surface/50 border border-white/10 backdrop-blur-md">
+                <svg className="w-6 h-6 text-zinc-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                 <div>
                   <p className="text-zinc-300 text-sm font-medium">와인을 인식하지 못했어요</p>
-                  <p className="text-zinc-500 text-xs mt-0.5">아래에서 직접 검색하거나 이름을 입력해주세요</p>
+                  <p className="text-zinc-500 text-xs mt-0.5 font-light">아래에서 직접 검색하거나 이름을 입력해주세요</p>
                 </div>
               </div>
             )}
@@ -508,34 +510,34 @@ export default function NewDiaryPage() {
             {/* AI 인식 성공 카드 */}
             {aiResult && !aiNotFound && !showSearch && (
               <div className="flex flex-col gap-2">
-                <div className="rounded-2xl bg-zinc-900 border border-rose-800/50 p-4 flex flex-col gap-2.5">
+                <div className="rounded-[20px] bg-surface/80 border border-white/10 p-5 flex flex-col gap-3 backdrop-blur-md shadow-xl">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-white text-lg leading-tight">{notNull(aiResult.name)}</p>
+                      <p className="font-serif font-medium text-white text-lg leading-tight">{notNull(aiResult.name)}</p>
                       {notNull(aiResult.name_original) && (
-                        <p className="text-sm text-zinc-400 italic mt-0.5">{aiResult.name_original}</p>
+                        <p className="text-sm text-zinc-400 italic mt-0.5 font-light">{aiResult.name_original}</p>
                       )}
-                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                        {aiResult.vintage && <span className="text-sm text-zinc-400">{aiResult.vintage}</span>}
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        {aiResult.vintage && <span className="text-xs text-zinc-400 font-light">{aiResult.vintage}</span>}
                         {aiResult.wine_type && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-zinc-300">
+                          <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-white/10 text-zinc-300 tracking-wide">
                             {TYPE_KO[aiResult.wine_type] ?? aiResult.wine_type}
                           </span>
                         )}
-                        {notNull(aiResult.country) && <span className="text-xs text-zinc-400">{aiResult.country}</span>}
+                        {notNull(aiResult.country) && <span className="text-xs text-zinc-400 font-light">{aiResult.country}</span>}
                       </div>
                       {notNull(aiResult.grape_variety) && (
-                        <p className="text-xs text-zinc-500 mt-1">🍇 {aiResult.grape_variety}</p>
+                        <p className="text-xs text-zinc-500 mt-1 font-light">🍇 {aiResult.grape_variety}</p>
                       )}
                     </div>
-                    <span className="text-[10px] px-2 py-1 rounded-lg bg-rose-900/50 text-rose-300 flex-shrink-0">AI 인식</span>
+                    <span className="text-[10px] px-2 py-1 rounded-lg bg-accent/20 text-accent flex-shrink-0 tracking-wide font-medium">AI 인식</span>
                   </div>
                 </div>
                 <button
                   onClick={() => { setShowSearch(true); setSelectedWine(null); }}
-                  className="text-zinc-500 text-xs text-center py-1 hover:text-zinc-300 transition-colors"
+                  className="text-zinc-500 text-xs text-center py-2 px-4 mx-auto rounded-full hover:bg-white/5 transition-colors font-light"
                 >
-                  🔄 다른 와인으로 변경
+                  다른 와인으로 변경
                 </button>
               </div>
             )}
@@ -585,7 +587,7 @@ export default function NewDiaryPage() {
 
                 {/* 검색으로 선택된 와인 */}
                 {selectedWine && (
-                  <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-rose-700 bg-rose-950/30">
+                  <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-accent/40 bg-accent/10">
                     <div>
                       <p className="font-semibold text-zinc-100 text-sm">{selectedWine.name_ko}</p>
                       <p className="text-xs text-zinc-400">{selectedWine.name}</p>
@@ -657,7 +659,7 @@ export default function NewDiaryPage() {
             <button
               onClick={() => setStep("review")}
               disabled={!selectedWine && !wineNameOriginal.trim() && !query.trim()}
-              className="w-full py-4 rounded-2xl bg-rose-700 hover:bg-rose-600 disabled:opacity-40 text-white font-semibold text-base transition-colors mt-auto"
+              className="w-full py-4 rounded-2xl bg-accent hover:bg-accent/90 disabled:opacity-40 active:scale-[0.98] text-white font-medium transition-all shadow-lg shadow-accent/20 mt-auto"
             >
               다음 — 감상 기록 →
             </button>
@@ -669,7 +671,7 @@ export default function NewDiaryPage() {
         {/* ══════════════════════════════════════════════ */}
         {step === "review" && (
           <form onSubmit={handleSubmit} className="flex flex-col px-4 pb-8 gap-6 overflow-y-auto">
-            {error && <p className="text-rose-400 text-sm bg-rose-950/40 rounded-xl px-4 py-3">{error}</p>}
+            {error && <p className="text-accent text-sm bg-accent/10 border border-accent/20 rounded-xl px-4 py-3 text-center">{error}</p>}
 
             {/* 사진 */}
             <section className="flex flex-col gap-3">
@@ -762,14 +764,14 @@ export default function NewDiaryPage() {
                   <div className="flex rounded-xl overflow-hidden border border-zinc-700">
                     {([["retail", "소매가"], ["market", "매장가"]] as const).map(([v, l]) => (
                       <button key={v} type="button" onClick={() => { setPriceType(v); if (v === "retail") setPriceUnit("bottle"); }}
-                        className={`flex-1 py-2 text-sm transition-colors ${priceType === v ? "bg-rose-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>{l}</button>
+                        className={`flex-1 py-2 text-sm transition-colors ${priceType === v ? "bg-accent text-white" : "bg-black/40 text-zinc-400"}`}>{l}</button>
                     ))}
                   </div>
                   {priceType === "market" && (
                     <div className="flex rounded-xl overflow-hidden border border-zinc-700">
                       {([["bottle", "바틀"], ["glass", "글라스"]] as const).map(([v, l]) => (
                         <button key={v} type="button" onClick={() => setPriceUnit(v)}
-                          className={`flex-1 py-2 text-sm transition-colors ${priceUnit === v ? "bg-rose-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>{l}</button>
+                          className={`flex-1 py-2 text-sm transition-colors ${priceUnit === v ? "bg-accent text-white" : "bg-black/40 text-zinc-400"}`}>{l}</button>
                       ))}
                     </div>
                   )}
@@ -808,7 +810,7 @@ export default function NewDiaryPage() {
             </section>
 
             <button type="button" onClick={() => setStep("rate")}
-              className="w-full py-4 rounded-2xl bg-rose-700 hover:bg-rose-600 text-white font-semibold text-base transition-colors mt-auto">
+              className="w-full py-4 mt-4 rounded-2xl bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-medium transition-all shadow-lg shadow-accent/20 active:scale-[0.98]">
               다음 — 평가하기 →
             </button>
           </form>
@@ -819,13 +821,13 @@ export default function NewDiaryPage() {
         {/* ══════════════════════════════════════════════ */}
         {step === "rate" && (
           <form onSubmit={handleSubmit} className="flex flex-col px-4 pb-8 gap-6 overflow-y-auto">
-            {error && <p className="text-rose-400 text-sm bg-rose-950/40 rounded-xl px-4 py-3">{error}</p>}
+            {error && <p className="text-accent text-sm bg-accent/10 border border-accent/20 rounded-xl px-4 py-3 text-center">{error}</p>}
 
             {/* 평점 */}
             <section className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">평점</h2>
-                <span className="text-sm font-semibold text-rose-400">
+                <span className="text-sm font-semibold text-accent">
                   종합 {(() => {
                     const scores = [rating, valueScore];
                     if (foods.length > 0) scores.push(pairingScore);
@@ -858,7 +860,7 @@ export default function NewDiaryPage() {
             </div>
 
             <button type="submit"
-              className="w-full py-4 rounded-2xl bg-rose-700 hover:bg-rose-600 text-white font-semibold text-base transition-colors">
+              className="w-full py-4 mt-4 rounded-2xl bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-medium transition-all shadow-lg shadow-accent/20 active:scale-[0.98]">
               기록 저장
             </button>
           </form>

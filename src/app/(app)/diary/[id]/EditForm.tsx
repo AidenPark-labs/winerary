@@ -10,14 +10,14 @@ import PlaceSearch from "@/components/PlaceSearch";
 import BlendGrapeSelector from "@/components/BlendGrapeSelector";
 import GrapeCombobox from "@/components/GrapeCombobox";
 
-const iCls = "w-full rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-zinc-100 focus:outline-none focus:border-rose-600 transition-colors text-sm";
+const iCls = "w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3.5 text-zinc-100 focus:outline-none focus:border-accent focus:bg-black/60 transition-all font-light text-sm";
 
 const WINE_TYPES: { value: WineType; label: string }[] = [
-  { value: "red", label: "레드 🍷" },
-  { value: "white", label: "화이트 🥂" },
-  { value: "rose", label: "로제 🌸" },
-  { value: "sparkling", label: "스파클링 ✨" },
-  { value: "fortified", label: "주정강화 🏺" },
+  { value: "red", label: "레드" },
+  { value: "white", label: "화이트" },
+  { value: "rose", label: "로제" },
+  { value: "sparkling", label: "스파클링" },
+  { value: "fortified", label: "주정강화" },
   { value: "other", label: "기타" },
 ];
 
@@ -198,7 +198,7 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
           )}
         </div>
 
-        {error && <p className="text-rose-400 text-sm bg-rose-950/40 rounded-xl px-4 py-2">{error}</p>}
+        {error && <p className="text-accent text-sm bg-accent/10 border border-accent/20 rounded-xl px-4 py-3 text-center">{error}</p>}
         {success && <p className="text-emerald-400 text-sm">✓ 저장되었습니다</p>}
 
         {/* ── 사진 ── */}
@@ -215,7 +215,7 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
             ))}
             <button type="button" onClick={() => photoInputRef.current?.click()}
               disabled={photoUploading}
-              className="w-20 h-20 rounded-xl border-2 border-dashed border-zinc-700 hover:border-rose-600 flex flex-col items-center justify-center gap-1 text-zinc-500 hover:text-rose-400 transition-colors">
+              className="w-20 h-20 rounded-xl border-2 border-dashed border-white/20 hover:border-white/40 flex flex-col items-center justify-center gap-1 text-zinc-500 hover:text-zinc-300 transition-colors">
               {photoUploading ? <span className="text-xs">업로드중</span> : <><span className="text-2xl">+</span><span className="text-[10px]">추가</span></>}
             </button>
           </div>
@@ -312,14 +312,14 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
               <div className="flex rounded-xl overflow-hidden border border-zinc-700">
                 {([["retail", "소매가"], ["market", "매장가"]] as const).map(([v, l]) => (
                   <button key={v} type="button" onClick={() => { setPriceType(v); if (v === "retail") setPriceUnit("bottle"); }}
-                    className={`flex-1 py-2 text-sm transition-colors ${priceType === v ? "bg-rose-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>{l}</button>
+                    className={`flex-1 py-2 text-sm transition-colors ${priceType === v ? "bg-accent text-white" : "bg-black/40 text-zinc-400"}`}>{l}</button>
                 ))}
               </div>
               {priceType === "market" && (
                 <div className="flex rounded-xl overflow-hidden border border-zinc-700">
                   {([["bottle", "바틀"], ["glass", "글라스"]] as const).map(([v, l]) => (
                     <button key={v} type="button" onClick={() => setPriceUnit(v)}
-                      className={`flex-1 py-2 text-sm transition-colors ${priceUnit === v ? "bg-rose-700 text-white" : "bg-zinc-800 text-zinc-400"}`}>{l}</button>
+                      className={`flex-1 py-2 text-sm transition-colors ${priceUnit === v ? "bg-accent text-white" : "bg-black/40 text-zinc-400"}`}>{l}</button>
                   ))}
                 </div>
               )}
@@ -377,7 +377,7 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
           <option value="public">전체 공개</option>
         </select>
 
-        <button type="submit" disabled={saving} className="w-full py-3 rounded-xl bg-rose-700 hover:bg-rose-600 disabled:opacity-50 text-white font-semibold transition-colors">
+        <button type="submit" disabled={saving} className="w-full py-4 mt-2 rounded-2xl bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-medium transition-all shadow-lg shadow-accent/20 active:scale-[0.98]">
           저장
         </button>
       </form>

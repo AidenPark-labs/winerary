@@ -20,7 +20,7 @@ export default function DeleteButton({ id }: { id: string }) {
     <button
       onClick={handleDelete}
       disabled={deleting}
-      className="text-sm text-zinc-500 hover:text-rose-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-rose-950/40 disabled:opacity-40"
+      className="text-sm text-zinc-500 hover:text-accent transition-colors px-3 py-1.5 rounded-lg hover:bg-accent/10 disabled:opacity-40"
     >
       {deleting ? "삭제 중…" : "삭제"}
     </button>

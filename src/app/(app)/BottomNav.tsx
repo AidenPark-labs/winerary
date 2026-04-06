@@ -2,13 +2,14 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useTransition, useEffect, useState } from "react";
+import { BookOpen, Search, Wine, Heart, User } from "lucide-react";
 
 const tabs = [
-  { href: "/diary", label: "와인노트", icon: "📔" },
-  { href: "/find", label: "와인검색", icon: "🔍" },
-  { href: "/recommend", label: "와인추천", icon: "🍷" },
-  { href: "/profile/wishlist", label: "내 와인", icon: "❤️" },
-  { href: "/profile", label: "마이페이지", icon: "👤" },
+  { href: "/diary", label: "와인노트", Icon: BookOpen },
+  { href: "/find", label: "와인검색", Icon: Search },
+  { href: "/recommend", label: "와인추천", Icon: Wine },
+  { href: "/profile/wishlist", label: "내 와인", Icon: Heart },
+  { href: "/profile", label: "마이페이지", Icon: User },
 ];
 
 export default function BottomNav() {
@@ -17,12 +18,10 @@ export default function BottomNav() {
   const [isPending, startTransition] = useTransition();
   const [pendingHref, setPendingHref] = useState<string | null>(null);
 
-  // 탭 라우트 미리 prefetch
   useEffect(() => {
     tabs.forEach((tab) => router.prefetch(tab.href));
   }, [router]);
 
-  // 네비게이션이 끝나면 pendingHref 초기화
   useEffect(() => {
     if (!isPending) setPendingHref(null);
   }, [isPending]);
@@ -36,25 +35,24 @@ export default function BottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-950 border-t border-zinc-800 flex">
-      {tabs.map((tab) => {
-        const active = path === tab.href || (tab.href === "/diary" && path.startsWith("/diary")) || (tab.href === "/profile/wishlist" && path.startsWith("/profile/wishlist")) || (tab.href === "/profile" && path === "/profile");
-        const loading = isPending && pendingHref === tab.href;
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-white/5 flex pb-safe">
+      {tabs.map(({ href, label, Icon }) => {
+        const active = path === href || (href === "/diary" && path.startsWith("/diary")) || (href === "/profile/wishlist" && path.startsWith("/profile/wishlist")) || (href === "/profile" && path === "/profile");
+        const loading = isPending && pendingHref === href;
         return (
           <button
-            key={tab.href}
-            onClick={() => handleTap(tab.href)}
-            className={`flex-1 flex flex-col items-center py-3 gap-0.5 text-xs transition-colors ${
-              active || loading ? "text-rose-400" : "text-zinc-500"
+            key={href}
+            onClick={() => handleTap(href)}
+            className={`flex-1 flex flex-col items-center py-4 gap-1.5 text-[10px] sm:text-xs transition-all duration-300 ${
+              active || loading ? "text-accent" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <span className={`text-xl transition-transform duration-200 ${loading ? "scale-110" : "scale-100"}`}>
-              {tab.icon}
-            </span>
-            {tab.label}
-            {/* 로딩 중 탭 하단 인디케이터 */}
-            <span className={`block h-0.5 w-4 rounded-full mt-0.5 transition-all duration-200 ${
-              loading ? "bg-rose-500 opacity-100" : "opacity-0"
+            <div className={`transition-transform duration-300 ${loading ? "scale-110" : active ? "scale-105" : "scale-100"}`}>
+              <Icon size={22} strokeWidth={active || loading ? 2.5 : 2} />
+            </div>
+            <span className="font-medium tracking-wide">{label}</span>
+            <span className={`absolute bottom-0 h-0.5 w-8 rounded-t-full transition-all duration-300 ${
+              active || loading ? "bg-accent opacity-100 scale-x-100" : "opacity-0 scale-x-0"
             }`} />
           </button>
         );

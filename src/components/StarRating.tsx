@@ -35,10 +35,10 @@ export default function StarRating({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm text-zinc-300">
+        <span className="text-sm text-zinc-300 font-light">
           {emoji} {label}
         </span>
-        <span className="text-rose-400 font-semibold text-sm">
+        <span className="text-accent font-semibold text-sm">
           {value.toFixed(step < 1 ? 1 : 0)} / {max}
         </span>
       </div>

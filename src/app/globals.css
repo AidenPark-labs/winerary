@@ -6,23 +6,25 @@
   --color-surface: var(--surface);
   --color-border: var(--border);
   --color-accent: var(--accent);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-playfair);
 }
 
 :root {
-  --background: #0d0907;
-  --foreground: #f0e8df;
-  --surface: #1c1410;
-  --border: #2e2118;
-  --accent: #c0392b;
+  --background: #080305; /* Very deep dark burgundy/black */
+  --foreground: #f4e8e1; /* Off-white with a touch of warmth */
+  --surface: #12070a; /* Slightly elevated background */
+  --border: #2e161c; /* Soft burgundy border */
+  --accent: #d32f4c; /* Vibrant ruby red accent */
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
   min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
 }
 
 @keyframes slideDown {

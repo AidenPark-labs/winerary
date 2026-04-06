@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { checkAuth, setPendingAction, consumePendingAction } from "@/lib/auth-guard";
+import { Heart } from "lucide-react";
 import Toast from "@/components/Toast";
 import AuthPrompt from "@/components/AuthPrompt";
 
@@ -71,7 +72,7 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded, priceRange }: {
   const naverUrl = `https://msearch.shopping.naver.com/search/all?query=${encodeURIComponent(nameKo)}`;
 
   return (
-    <span className="block my-2 p-3 rounded-xl bg-zinc-900/80 border border-zinc-700/50">
+    <span className="block my-2 p-4 rounded-2xl bg-surface/80 border border-white/5 backdrop-blur-md shadow-lg">
       <strong className="text-white text-sm">{nameKo}</strong>
       <span className="block text-xs text-zinc-500 mt-0.5">{nameEn}</span>
       <span className="block mt-1.5 text-xs">
@@ -91,7 +92,7 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded, priceRange }: {
           href={vivinoUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-950/50 border border-rose-800/50 text-rose-300 text-xs hover:bg-rose-900/50 transition-colors"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-accent text-xs hover:bg-white/10 transition-colors tracking-wide"
           onClick={(e) => e.stopPropagation()}
         >
           Vivino
@@ -100,7 +101,7 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded, priceRange }: {
           href={naverUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-950/50 border border-emerald-800/50 text-emerald-300 text-xs hover:bg-emerald-900/50 transition-colors"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-300 text-xs hover:bg-white/10 transition-colors tracking-wide"
           onClick={(e) => e.stopPropagation()}
         >
           네이버 최저가
@@ -108,10 +109,10 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded, priceRange }: {
         <button
           onClick={handleSave}
           disabled={saving || saved}
-          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-colors ${
+          className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs transition-all tracking-wide ${
             saved
-              ? "bg-rose-700/30 border border-rose-700/50 text-rose-300"
-              : "bg-amber-950/50 border border-amber-800/50 text-amber-300 hover:bg-amber-900/50"
+              ? "bg-accent/20 border border-accent/40 text-accent"
+              : "bg-surface border border-white/10 text-zinc-300 hover:bg-white/5"
           }`}
         >
           {saved ? "♥ 추가됨" : saving ? "추가 중…" : "♡ 내 와인에 추가"}
@@ -135,9 +136,9 @@ function WishlistPanel({ items, onDelete, onClose }: {
         <button onClick={onClose} className="text-xs text-zinc-500 hover:text-zinc-300">닫기</button>
       </div>
       {items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center flex-1 gap-2 py-16">
-          <span className="text-4xl">♡</span>
-          <p className="text-zinc-500 text-sm">추천받은 와인을 저장해보세요</p>
+        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16">
+          <Heart className="w-12 h-12 text-zinc-700" strokeWidth={1} />
+          <p className="text-zinc-500 text-sm font-light mt-1">추천받은 와인을 저장해보세요</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
@@ -145,7 +146,7 @@ function WishlistPanel({ items, onDelete, onClose }: {
             const vivinoUrl = `https://www.vivino.com/search/wines?q=${encodeURIComponent(item.name_en)}`;
             const naverUrl = `https://msearch.shopping.naver.com/search/all?query=${encodeURIComponent(item.name_ko)}`;
             return (
-              <div key={item.id} className="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+              <div key={item.id} className="p-3 rounded-2xl bg-surface/80 border border-white/5 backdrop-blur-md">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="text-sm font-semibold text-white">{item.name_ko}</p>
@@ -153,18 +154,18 @@ function WishlistPanel({ items, onDelete, onClose }: {
                   </div>
                   <button
                     onClick={() => onDelete(item.id)}
-                    className="text-zinc-600 hover:text-rose-400 text-lg flex-shrink-0"
+                    className="text-zinc-500 hover:text-accent text-xl flex-shrink-0 transition-colors w-8 h-8 flex items-center justify-center -mt-1 -mr-1 rounded-full hover:bg-white/5"
                   >
-                    ♥
+                    ×
                   </button>
                 </div>
                 <div className="flex gap-2 mt-2">
                   <a href={vivinoUrl} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-950/50 border border-rose-800/50 text-rose-300 text-xs">
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-accent text-xs tracking-wide">
                     Vivino
                   </a>
                   <a href={naverUrl} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-950/50 border border-emerald-800/50 text-emerald-300 text-xs">
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-300 text-xs tracking-wide">
                     네이버 최저가
                   </a>
                 </div>
@@ -423,10 +424,10 @@ export default function RecommendPage() {
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                  className={`max-w-[85%] rounded-[24px] px-5 py-3.5 text-sm leading-relaxed whitespace-pre-wrap shadow-lg ${
                     msg.role === "user"
-                      ? "bg-rose-700 text-white rounded-br-md"
-                      : "bg-zinc-800 text-zinc-200 rounded-bl-md"
+                      ? "bg-accent text-white rounded-br-md font-light"
+                      : "bg-surface/80 border border-white/5 text-zinc-200 rounded-bl-md font-light backdrop-blur-md"
                   }`}
                 >
                   {msg.content
@@ -446,7 +447,7 @@ export default function RecommendPage() {
           </div>
 
           {/* 입력 영역 */}
-          <div className="flex-shrink-0 px-4 pt-2 pb-2 bg-zinc-950 border-t border-zinc-800">
+          <div className="flex-shrink-0 px-4 pt-2 pb-2 bg-background/80 backdrop-blur-md border-t border-white/5">
             <div className="flex items-end gap-2">
               <textarea
                 ref={textareaRef}
@@ -456,13 +457,13 @@ export default function RecommendPage() {
                 onFocus={() => setTimeout(() => scrollEndRef.current?.scrollIntoView({ behavior: "smooth" }), 300)}
                 placeholder="메시지를 입력하세요..."
                 rows={1}
-                className="flex-1 rounded-2xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-zinc-100 text-sm resize-none focus:outline-none focus:border-rose-600 transition-colors max-h-28"
+                className="flex-1 rounded-[24px] bg-surface/80 border border-white/10 px-5 py-3.5 text-zinc-100 text-sm resize-none focus:outline-none focus:border-accent transition-all font-light shadow-sm"
                 style={{ minHeight: "44px" }}
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || streaming}
-                className="w-11 h-11 rounded-full bg-rose-700 hover:bg-rose-600 disabled:opacity-40 flex items-center justify-center text-white transition-colors flex-shrink-0"
+                className="w-12 h-12 rounded-full bg-accent hover:bg-accent/90 disabled:opacity-40 flex items-center justify-center text-white transition-all shadow-lg shadow-accent/20 flex-shrink-0 active:scale-[0.98]"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="22" y1="2" x2="11" y2="13" />

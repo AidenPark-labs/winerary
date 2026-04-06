@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Toast from "@/components/Toast";
 import AuthPrompt from "@/components/AuthPrompt";
+import { Wine } from "lucide-react";
 
 interface WishlistItem {
   id: string;
@@ -108,14 +109,14 @@ export default function MyWinePage() {
       </header>
 
       {/* Segmented Control */}
-      <div className="mx-5 mb-4 flex p-1 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div className="mx-5 mb-4 flex p-1 rounded-xl bg-surface border border-white/5 backdrop-blur-md">
         {([["frequent", "자주마신 와인"], ["wishlist", "위시리스트"]] as const).map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
             className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
               tab === key
-                ? "bg-zinc-700 text-white shadow-sm"
+                ? "bg-white/10 text-white shadow-sm"
                 : "text-zinc-500"
             }`}
           >
@@ -135,31 +136,31 @@ export default function MyWinePage() {
           /* 자주마신 와인 */
           frequentWines.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <span className="text-5xl">🍷</span>
-              <p className="text-zinc-500 text-sm">같은 와인을 2번 이상 기록하면 여기에 표시돼요</p>
-              <a href="/diary/new" className="text-rose-400 text-sm hover:underline">와인 기록하러 가기 →</a>
+              <Wine className="w-16 h-16 text-zinc-800" strokeWidth={1} />
+              <p className="text-zinc-500 text-sm font-light">같은 와인을 2번 이상 기록하면 여기에 표시돼요</p>
+              <a href="/diary/new" className="text-accent text-sm hover:underline font-light mt-1">와인 기록하러 가기 →</a>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              <p className="text-zinc-500 text-sm">{frequentWines.length}종의 와인을 반복해서 즐겼어요</p>
+              <p className="text-zinc-500 text-sm font-light">{frequentWines.length}종의 와인을 반복해서 즐겼어요</p>
               {frequentWines.map((wine, i) => (
-                <div key={wine.name} className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
+                <div key={wine.name} className="p-4 rounded-2xl bg-surface/80 border border-white/5 backdrop-blur-md shadow-sm">
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-rose-900/60 flex items-center justify-center text-sm font-bold text-rose-300 flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-sm font-bold text-accent flex-shrink-0">
                       {i + 1}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-white truncate">{wine.name}</p>
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-zinc-500">
-                        <span className="text-rose-400 font-semibold">{wine.count}회</span>
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-zinc-500 font-light">
+                        <span className="text-accent font-semibold">{wine.count}회</span>
                         {wine.wineType && <span>{TYPE_LABELS[wine.wineType] ?? wine.wineType}</span>}
                         {wine.avgRating != null && (
-                          <span className="flex items-center gap-0.5 text-amber-400">
+                          <span className="flex items-center gap-0.5 text-amber-400 font-medium">
                             ★ {wine.avgRating.toFixed(1)}
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-zinc-600 mt-1">
+                      <p className="text-[11px] text-zinc-600 mt-1 font-light">
                         마지막: {new Date(wine.lastDrunkAt).toLocaleDateString("ko-KR", { year: "numeric", month: "short", day: "numeric" })}
                       </p>
                     </div>
@@ -172,41 +173,41 @@ export default function MyWinePage() {
           /* 위시리스트 */
           wishlistItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <span className="text-5xl">🍷</span>
-              <p className="text-zinc-500 text-sm">저장된 와인이 없습니다</p>
-              <a href="/recommend" className="text-rose-400 text-sm hover:underline">와인 추천받으러 가기 →</a>
+              <Wine className="w-16 h-16 text-zinc-800" strokeWidth={1} />
+              <p className="text-zinc-500 text-sm font-light">저장된 와인이 없습니다</p>
+              <a href="/recommend" className="text-accent text-sm hover:underline font-light mt-1">와인 추천받으러 가기 →</a>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              <p className="text-zinc-500 text-sm">{wishlistItems.length}개의 와인이 저장되어 있어요</p>
+              <p className="text-zinc-500 text-sm font-light">{wishlistItems.length}개의 와인이 저장되어 있어요</p>
               {wishlistItems.map((item) => {
                 const vivinoUrl = `https://www.vivino.com/search/wines?q=${encodeURIComponent(item.name_en)}`;
                 const naverUrl = `https://msearch.shopping.naver.com/search/all?query=${encodeURIComponent(item.name_ko)}`;
                 return (
-                  <div key={item.id} className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
+                  <div key={item.id} className="p-4 rounded-2xl bg-surface/80 border border-white/5 backdrop-blur-md shadow-sm">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="font-semibold text-white">{item.name_ko}</p>
-                        <p className="text-xs text-zinc-500 mt-0.5">{item.name_en}</p>
+                        <p className="font-semibold text-white truncate">{item.name_ko}</p>
+                        <p className="text-xs text-zinc-500 mt-0.5 truncate">{item.name_en}</p>
                       </div>
                       <button
                         onClick={() => handleDelete(item.id)}
-                        className="text-xs px-2.5 py-1 rounded-full border border-zinc-700 text-zinc-500 hover:text-rose-400 hover:border-rose-700 transition-colors flex-shrink-0"
+                        className="text-xs px-2.5 py-1 rounded-full border border-white/10 text-zinc-500 hover:text-accent hover:border-accent hover:bg-accent/10 transition-colors flex-shrink-0"
                       >
                         삭제
                       </button>
                     </div>
                     <div className="flex gap-2 mt-3">
                       <a href={vivinoUrl} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-rose-950/50 border border-rose-800/50 text-rose-300 text-xs hover:bg-rose-900/50 transition-colors">
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-accent text-xs hover:bg-white/10 transition-colors tracking-wide">
                         Vivino
                       </a>
                       <a href={naverUrl} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-950/50 border border-emerald-800/50 text-emerald-300 text-xs hover:bg-emerald-900/50 transition-colors">
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-300 text-xs hover:bg-white/10 transition-colors tracking-wide">
                         네이버 최저가
                       </a>
                     </div>
-                    <p className="text-xs text-zinc-600 mt-2">
+                    <p className="text-xs text-zinc-600 mt-2 font-light">
                       {new Date(item.created_at).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })} 저장
                     </p>
                   </div>

@@ -3,14 +3,15 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Search, HelpCircle, Wine, Camera, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { extractPhotoDate } from "@/lib/exif";
 import { checkAuth, setPendingAction, consumePendingAction } from "@/lib/auth-guard";
 import Toast from "@/components/Toast";
 import AuthPrompt from "@/components/AuthPrompt";
 
 const TYPE_KO: Record<string, string> = {
-  red: "레드 🍷", white: "화이트 🥂", rose: "로제 🌸",
-  sparkling: "스파클링 ✨", fortified: "주정강화 🏺", other: "기타",
+  red: "레드", white: "화이트", rose: "로제",
+  sparkling: "스파클링", fortified: "주정강화", other: "기타",
 };
 
 interface WineResult {
@@ -412,13 +413,13 @@ export default function FindPage() {
 
       {/* 세그먼티드 컨트롤 - select 단계에서만 표시 */}
       {step === "select" && (
-        <div className="mx-5 mb-4 flex p-1 rounded-xl bg-zinc-900 border border-zinc-800 flex-shrink-0">
+        <div className="mx-5 mb-4 flex p-1 rounded-xl bg-surface border border-white/5 flex-shrink-0 backdrop-blur-md">
           {([["photo", "사진 검색"], ["text", "이름 검색"]] as const).map(([key, label]) => (
             <button
               key={key}
               onClick={() => setSearchMode(key)}
               className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
-                searchMode === key ? "bg-zinc-700 text-white shadow-sm" : "text-zinc-500"
+                searchMode === key ? "bg-white/10 text-white shadow-sm" : "text-zinc-500"
               }`}
             >
               {label}
@@ -437,12 +438,12 @@ export default function FindPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleTextSearch()}
               placeholder="와인 이름을 입력하세요"
-              className="flex-1 rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3 text-zinc-100 text-sm focus:outline-none focus:border-rose-600 transition-colors"
+              className="flex-1 rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-zinc-100 text-sm focus:outline-none focus:border-accent focus:bg-black/60 transition-all font-light"
             />
             <button
               onClick={handleTextSearch}
               disabled={searching || searchQuery.trim().length < 2}
-              className="px-4 py-3 rounded-xl bg-rose-700 hover:bg-rose-600 disabled:opacity-40 text-white font-semibold text-sm transition-colors"
+              className="px-4 py-3 rounded-xl bg-accent hover:bg-accent/90 disabled:opacity-40 text-white font-medium text-sm transition-all shadow-lg shadow-accent/20 active:scale-[0.98]"
             >
               {searching ? "…" : "검색"}
             </button>
@@ -450,7 +451,7 @@ export default function FindPage() {
 
           {searching && (
             <div className="flex items-center justify-center py-10">
-              <div className="w-8 h-8 rounded-full border-2 border-rose-600 border-t-transparent animate-spin" />
+              <div className="w-8 h-8 rounded-full border-2 border-accent border-t-transparent animate-spin shadow-lg shadow-accent/20" />
             </div>
           )}
 
@@ -461,10 +462,10 @@ export default function FindPage() {
                 <Link
                   key={wine.id}
                   href={`/wines/${wine.id}`}
-                  className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-900 border border-zinc-800 text-left hover:border-zinc-600 transition-colors"
+                  className="flex items-center gap-3 p-3 rounded-2xl bg-surface/80 border border-white/5 text-left hover:border-white/20 transition-all backdrop-blur-sm"
                 >
                   {wine.naver_image && (
-                    <img src={wine.naver_image} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-zinc-800" />
+                    <img src={wine.naver_image} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-white/5" />
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-white text-sm truncate">{wine.name_ko}</p>
@@ -485,8 +486,8 @@ export default function FindPage() {
           {!searching && searchResults.length === 0 && aiSearchResult && !aiSearchResult.error && (
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2">
-                <span className="text-xs px-2 py-0.5 rounded-full bg-rose-900/50 text-rose-300">AI 검색</span>
-                <p className="text-zinc-500 text-sm">DB에 없지만 AI가 찾았어요</p>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent">AI 검색</span>
+                <p className="text-zinc-500 text-sm font-light">DB에 없지만 AI가 찾았어요</p>
               </div>
               <button
                 onClick={() => {
@@ -496,7 +497,7 @@ export default function FindPage() {
                     searchShopping(aiSearchResult.name || aiSearchResult.name_original!);
                   }
                 }}
-                className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 text-left hover:border-zinc-600 transition-colors"
+                className="p-4 rounded-2xl bg-surface/80 border border-white/5 text-left hover:border-white/20 transition-all backdrop-blur-sm"
               >
                 <p className="font-semibold text-white text-sm">{aiSearchResult.name}</p>
                 {aiSearchResult.name_original && (
@@ -514,12 +515,12 @@ export default function FindPage() {
           {/* 검색 결과 없음 */}
           {!searching && searchResults.length === 0 && !aiSearchResult && searchQuery.trim().length >= 2 && (
             <div className="flex flex-col items-center justify-center py-10 gap-3">
-              <span className="text-4xl">🔍</span>
-              <p className="text-zinc-500 text-sm">검색 결과가 없습니다</p>
-              <p className="text-zinc-600 text-xs">사진 검색으로 AI가 분석해볼 수 있어요</p>
+              <Search className="w-12 h-12 text-zinc-700" />
+              <p className="text-zinc-500 text-sm font-light">검색 결과가 없습니다</p>
+              <p className="text-zinc-600 text-xs font-light">사진 검색으로 AI가 분석해볼 수 있어요</p>
               <button
                 onClick={() => setSearchMode("photo")}
-                className="text-rose-400 text-sm hover:underline"
+                className="text-accent text-sm hover:underline font-light mt-1"
               >
                 사진으로 검색하기 →
               </button>
@@ -529,11 +530,11 @@ export default function FindPage() {
           {/* AI도 못 찾은 경우 */}
           {!searching && searchResults.length === 0 && aiSearchResult?.error && searchQuery.trim().length >= 2 && (
             <div className="flex flex-col items-center justify-center py-10 gap-3">
-              <span className="text-4xl">🤷</span>
-              <p className="text-zinc-500 text-sm">DB와 AI 모두에서 찾지 못했어요</p>
+              <HelpCircle className="w-12 h-12 text-zinc-700" />
+              <p className="text-zinc-500 text-sm font-light">DB와 AI 모두에서 찾지 못했어요</p>
               <button
                 onClick={() => setSearchMode("photo")}
-                className="text-rose-400 text-sm hover:underline"
+                className="text-accent text-sm hover:underline font-light mt-1"
               >
                 사진으로 검색하기 →
               </button>
@@ -542,8 +543,8 @@ export default function FindPage() {
 
           {!searching && searchQuery.trim().length < 2 && (
             <div className="flex flex-col items-center justify-center flex-1 gap-3">
-              <span className="text-5xl">🍷</span>
-              <p className="text-zinc-400 text-sm">와인 이름, 품종, 생산자로 검색하세요</p>
+              <Wine className="w-16 h-16 text-zinc-800" strokeWidth={1} />
+              <p className="text-zinc-500 text-sm font-light">와인 이름, 품종, 생산자로 검색하세요</p>
             </div>
           )}
         </div>
@@ -561,21 +562,23 @@ export default function FindPage() {
           {/* 대형 업로드 영역 */}
           <button
             onClick={() => fileRef.current?.click()}
-            className="flex-1 flex flex-col items-center justify-center gap-4 rounded-3xl border-2 border-dashed border-zinc-700 bg-zinc-900/50 active:bg-zinc-800/60 transition-colors"
+            className="flex-1 flex flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-white/20 bg-surface/50 active:bg-surface/80 transition-all font-light"
           >
-            <div className="w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center text-4xl">🍾</div>
+            <div className="w-20 h-20 rounded-full bg-white/5 border border-white/5 flex items-center justify-center">
+              <ImageIcon className="w-8 h-8 text-zinc-400" strokeWidth={1.5} />
+            </div>
             <div className="text-center">
-              <p className="text-zinc-200 font-semibold">사진 선택</p>
-              <p className="text-zinc-500 text-sm mt-1">갤러리에서 와인 라벨 사진을 선택하세요</p>
+              <p className="text-zinc-200 font-semibold tracking-wide">사진 선택</p>
+              <p className="text-zinc-500 text-sm mt-1 font-light">갤러리에서 와인 라벨 사진을 선택하세요</p>
             </div>
           </button>
 
           {/* 카메라 버튼 */}
           <button
             onClick={() => cameraRef.current?.click()}
-            className="flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-rose-700 hover:bg-rose-600 active:scale-95 transition-all text-white font-semibold"
+            className="flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-accent hover:bg-accent/90 active:scale-[0.98] transition-all text-white font-medium shadow-lg shadow-accent/20"
           >
-            <span className="text-xl">📸</span>
+            <Camera className="w-5 h-5" />
             지금 사진 찍기
           </button>
         </div>
@@ -616,11 +619,11 @@ export default function FindPage() {
           </div>
           <div className="flex gap-3 flex-shrink-0">
             <button onClick={() => { reset(); setZoom(1); setPan({ x: 0, y: 0 }); }}
-              className="flex-1 py-3.5 rounded-2xl border border-zinc-700 text-zinc-300 font-medium active:scale-95 transition-all">
+              className="flex-1 py-3.5 rounded-2xl border border-white/10 text-zinc-300 font-medium active:scale-95 transition-all bg-white/5 hover:bg-white/10">
               다시 선택
             </button>
             <button onClick={analyze}
-              className="flex-[2] py-3.5 rounded-2xl bg-rose-700 hover:bg-rose-600 active:scale-95 transition-all text-white font-semibold">
+              className="flex-[2] py-3.5 rounded-2xl bg-accent hover:bg-accent/90 active:scale-[0.98] transition-all text-white font-medium shadow-lg shadow-accent/20">
               {zoom > 1 ? "🔍 선택 영역 분석하기" : "🤖 AI로 분석하기"}
             </button>
           </div>
@@ -630,13 +633,13 @@ export default function FindPage() {
       {/* ── 분석 중 ── */}
       {step === "analyzing" && previewUrl && (
         <div className="flex flex-col flex-1 px-4 pb-28 gap-4">
-          <div className="relative rounded-2xl overflow-hidden flex-1 bg-zinc-900 min-h-0">
+          <div className="relative rounded-2xl overflow-hidden flex-1 bg-surface min-h-0">
             <img src={previewUrl} alt="분석 중" className="w-full h-full object-contain opacity-40" />
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-              <div className="w-16 h-16 rounded-full border-4 border-rose-700 border-t-transparent animate-spin" />
+              <div className="w-16 h-16 rounded-full border-4 border-accent border-t-transparent animate-spin shadow-xl shadow-accent/20" />
               <div className="text-center">
-                <p className="text-white font-semibold">AI가 와인을 분석하고 있어요</p>
-                <p className="text-zinc-400 text-sm mt-1">라벨 정보를 읽는 중…</p>
+                <p className="text-white font-serif tracking-wide">AI가 와인을 분석하고 있어요</p>
+                <p className="text-zinc-500 text-sm mt-1 font-light">라벨 정보를 읽는 중…</p>
               </div>
             </div>
           </div>
@@ -650,14 +653,14 @@ export default function FindPage() {
           {result.error ? (
             /* 오류 */
             <div className="flex flex-col flex-1 items-center justify-center gap-4 text-center py-10">
-              <span className="text-5xl">😅</span>
+              <AlertCircle className="w-16 h-16 text-zinc-700" strokeWidth={1} />
               <div>
-                <p className="text-zinc-200 font-semibold">인식하지 못했어요</p>
-                <p className="text-zinc-500 text-sm mt-1">{result.error}</p>
-                <p className="text-zinc-600 text-sm mt-0.5">라벨이 잘 보이는 사진으로 다시 시도해보세요.</p>
+                <p className="text-zinc-200 font-semibold tracking-wide">인식하지 못했어요</p>
+                <p className="text-zinc-500 text-sm mt-1 font-light">{result.error}</p>
+                <p className="text-zinc-600 text-sm mt-0.5 font-light">라벨이 잘 보이는 사진으로 다시 시도해보세요.</p>
               </div>
               <button onClick={reset}
-                className="px-6 py-3 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium transition-colors">
+                className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 text-zinc-200 font-medium transition-all">
                 다시 시도
               </button>
             </div>
@@ -670,20 +673,20 @@ export default function FindPage() {
                 </div>
               )}
 
-              <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-5 flex flex-col gap-4">
+              <div className="rounded-2xl bg-surface/80 border border-white/10 p-5 flex flex-col gap-4 shadow-xl backdrop-blur-md">
                 {/* 이름 */}
                 <div>
                   <div className="flex items-start gap-2 flex-wrap">
-                    <h2 className="text-2xl font-bold text-white leading-tight">{result.name}</h2>
+                    <h2 className="text-2xl font-serif font-medium text-white leading-tight drop-shadow-sm">{result.name}</h2>
                     {result.vintage && (
-                      <span className="text-lg text-zinc-400 font-medium mt-0.5">{result.vintage}</span>
+                      <span className="text-lg text-zinc-400 font-light mt-0.5">{result.vintage}</span>
                     )}
                   </div>
                   {result.name_original && result.name_original !== result.name && (
-                    <p className="text-sm text-zinc-500 italic mt-0.5">{result.name_original}</p>
+                    <p className="text-sm text-zinc-500 italic mt-0.5 font-light">{result.name_original}</p>
                   )}
                   {(result.producer || result.country) && (
-                    <p className="text-sm text-zinc-400 mt-1">
+                    <p className="text-sm text-zinc-400 mt-1 font-light">
                       {[result.producer, result.country, result.region].filter(Boolean).join(" · ")}
                     </p>
                   )}
@@ -763,7 +766,7 @@ export default function FindPage() {
                     )}
                     {result.vivino_url && (
                       <a href={result.vivino_url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-1 px-3 py-2 rounded-xl border border-rose-800/60 bg-rose-950/30 text-rose-300 text-xs hover:bg-rose-900/40 transition-colors">
+                        className="flex items-center gap-1 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-accent text-xs hover:bg-white/10 transition-colors">
                         Vivino에서 보기 →
                       </a>
                     )}
@@ -772,7 +775,7 @@ export default function FindPage() {
               </div>
 
               {/* 네이버 쇼핑 결과 */}
-              <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-5 flex flex-col gap-3">
+              <div className="rounded-2xl bg-surface/80 border border-white/10 p-5 flex flex-col gap-3 shadow-xl backdrop-blur-md">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">네이버 쇼핑 최저가</h3>
                   {shopLoading && (
@@ -796,13 +799,13 @@ export default function FindPage() {
                         href={item.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 p-2.5 rounded-xl bg-zinc-800/60 hover:bg-zinc-800 transition-colors"
+                        className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
                       >
                         {item.image && (
                           <img
                             src={item.image}
                             alt=""
-                            className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-zinc-700"
+                            className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-white/5"
                           />
                         )}
                         <div className="flex-1 min-w-0">
@@ -820,7 +823,7 @@ export default function FindPage() {
                       href={`https://msearch.shopping.naver.com/search/all?query=${encodeURIComponent(result.name || result.name_original || "")}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1.5 py-3 rounded-xl border border-zinc-700 text-zinc-400 text-sm hover:text-zinc-200 hover:border-zinc-500 transition-colors"
+                      className="flex items-center justify-center gap-1.5 py-3 rounded-xl border border-white/10 bg-white/5 text-zinc-300 text-sm hover:bg-white/10 transition-colors font-light"
                     >
                       네이버에서 전체 가격 확인하기 →
                     </a>
@@ -856,10 +859,10 @@ export default function FindPage() {
                   setToast(true);
                 }}
                 disabled={wishSaving || wishSaved}
-                className={`w-full py-3.5 rounded-2xl font-semibold text-sm transition-all active:scale-95 ${
+                className={`w-full py-3.5 rounded-2xl font-light text-sm transition-all shadow-lg active:scale-[0.98] ${
                   wishSaved
-                    ? "bg-rose-900/30 border border-rose-700/50 text-rose-300"
-                    : "bg-zinc-800 border border-zinc-700 text-zinc-200 hover:border-zinc-500"
+                    ? "bg-accent/20 border border-accent/40 text-accent/80"
+                    : "bg-surface/80 border border-white/10 text-zinc-200 hover:bg-white/5"
                 }`}
               >
                 {wishSaved ? "♥ 내 와인에 추가됨" : wishSaving ? "추가 중…" : "♡ 내 와인에 추가하기"}
@@ -868,12 +871,12 @@ export default function FindPage() {
               {/* 액션 버튼 */}
               <div className="flex gap-3 flex-shrink-0">
                 <button onClick={reset} disabled={recording}
-                  className="flex-1 py-3.5 rounded-2xl border border-zinc-700 text-zinc-300 font-medium active:scale-95 transition-all disabled:opacity-40">
+                  className="flex-1 py-3.5 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 text-zinc-300 font-medium active:scale-[0.98] transition-all disabled:opacity-40">
                   다시 검색
                 </button>
                 <button onClick={handleRecord} disabled={recording}
-                  className="flex-[2] py-3.5 rounded-2xl bg-rose-700 hover:bg-rose-600 active:scale-95 transition-all text-white font-semibold disabled:opacity-60">
-                  {recording ? "준비 중…" : "✍️ 이 와인 기록하기"}
+                  className="flex-[2] py-3.5 rounded-2xl bg-accent hover:bg-accent/90 active:scale-[0.98] transition-all text-white font-medium shadow-lg shadow-accent/20 disabled:opacity-60">
+                  {recording ? "준비 중…" : "이 와인 기록하기"}
                 </button>
               </div>
             </>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { WineSession, SessionEvaluation, SessionComment } from "@/types";
+import { Star, Scale, Sparkles, Coins } from "lucide-react";
 
 interface Props {
   session: WineSession;
@@ -99,27 +100,28 @@ export default function SessionClient({ session, initialEvaluations, initialComm
       {avgEval && (
         <div className="px-5 py-4 grid grid-cols-4 gap-2">
           {[
-            { label: "평점", value: avgEval.rating },
-            { label: "밸런스", value: avgEval.balance },
-            { label: "복잡성", value: avgEval.complexity },
-            { label: "가성비", value: avgEval.value_score },
+            { label: "평점", value: avgEval.rating, icon: Star },
+            { label: "밸런스", value: avgEval.balance, icon: Scale },
+            { label: "복잡성", value: avgEval.complexity, icon: Sparkles },
+            { label: "가성비", value: avgEval.value_score, icon: Coins },
           ].map((item) => (
-            <div key={item.label} className="flex flex-col items-center p-2 rounded-xl bg-zinc-900 border border-zinc-800">
-              <span className="text-lg font-bold text-rose-400">{item.value.toFixed(1)}</span>
-              <span className="text-xs text-zinc-500">{item.label}</span>
+            <div key={item.label} className="flex flex-col items-center p-3 rounded-2xl bg-surface/80 border border-white/5 backdrop-blur-md shadow-sm gap-1">
+              <item.icon className="w-4 h-4 text-accent" />
+              <span className="text-lg font-serif text-white">{item.value.toFixed(1)}</span>
+              <span className="text-[11px] text-zinc-500 font-light tracking-wide">{item.label}</span>
             </div>
           ))}
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex border-b border-zinc-800 px-5">
+      <div className="flex border-b border-white/5 px-5">
         {(["eval", "chat"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
-              tab === t ? "border-rose-600 text-rose-400" : "border-transparent text-zinc-500 hover:text-zinc-300"
+            className={`py-3 px-4 text-sm font-medium border-b-2 transition-all flex-1 text-center ${
+              tab === t ? "border-accent text-accent" : "border-transparent text-zinc-500 hover:text-zinc-300"
             }`}
           >
             {t === "eval" ? `품평 (${evaluations.length})` : `채팅 (${comments.length})`}
@@ -131,23 +133,23 @@ export default function SessionClient({ session, initialEvaluations, initialComm
         <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-6">
           {/* Nickname input */}
           <div className="flex items-center gap-2">
-            <span className="text-sm text-zinc-400 flex-shrink-0">내 이름:</span>
+            <span className="text-sm text-zinc-400 flex-shrink-0 font-light">내 이름:</span>
             <input
               value={myNickname}
               onChange={(e) => setMyNickname(e.target.value)}
-              className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-rose-600"
+              className="flex-1 bg-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-zinc-100 font-light focus:outline-none focus:border-accent transition-all"
             />
           </div>
 
           {/* Eval form */}
           {session.is_active && (
-            <div className="flex flex-col gap-4 p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
-              <h3 className="font-semibold text-sm">내 품평 추가</h3>
+            <div className="flex flex-col gap-5 p-5 rounded-3xl bg-surface/80 border border-white/5 backdrop-blur-md shadow-lg">
+              <h3 className="font-semibold text-sm text-white">내 품평 추가</h3>
               {(["rating", "balance", "complexity", "value_score"] as const).map((key) => (
                 <div key={key} className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-zinc-400">{key === "rating" ? "⭐ 종합 평점" : key === "balance" ? "⚖️ 밸런스" : key === "complexity" ? "🌸 복잡성" : "💰 가성비"}</span>
-                    <span className="text-rose-400 font-semibold">{evalForm[key].toFixed(key === "rating" ? 1 : 0)}</span>
+                    <span className="text-zinc-400 font-light">{key === "rating" ? "종합 평점" : key === "balance" ? "밸런스" : key === "complexity" ? "복잡성" : "가성비"}</span>
+                    <span className="text-accent font-semibold">{evalForm[key].toFixed(key === "rating" ? 1 : 0)}</span>
                   </div>
                   <input
                     type="range"
@@ -156,7 +158,7 @@ export default function SessionClient({ session, initialEvaluations, initialComm
                     step={key === "rating" ? "0.5" : "1"}
                     value={evalForm[key]}
                     onChange={(e) => setEvalForm((f) => ({ ...f, [key]: parseFloat(e.target.value) }))}
-                    className="accent-rose-600"
+                    className="accent-accent"
                   />
                 </div>
               ))}
@@ -165,12 +167,12 @@ export default function SessionClient({ session, initialEvaluations, initialComm
                 onChange={(e) => setEvalForm((f) => ({ ...f, memo: e.target.value }))}
                 rows={2}
                 placeholder="한 마디 메모 (선택)"
-                className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100 resize-none focus:outline-none focus:border-rose-600"
+                className="bg-surface border border-white/10 rounded-xl px-4 py-3 text-sm text-zinc-100 font-light resize-none focus:outline-none focus:border-accent transition-all"
               />
               <button
                 onClick={submitEval}
                 disabled={submittingEval}
-                className="w-full py-2.5 rounded-xl bg-rose-700 hover:bg-rose-600 disabled:opacity-50 text-white font-semibold text-sm transition-colors"
+                className="w-full py-3 rounded-xl bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-medium text-sm transition-all shadow-lg shadow-accent/20 active:scale-[0.98]"
               >
                 {submittingEval ? "제출 중…" : "품평 제출"}
               </button>
@@ -180,17 +182,17 @@ export default function SessionClient({ session, initialEvaluations, initialComm
           {/* Eval list */}
           <div className="flex flex-col gap-3">
             {evaluations.map((ev) => (
-              <div key={ev.id} className="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+              <div key={ev.id} className="p-4 rounded-2xl bg-surface/80 border border-white/5 backdrop-blur-md shadow-sm">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-sm">{ev.nickname}</span>
-                  {ev.rating && <span className="text-yellow-400 text-sm">★ {ev.rating.toFixed(1)}</span>}
+                  <span className="font-semibold text-sm text-white">{ev.nickname}</span>
+                  {ev.rating && <span className="text-amber-400 text-sm font-medium">★ {ev.rating.toFixed(1)}</span>}
                 </div>
-                <div className="flex gap-3 text-xs text-zinc-500">
+                <div className="flex gap-3 text-xs text-zinc-400 font-light">
                   {ev.balance && <span>밸런스 {ev.balance}</span>}
                   {ev.complexity && <span>복잡성 {ev.complexity}</span>}
                   {ev.value_score && <span>가성비 {ev.value_score}</span>}
                 </div>
-                {ev.memo && <p className="text-sm text-zinc-300 mt-1.5 italic">"{ev.memo}"</p>}
+                {ev.memo && <p className="text-sm text-zinc-300 mt-2 italic font-light">"{ev.memo}"</p>}
               </div>
             ))}
             {evaluations.length === 0 && <p className="text-center text-zinc-500 text-sm py-4">아직 품평이 없습니다</p>}
@@ -203,11 +205,11 @@ export default function SessionClient({ session, initialEvaluations, initialComm
           <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-2">
             {comments.map((c) => (
               <div key={c.id} className={`flex flex-col gap-0.5 ${c.user_id === currentUserId ? "items-end" : "items-start"}`}>
-                <span className="text-xs text-zinc-500">{c.nickname}</span>
-                <div className={`max-w-xs px-3 py-2 rounded-2xl text-sm ${
+                <span className="text-xs text-zinc-500 mb-0.5 ml-1 mr-1">{c.nickname}</span>
+                <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm shadow-md font-light ${
                   c.user_id === currentUserId
-                    ? "bg-rose-700 text-white rounded-br-sm"
-                    : "bg-zinc-800 text-zinc-100 rounded-bl-sm"
+                    ? "bg-accent text-white rounded-br-sm"
+                    : "bg-surface/80 border border-white/5 text-zinc-200 rounded-bl-sm backdrop-blur-md"
                 }`}>
                   {c.content}
                 </div>
@@ -217,17 +219,17 @@ export default function SessionClient({ session, initialEvaluations, initialComm
             <div ref={chatEndRef} />
           </div>
 
-          <form onSubmit={submitComment} className="px-4 pb-6 pt-2 flex gap-2 border-t border-zinc-800">
+          <form onSubmit={submitComment} className="px-4 pb-6 pt-3 flex gap-2 border-t border-white/5 bg-background">
             <input
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               placeholder="메시지 입력…"
-              className="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-rose-600"
+              className="flex-1 bg-surface border border-white/10 rounded-2xl px-4 py-3 text-sm text-zinc-100 font-light focus:outline-none focus:border-accent transition-all shadow-sm"
             />
             <button
               type="submit"
               disabled={submittingComment || !commentText.trim()}
-              className="px-4 py-2.5 rounded-xl bg-rose-700 hover:bg-rose-600 disabled:opacity-50 text-white text-sm font-semibold transition-colors"
+              className="px-5 py-3 rounded-2xl bg-accent hover:bg-accent/90 disabled:opacity-50 text-white text-sm font-medium transition-all shadow-lg shadow-accent/20 active:scale-[0.98]"
             >
               전송
             </button>

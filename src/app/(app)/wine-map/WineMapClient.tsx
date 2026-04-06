@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { MapPin, Map as MapIcon, Wine } from "lucide-react";
 
 interface MapRecord {
   id: string;
@@ -16,9 +17,9 @@ interface MapRecord {
   wine_type: string | null;
 }
 
-const WINE_EMOJI: Record<string, string> = {
-  red: "\uD83C\uDF77", white: "\uD83E\uDD42", rose: "\uD83C\uDF38",
-  sparkling: "\u2728", fortified: "\uD83C\uDFFA", other: "\uD83C\uDF7E",
+const WINE_COLORS: Record<string, string> = {
+  red: "#be123c", white: "#d97706", rose: "#ec4899",
+  sparkling: "#0ea5e9", fortified: "#8b5cf6", other: "#52525b"
 };
 
 export default function WineMapClient({ records }: { records: MapRecord[] }) {
@@ -72,18 +73,21 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
 
   if (records.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] text-center px-6">
-        <p className="text-4xl mb-4">🗺️</p>
-        <h2 className="text-lg font-semibold text-zinc-200 mb-2">아직 지도에 표시할 기록이 없어요</h2>
-        <p className="text-sm text-zinc-500">와인 기록 시 장소를 검색해서 선택하면<br/>이곳에 표시됩니다</p>
+      <div className="flex flex-col items-center justify-center h-[60vh] text-center px-6 gap-3">
+        <MapIcon className="w-16 h-16 text-zinc-800" strokeWidth={1} />
+        <h2 className="text-lg font-semibold text-zinc-200 mt-2">아직 지도에 표시할 기록이 없어요</h2>
+        <p className="text-sm text-zinc-500 font-light">와인 기록 시 장소를 검색해서 선택하면<br/>이곳에 표시됩니다</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-80px)]">
-      <div className="px-4 py-3 flex items-center justify-between border-b border-zinc-800">
-        <h1 className="text-lg font-bold text-zinc-100">🗺️ 와인 지도</h1>
+    <div className="flex flex-col h-[calc(100dvh-80px)] bg-background">
+      <div className="px-5 py-4 flex items-center justify-between border-b border-white/5 bg-background/80 backdrop-blur-md z-10">
+        <div className="flex items-center gap-2">
+          <MapIcon className="w-5 h-5 text-accent" />
+          <h1 className="text-xl font-serif text-white tracking-wide">와인 지도</h1>
+        </div>
         <span className="text-xs text-zinc-500">{records.length}곳</span>
       </div>
 
@@ -97,29 +101,38 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
         )}
 
         {selected && (
-          <div className="absolute bottom-4 left-4 right-4 z-[1000] bg-zinc-900 border border-zinc-700 rounded-2xl p-4 shadow-xl">
+          <div className="absolute bottom-6 left-4 right-4 z-[1000] bg-surface/95 border border-white/10 rounded-2xl p-4 shadow-2xl backdrop-blur-md">
             <button
               onClick={() => setSelected(null)}
-              className="absolute top-3 right-3 text-zinc-500 hover:text-zinc-300 text-lg w-6 h-6 flex items-center justify-center"
+              className="absolute top-3 right-3 text-zinc-500 hover:text-accent text-xl w-6 h-6 flex items-center justify-center transition-colors"
             >×</button>
             <Link href={`/diary/${selected.id}`} className="block">
-              <div className="flex items-start gap-3">
-                {selected.photos?.[0] && (
-                  <img src={selected.photos[0]} alt="" className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
+              <div className="flex items-start gap-4">
+                {selected.photos?.[0] ? (
+                  <img src={selected.photos[0]} alt="" className="w-16 h-16 rounded-xl object-cover flex-shrink-0 border border-white/5 shadow-sm" />
+                ) : (
+                  <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center flex-shrink-0">
+                    <Wine className="w-6 h-6 text-zinc-600" />
+                  </div>
                 )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-zinc-100 truncate">
-                    {WINE_EMOJI[selected.wine_type ?? ""] ?? "🍷"} {selected.name}
+                <div className="flex-1 min-w-0 pr-4 flex flex-col pt-0.5">
+                  <p className="text-[15px] font-semibold text-white truncate flex items-center gap-2">
+                    <span
+                      className="w-2.5 h-2.5 flex-shrink-0 rounded-full shadow-sm"
+                      style={{ backgroundColor: WINE_COLORS[selected.wine_type ?? ""] ?? WINE_COLORS.other }}
+                    />
+                    {selected.name}
                   </p>
-                  <p className="text-xs text-zinc-400 mt-0.5">
-                    📍 {selected.place_name || selected.location}
+                  <p className="text-xs text-zinc-400 mt-1 flex items-center gap-1.5 font-light truncate">
+                    <MapPin className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
+                    {selected.place_name || selected.location}
                   </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-zinc-500">
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="text-[11px] text-zinc-500 font-light px-1.5 py-0.5 rounded-md border border-white/5 bg-white/5">
                       {new Date(selected.drunk_at).toLocaleDateString("ko-KR", { year: "numeric", month: "short", day: "numeric" })}
                     </span>
                     {selected.rating != null && (
-                      <span className="text-xs text-amber-400">★ {selected.rating}</span>
+                      <span className="text-[11px] text-amber-400 font-medium px-1.5 py-0.5 rounded-md border border-amber-500/10 bg-amber-500/10">★ {selected.rating}</span>
                     )}
                   </div>
                 </div>

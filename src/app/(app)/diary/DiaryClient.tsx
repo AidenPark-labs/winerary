@@ -193,14 +193,40 @@ function FeedCard({ record }: { record: WineRecord }) {
       {/* 하단 텍스트 가독성용 그라데이션 (하단만) */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent z-10 pointer-events-none" />
 
-      {/* 상단 액션 바 (와인 타입 도트 & 메뉴) */}
+      {/* 상단: 별점 + 태그 + 메뉴 */}
       <div className="relative z-20 flex justify-between items-start p-5 pointer-events-none">
-        {record.rating ? (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 shadow-lg pointer-events-auto">
-            <span className="text-amber-400 text-[11px]">★</span>
-            <span className="text-xs font-bold text-amber-400">{Number(record.rating).toFixed(1)}</span>
+        <div className="flex flex-col gap-2 pointer-events-auto">
+          {record.rating ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 shadow-lg">
+              <span className="text-amber-400 text-[11px]">★</span>
+              <span className="text-xs font-bold text-amber-400">{Number(record.rating).toFixed(1)}</span>
+            </div>
+          ) : null}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {record.wine_type && (
+              <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-zinc-200 font-medium shadow-sm">
+                <span className={`w-1.5 h-1.5 rounded-full ${WINE_TYPE_COLORS[record.wine_type] ?? "bg-zinc-500"}`} />
+                {TYPE_KO[record.wine_type] ?? record.wine_type}
+              </span>
+            )}
+            {record.wine_vintage && (
+              <span className="px-2 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-zinc-200 font-medium shadow-sm">
+                {record.wine_vintage}
+              </span>
+            )}
+            {record.wine_country && (
+              <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-zinc-200 font-medium shadow-sm">
+                <MapPin size={10} className="text-zinc-300" />
+                {record.wine_country}
+              </span>
+            )}
+            {record.grape_variety && (
+              <span className="px-2 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-zinc-200 font-medium shadow-sm">
+                🍇 {/블렌드|blend/i.test(record.grape_variety) ? '블렌드' : record.grape_variety}
+              </span>
+            )}
           </div>
-        ) : <div />}
+        </div>
         <div className="flex items-center gap-2 pointer-events-auto">
           {photos.length > 1 && (
             <span className="flex items-center gap-1.5 text-[10px] px-2.5 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white shadow-lg">
@@ -213,56 +239,19 @@ function FeedCard({ record }: { record: WineRecord }) {
         </div>
       </div>
 
-      {/* 사진이 온전히 보일 수 있도록 상단 빈 영역(최소 220px) 강제 확보 */}
+      {/* 사진 영역 확보 */}
       <div className="flex-1 z-10 pointer-events-none min-h-[220px]" />
 
-      {/* 하단 글래스모피즘 정보 패널 (카드 인 카드 느낌 제거, 하단 밀착형 블러) */}
-      <div className="relative z-20 mt-auto p-6 bg-black/40 backdrop-blur-2xl border-t border-white/10 flex flex-col gap-2 pointer-events-none">
-        <div className="flex flex-col gap-0.5 min-w-0">
-          <h2 className="font-serif font-medium text-white text-xl tracking-wide leading-tight line-clamp-2 drop-shadow-md">
-            {record.name}
-          </h2>
-          {record.wine_name_original && (
-            <p className="text-xs text-zinc-300/80 italic font-light truncate drop-shadow-sm w-full">{record.wine_name_original}</p>
-          )}
-        </div>
-        
-        <div className="flex items-center gap-2 flex-wrap mt-1.5">
-          {record.wine_type && (
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium tracking-wide shadow-sm backdrop-blur-md">
-              <span className={`w-1.5 h-1.5 rounded-full ${WINE_TYPE_COLORS[record.wine_type] ?? "bg-zinc-500"} shadow-sm`} />
-              {TYPE_KO[record.wine_type] ?? record.wine_type}
-            </span>
-          )}
-          {record.wine_vintage && (
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium tracking-wide shadow-sm backdrop-blur-md">
-              {record.wine_vintage}
-            </span>
-          )}
-          {record.wine_country && (
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium tracking-wide shadow-sm backdrop-blur-md">
-              <MapPin size={10} className="text-zinc-400" />
-              {record.wine_country}
-            </span>
-          )}
-          {record.grape_variety && (
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium tracking-wide shadow-sm backdrop-blur-md">
-              🍇 {/블렌드|blend/i.test(record.grape_variety) ? '블렌드' : record.grape_variety}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between pt-3 border-t border-white/10 mt-1">
-          <p className="text-[11px] text-zinc-400 font-light tracking-wide">
-            {new Date(record.drunk_at).toLocaleDateString("ko-KR", { year: "numeric", month: "short", day: "numeric" })}
-            {record.location && ` · ${record.location}`}
-          </p>
-          {foods.length > 0 && (
-            <p className="text-[11px] text-zinc-400 truncate max-w-[45%] font-light">
-              🍽 {foods.map(f => f.name).join(", ")}
-            </p>
-          )}
-        </div>
+      {/* 하단 슬림 글라스 패널: 이름 + 날짜만 */}
+      <div className="relative z-20 mt-auto px-5 py-4 bg-black/40 backdrop-blur-2xl border-t border-white/10 pointer-events-none">
+        <h2 className="font-serif font-medium text-white text-lg tracking-wide leading-tight line-clamp-1 drop-shadow-md">
+          {record.name}
+        </h2>
+        <p className="text-[11px] text-zinc-400 font-light tracking-wide mt-1">
+          {new Date(record.drunk_at).toLocaleDateString("ko-KR", { year: "numeric", month: "short", day: "numeric" })}
+          {record.location && ` · ${record.location}`}
+          {foods.length > 0 && ` · 🍽 ${foods.map(f => f.name).join(", ")}`}
+        </p>
       </div>
     </Link>
   );

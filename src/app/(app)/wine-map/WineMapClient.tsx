@@ -29,16 +29,21 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
   useEffect(() => {
     if (typeof window === "undefined" || records.length === 0) return;
 
+    // 이미 로드된 경우
+    if ((window as any).kakao?.maps) {
+      setLoaded(true);
+      return;
+    }
+
     const script = document.createElement("script");
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_KEY}&autoload=false`;
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_KEY}&autoload=false`;
+    script.onerror = () => console.error("[KakaoMap] SDK 로드 실패 - API 키를 확인하세요");
     script.onload = () => {
       (window as any).kakao.maps.load(() => {
         setLoaded(true);
       });
     };
     document.head.appendChild(script);
-
-    return () => { document.head.removeChild(script); };
   }, [records.length]);
 
   useEffect(() => {

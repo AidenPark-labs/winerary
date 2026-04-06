@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { extractPhotoDate } from "@/lib/exif";
 import { checkAuth, setPendingAction, consumePendingAction } from "@/lib/auth-guard";
 import Toast from "@/components/Toast";
@@ -438,9 +439,9 @@ export default function FindPage() {
             <div className="flex flex-col gap-2.5 overflow-y-auto">
               <p className="text-zinc-500 text-sm">{searchResults.length}개의 와인을 찾았어요</p>
               {searchResults.map((wine) => (
-                <button
+                <Link
                   key={wine.id}
-                  onClick={() => selectDbWine(wine)}
+                  href={`/wines/${wine.id}`}
                   className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-900 border border-zinc-800 text-left hover:border-zinc-600 transition-colors"
                 >
                   {wine.naver_image && (
@@ -456,7 +457,7 @@ export default function FindPage() {
                       {wine.country && <span>{wine.country}</span>}
                     </div>
                   </div>
-                </button>
+                </Link>
               ))}
             </div>
           )}

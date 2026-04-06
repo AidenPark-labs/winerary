@@ -128,6 +128,63 @@ async function queryWines(filters: WineFilters): Promise<string> {
   return `\n\n[한국 유통 와인 DB - ${data.length}개 검색됨]\n이 목록의 와인을 우선적으로 추천하세요. 가격은 실제 한국 판매가입니다.\n${lines.join("\n")}`;
 }
 
+// ─── 사용자 취향 프로필 ──────────────────────────────────────────────────────
+
+async function getUserPreferences(): Promise<string> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return "";
+
+  const { data: records } = await supabase
+    .from("wine_records")
+    .select("name, wine_type, grape_variety, wine_country, rating, price")
+    .eq("user_id", user.id)
+    .is("deleted_at", null)
+    .order("rating", { ascending: false, nullsFirst: false })
+    .limit(30);
+
+  if (!records || records.length < 3) return "";
+
+  // 선호 타입
+  const typeCounts: Record<string, number> = {};
+  records.forEach((r) => { if (r.wine_type) typeCounts[r.wine_type] = (typeCounts[r.wine_type] ?? 0) + 1; });
+  const topTypes = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([t]) => t);
+
+  // 선호 품종
+  const grapeCounts: Record<string, number> = {};
+  records.forEach((r) => {
+    if (r.grape_variety) r.grape_variety.split(/[,\/·&]+/).map((g: string) => g.trim()).filter(Boolean).forEach((g: string) => {
+      grapeCounts[g] = (grapeCounts[g] ?? 0) + 1;
+    });
+  });
+  const topGrapes = Object.entries(grapeCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([g]) => g);
+
+  // 선호 국가
+  const countryCounts: Record<string, number> = {};
+  records.forEach((r) => { if (r.wine_country) countryCounts[r.wine_country] = (countryCounts[r.wine_country] ?? 0) + 1; });
+  const topCountries = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([c]) => c);
+
+  // 평균 가격대
+  const prices = records.map((r) => r.price).filter((p): p is number => p != null && p > 0);
+  const avgPrice = prices.length ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : null;
+
+  // 높은 평점 와인
+  const topRated = records.filter((r) => r.rating != null && r.rating >= 4).slice(0, 5).map((r) => r.name);
+
+  const parts: string[] = [];
+  if (topTypes.length) parts.push(`선호 와인 타입: ${topTypes.join(", ")}`);
+  if (topGrapes.length) parts.push(`선호 품종: ${topGrapes.join(", ")}`);
+  if (topCountries.length) parts.push(`선호 국가: ${topCountries.join(", ")}`);
+  if (avgPrice) parts.push(`평균 구매 가격: 약 ${avgPrice.toLocaleString()}원`);
+  if (topRated.length) parts.push(`높은 평점 와인: ${topRated.join(", ")}`);
+
+  if (parts.length === 0) return "";
+
+  return `\n\n[사용자 취향 프로필 - 기록 ${records.length}개 기반]
+이 사용자의 과거 와인 기록을 참고하여, 취향에 맞는 추천을 해주세요. 단, 사용자가 다른 조건을 명시하면 그것을 우선하세요.
+${parts.join("\n")}`;
+}
+
 // ─── API ─────────────────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
@@ -137,10 +194,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    // 대화에서 조건 추출 → DB 조회 → 시스템 프롬프트에 추가
+    // 대화에서 조건 추출 → DB 조회 + 사용자 취향 → 시스템 프롬프트에 추가
     const filters = extractFilters(messages);
-    const wineList = await queryWines(filters);
-    const systemPrompt = BASE_SYSTEM_PROMPT + wineList;
+    const [wineList, userPrefs] = await Promise.all([queryWines(filters), getUserPreferences()]);
+    const systemPrompt = BASE_SYSTEM_PROMPT + wineList + userPrefs;
 
     const stream = await client.messages.stream({
       model: "claude-haiku-4-5-20251001",

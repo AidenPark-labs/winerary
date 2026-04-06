@@ -10,6 +10,7 @@ export default async function AdminDashboard() {
     { count: wineDbCount },
     { count: wishlistCount },
     { count: vivinoCount },
+    { count: pendingCount },
   ] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }),
     supabase.from("wine_records").select("*", { count: "exact", head: true }),
@@ -17,6 +18,7 @@ export default async function AdminDashboard() {
     supabase.from("wines").select("*", { count: "exact", head: true }),
     supabase.from("wine_wishlist").select("*", { count: "exact", head: true }),
     supabase.from("wines").select("*", { count: "exact", head: true }).not("vivino_rating", "is", null),
+    supabase.from("pending_wines").select("*", { count: "exact", head: true }).eq("status", "pending"),
   ]);
 
   const stats = [
@@ -24,6 +26,7 @@ export default async function AdminDashboard() {
     { label: "와인 기록 (전체)", value: recordCount ?? 0, emoji: "📝" },
     { label: "와인 기록 (활성)", value: activeRecordCount ?? 0, emoji: "🍷" },
     { label: "와인 DB", value: wineDbCount ?? 0, emoji: "🗄️" },
+    { label: "편입 대기", value: pendingCount ?? 0, emoji: "⏳" },
     { label: "위시리스트", value: wishlistCount ?? 0, emoji: "❤️" },
     { label: "Vivino 별점 보유", value: vivinoCount ?? 0, emoji: "⭐" },
   ];

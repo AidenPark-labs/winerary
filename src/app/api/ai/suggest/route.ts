@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
   const { data } = await supabase
     .from("wines")
-    .select("name_ko, name_en, wine_type, country, grape_variety, producer, price, vivino_url, vivino_rating")
+    .select("id, name_ko, name_en, wine_type, country, grape_variety, producer, price, vivino_url, vivino_rating")
     .or([
       `name_ko.ilike.${exact}`,
       `name_en.ilike.${exact}`,
@@ -25,6 +25,7 @@ export async function GET(request: Request) {
     .limit(10);
 
   const wines: WineSuggestion[] = (data ?? []).map((w) => ({
+    wine_id: w.id,
     name: w.name_en ?? w.name_ko,
     name_ko: w.name_ko,
     producer: w.producer ?? "",

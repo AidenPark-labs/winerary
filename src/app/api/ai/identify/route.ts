@@ -119,6 +119,7 @@ description과 food_pairing은 사진이 아닌, 해당 와인 자체의 알려�
       if (dbWine) {
         result.db_match = true;
         result.db_price = dbWine.price;
+        result.wine_id = dbWine.id;
         if (dbWine.wine_type) result.wine_type = dbWine.wine_type;
         if (dbWine.country) result.country = dbWine.country;
         if (dbWine.grape_variety) result.grape_variety = dbWine.grape_variety;

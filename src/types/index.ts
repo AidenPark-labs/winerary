@@ -12,6 +12,8 @@ export interface WineRecord {
   wine_vintage: number | null
   grape_variety: string | null
   wine_country: string | null
+  wine_id: string | null
+  pending_wine_id: string | null
   photos: string[]
   location: string | null
   place_name: string | null
@@ -72,6 +74,7 @@ export interface SessionComment {
 }
 
 export interface WineSuggestion {
+  wine_id?: string
   name: string
   name_ko: string
   producer: string

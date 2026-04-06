@@ -24,6 +24,7 @@ interface AiResult {
   grape_variety?: string | null;
   vintage?: number | null;
   vivino_url?: string;
+  wine_id?: string;
   error?: string;
 }
 
@@ -361,8 +362,10 @@ export default function NewDiaryPage() {
       ? (blendGrapes.length > 0 ? `블렌드 (${blendGrapes.join(", ")})` : "블렌드")
       : grape || null;
     const finalCountry = country === "__custom__" ? countryCustom.trim() || null : country || null;
+    const resolvedWineId = selectedWine?.wine_id || aiResult?.wine_id || null;
     const result = await createWineRecord({
       name: wineName,
+      wine_id: resolvedWineId,
       wine_name_original: wineNameOriginal || null,
       wine_vivino_url: selectedWine?.vivino_url || null,
       wine_type: (wineType as WineType) || null,

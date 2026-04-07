@@ -59,9 +59,9 @@ function WineInfoSection({ record, wineData }: { record: WineRecord; wineData: W
           </div>
         )}
         {(hasVivino ? wineData?.vivino_grapes : record.grape_variety) && (
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-zinc-500">품종</span>
-            <span className="text-sm text-white font-light">{hasVivino ? wineData!.vivino_grapes : record.grape_variety}</span>
+          <div className="flex items-start justify-between gap-4">
+            <span className="text-xs text-zinc-500 flex-shrink-0 pt-0.5">품종</span>
+            <span className="text-sm text-white font-light text-right">{hasVivino ? wineData!.vivino_grapes : record.grape_variety}</span>
           </div>
         )}
         {record.wine_country && (

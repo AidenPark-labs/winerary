@@ -252,6 +252,11 @@ function FeedCard({ record }: { record: WineRecord }) {
               {record.wine_vintage}
             </span>
           )}
+          {(record.tags ?? []).map((tag, i) => (
+            <span key={i} className="px-2 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] text-violet-300 font-medium">
+              #{tag}
+            </span>
+          ))}
         </div>
       </div>
     </Link>

@@ -28,7 +28,129 @@ function renderStars(score: number, max = 5) {
   });
 }
 
-export default function DiaryDetail({ record, readOnly = false, wineDescription }: { record: WineRecord; readOnly?: boolean; wineDescription?: string | null }) {
+interface WineData {
+  description?: string | null;
+  vivino_url?: string | null;
+  vivino_rating?: number | null;
+  vivino_reviews?: number | null;
+  vivino_winery?: string | null;
+  vivino_grapes?: string | null;
+  vivino_region?: string | null;
+  vivino_style?: string | null;
+  vivino_alcohol?: string | null;
+  vivino_description?: string | null;
+}
+
+function WineInfoSection({ record, wineData }: { record: WineRecord; wineData: WineData | null }) {
+  const hasVivino = !!(wineData?.vivino_rating || wineData?.vivino_winery || wineData?.vivino_grapes);
+
+  return (
+    <div className="rounded-3xl bg-surface/60 backdrop-blur-2xl border border-white/5 overflow-hidden shadow-xl">
+      <div className="px-5 pt-5 pb-3">
+        <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Wine Info</p>
+      </div>
+
+      {/* 기본 정보 (항상 표시) */}
+      <div className="px-5 pb-4 flex flex-col gap-2.5">
+        {record.wine_type && (
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-zinc-500">종류</span>
+            <span className="text-sm text-white font-light">{TYPE_KO[record.wine_type] ?? record.wine_type}</span>
+          </div>
+        )}
+        {(hasVivino ? wineData?.vivino_grapes : record.grape_variety) && (
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-zinc-500">품종</span>
+            <span className="text-sm text-white font-light">{hasVivino ? wineData!.vivino_grapes : record.grape_variety}</span>
+          </div>
+        )}
+        {record.wine_country && (
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-zinc-500">국가</span>
+            <span className="text-sm text-white font-light">{record.wine_country}</span>
+          </div>
+        )}
+        {record.wine_vintage && (
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-zinc-500">빈티지</span>
+            <span className="text-sm text-white font-light">{record.wine_vintage}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Vivino 확장 정보 */}
+      {hasVivino && (
+        <>
+          <div className="border-t border-white/5 mx-5" />
+          <div className="px-5 py-4 flex flex-col gap-2.5">
+            {wineData?.vivino_winery && (
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-zinc-500">와이너리</span>
+                <span className="text-sm text-white font-light">{wineData.vivino_winery}</span>
+              </div>
+            )}
+            {wineData?.vivino_region && (
+              <div className="flex items-start justify-between gap-4">
+                <span className="text-xs text-zinc-500 flex-shrink-0 pt-0.5">지역</span>
+                <span className="text-sm text-white font-light text-right">{wineData.vivino_region}</span>
+              </div>
+            )}
+            {wineData?.vivino_style && (
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-zinc-500">스타일</span>
+                <span className="text-sm text-white font-light">{wineData.vivino_style}</span>
+              </div>
+            )}
+            {wineData?.vivino_alcohol && (
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-zinc-500">도수</span>
+                <span className="text-sm text-white font-light">{wineData.vivino_alcohol}</span>
+              </div>
+            )}
+            {wineData?.vivino_rating != null && (
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-zinc-500">Vivino 평점</span>
+                <span className="text-sm font-medium">
+                  <span className="text-amber-400">★ {wineData.vivino_rating}</span>
+                  {wineData.vivino_reviews != null && (
+                    <span className="text-zinc-500 font-light ml-1">({wineData.vivino_reviews.toLocaleString()})</span>
+                  )}
+                </span>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* 와인 설명 */}
+      {(wineData?.vivino_description || wineData?.description) && (
+        <>
+          <div className="border-t border-white/5 mx-5" />
+          <div className="px-5 py-4">
+            <p className="text-zinc-300 text-sm font-light leading-relaxed">{wineData?.vivino_description || wineData?.description}</p>
+          </div>
+        </>
+      )}
+
+      {/* Vivino 링크 */}
+      {wineData?.vivino_url && (
+        <>
+          <div className="border-t border-white/5 mx-5" />
+          <a
+            href={wineData.vivino_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 px-5 py-3.5 text-sm text-accent hover:bg-white/5 transition-colors font-light"
+          >
+            Vivino에서 보기 →
+          </a>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default function DiaryDetail({ record, readOnly = false, wineData = null }: { record: WineRecord; readOnly?: boolean; wineData?: WineData | null }) {
   const photos: string[] = record.photos ?? [];
   const foods: { name: string }[] = (record.foods as { name: string }[]) ?? [];
   const companions: string[] = record.companions ?? [];
@@ -169,42 +291,8 @@ export default function DiaryDetail({ record, readOnly = false, wineDescription 
             <ShareButton id={record.id} />
           )}
 
-          {/* 와인 정보 태그 + Vivino */}
-          <div className="flex flex-col gap-3">
-            {(record.wine_type || record.wine_country || record.grape_variety) && (
-              <div className="flex flex-wrap gap-2">
-                {record.wine_type && (
-                  <span className="text-xs font-medium px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/5 text-white shadow-sm">
-                    {TYPE_KO[record.wine_type] ?? record.wine_type}
-                  </span>
-                )}
-                {record.wine_country && (
-                  <span className="text-xs font-light px-3 py-1.5 rounded-xl bg-white/5 backdrop-blur-md border border-white/5 text-zinc-300 shadow-sm flex items-center gap-1">
-                    📍 {record.wine_country}
-                  </span>
-                )}
-                {record.grape_variety && (
-                  <span className="text-xs font-light px-3 py-1.5 rounded-xl bg-white/5 backdrop-blur-md border border-white/5 text-zinc-300 shadow-sm flex items-center gap-1">
-                    🍇 {record.grape_variety}
-                  </span>
-                )}
-              </div>
-            )}
-            {record.wine_vivino_url && (
-              <a
-                href={record.wine_vivino_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="self-start flex items-center gap-2 px-5 py-2.5 rounded-2xl border border-white/10 bg-surface/50 backdrop-blur-xl hover:bg-white/10 text-white text-sm transition-all shadow-lg active:scale-95"
-              >
-                <svg className="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  <path d="M9 12l2 2 4-4" />
-                </svg>
-                Vivino에서 정보 보기 →
-              </a>
-            )}
-          </div>
+          {/* 와인 정보 섹션 */}
+          <WineInfoSection record={record} wineData={wineData} />
 
           {/* ── 벤토 그리드 통계 패널 ── */}
           <div className="grid grid-cols-2 gap-3 mt-2">
@@ -300,11 +388,14 @@ export default function DiaryDetail({ record, readOnly = false, wineDescription 
             </div>
           )}
 
-          {/* 와인 설명 */}
-          {wineDescription && (
-            <div className="rounded-3xl bg-surface/40 backdrop-blur-xl border border-white/5 p-6 shadow-lg mt-2">
-              <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em] mb-3">About This Wine</p>
-              <p className="text-zinc-300 text-sm font-light leading-relaxed whitespace-pre-wrap tracking-wide">{wineDescription}</p>
+          {/* 태그 */}
+          {(record.tags ?? []).length > 0 && (
+            <div className="flex gap-2 flex-wrap">
+              {(record.tags ?? []).map((tag, i) => (
+                <span key={i} className="px-3 py-1.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-300 text-xs font-light">
+                  #{tag}
+                </span>
+              ))}
             </div>
           )}
         </div>

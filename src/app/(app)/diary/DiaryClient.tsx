@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { deleteWineRecord } from "@/lib/actions/diary";
-import { Map, CalendarDays, LayoutList, MoreVertical, Camera, Plus, MapPin, Wine as WineIcon } from "lucide-react";
+import { Map, CalendarDays, LayoutList, MoreVertical, Camera, Plus, MapPin, Wine as WineIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import type { WineRecord } from "@/types";
 
 const TYPE_KO: Record<string, string> = {
@@ -21,13 +21,59 @@ const WINE_TYPE_COLORS: Record<string, string> = {
   sparkling: "bg-[#F3E5AB]", fortified: "bg-[#4A0E4E]", other: "bg-zinc-400",
 };
 
+function MapRecordCard({ record }: { record: WineRecord }) {
+  return (
+    <Link href={`/diary/${record.id}`} className="block">
+      <div className="flex items-start gap-4">
+        {record.photos?.[0] ? (
+          <img src={record.photos[0]} alt="" className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
+        ) : (
+          <div className="w-14 h-14 rounded-xl bg-black/40 flex items-center justify-center flex-shrink-0 border border-white/5">
+            <WineIcon className="text-zinc-600" size={20} />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${WINE_TYPE_COLORS[record.wine_type ?? ""] ?? "bg-zinc-500"}`} />
+            <p className="text-sm font-medium text-white truncate px-0">{record.name}</p>
+          </div>
+          <p className="text-xs text-zinc-400 mt-1 flex items-center gap-1 font-light truncate">
+            <MapPin size={10} /> {record.place_name || record.location}
+          </p>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-[10px] text-zinc-500 font-light">
+              {new Date(record.drunk_at).toLocaleDateString("ko-KR", { year: "numeric", month: "short", day: "numeric" })}
+            </span>
+            {record.rating != null && (
+              <span className="text-[10px] text-amber-400 tracking-wider font-semibold">★ {Number(record.rating).toFixed(1)}</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 function MapView({ records }: { records: WineRecord[] }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const [loaded, setLoaded] = useState(false);
-  const [selected, setSelected] = useState<WineRecord | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<WineRecord[] | null>(null);
+  const [selectedIdx, setSelectedIdx] = useState(0);
 
   const geoRecords = records.filter((r) => r.latitude != null && r.longitude != null);
+
+  // 같은 좌표의 기록을 그룹핑
+  const groupedByLocation = useCallback(() => {
+    const groups = new window.Map<string, WineRecord[]>();
+    geoRecords.forEach((r) => {
+      const key = `${r.latitude},${r.longitude}`;
+      const group = groups.get(key) ?? [];
+      group.push(r);
+      groups.set(key, group);
+    });
+    return Array.from(groups.values());
+  }, [geoRecords]);
 
   useEffect(() => {
     if (geoRecords.length === 0) return;
@@ -54,22 +100,40 @@ function MapView({ records }: { records: WineRecord[] }) {
       level: 8,
     });
     map.setBounds(bounds, 80);
-    // 핀이 밀집되어 있어도 너무 가까이 줌인되지 않도록 최소 레벨 보장
     if (map.getLevel() < 5) map.setLevel(5);
     mapInstanceRef.current = map;
 
-    geoRecords.forEach((r) => {
-      const marker = new kakao.maps.Marker({
-        map,
-        position: new kakao.maps.LatLng(r.latitude, r.longitude),
-        title: r.name,
-      });
+    const groups = groupedByLocation();
+    groups.forEach((group) => {
+      const rep = group[0];
+      const pos = new kakao.maps.LatLng(rep.latitude, rep.longitude);
+
+      // 여러 기록이 있는 장소에는 개수 오버레이 표시
+      if (group.length > 1) {
+        const overlay = new kakao.maps.CustomOverlay({
+          position: pos,
+          content: `<div style="
+            position:relative; top:-44px; left:10px;
+            background:#7c3aed; color:white;
+            width:20px; height:20px; border-radius:50%;
+            display:flex; align-items:center; justify-content:center;
+            font-size:11px; font-weight:700;
+            border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.3);
+            pointer-events:none;
+          ">${group.length}</div>`,
+          zIndex: 2,
+        });
+        overlay.setMap(map);
+      }
+
+      const marker = new kakao.maps.Marker({ map, position: pos, title: rep.name });
       kakao.maps.event.addListener(marker, "click", () => {
-        setSelected(r);
-        map.panTo(new kakao.maps.LatLng(r.latitude, r.longitude));
+        setSelectedGroup(group);
+        setSelectedIdx(0);
+        map.panTo(pos);
       });
     });
-  }, [loaded, geoRecords]);
+  }, [loaded, geoRecords, groupedByLocation]);
 
   if (geoRecords.length === 0) {
     return (
@@ -82,6 +146,9 @@ function MapView({ records }: { records: WineRecord[] }) {
     );
   }
 
+  const current = selectedGroup?.[selectedIdx] ?? null;
+  const total = selectedGroup?.length ?? 0;
+
   return (
     <div className="relative" style={{ height: "calc(100dvh - 200px)" }}>
       <div ref={mapRef} className="absolute inset-0" />
@@ -90,37 +157,32 @@ function MapView({ records }: { records: WineRecord[] }) {
           <p className="text-zinc-500 text-sm font-light">지도 로딩 중…</p>
         </div>
       )}
-      {selected && (
+      {current && selectedGroup && (
         <div className="absolute bottom-20 left-4 right-4 z-[1000] bg-surface/90 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl">
-          <button onClick={() => setSelected(null)} className="absolute top-3 right-3 text-zinc-500 hover:text-white transition-colors text-lg w-6 h-6 flex items-center justify-center">×</button>
-          <Link href={`/diary/${selected.id}`} className="block">
-            <div className="flex items-start gap-4">
-              {selected.photos?.[0] ? (
-                <img src={selected.photos[0]} alt="" className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
-              ) : (
-                <div className="w-14 h-14 rounded-xl bg-black/40 flex items-center justify-center flex-shrink-0 border border-white/5">
-                  <WineIcon className="text-zinc-600" size={20} />
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${WINE_TYPE_COLORS[selected.wine_type ?? ""] ?? "bg-zinc-500"}`} />
-                  <p className="text-sm font-medium text-white truncate px-0">{selected.name}</p>
-                </div>
-                <p className="text-xs text-zinc-400 mt-1 flex items-center gap-1 font-light truncate">
-                  <MapPin size={10} /> {selected.place_name || selected.location}
-                </p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[10px] text-zinc-500 font-light">
-                    {new Date(selected.drunk_at).toLocaleDateString("ko-KR", { year: "numeric", month: "short", day: "numeric" })}
-                  </span>
-                  {selected.rating != null && (
-                    <span className="text-[10px] text-amber-400 tracking-wider font-semibold">★ {Number(selected.rating).toFixed(1)}</span>
-                  )}
-                </div>
-              </div>
+          <button onClick={() => { setSelectedGroup(null); setSelectedIdx(0); }} className="absolute top-3 right-3 text-zinc-500 hover:text-white transition-colors text-lg w-6 h-6 flex items-center justify-center z-10">×</button>
+
+          {/* 여러 기록일 때 네비게이션 */}
+          {total > 1 && (
+            <div className="flex items-center justify-between mb-3">
+              <button
+                onClick={() => setSelectedIdx((prev) => (prev - 1 + total) % total)}
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 text-zinc-300 hover:text-white hover:bg-white/20 transition-colors"
+              >
+                <ChevronLeft size={14} />
+              </button>
+              <span className="text-[11px] text-zinc-400 font-medium tabular-nums">
+                {selectedIdx + 1} / {total}
+              </span>
+              <button
+                onClick={() => setSelectedIdx((prev) => (prev + 1) % total)}
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 text-zinc-300 hover:text-white hover:bg-white/20 transition-colors"
+              >
+                <ChevronRight size={14} />
+              </button>
             </div>
-          </Link>
+          )}
+
+          <MapRecordCard record={current} />
         </div>
       )}
     </div>

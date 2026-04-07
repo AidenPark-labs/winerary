@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const { recordId, action } = await request.json();
+  const { recordId, action, wineId } = await request.json();
   if (!recordId || !action) {
     return Response.json({ error: "Missing params" }, { status: 400 });
   }
@@ -28,6 +28,8 @@ export async function POST(request: Request) {
     await admin.from("wine_records").update({ deleted_at: null }).eq("id", recordId);
   } else if (action === "hard_delete") {
     await admin.from("wine_records").delete().eq("id", recordId);
+  } else if (action === "update_wine_id") {
+    await admin.from("wine_records").update({ wine_id: wineId ?? null }).eq("id", recordId);
   }
 
   return Response.json({ ok: true });

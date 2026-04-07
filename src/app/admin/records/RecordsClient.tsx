@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import AdminRecordActions from "./RecordActions";
 
 const TYPE_KO: Record<string, string> = {
@@ -11,6 +12,83 @@ const TYPE_KO: Record<string, string> = {
 interface Props {
   records: any[];
   profiles: { id: string; nickname: string }[];
+}
+
+function WineIdMapper({ recordId, currentWineId, recordName }: { recordId: string; currentWineId: string | null; recordName: string }) {
+  const router = useRouter();
+  const [wineId, setWineId] = useState(currentWineId);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  async function search(q: string) {
+    if (q.length < 2) return;
+    setSearching(true);
+    try {
+      const res = await fetch(`/api/ai/suggest?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      setResults(data.wines ?? []);
+    } catch { setResults([]); }
+    setSearching(false);
+  }
+
+  async function save(newWineId: string | null) {
+    setSaving(true);
+    await fetch("/api/admin/records", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ recordId, action: "update_wine_id", wineId: newWineId }),
+    });
+    setWineId(newWineId);
+    setSaving(false);
+    setOpen(false);
+    router.refresh();
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5 text-xs">
+      <div className="flex items-center gap-2">
+        <span className="text-zinc-500">🔗 DB매핑:</span>
+        {wineId ? (
+          <>
+            <span className="text-emerald-400 font-mono">{wineId.slice(0, 8)}</span>
+            <button onClick={() => save(null)} disabled={saving} className="text-rose-400 hover:text-rose-300 disabled:opacity-40">해제</button>
+          </>
+        ) : (
+          <>
+            <span className="text-zinc-600">없음</span>
+            <button onClick={() => { setOpen(!open); setQuery(recordName); if (!open) search(recordName); }} className="text-blue-400 hover:text-blue-300">검색</button>
+          </>
+        )}
+      </div>
+      {open && !wineId && (
+        <div className="flex flex-col gap-1.5 mt-1">
+          <div className="flex gap-1.5">
+            <input value={query} onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); search(query); } }}
+              className="flex-1 rounded-lg bg-zinc-800 border border-zinc-700 px-2 py-1.5 text-xs text-zinc-200" placeholder="와인 검색…" />
+            <button onClick={() => search(query)} disabled={searching}
+              className="px-2 py-1.5 rounded-lg bg-zinc-700 text-zinc-300 text-xs disabled:opacity-40">{searching ? "…" : "검색"}</button>
+          </div>
+          {results.length > 0 && (
+            <ul className="bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden max-h-32 overflow-y-auto">
+              {results.map((w: any, i: number) => (
+                <li key={i}>
+                  <button onClick={() => save(w.wine_id)} disabled={saving}
+                    className="w-full text-left px-3 py-1.5 hover:bg-zinc-800 text-xs transition-colors disabled:opacity-40">
+                    <span className="text-zinc-200">{w.name_ko}</span>
+                    <span className="text-zinc-500 ml-1">{w.country && `· ${w.country}`}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function RecordsClient({ records, profiles }: Props) {
@@ -118,6 +196,11 @@ export default function RecordsClient({ records, profiles }: Props) {
                 {r.memo && (
                   <p className="text-xs text-zinc-400 bg-zinc-800/50 rounded-lg p-2">💬 {r.memo}</p>
                 )}
+
+                {/* 와인 DB 매핑 */}
+                <div className="pt-2 border-t border-zinc-800/50">
+                  <WineIdMapper recordId={r.id} currentWineId={r.wine_id} recordName={r.name} />
+                </div>
 
                 {/* 하단: 유저 + 액션 */}
                 <div className="flex items-center justify-between mt-auto pt-2 border-t border-zinc-800/50">

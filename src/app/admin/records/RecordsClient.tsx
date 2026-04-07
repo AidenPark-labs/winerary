@@ -77,9 +77,11 @@ function WineIdMapper({ recordId, currentWineId, recordName }: { recordId: strin
               {results.map((w: any, i: number) => (
                 <li key={i}>
                   <button onClick={() => save(w.wine_id)} disabled={saving}
-                    className="w-full text-left px-3 py-1.5 hover:bg-zinc-800 text-xs transition-colors disabled:opacity-40">
-                    <span className="text-zinc-200">{w.name_ko}</span>
-                    <span className="text-zinc-500 ml-1">{w.country && `· ${w.country}`}</span>
+                    className="w-full text-left px-3 py-2 hover:bg-zinc-800 text-xs transition-colors disabled:opacity-40">
+                    <p className="text-zinc-200">{w.name_ko}</p>
+                    <p className="text-zinc-500 truncate">
+                      {w.name !== w.name_ko && w.name}{w.country && ` · ${w.country}`}{w.grapes && ` · ${w.grapes}`}
+                    </p>
                   </button>
                 </li>
               ))}

@@ -14,7 +14,7 @@ interface Props {
   profiles: { id: string; nickname: string }[];
 }
 
-function WineIdMapper({ recordId, currentWineId, recordName }: { recordId: string; currentWineId: string | null; recordName: string }) {
+function WineIdMapper({ recordId, currentWineId, recordName, record }: { recordId: string; currentWineId: string | null; recordName: string; record: any }) {
   const router = useRouter();
   const [wineId, setWineId] = useState(currentWineId);
   const [query, setQuery] = useState("");
@@ -22,6 +22,35 @@ function WineIdMapper({ recordId, currentWineId, recordName }: { recordId: strin
   const [searching, setSearching] = useState(false);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [creating, setCreating] = useState(false);
+
+  async function createAndMap() {
+    setCreating(true);
+    try {
+      const res = await fetch("/api/admin/records", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recordId,
+          action: "create_wine",
+          wineData: {
+            name_ko: record.name,
+            name_en: record.wine_name_original || null,
+            wine_type: record.wine_type || null,
+            grape_variety: record.grape_variety || null,
+            country: record.wine_country || null,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (data.wine_id) {
+        setWineId(data.wine_id);
+        setOpen(false);
+        router.refresh();
+      }
+    } catch {}
+    setCreating(false);
+  }
 
   async function search(q: string) {
     if (q.length < 2) return;
@@ -87,6 +116,10 @@ function WineIdMapper({ recordId, currentWineId, recordName }: { recordId: strin
               ))}
             </ul>
           )}
+          <button onClick={createAndMap} disabled={creating}
+            className="w-full text-left px-3 py-2 rounded-lg border border-dashed border-zinc-700 hover:border-zinc-500 text-xs text-zinc-400 hover:text-zinc-200 transition-colors disabled:opacity-40">
+            {creating ? "생성 중…" : `+ "${recordName}" 를 새 와인으로 DB에 등록`}
+          </button>
         </div>
       )}
     </div>
@@ -201,7 +234,7 @@ export default function RecordsClient({ records, profiles }: Props) {
 
                 {/* 와인 DB 매핑 */}
                 <div className="pt-2 border-t border-zinc-800/50">
-                  <WineIdMapper recordId={r.id} currentWineId={r.wine_id} recordName={r.name} />
+                  <WineIdMapper recordId={r.id} currentWineId={r.wine_id} recordName={r.name} record={r} />
                 </div>
 
                 {/* 하단: 유저 + 액션 */}

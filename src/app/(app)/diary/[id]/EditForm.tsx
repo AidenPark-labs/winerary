@@ -79,6 +79,24 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  // wine_id 매핑
+  const [wineId, setWineId] = useState<string | null>(record.wine_id ?? null);
+  const [wineSearchQuery, setWineSearchQuery] = useState("");
+  const [wineSearchResults, setWineSearchResults] = useState<any[]>([]);
+  const [wineSearching, setWineSearching] = useState(false);
+  const [showWineSearch, setShowWineSearch] = useState(false);
+
+  async function searchWines(q: string) {
+    if (q.length < 2) { setWineSearchResults([]); return; }
+    setWineSearching(true);
+    try {
+      const res = await fetch(`/api/ai/suggest?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      setWineSearchResults(data.wines ?? []);
+    } catch { setWineSearchResults([]); }
+    setWineSearching(false);
+  }
+
   // 와인 기본 정보
   const [name, setName] = useState(record.name);
   const [wineNameOriginal, setWineNameOriginal] = useState(record.wine_name_original ?? "");
@@ -155,6 +173,7 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
 
     const result = await updateWineRecord(record.id, {
       name: name.trim(),
+      wine_id: wineId,
       wine_name_original: wineNameOriginal || null,
       wine_type: (wineType as WineType) || null,
       wine_vintage: wineVintage ? parseInt(wineVintage) : null,
@@ -222,6 +241,53 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
             </button>
           </div>
           <input ref={photoInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handlePhotoAdd} />
+        </section>
+
+        {/* ── 와인 DB 매핑 ── */}
+        <section className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">와인 DB 매핑</label>
+            {wineId ? (
+              <button type="button" onClick={() => { setWineId(null); setShowWineSearch(false); }}
+                className="text-[11px] px-2.5 py-1 rounded-lg bg-zinc-800 text-rose-400 border border-zinc-700 hover:bg-zinc-700">해제</button>
+            ) : (
+              <button type="button" onClick={() => setShowWineSearch(!showWineSearch)}
+                className="text-[11px] px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700">
+                {showWineSearch ? "닫기" : "검색"}
+              </button>
+            )}
+          </div>
+          {wineId ? (
+            <p className="text-xs text-emerald-400 bg-emerald-900/20 border border-emerald-800/30 rounded-xl px-3 py-2">✓ 와인 DB에 연결됨</p>
+          ) : (
+            <p className="text-xs text-zinc-500">연결된 와인 DB가 없습니다</p>
+          )}
+          {showWineSearch && !wineId && (
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                <input value={wineSearchQuery} onChange={(e) => setWineSearchQuery(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); searchWines(wineSearchQuery); } }}
+                  placeholder="와인 이름으로 검색…" className={iCls} />
+                <button type="button" onClick={() => searchWines(wineSearchQuery)} disabled={wineSearching}
+                  className="px-3 py-3 rounded-xl bg-zinc-700 hover:bg-zinc-600 disabled:opacity-40 text-zinc-200 text-sm whitespace-nowrap">
+                  {wineSearching ? "…" : "검색"}
+                </button>
+              </div>
+              {wineSearchResults.length > 0 && (
+                <ul className="bg-zinc-900 border border-zinc-700 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
+                  {wineSearchResults.map((w: any, i: number) => (
+                    <li key={i}>
+                      <button type="button" onClick={() => { setWineId(w.wine_id); setShowWineSearch(false); setWineSearchResults([]); }}
+                        className="w-full text-left px-4 py-2.5 hover:bg-zinc-800 transition-colors">
+                        <p className="text-sm text-zinc-100 truncate">{w.name_ko}</p>
+                        <p className="text-xs text-zinc-500 truncate">{w.name} {w.country && `· ${w.country}`} {w.grapes && `· ${w.grapes}`}</p>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </section>
 
         {/* ── 와인 정보 ── */}

@@ -23,6 +23,7 @@ const WINE_TYPE_COLORS: Record<string, string> = {
 
 function MapView({ records }: { records: WineRecord[] }) {
   const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
   const [loaded, setLoaded] = useState(false);
   const [selected, setSelected] = useState<WineRecord | null>(null);
 
@@ -42,6 +43,7 @@ function MapView({ records }: { records: WineRecord[] }) {
 
   useEffect(() => {
     if (!loaded || !mapRef.current || geoRecords.length === 0) return;
+    if (mapInstanceRef.current) return;
     const kakao = (window as any).kakao;
 
     const bounds = new kakao.maps.LatLngBounds();
@@ -49,9 +51,12 @@ function MapView({ records }: { records: WineRecord[] }) {
 
     const map = new kakao.maps.Map(mapRef.current, {
       center: bounds.getCenter?.() ?? new kakao.maps.LatLng(37.5665, 126.978),
-      level: 5,
+      level: 8,
     });
-    if (geoRecords.length > 1) map.setBounds(bounds, 60);
+    map.setBounds(bounds, 80);
+    // 핀이 밀집되어 있어도 너무 가까이 줌인되지 않도록 최소 레벨 보장
+    if (map.getLevel() < 5) map.setLevel(5);
+    mapInstanceRef.current = map;
 
     geoRecords.forEach((r) => {
       const marker = new kakao.maps.Marker({
@@ -59,7 +64,10 @@ function MapView({ records }: { records: WineRecord[] }) {
         position: new kakao.maps.LatLng(r.latitude, r.longitude),
         title: r.name,
       });
-      kakao.maps.event.addListener(marker, "click", () => setSelected(r));
+      kakao.maps.event.addListener(marker, "click", () => {
+        setSelected(r);
+        map.panTo(new kakao.maps.LatLng(r.latitude, r.longitude));
+      });
     });
   }, [loaded, geoRecords]);
 

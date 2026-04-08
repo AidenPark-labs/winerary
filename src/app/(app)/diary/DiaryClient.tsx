@@ -388,12 +388,11 @@ function DateGroupCarousel({ date, records: groupRecords }: { date: string; reco
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIdx, setActiveIdx] = useState(0);
 
-  const dateLabel = new Date(date + "T00:00:00").toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    weekday: "short",
-  });
+  const d = new Date(date + "T00:00:00");
+  const dayNum = d.getDate();
+  const monthStr = d.toLocaleDateString("ko-KR", { month: "short" });
+  const weekday = ["일", "월", "화", "수", "목", "금", "토"][d.getDay()];
+  const yearStr = d.getFullYear();
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -408,10 +407,17 @@ function DateGroupCarousel({ date, records: groupRecords }: { date: string; reco
 
   return (
     <div>
-      <div className="flex items-center justify-between px-5 mb-2">
-        <h3 className="text-sm font-semibold text-zinc-300 tracking-wide">{dateLabel}</h3>
+      <div className="flex items-center gap-3 px-5 mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl font-bold text-white leading-none">{dayNum}</span>
+          <div className="flex flex-col">
+            <span className="text-[11px] font-medium text-zinc-400 leading-tight">{monthStr} {yearStr}</span>
+            <span className="text-[10px] text-zinc-600 leading-tight">{weekday}요일</span>
+          </div>
+        </div>
+        <div className="flex-1 h-px bg-white/5" />
         {groupRecords.length > 1 && (
-          <span className="text-[11px] text-zinc-500 font-medium">{groupRecords.length}개</span>
+          <span className="text-[10px] text-zinc-600 font-medium">{groupRecords.length}개</span>
         )}
       </div>
       <div

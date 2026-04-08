@@ -2,13 +2,13 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useTransition, useEffect, useState } from "react";
-import { BookOpen, Search, Wine, Heart, User } from "lucide-react";
+import { BookOpen, Map, Search, Wine, User } from "lucide-react";
 
 const tabs = [
   { href: "/diary", label: "와인노트", Icon: BookOpen },
+  { href: "/wine-map", label: "와인맵", Icon: Map },
   { href: "/find", label: "와인검색", Icon: Search },
   { href: "/recommend", label: "와인추천", Icon: Wine },
-  { href: "/profile/wishlist", label: "내 와인", Icon: Heart },
   { href: "/profile", label: "마이페이지", Icon: User },
 ];
 
@@ -37,7 +37,7 @@ export default function BottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-white/5 flex pb-safe">
       {tabs.map(({ href, label, Icon }) => {
-        const active = path === href || (href === "/diary" && path.startsWith("/diary")) || (href === "/profile/wishlist" && path.startsWith("/profile/wishlist")) || (href === "/profile" && path === "/profile");
+        const active = path === href || (href === "/diary" && path.startsWith("/diary")) || (href === "/wine-map" && path.startsWith("/wine-map")) || (href === "/profile" && path === "/profile");
         const loading = isPending && pendingHref === href;
         return (
           <button

@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { WineRecord } from "@/types";
 import LogoutButton from "./LogoutButton";
 import AuthPrompt from "@/components/AuthPrompt";
-import { User, Book, Star, BarChart3, Pencil } from "lucide-react";
+import { User, Book, Star, BarChart3, Pencil, Heart } from "lucide-react";
 import Link from "next/link";
 import { GRAPE_OPTIONS } from "@/lib/grapes";
 
@@ -225,6 +225,16 @@ export default async function MyWinePage() {
           <StatCard label="기록" value={`${total}`} icon={Book} />
           <StatCard label="종합 평점" value={avgOverall ? avgOverall.toFixed(1) : "-"} icon={Star} />
         </div>
+
+        {/* 메뉴 */}
+        <Link
+          href="/profile/wishlist"
+          className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-surface/80 border border-white/5 hover:bg-white/5 transition-colors"
+        >
+          <Heart size={18} className="text-accent" />
+          <span className="text-sm text-white font-medium flex-1">내 와인</span>
+          <span className="text-zinc-600 text-sm">›</span>
+        </Link>
 
         {total === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16">

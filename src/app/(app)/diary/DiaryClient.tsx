@@ -15,7 +15,7 @@ const TYPE_KO: Record<string, string> = {
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
-type ViewMode = "feed" | "grid" | "calendar" | "map";
+type ViewMode = "feed" | "grid" | "calendar";
 
 const WINE_TYPE_COLORS: Record<string, string> = {
   red: "bg-[#722F37]", white: "bg-[#F7E7CE]", rose: "bg-[#FFC0CB]",
@@ -633,7 +633,7 @@ export default function DiaryClient({ records, linkedMap = {} }: { records: Wine
 
       {/* Segmented Control */}
       <div className="mx-5 mb-4 flex p-1.5 rounded-xl bg-surface/80 border border-white/5 backdrop-blur-md">
-        {([["feed", "카드"], ["grid", "그리드"], ["calendar", "달력"], ["map", "지도"]] as const).map(([mode, label]) => (
+        {([["feed", "카드"], ["grid", "그리드"], ["calendar", "달력"]] as const).map(([mode, label]) => (
           <button
             key={mode}
             onClick={() => switchView(mode)}
@@ -644,7 +644,6 @@ export default function DiaryClient({ records, linkedMap = {} }: { records: Wine
             {mode === "feed" && <LayoutList size={14} />}
             {mode === "grid" && <Grid3X3 size={14} />}
             {mode === "calendar" && <CalendarDays size={14} />}
-            {mode === "map" && <Map size={14} />}
             {label}
           </button>
         ))}
@@ -682,10 +681,6 @@ export default function DiaryClient({ records, linkedMap = {} }: { records: Wine
             첫 와인 기록하기
           </Link>
         </div>
-
-      ) : viewMode === "map" ? (
-        /* ── 지도 뷰 ── */
-        <MapView records={filteredRecords} />
 
       ) : viewMode === "feed" ? (
         /* ── 피드 뷰 (날짜별 그룹) ── */

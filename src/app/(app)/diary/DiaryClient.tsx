@@ -21,6 +21,15 @@ const WINE_TYPE_COLORS: Record<string, string> = {
   sparkling: "bg-[#F3E5AB]", fortified: "bg-[#4A0E4E]", other: "bg-zinc-400",
 };
 
+function calcOverallScore(record: WineRecord): number | null {
+  const scores: number[] = [];
+  if (record.rating != null) scores.push(Number(record.rating));
+  if (record.value_score != null) scores.push(Number(record.value_score));
+  const foods = (record.foods as { name: string }[]) ?? [];
+  if (foods.length > 0 && record.pairing_score != null) scores.push(Number(record.pairing_score));
+  return scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
+}
+
 function MapRecordCard({ record }: { record: WineRecord }) {
   return (
     <Link href={`/diary/${record.id}`} className="block">
@@ -44,9 +53,9 @@ function MapRecordCard({ record }: { record: WineRecord }) {
             <span className="text-[10px] text-zinc-500 font-light">
               {new Date(record.drunk_at).toLocaleDateString("ko-KR", { year: "numeric", month: "short", day: "numeric" })}
             </span>
-            {record.rating != null && (
-              <span className="text-[10px] text-amber-400 tracking-wider font-semibold">★ {Number(record.rating).toFixed(1)}</span>
-            )}
+            {(() => { const s = calcOverallScore(record); return s != null ? (
+              <span className="text-[10px] text-amber-400 tracking-wider font-semibold">★ {s.toFixed(1)}</span>
+            ) : null; })()}
           </div>
         </div>
       </div>
@@ -265,12 +274,12 @@ function FeedCard({ record }: { record: WineRecord }) {
 
       {/* 상단: 별점 + 메뉴 */}
       <div className="relative z-20 flex justify-between items-start p-5 pointer-events-none">
-        {record.rating ? (
+        {(() => { const s = calcOverallScore(record); return s != null ? (
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 shadow-lg pointer-events-auto">
             <span className="text-amber-400 text-[11px]">★</span>
-            <span className="text-xs font-bold text-amber-400">{Number(record.rating).toFixed(1)}</span>
+            <span className="text-xs font-bold text-amber-400">{s.toFixed(1)}</span>
           </div>
-        ) : <div />}
+        ) : <div />; })()}
         <div className="flex items-center gap-2 pointer-events-auto">
           {photos.length > 1 && (
             <span className="flex items-center gap-1.5 text-[10px] px-2.5 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white shadow-lg">
@@ -372,12 +381,12 @@ function CalendarRecordCard({ record }: { record: WineRecord }) {
           )}
         </div>
       </div>
-      {record.rating && (
+      {(() => { const s = calcOverallScore(record); return s != null ? (
         <div className="flex flex-col items-center justify-center gap-0.5 flex-shrink-0 pl-1 h-14 bg-amber-400/10 px-3 rounded-2xl">
           <span className="text-amber-400 text-[11px]">★</span>
-          <span className="text-sm font-bold text-amber-400">{Number(record.rating).toFixed(1)}</span>
+          <span className="text-sm font-bold text-amber-400">{s.toFixed(1)}</span>
         </div>
-      )}
+      ) : null; })()}
     </Link>
   );
 }

@@ -93,7 +93,7 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
             <img src={heroImage} alt={wine.name_ko} className="w-full h-full object-contain" />
           </div>
           <div className="absolute top-0 inset-x-0 h-36 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
-          <div className="absolute inset-x-0 pointer-events-none" style={{ bottom: "-4rem", height: "12rem", background: "linear-gradient(to top, transparent 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.6) 60%, transparent 100%)" }} />
+          <div className="absolute inset-x-0 bottom-0 pointer-events-none" style={{ height: "25%", background: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.8) 80%, rgba(0,0,0,1) 100%)" }} />
 
           {/* 헤더 — 뒤로가기 */}
           <div className="absolute top-0 inset-x-0 px-4 pt-12 flex items-center z-20 pointer-events-none">

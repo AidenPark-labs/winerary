@@ -13,30 +13,52 @@ export default async function LinkMinePage({ params }: { params: Promise<{ id: s
   // 공유받은 기록 조회
   const { data: sharedRecord } = await supabase
     .from("wine_records")
-    .select("id, name, drunk_at, user_id")
+    .select("id, name, wine_id, drunk_at, user_id")
     .eq("id", id)
     .is("deleted_at", null)
     .single();
 
   if (!sharedRecord) notFound();
-  // 본인 기록이면 link 페이지로
   if (sharedRecord.user_id === user.id) redirect(`/diary/${id}/link`);
 
   // 내 같은 날짜 기록 조회
   const { data: myRecords } = await supabase
     .from("wine_records")
-    .select("id, name, photos, drunk_at")
+    .select("id, name, wine_id, photos, drunk_at")
     .eq("user_id", user.id)
     .eq("drunk_at", sharedRecord.drunk_at)
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
-  const myRecordList = (myRecords ?? []).map((r: Record<string, unknown>) => ({
-    id: r.id as string,
-    name: r.name as string,
-    photos: (r.photos as string[]) ?? [],
-    drunk_at: r.drunk_at as string,
-  }));
+  // 와인명 유사도 계산 (공통 글자 비율)
+  function nameSimilarity(a: string, b: string): number {
+    const la = a.toLowerCase().replace(/\s/g, "");
+    const lb = b.toLowerCase().replace(/\s/g, "");
+    if (la === lb) return 1;
+    if (la.includes(lb) || lb.includes(la)) return 0.8;
+    const shorter = la.length < lb.length ? la : lb;
+    const longer = la.length < lb.length ? lb : la;
+    let matches = 0;
+    for (const ch of shorter) { if (longer.includes(ch)) matches++; }
+    return matches / longer.length;
+  }
+
+  const sharedName = sharedRecord.name ?? "";
+  const myRecordList = (myRecords ?? [])
+    .map((r: Record<string, unknown>) => {
+      const name = r.name as string;
+      const wineIdMatch = sharedRecord.wine_id && r.wine_id && sharedRecord.wine_id === r.wine_id;
+      const similarity = wineIdMatch ? 1 : nameSimilarity(sharedName, name);
+      return {
+        id: r.id as string,
+        name,
+        photos: (r.photos as string[]) ?? [],
+        drunk_at: r.drunk_at as string,
+        similarity,
+        recommended: similarity >= 0.4 || !!wineIdMatch,
+      };
+    })
+    .sort((a, b) => b.similarity - a.similarity);
 
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950">

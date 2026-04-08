@@ -9,6 +9,8 @@ interface MyRecord {
   name: string;
   photos: string[];
   drunk_at: string;
+  similarity: number;
+  recommended: boolean;
 }
 
 export default function LinkMineForm({ sharedRecordId, myRecords }: { sharedRecordId: string; myRecords: MyRecord[] }) {
@@ -55,7 +57,12 @@ export default function LinkMineForm({ sharedRecordId, myRecords }: { sharedReco
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-white font-medium truncate">{r.name}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="text-sm text-white font-medium truncate">{r.name}</p>
+                {r.recommended && (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-medium flex-shrink-0">추천</span>
+                )}
+              </div>
               <p className="text-xs text-zinc-500 font-light">{r.drunk_at}</p>
             </div>
             <button

@@ -5,6 +5,7 @@ CREATE TABLE record_evaluations (
   user_id uuid REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   rating numeric(3,1) CHECK (rating BETWEEN 1 AND 5),
   value_score numeric(3,1) CHECK (value_score BETWEEN 1 AND 5),
+  pairing_score integer CHECK (pairing_score BETWEEN 1 AND 5),
   memo text,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now(),

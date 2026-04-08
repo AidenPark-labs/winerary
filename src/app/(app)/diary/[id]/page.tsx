@@ -50,6 +50,7 @@ export default async function DiaryDetailPage({ params }: { params: Promise<{ id
         user_id: row.user_id as string,
         rating: row.rating as number | null,
         value_score: row.value_score as number | null,
+        pairing_score: row.pairing_score as number | null,
         memo: row.memo as string | null,
         created_at: row.created_at as string,
         updated_at: row.updated_at as string,

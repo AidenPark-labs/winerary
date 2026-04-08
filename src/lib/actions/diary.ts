@@ -163,7 +163,7 @@ export async function deleteWineRecord(id: string) {
 
 export async function upsertRecordEvaluation(
   recordId: string,
-  data: { rating: number | null; value_score: number | null; memo: string | null },
+  data: { rating: number | null; value_score: number | null; pairing_score: number | null; memo: string | null },
 ) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -177,6 +177,7 @@ export async function upsertRecordEvaluation(
         user_id: user.id,
         rating: data.rating,
         value_score: data.value_score,
+        pairing_score: data.pairing_score,
         memo: data.memo || null,
         updated_at: new Date().toISOString(),
       },

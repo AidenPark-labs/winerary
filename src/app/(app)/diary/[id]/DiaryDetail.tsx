@@ -409,6 +409,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
             evaluations={evaluations}
             myEvaluation={myEvaluation}
             currentUserId={currentUserId}
+            hasFoods={foods.length > 0}
           />
         </div>
 
@@ -454,16 +455,18 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
 
 // ─── Evaluation Section ──────────────────────────────────────────────────────
 
-function EvaluationSection({ recordId, readOnly, evaluations, myEvaluation, currentUserId }: {
+function EvaluationSection({ recordId, readOnly, evaluations, myEvaluation, currentUserId, hasFoods }: {
   recordId: string;
   readOnly: boolean;
   evaluations: RecordEvaluation[];
   myEvaluation: RecordEvaluation | null;
   currentUserId: string | null;
+  hasFoods: boolean;
 }) {
   const [showForm, setShowForm] = useState(false);
   const [rating, setRating] = useState(myEvaluation?.rating ?? 3);
   const [valueScore, setValueScore] = useState(myEvaluation?.value_score ?? 3);
+  const [pairingScore, setPairingScore] = useState(myEvaluation?.pairing_score ?? 3);
   const [memo, setMemo] = useState(myEvaluation?.memo ?? "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -477,6 +480,7 @@ function EvaluationSection({ recordId, readOnly, evaluations, myEvaluation, curr
     const result = await upsertRecordEvaluation(recordId, {
       rating,
       value_score: valueScore,
+      pairing_score: hasFoods ? pairingScore : null,
       memo: memo.trim() || null,
     });
     setSaving(false);
@@ -509,6 +513,9 @@ function EvaluationSection({ recordId, readOnly, evaluations, myEvaluation, curr
         <div className="px-5 pb-4 flex flex-col gap-3 border-b border-white/10">
           <StarRating label="맛 평점" emoji="⭐" value={rating} max={5} step={0.5} onChange={setRating} />
           <StarRating label="가성비" emoji="💰" value={valueScore} max={5} step={0.5} onChange={setValueScore} />
+          {hasFoods && (
+            <StarRating label="음식 궁합" emoji="🍽️" value={pairingScore} max={5} step={1} onChange={setPairingScore} />
+          )}
           <textarea
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
@@ -542,7 +549,7 @@ function EvaluationSection({ recordId, readOnly, evaluations, myEvaluation, curr
       {myEvaluation && !showForm && (
         <div className="px-5 py-3 border-b border-white/10">
           <p className="text-[11px] text-violet-300 font-medium mb-2">내 평가</p>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             {myEvaluation.rating != null && (
               <div className="flex items-center gap-1.5">
                 <span className="text-[10px] text-zinc-500">맛</span>
@@ -557,6 +564,13 @@ function EvaluationSection({ recordId, readOnly, evaluations, myEvaluation, curr
                 <span className="text-xs font-bold text-white">{Number(myEvaluation.value_score).toFixed(1)}</span>
               </div>
             )}
+            {myEvaluation.pairing_score != null && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-zinc-500">궁합</span>
+                <div className="flex">{renderStars(Number(myEvaluation.pairing_score), 5)}</div>
+                <span className="text-xs font-bold text-white">{Number(myEvaluation.pairing_score).toFixed(1)}</span>
+              </div>
+            )}
           </div>
           {myEvaluation.memo && (
             <p className="text-xs text-zinc-300 font-light mt-2">{myEvaluation.memo}</p>
@@ -568,7 +582,7 @@ function EvaluationSection({ recordId, readOnly, evaluations, myEvaluation, curr
       {otherEvals.map((ev) => (
         <div key={ev.id} className="px-5 py-3 border-b border-white/10 last:border-b-0">
           <p className="text-[11px] text-zinc-400 font-medium mb-2">{ev.nickname ?? "익명"}</p>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             {ev.rating != null && (
               <div className="flex items-center gap-1.5">
                 <span className="text-[10px] text-zinc-500">맛</span>
@@ -581,6 +595,13 @@ function EvaluationSection({ recordId, readOnly, evaluations, myEvaluation, curr
                 <span className="text-[10px] text-zinc-500">가성비</span>
                 <div className="flex">{renderStars(Number(ev.value_score), 5)}</div>
                 <span className="text-xs font-bold text-white">{Number(ev.value_score).toFixed(1)}</span>
+              </div>
+            )}
+            {ev.pairing_score != null && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-zinc-500">궁합</span>
+                <div className="flex">{renderStars(Number(ev.pairing_score), 5)}</div>
+                <span className="text-xs font-bold text-white">{Number(ev.pairing_score).toFixed(1)}</span>
               </div>
             )}
           </div>

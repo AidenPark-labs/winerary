@@ -65,6 +65,7 @@ export interface RecordEvaluation {
   user_id: string
   rating: number | null
   value_score: number | null
+  pairing_score: number | null
   memo: string | null
   created_at: string
   updated_at: string

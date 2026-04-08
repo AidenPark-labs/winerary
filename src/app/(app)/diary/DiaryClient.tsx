@@ -178,29 +178,41 @@ function MapView({ records }: { records: WineRecord[] }) {
         </div>
       )}
       {current && selectedGroup && (
-        <div className={`absolute bottom-20 left-4 right-4 z-[1000] backdrop-blur-xl rounded-2xl p-4 shadow-2xl border ${isShared(current) ? "bg-violet-950/60 border-violet-500/30" : "bg-surface/90 border-white/10"}`}>
-          <button onClick={() => { setSelectedGroup(null); setSelectedIdx(0); }} className="absolute top-3 right-3 text-zinc-500 hover:text-white transition-colors text-lg w-6 h-6 flex items-center justify-center z-10">×</button>
-
-          {/* 여러 기록일 때 네비게이션 */}
-          {total > 1 && (
-            <div className="flex items-center justify-between mb-3">
+        <div className={`absolute bottom-28 left-4 right-4 z-[1000] backdrop-blur-xl rounded-2xl p-4 shadow-2xl border ${isShared(current) ? "bg-violet-950/60 border-violet-500/30" : "bg-surface/90 border-white/10"}`}>
+          {/* 헤더: 네비게이션 + 닫기 */}
+          <div className="flex items-center justify-between mb-3">
+            {total > 1 ? (
+              <>
+                <button
+                  onClick={() => setSelectedIdx((prev) => (prev - 1 + total) % total)}
+                  className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 text-zinc-300 hover:text-white hover:bg-white/20 transition-colors"
+                >
+                  <ChevronLeft size={14} />
+                </button>
+                <span className="text-[11px] text-zinc-400 font-medium tabular-nums">
+                  {selectedIdx + 1} / {total}
+                </span>
+              </>
+            ) : (
+              <div />
+            )}
+            <div className="flex items-center gap-2">
+              {total > 1 && (
+                <button
+                  onClick={() => setSelectedIdx((prev) => (prev + 1) % total)}
+                  className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 text-zinc-300 hover:text-white hover:bg-white/20 transition-colors"
+                >
+                  <ChevronRight size={14} />
+                </button>
+              )}
               <button
-                onClick={() => setSelectedIdx((prev) => (prev - 1 + total) % total)}
-                className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 text-zinc-300 hover:text-white hover:bg-white/20 transition-colors"
+                onClick={() => { setSelectedGroup(null); setSelectedIdx(0); }}
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 text-zinc-400 hover:text-white hover:bg-white/20 transition-colors text-sm"
               >
-                <ChevronLeft size={14} />
-              </button>
-              <span className="text-[11px] text-zinc-400 font-medium tabular-nums">
-                {selectedIdx + 1} / {total}
-              </span>
-              <button
-                onClick={() => setSelectedIdx((prev) => (prev + 1) % total)}
-                className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 text-zinc-300 hover:text-white hover:bg-white/20 transition-colors"
-              >
-                <ChevronRight size={14} />
+                ×
               </button>
             </div>
-          )}
+          </div>
 
           <MapRecordCard record={current} />
         </div>

@@ -298,18 +298,17 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                 <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Experience</p>
               </div>
               {placeStr && (
-                <div className="px-5 py-3.5">
-                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Place</p>
-                  <p className="text-sm text-white font-medium">{placeStr}</p>
+                <div className="flex items-center justify-between px-5 py-3">
+                  <span className="text-xs text-zinc-400">장소</span>
+                  <span className="text-sm text-white font-medium text-right">{placeStr}</span>
                 </div>
               )}
               {priceText && (
-                <div className="px-5 py-3.5">
-                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Price</p>
-                  <p className="text-sm text-white font-medium">{priceText}</p>
+                <div className="flex items-center justify-between px-5 py-3">
+                  <span className="text-xs text-zinc-400">가격</span>
+                  <span className="text-sm text-white font-medium">{priceText}</span>
                 </div>
               )}
-              {/* 가성비 → 가격에 대한 평가 */}
               {record.value_score != null && (
                 <div className="flex items-center justify-between px-5 py-3">
                   <span className="text-xs text-zinc-400">가성비</span>

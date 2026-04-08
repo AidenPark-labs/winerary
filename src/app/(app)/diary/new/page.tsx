@@ -422,7 +422,6 @@ export default function NewDiaryPage() {
       if (!aiData.error && notNull(aiData.name)) {
         setAiResult(aiData);
         setAiNotFound(false);
-        fillWineFields(aiData, { setQuery, setWineNameOriginal, setWineType, setWineVintage, setGrape, setGrapeCustom, setBlendGrapes, setCountry, setCountryCustom, setSelectedWine });
 
         // DB 매칭 검색 (AI 텍스트 → DB 유사도 검색)
         const koName = aiData.name || "";
@@ -430,10 +429,12 @@ export default function NewDiaryPage() {
         const dbMatches = await searchDbMatches(koName, enName);
 
         if (dbMatches.length > 0) {
+          // DB 매칭 성공 → DB 결과로 세팅 (fillWineFields 건너뜀)
           setSuggestions(dbMatches);
           applyWineFields(dbMatches[0]);
         } else {
-          // DB에 없음 → AI 인식 결과 프리필, 후보 없음
+          // DB에 없음 → AI 인식 결과로 프리필
+          fillWineFields(aiData, { setQuery, setWineNameOriginal, setWineType, setWineVintage, setGrape, setGrapeCustom, setBlendGrapes, setCountry, setCountryCustom, setSelectedWine });
           setSuggestions([]);
         }
       } else {

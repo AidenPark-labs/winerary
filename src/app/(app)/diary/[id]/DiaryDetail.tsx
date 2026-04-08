@@ -181,34 +181,15 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
         {/* ── 컨텐츠 ── */}
         <div className={`flex flex-col gap-4 px-4 relative z-20 ${hasPhoto ? "-mt-16" : "pt-4"} ${readOnly ? "pb-36" : "pb-28"}`}>
 
-          {/* ── 와인 글라스 카드 (이름만 간결하게) ── */}
-          {(() => {
-            const hasWineLink = !!(record.wine_id && wineData?.id);
-
-            const card = (
-              <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 px-5 py-4 shadow-2xl flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-baseline gap-2 flex-wrap">
-                    <h1 className="font-serif font-medium text-white text-xl tracking-wide leading-tight">{record.name}</h1>
-                    {record.wine_vintage && (
-                      <span className="text-base text-white/60 font-light">{record.wine_vintage}</span>
-                    )}
-                  </div>
-                  {record.wine_name_original && (
-                    <p className="text-xs text-zinc-300/70 italic font-light truncate mt-0.5">{record.wine_name_original}</p>
-                  )}
-                </div>
-                {hasWineLink && (
-                  <span className="text-zinc-500 text-lg flex-shrink-0">›</span>
-                )}
-              </div>
-            );
-
-            if (hasWineLink) {
-              return <Link href={`/wines/${record.wine_id}`}>{card}</Link>;
-            }
-            return card;
-          })()}
+          {/* ── 글라스 카드 (날짜 + 동행) ── */}
+          <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 px-5 py-4 shadow-2xl">
+            <p className="text-sm text-white font-medium">{dateStr}</p>
+            {(placeStr || companions.length > 0) && (
+              <p className="text-xs text-zinc-300/70 font-light mt-1 truncate">
+                {[placeStr, companions.length > 0 && `with ${companions.join(", ")}`].filter(Boolean).join(" · ")}
+              </p>
+            )}
+          </div>
 
           {/* ━━━━━━━━━━ 1. Wine ━━━━━━━━━━ */}
           {(() => {
@@ -226,10 +207,39 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
 
             const hasWineScores = record.rating != null || record.value_score != null;
 
+            const hasWineLink = !!(record.wine_id && wineData?.id);
+
             return (
               <div className="rounded-2xl bg-surface/60 backdrop-blur-2xl border border-white/5 overflow-hidden">
                 <div className="px-5 pt-4 pb-2">
                   <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Wine</p>
+                </div>
+                {/* 와인명 + 빈티지 + 와인 상세 링크 */}
+                <div className="px-5 pb-3">
+                  {(() => {
+                    const nameBlock = (
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-baseline gap-2 flex-wrap">
+                            <h1 className="font-serif font-medium text-white text-xl tracking-wide leading-tight">{record.name}</h1>
+                            {record.wine_vintage && (
+                              <span className="text-base text-white/60 font-light">{record.wine_vintage}</span>
+                            )}
+                          </div>
+                          {record.wine_name_original && (
+                            <p className="text-xs text-zinc-300/70 italic font-light truncate mt-0.5">{record.wine_name_original}</p>
+                          )}
+                        </div>
+                        {hasWineLink && (
+                          <span className="text-zinc-500 text-lg flex-shrink-0">›</span>
+                        )}
+                      </div>
+                    );
+                    if (hasWineLink) {
+                      return <Link href={`/wines/${record.wine_id}`}>{nameBlock}</Link>;
+                    }
+                    return nameBlock;
+                  })()}
                 </div>
                 {/* 와인 칩 */}
                 {wineChips.length > 0 && (
@@ -304,50 +314,39 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
           )}
 
           {/* ━━━━━━━━━━ 3. Experience ━━━━━━━━━━ */}
-          <div className="rounded-2xl bg-surface/40 backdrop-blur-xl border border-white/5 overflow-hidden divide-y divide-white/5">
-            <div className="px-5 pt-4 pb-2">
-              <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Experience</p>
-            </div>
-            {/* 날짜 + 장소 */}
-            <div className="flex divide-x divide-white/5">
-              <div className="flex-1 px-4 py-3.5">
-                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Date</p>
-                <p className="text-sm text-white font-medium">{dateStr}</p>
+          {(priceText || record.repurchase_intent || placeStr) && (
+            <div className="rounded-2xl bg-surface/40 backdrop-blur-xl border border-white/5 overflow-hidden divide-y divide-white/5">
+              <div className="px-5 pt-4 pb-2">
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Experience</p>
               </div>
+              {/* 장소 */}
               {placeStr && (
-                <div className="flex-1 px-4 py-3.5">
+                <div className="px-4 py-3.5">
                   <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Place</p>
                   <p className="text-sm text-white font-medium">{placeStr}</p>
                 </div>
               )}
+              {/* 가격 + 재구매 */}
+              {(priceText || record.repurchase_intent) && (
+                <div className="flex divide-x divide-white/5">
+                  {priceText && (
+                    <div className="flex-1 px-4 py-3.5">
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Price</p>
+                      <p className="text-sm text-white font-medium">{priceText}</p>
+                    </div>
+                  )}
+                  {record.repurchase_intent && (
+                    <div className="flex-1 px-4 py-3.5">
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Repurchase</p>
+                      <p className="text-sm text-white font-medium">
+                        {{ yes: "👍 재구매 의사 있음", maybe: "🤔 고민 중", no: "👋 다음에는 패스" }[record.repurchase_intent]}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-            {/* 가격 + 재구매 */}
-            {(priceText || record.repurchase_intent) && (
-              <div className="flex divide-x divide-white/5">
-                {priceText && (
-                  <div className="flex-1 px-4 py-3.5">
-                    <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Price</p>
-                    <p className="text-sm text-white font-medium">{priceText}</p>
-                  </div>
-                )}
-                {record.repurchase_intent && (
-                  <div className="flex-1 px-4 py-3.5">
-                    <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Repurchase</p>
-                    <p className="text-sm text-white font-medium">
-                      {{ yes: "👍 재구매 의사 있음", maybe: "🤔 고민 중", no: "👋 다음에는 패스" }[record.repurchase_intent]}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-            {/* 함께한 사람 */}
-            {companions.length > 0 && (
-              <div className="px-4 py-3.5">
-                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Companions</p>
-                <p className="text-zinc-200 text-sm font-light">{companions.join(", ")}</p>
-              </div>
-            )}
-          </div>
+          )}
 
           {/* 태그 */}
           {tags.length > 0 && (

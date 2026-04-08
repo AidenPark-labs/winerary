@@ -353,6 +353,17 @@ export default function NewDiaryPage() {
         setAiResult(aiData);
         setAiNotFound(false);
         fillWineFields(aiData, { setQuery, setWineNameOriginal, setWineType, setWineVintage, setGrape, setGrapeCustom, setCountry, setCountryCustom, setSelectedWine });
+        // DB 매칭 후보 자동 검색
+        const searchName = aiData.name_original || aiData.name || "";
+        if (searchName.length >= 2) {
+          setSuggestLoading(true);
+          try {
+            const suggestRes = await fetch("/api/ai/suggest?q=" + encodeURIComponent(searchName));
+            const suggestData = await suggestRes.json();
+            setSuggestions(suggestData.wines ?? []);
+          } catch { setSuggestions([]); }
+          finally { setSuggestLoading(false); }
+        }
       } else {
         setAiResult(null);
         setAiNotFound(true);
@@ -614,9 +625,9 @@ export default function NewDiaryPage() {
               </div>
             )}
 
-            {/* AI 인식 성공 카드 */}
+            {/* AI 인식 성공 카드 + DB 매칭 후보 */}
             {aiResult && !aiNotFound && !showSearch && (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 <div className="rounded-[20px] bg-surface/80 border border-white/10 p-5 flex flex-col gap-3 backdrop-blur-md shadow-xl">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
@@ -640,12 +651,55 @@ export default function NewDiaryPage() {
                     <span className="text-[10px] px-2 py-1 rounded-lg bg-accent/20 text-accent flex-shrink-0 tracking-wide font-medium">AI 인식</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => { setShowSearch(true); setSelectedWine(null); }}
-                  className="text-zinc-500 text-xs text-center py-2 px-4 mx-auto rounded-full hover:bg-white/5 transition-colors font-light"
-                >
-                  다른 와인으로 변경
-                </button>
+
+                {/* DB 매칭 후보 리스트 */}
+                {suggestLoading && (
+                  <p className="text-xs text-zinc-500 text-center py-2">와인 DB 검색 중…</p>
+                )}
+                {!suggestLoading && suggestions && suggestions.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <p className="text-xs text-zinc-400 font-medium px-1">이 와인이 맞나요?</p>
+                    {suggestions.slice(0, 5).map((wine, i) => (
+                      <button key={i} type="button" onClick={() => selectWine(wine)}
+                        className={`w-full flex flex-col gap-0.5 p-3 rounded-xl border text-left transition-all ${
+                          selectedWine?.wine_id === wine.wine_id && wine.wine_id
+                            ? "border-accent bg-accent/10"
+                            : "border-zinc-800 bg-zinc-900 hover:border-zinc-600"
+                        }`}>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-zinc-100 text-sm">{wine.name_ko || wine.name}</span>
+                          {wine.vintage_range && <span className="text-[10px] text-zinc-500">{wine.vintage_range}</span>}
+                        </div>
+                        {wine.name && wine.name !== wine.name_ko && (
+                          <span className="text-xs text-zinc-500 italic truncate">{wine.name}</span>
+                        )}
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          {wine.country && <span className="text-[10px] text-zinc-500">{wine.country}</span>}
+                          {wine.grapes && <span className="text-[10px] text-zinc-600">🍇 {wine.grapes}</span>}
+                        </div>
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => { setSuggestions(null); }}
+                      className="text-zinc-500 text-xs text-center py-2 px-4 mx-auto rounded-full hover:bg-white/5 transition-colors font-light"
+                    >
+                      해당 없음 — AI 인식 결과 사용
+                    </button>
+                  </div>
+                )}
+                {!suggestLoading && suggestions && suggestions.length === 0 && (
+                  <p className="text-xs text-zinc-600 text-center py-1">DB에 일치하는 와인이 없습니다. AI 인식 결과를 사용합니다.</p>
+                )}
+
+                {!suggestions && !suggestLoading && (
+                  <button
+                    onClick={() => { setShowSearch(true); setSelectedWine(null); }}
+                    className="text-zinc-500 text-xs text-center py-2 px-4 mx-auto rounded-full hover:bg-white/5 transition-colors font-light"
+                  >
+                    다른 와인으로 변경
+                  </button>
+                )}
               </div>
             )}
 

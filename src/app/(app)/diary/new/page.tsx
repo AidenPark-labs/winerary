@@ -332,23 +332,30 @@ export default function NewDiaryPage() {
       });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── AI 인식 후 DB 매칭 자동 검색 (한국어 + 영문 둘 다 시도) ──
-  useEffect(() => {
-    if (!aiResult || aiNotFound || showSearch || fromRecordId) return;
-    const koName = aiResult.name || "";
-    const enName = aiResult.name_original || "";
-    if (koName.length < 2 && enName.length < 2) return;
-    let cancelled = false;
-    setSuggestLoading(true);
-    setSuggestions(null);
+  // ── DB 매칭 검색 함수 (handleFile에서 호출) ──
+  async function searchDbMatches(koName: string, enName: string): Promise<WineSuggestion[]> {
+    const allWines: WineSuggestion[] = [];
+    const seenIds = new Set<string>();
 
-    async function search() {
-      const allWines: WineSuggestion[] = [];
-      const seenIds = new Set<string>();
+    for (const q of [koName, enName].filter(Boolean)) {
+      try {
+        const res = await fetch("/api/ai/suggest?q=" + encodeURIComponent(q));
+        const data = await res.json();
+        for (const w of data.wines ?? []) {
+          if (!seenIds.has(w.wine_id ?? w.name)) {
+            seenIds.add(w.wine_id ?? w.name);
+            allWines.push(w);
+          }
+        }
+      } catch { /* skip */ }
+      if (allWines.length >= 5) break;
+    }
 
-      for (const q of [koName, enName].filter(Boolean)) {
+    if (allWines.length === 0 && enName.length >= 2) {
+      const words = enName.split(/[\s']+/).filter((w: string) => w.length >= 4);
+      for (const word of words.slice(0, 3)) {
         try {
-          const res = await fetch("/api/ai/suggest?q=" + encodeURIComponent(q));
+          const res = await fetch("/api/ai/suggest?q=" + encodeURIComponent(word));
           const data = await res.json();
           for (const w of data.wines ?? []) {
             if (!seenIds.has(w.wine_id ?? w.name)) {
@@ -359,48 +366,19 @@ export default function NewDiaryPage() {
         } catch { /* skip */ }
         if (allWines.length >= 5) break;
       }
-
-      // 영문 이름의 핵심 단어로도 추가 검색 (ex: "Killerman" from "Kilikanoon Killerman's Run...")
-      if (allWines.length === 0 && enName.length >= 2) {
-        const words = enName.split(/[\s']+/).filter((w: string) => w.length >= 4);
-        for (const word of words.slice(0, 3)) {
-          try {
-            const res = await fetch("/api/ai/suggest?q=" + encodeURIComponent(word));
-            const data = await res.json();
-            for (const w of data.wines ?? []) {
-              if (!seenIds.has(w.wine_id ?? w.name)) {
-                seenIds.add(w.wine_id ?? w.name);
-                allWines.push(w);
-              }
-            }
-          } catch { /* skip */ }
-          if (allWines.length >= 5) break;
-        }
-      }
-
-      // 유사도 정렬: AI 인식 결과와 이름이 비슷한 순
-      const normalize = (s: string) => s.toLowerCase().replace(/['\s]/g, "");
-      const koNorm = normalize(koName);
-      const enNorm = normalize(enName);
-      allWines.sort((a, b) => {
-        const scoreA = Math.max(
-          similarity(koNorm, normalize(a.name_ko || "")),
-          similarity(enNorm, normalize(a.name || "")),
-        );
-        const scoreB = Math.max(
-          similarity(koNorm, normalize(b.name_ko || "")),
-          similarity(enNorm, normalize(b.name || "")),
-        );
-        return scoreB - scoreA;
-      });
-
-      if (!cancelled) setSuggestions(allWines);
-      if (!cancelled) setSuggestLoading(false);
     }
 
-    search();
-    return () => { cancelled = true; };
-  }, [aiResult, aiNotFound, showSearch, fromRecordId]);
+    const normalize = (s: string) => s.toLowerCase().replace(/['\s]/g, "");
+    const koNorm = normalize(koName);
+    const enNorm = normalize(enName);
+    allWines.sort((a, b) => {
+      const scoreA = Math.max(similarity(koNorm, normalize(a.name_ko || "")), similarity(enNorm, normalize(a.name || "")));
+      const scoreB = Math.max(similarity(koNorm, normalize(b.name_ko || "")), similarity(enNorm, normalize(b.name || "")));
+      return scoreB - scoreA;
+    });
+
+    return allWines;
+  }
 
   // ── Step 1: Photo selection ──
   async function handleFile(file: File) {
@@ -429,11 +407,22 @@ export default function NewDiaryPage() {
         setPhotoPreviews([blobUrl]);
       }
 
-      // Apply AI result
+      // Apply AI result + DB 매칭 (모두 완료 후 step 전환)
       if (!aiData.error && notNull(aiData.name)) {
         setAiResult(aiData);
         setAiNotFound(false);
         fillWineFields(aiData, { setQuery, setWineNameOriginal, setWineType, setWineVintage, setGrape, setGrapeCustom, setCountry, setCountryCustom, setSelectedWine });
+
+        // DB 매칭 검색
+        const koName = aiData.name || "";
+        const enName = aiData.name_original || "";
+        const dbMatches = await searchDbMatches(koName, enName);
+        setSuggestions(dbMatches);
+
+        // 유사도 최고 후보 자동 선택 (suggestions는 유지)
+        if (dbMatches.length > 0) {
+          applyWineFields(dbMatches[0]);
+        }
       } else {
         setAiResult(null);
         setAiNotFound(true);
@@ -467,13 +456,10 @@ export default function NewDiaryPage() {
     }
   }
 
-  function selectWine(wine: WineSuggestion) {
+  function applyWineFields(wine: WineSuggestion) {
     setSelectedWine(wine);
-    setSuggestions(null);
     setQuery(wine.name_ko || wine.name);
     setWineNameOriginal(wine.name);
-    setShowSearch(false);
-    setAiResult(null);
     const typeMap: Record<string, WineType> = { red: "red", white: "white", rose: "rose", sparkling: "sparkling", fortified: "fortified", other: "other" };
     setWineType(typeMap[wine.type] ?? "");
     if (wine.grapes) {
@@ -486,6 +472,13 @@ export default function NewDiaryPage() {
       if (match) setCountry(match);
       else { setCountry("__custom__"); setCountryCustom(wine.country); }
     }
+  }
+
+  function selectWine(wine: WineSuggestion) {
+    applyWineFields(wine);
+    setSuggestions(null);
+    setShowSearch(false);
+    setAiResult(null);
   }
 
   // ── Step 3: Additional photos ──
@@ -695,50 +688,49 @@ export default function NewDiaryPage() {
               </div>
             )}
 
-            {/* AI 인식 성공 카드 + DB 매칭 후보 */}
+            {/* AI 인식 성공 → DB 매칭 최고 후보 확인 */}
             {aiResult && !aiNotFound && !showSearch && (
               <div className="flex flex-col gap-3">
-                <div className="rounded-[20px] bg-surface/80 border border-white/10 p-5 flex flex-col gap-3 backdrop-blur-md shadow-xl">
+                {/* 선택된 와인 (DB 매칭 최고 후보 또는 AI 결과) */}
+                <div className="rounded-[20px] bg-surface/80 border border-accent/30 p-5 flex flex-col gap-3 backdrop-blur-md shadow-xl">
+                  <p className="text-xs text-accent font-medium">이 와인이 맞나요?</p>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <p className="font-serif font-medium text-white text-lg leading-tight">{notNull(aiResult.name)}</p>
-                      {notNull(aiResult.name_original) && (
-                        <p className="text-sm text-zinc-400 italic mt-0.5 font-light">{aiResult.name_original}</p>
+                      <p className="font-serif font-medium text-white text-lg leading-tight">{selectedWine?.name_ko || selectedWine?.name || notNull(aiResult.name)}</p>
+                      {(selectedWine?.name || notNull(aiResult.name_original)) && (
+                        <p className="text-sm text-zinc-400 italic mt-0.5 font-light">{selectedWine?.name || aiResult.name_original}</p>
                       )}
                       <div className="flex items-center gap-2 mt-2 flex-wrap">
-                        {aiResult.vintage && <span className="text-xs text-zinc-400 font-light">{aiResult.vintage}</span>}
-                        {aiResult.wine_type && (
+                        {(selectedWine?.type || aiResult.wine_type) && (
                           <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-white/10 text-zinc-300 tracking-wide">
-                            {TYPE_KO[aiResult.wine_type] ?? aiResult.wine_type}
+                            {TYPE_KO[selectedWine?.type || aiResult.wine_type || ""] ?? (selectedWine?.type || aiResult.wine_type)}
                           </span>
                         )}
-                        {notNull(aiResult.country) && <span className="text-xs text-zinc-400 font-light">{aiResult.country}</span>}
+                        {(selectedWine?.country || notNull(aiResult.country)) && (
+                          <span className="text-xs text-zinc-400 font-light">{selectedWine?.country || aiResult.country}</span>
+                        )}
+                        {(selectedWine?.grapes || notNull(aiResult.grape_variety)) && (
+                          <span className="text-xs text-zinc-500 font-light">🍇 {selectedWine?.grapes || aiResult.grape_variety}</span>
+                        )}
                       </div>
-                      {notNull(aiResult.grape_variety) && (
-                        <p className="text-xs text-zinc-500 mt-1 font-light">🍇 {aiResult.grape_variety}</p>
-                      )}
                     </div>
-                    <span className="text-[10px] px-2 py-1 rounded-lg bg-accent/20 text-accent flex-shrink-0 tracking-wide font-medium">AI 인식</span>
+                    <span className={`text-[10px] px-2 py-1 rounded-lg flex-shrink-0 tracking-wide font-medium ${
+                      selectedWine?.wine_id ? "bg-emerald-500/20 text-emerald-400" : "bg-accent/20 text-accent"
+                    }`}>
+                      {selectedWine?.wine_id ? "DB 매칭" : "AI 인식"}
+                    </span>
                   </div>
                 </div>
 
-                {/* DB 매칭 후보 리스트 */}
-                {suggestLoading && (
-                  <p className="text-xs text-zinc-500 text-center py-2">와인 DB 검색 중…</p>
-                )}
-                {!suggestLoading && suggestions && suggestions.length > 0 && (
+                {/* 다른 후보 리스트 */}
+                {suggestions && suggestions.length > 1 && (
                   <div className="flex flex-col gap-2">
-                    <p className="text-xs text-zinc-400 font-medium px-1">이 와인이 맞나요?</p>
-                    {suggestions.slice(0, 5).map((wine, i) => (
-                      <button key={i} type="button" onClick={() => selectWine(wine)}
-                        className={`w-full flex flex-col gap-0.5 p-3 rounded-xl border text-left transition-all ${
-                          selectedWine?.wine_id === wine.wine_id && wine.wine_id
-                            ? "border-accent bg-accent/10"
-                            : "border-zinc-800 bg-zinc-900 hover:border-zinc-600"
-                        }`}>
+                    <p className="text-xs text-zinc-500 font-medium px-1">다른 와인인가요?</p>
+                    {suggestions.filter((w) => (w.wine_id ?? w.name) !== (selectedWine?.wine_id ?? selectedWine?.name)).slice(0, 4).map((wine, i) => (
+                      <button key={i} type="button" onClick={() => { applyWineFields(wine); }}
+                        className="w-full flex flex-col gap-0.5 p-3 rounded-xl border border-zinc-800 bg-zinc-900 hover:border-zinc-600 text-left transition-all">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-medium text-zinc-100 text-sm">{wine.name_ko || wine.name}</span>
-                          {wine.vintage_range && <span className="text-[10px] text-zinc-500">{wine.vintage_range}</span>}
                         </div>
                         {wine.name && wine.name !== wine.name_ko && (
                           <span className="text-xs text-zinc-500 italic truncate">{wine.name}</span>
@@ -749,27 +741,20 @@ export default function NewDiaryPage() {
                         </div>
                       </button>
                     ))}
-                    <button
-                      type="button"
-                      onClick={() => { setSuggestions(null); }}
-                      className="text-zinc-500 text-xs text-center py-2 px-4 mx-auto rounded-full hover:bg-white/5 transition-colors font-light"
-                    >
-                      해당 없음 — AI 인식 결과 사용
-                    </button>
                   </div>
                 )}
-                {!suggestLoading && suggestions && suggestions.length === 0 && (
-                  <p className="text-xs text-zinc-600 text-center py-1">DB에 일치하는 와인이 없습니다. AI 인식 결과를 사용합니다.</p>
-                )}
 
-                {!suggestions && !suggestLoading && (
-                  <button
-                    onClick={() => { setShowSearch(true); setSelectedWine(null); }}
-                    className="text-zinc-500 text-xs text-center py-2 px-4 mx-auto rounded-full hover:bg-white/5 transition-colors font-light"
-                  >
-                    다른 와인으로 변경
-                  </button>
-                )}
+                <button
+                  onClick={() => {
+                    setSuggestions(null);
+                    setShowSearch(true);
+                    setSelectedWine(null);
+                    setAiResult(null);
+                  }}
+                  className="text-zinc-500 text-xs text-center py-2 px-4 mx-auto rounded-full hover:bg-white/5 transition-colors font-light"
+                >
+                  목록에 없음 — 직접 검색
+                </button>
               </div>
             )}
 

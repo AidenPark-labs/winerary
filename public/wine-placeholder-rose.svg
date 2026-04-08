@@ -1,18 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" fill="none">
-  <rect width="400" height="600" fill="#140a0c"/>
-  <ellipse cx="200" cy="520" rx="60" ry="8" fill="#201015" opacity="0.6"/>
-  <!-- base -->
-  <ellipse cx="200" cy="510" rx="50" ry="6" fill="#4a2535"/>
-  <rect x="195" y="350" width="10" height="160" fill="#4a2535"/>
-  <!-- bowl -->
-  <path d="M140 200 Q140 320 200 340 Q260 320 260 200 Z" fill="#E8A0B0" opacity="0.3"/>
-  <path d="M145 200 Q145 300 200 320 Q220 312 235 290" fill="#F0B0C0" opacity="0.15"/>
-  <!-- wine surface -->
-  <ellipse cx="200" cy="200" rx="60" ry="12" fill="#C07080" opacity="0.3"/>
-  <!-- rim -->
-  <ellipse cx="200" cy="200" rx="60" ry="12" stroke="#D08090" stroke-width="1.5" fill="none" opacity="0.4"/>
-  <!-- highlight -->
-  <path d="M155 220 Q155 280 180 300" stroke="#E8A0B0" stroke-width="1" opacity="0.3" fill="none"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <rect width="400" height="400" fill="#f5f0eb"/>
+  <!-- shadow -->
+  <ellipse cx="200" cy="375" rx="55" ry="6" fill="#d0c8c0" opacity="0.5"/>
+  <!-- bottle body -->
+  <path d="M155 180 Q150 190 148 220 L148 350 Q148 365 165 365 L235 365 Q252 365 252 350 L252 220 Q250 190 245 180 Z" fill="#C07080"/>
+  <!-- bottle shoulder curve -->
+  <path d="M155 180 Q155 160 170 145 L170 145 L230 145 Q245 160 245 180 Z" fill="#C07080"/>
+  <!-- neck -->
+  <rect x="178" y="55" width="44" height="90" rx="2" fill="#C07080"/>
+  <!-- capsule/foil -->
+  <rect x="175" y="35" width="50" height="30" rx="3" fill="#D4A0A8"/>
+  <rect x="175" y="35" width="50" height="8" rx="3" fill="#E0B0B8"/>
+  <rect x="175" y="60" width="50" height="5" rx="1" fill="#C89098"/>
   <!-- label -->
-  <text x="200" y="560" text-anchor="middle" fill="#4a2535" font-family="serif" font-size="14" opacity="0.5">ROSÉ WINE</text>
+  <rect x="160" y="220" width="80" height="100" rx="2" fill="#F0D0D8" opacity="0.6"/>
+  <!-- body highlight left -->
+  <path d="M155 180 Q150 190 148 220 L148 350 Q148 365 165 365 L170 365 L170 180 Z" fill="white" opacity="0.15"/>
+  <!-- body highlight right -->
+  <path d="M230 180 L230 365 L235 365 Q252 365 252 350 L252 220 Q250 190 245 180 Z" fill="black" opacity="0.1"/>
+  <!-- neck highlight -->
+  <rect x="178" y="55" width="12" height="90" fill="white" opacity="0.1"/>
+  <!-- wine color tint -->
+  <path d="M155 180 Q150 190 148 220 L148 350 Q148 365 165 365 L235 365 Q252 365 252 350 L252 220 Q250 190 245 180 Z" fill="#E8A0B0" opacity="0.15"/>
 </svg>

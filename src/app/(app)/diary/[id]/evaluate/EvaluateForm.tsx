@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateRecordOwnerEvaluation, upsertRecordEvaluation } from "@/lib/actions/diary";
+import { updateRecordOwnerEvaluation, upsertRecordEvaluation, resetRecordOwnerEvaluation, deleteRecordEvaluation } from "@/lib/actions/diary";
 import StarRating from "@/components/StarRating";
 
 const REPURCHASE_OPTIONS = [
@@ -129,6 +129,25 @@ export default function EvaluateForm({
           {saving ? "저장 중…" : isEdit ? "수정 완료" : "평가 저장"}
         </button>
       </div>
+
+      {isEdit && (
+        <button
+          onClick={async () => {
+            if (!confirm("평가를 초기화하시겠습니까?")) return;
+            setSaving(true);
+            const result = mode === "owner"
+              ? await resetRecordOwnerEvaluation(recordId)
+              : await deleteRecordEvaluation(recordId);
+            setSaving(false);
+            if (result.error) setError(result.error);
+            else { router.push(`/diary/${recordId}`); router.refresh(); }
+          }}
+          disabled={saving}
+          className="w-full py-3 text-sm text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
+        >
+          평가 초기화
+        </button>
+      )}
     </div>
   );
 }

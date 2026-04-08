@@ -194,6 +194,46 @@ export async function updateRecordOwnerEvaluation(
   return { success: true };
 }
 
+export async function resetRecordOwnerEvaluation(recordId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const { error } = await supabase
+    .from("wine_records")
+    .update({
+      rating: null,
+      value_score: null,
+      pairing_score: null,
+      memo: null,
+      repurchase_intent: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", recordId)
+    .eq("user_id", user.id);
+
+  if (error) return { error: error.message };
+  revalidatePath(`/diary/${recordId}`);
+  revalidatePath("/diary");
+  return { success: true };
+}
+
+export async function deleteRecordEvaluation(recordId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const { error } = await supabase
+    .from("record_evaluations")
+    .delete()
+    .eq("record_id", recordId)
+    .eq("user_id", user.id);
+
+  if (error) return { error: error.message };
+  revalidatePath(`/diary/${recordId}`);
+  return { success: true };
+}
+
 export async function upsertRecordEvaluation(
   recordId: string,
   data: { rating: number | null; value_score: number | null; pairing_score: number | null; memo: string | null },

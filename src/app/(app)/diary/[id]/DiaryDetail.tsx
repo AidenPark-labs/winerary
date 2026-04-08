@@ -269,39 +269,39 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
               <div className="px-5 pt-4 pb-2">
                 <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">My Rating</p>
               </div>
-              <div className="grid grid-cols-2 gap-px bg-white/5">
+              <div className="flex flex-col divide-y divide-white/5">
                 {record.rating != null && (
-                  <div className="flex items-center justify-between px-4 py-3.5 bg-surface/80">
+                  <div className="flex items-center justify-between px-5 py-3">
                     <span className="text-xs text-zinc-400">맛</span>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
                       <div className="flex">{renderStars(Number(record.rating), 5)}</div>
-                      <span className="text-sm font-bold text-white w-7 text-right">{Number(record.rating).toFixed(1)}</span>
+                      <span className="text-sm font-bold text-white">{Number(record.rating).toFixed(1)}</span>
                     </div>
                   </div>
                 )}
                 {record.value_score != null && (
-                  <div className="flex items-center justify-between px-4 py-3.5 bg-surface/80">
+                  <div className="flex items-center justify-between px-5 py-3">
                     <span className="text-xs text-zinc-400">가성비</span>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
                       <div className="flex">{renderStars(Number(record.value_score), 5)}</div>
-                      <span className="text-sm font-bold text-white w-7 text-right">{Number(record.value_score).toFixed(1)}</span>
+                      <span className="text-sm font-bold text-white">{Number(record.value_score).toFixed(1)}</span>
                     </div>
                   </div>
                 )}
                 {record.pairing_score != null && (
-                  <div className="flex items-center justify-between px-4 py-3.5 bg-surface/80">
+                  <div className="flex items-center justify-between px-5 py-3">
                     <span className="text-xs text-zinc-400">음식 궁합</span>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
                       <div className="flex">{renderStars(record.pairing_score, 5)}</div>
-                      <span className="text-sm font-bold text-white w-7 text-right">{record.pairing_score}</span>
+                      <span className="text-sm font-bold text-white">{record.pairing_score}</span>
                     </div>
                   </div>
                 )}
                 {record.repurchase_intent && (
-                  <div className="flex items-center justify-between px-4 py-3.5 bg-surface/80">
+                  <div className="flex items-center justify-between px-5 py-3">
                     <span className="text-xs text-zinc-400">재구매</span>
                     <span className="text-sm font-medium text-white">
-                      {{ yes: "👍 있음", maybe: "🤔 고민", no: "👋 패스" }[record.repurchase_intent]}
+                      {{ yes: "👍 있음", maybe: "🤔 고민 중", no: "👋 패스" }[record.repurchase_intent]}
                     </span>
                   </div>
                 )}

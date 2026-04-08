@@ -350,11 +350,25 @@ function FeedCard({ record }: { record: WineRecord }) {
           <p className="text-xs text-zinc-300/80 italic font-light truncate drop-shadow-sm">{record.wine_name_original}</p>
         )}
         <p className="text-[11px] text-zinc-400 font-light tracking-wide mt-1">
-          {[
-            record.location,
-            foods.length > 0 ? `🍽 ${foods.map(f => f.name).join(", ")}` : null,
-            companions.length > 0 ? `with ${companions.map(c => c.startsWith("@") ? c : `@${c}`).join(", ")}` : null,
-          ].filter(Boolean).join(" · ")}
+          {record.location}
+          {record.location && foods.length > 0 && " · "}
+          {foods.length > 0 && `🍽 ${foods.map(f => f.name).join(", ")}`}
+          {(record.location || foods.length > 0) && companions.length > 0 && " · "}
+          {companions.length > 0 && (
+            <span>
+              with{" "}
+              {companions.map((c, i) => (
+                <span key={i}>
+                  {i > 0 && ", "}
+                  {c.startsWith("@") ? (
+                    <span className="text-violet-300">{c}</span>
+                  ) : (
+                    <span className="text-zinc-500">{c}</span>
+                  )}
+                </span>
+              ))}
+            </span>
+          )}
         </p>
         <div className="flex items-center gap-1.5 flex-wrap mt-2">
           {record.wine_type && (

@@ -12,15 +12,22 @@ export async function GET(request: Request) {
   const fuzzy = "%" + q.replace(/\s+/g, "").split("").join("%") + "%";
   const exact = `%${q}%`;
 
+  // 핵심 단어 패턴 (3글자 이상 단어 AND 조합)
+  const words = q.split(/[\s']+/).filter((w) => w.length >= 3);
+  const wordPatterns = words.slice(0, 3).map((w) => `%${w}%`);
+
+  const orConditions = [
+    `name_ko.ilike.${exact}`,
+    `name_en.ilike.${exact}`,
+    `name_ko.ilike.${fuzzy}`,
+    `name_en.ilike.${fuzzy}`,
+    ...wordPatterns.flatMap((p) => [`name_ko.ilike.${p}`, `name_en.ilike.${p}`]),
+  ];
+
   const { data } = await supabase
     .from("wines")
     .select("id, name_ko, name_en, wine_type, country, grape_variety, producer, price, vivino_url, vivino_rating")
-    .or([
-      `name_ko.ilike.${exact}`,
-      `name_en.ilike.${exact}`,
-      `name_ko.ilike.${fuzzy}`,
-      `name_en.ilike.${fuzzy}`,
-    ].join(","))
+    .or(orConditions.join(","))
     .order("price", { ascending: true, nullsFirst: false })
     .limit(10);
 

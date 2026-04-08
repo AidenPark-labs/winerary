@@ -178,7 +178,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
         </div>
 
         {/* ── 컨텐츠 ── */}
-        <div className={`flex flex-col gap-4 px-4 relative z-20 ${hasPhoto ? "-mt-2" : "pt-0"} ${readOnly ? "pb-36" : "pb-28"}`}>
+        <div className={`flex flex-col gap-4 px-4 relative z-20 ${hasPhoto ? "-mt-16" : "pt-4"} ${readOnly ? "pb-36" : "pb-28"}`}>
 
           {/* ── 와인 글라스 카드 (피드와 동일한 스타일) ── */}
           {(() => {
@@ -225,16 +225,12 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                   )}
                 </div>
 
-                {/* 날짜 · 장소 + 와인 상세 링크 */}
-                <div className="flex items-center justify-between mt-3">
-                  <p className="text-[11px] text-zinc-400 font-light tracking-wide">
-                    {dateStr}
-                    {placeStr && ` · ${placeStr}`}
-                  </p>
-                  {hasWineLink && (
+                {/* 와인 상세 링크 */}
+                {hasWineLink && (
+                  <div className="flex justify-end mt-2.5">
                     <span className="text-[10px] text-zinc-500 font-medium">와인 상세 ›</span>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             );
 
@@ -296,10 +292,23 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
           )}
 
           {/* ── 경험 정보 그리드 ── */}
-          {(priceText || record.repurchase_intent || foods.length > 0 || companions.length > 0) && (
-            <div className="rounded-2xl bg-surface/40 backdrop-blur-xl border border-white/5 overflow-hidden divide-y divide-white/5">
-              {/* 가격 + 재구매 */}
-              {(priceText || record.repurchase_intent) && (
+          <div className="rounded-2xl bg-surface/40 backdrop-blur-xl border border-white/5 overflow-hidden divide-y divide-white/5">
+            {/* 날짜 · 장소 */}
+            <div className="flex divide-x divide-white/5">
+              <div className="flex-1 px-4 py-3.5">
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Date</p>
+                <p className="text-sm text-white font-medium">{dateStr}</p>
+              </div>
+              {placeStr && (
+                <div className="flex-1 px-4 py-3.5">
+                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Place</p>
+                  <p className="text-sm text-white font-medium">{placeStr}</p>
+                </div>
+              )}
+            </div>
+
+            {/* 가격 + 재구매 */}
+            {(priceText || record.repurchase_intent) && (
                 <div className="flex divide-x divide-white/5">
                   {priceText && (
                     <div className="flex-1 px-4 py-3.5">
@@ -338,7 +347,6 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                 </div>
               )}
             </div>
-          )}
 
           {/* 태그 */}
           {tags.length > 0 && (

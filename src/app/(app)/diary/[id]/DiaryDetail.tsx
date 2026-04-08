@@ -8,6 +8,38 @@ import DeleteButton from "./DeleteButton";
 import ShareButton from "./ShareButton";
 import InviteButton from "./InviteButton";
 
+const FOOD_COLOR_RULES: [RegExp, { bg: string; border: string; text: string }][] = [
+  [/스테이크|고기|소고기|돼지|양고기|갈비|삼겹|안심|등심|채끝|립|로스트|미트|바베큐|BBQ|불고기|육/i,
+    { bg: "bg-red-500/10", border: "border-red-500/20", text: "text-red-300" }],
+  [/해산물|생선|연어|참치|새우|조개|굴|랍스터|회|초밥|스시|문어|오징어|게|전복|광어|우니|사시미/i,
+    { bg: "bg-cyan-500/10", border: "border-cyan-500/20", text: "text-cyan-300" }],
+  [/치즈|까망베르|브리|고르곤졸라|모짜렐라|파르메산|체다|블루치즈|그뤼에르/i,
+    { bg: "bg-amber-500/10", border: "border-amber-500/20", text: "text-amber-300" }],
+  [/파스타|피자|빵|리조또|뇨끼|라자냐|크로와상|바게트|포카치아|브루스케타/i,
+    { bg: "bg-orange-500/10", border: "border-orange-500/20", text: "text-orange-300" }],
+  [/샐러드|채소|야채|버섯|아보카도|올리브|루꼴라|카프레제|그린/i,
+    { bg: "bg-emerald-500/10", border: "border-emerald-500/20", text: "text-emerald-300" }],
+  [/초콜릿|디저트|케이크|타르트|마카롱|아이스크림|과일|베리|딸기|체리|무화과|푸딩|크림/i,
+    { bg: "bg-pink-500/10", border: "border-pink-500/20", text: "text-pink-300" }],
+  [/닭|치킨|오리|duck|포울트리|터키/i,
+    { bg: "bg-yellow-500/10", border: "border-yellow-500/20", text: "text-yellow-300" }],
+  [/감자|튀김|칩|프라이|프렌치|해시|크로켓|너겟/i,
+    { bg: "bg-yellow-600/10", border: "border-yellow-600/20", text: "text-yellow-200" }],
+  [/햄|살라미|하몽|프로슈토|소시지|베이컨|샤퀴테리/i,
+    { bg: "bg-rose-500/10", border: "border-rose-500/20", text: "text-rose-300" }],
+  [/에그|계란|달걀|오믈렛/i,
+    { bg: "bg-yellow-400/10", border: "border-yellow-400/20", text: "text-yellow-200" }],
+];
+
+const DEFAULT_FOOD_COLOR = { bg: "bg-white/5", border: "border-white/10", text: "text-zinc-200" };
+
+function getFoodColor(name: string) {
+  for (const [pattern, color] of FOOD_COLOR_RULES) {
+    if (pattern.test(name)) return color;
+  }
+  return DEFAULT_FOOD_COLOR;
+}
+
 const TYPE_KO: Record<string, string> = {
   red: "레드", white: "화이트", rose: "로제",
   sparkling: "스파클링", fortified: "주정강화", other: "기타",
@@ -323,9 +355,12 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
               </div>
               <div className="px-5 pb-3">
                 <div className="flex gap-1.5 flex-wrap">
-                  {foods.map((f, i) => (
-                    <span key={i} className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 text-zinc-200 text-sm font-light">{f.name}</span>
-                  ))}
+                  {foods.map((f, i) => {
+                    const c = getFoodColor(f.name);
+                    return (
+                      <span key={i} className={`px-3 py-1.5 rounded-xl border text-sm font-light ${c.bg} ${c.border} ${c.text}`}>{f.name}</span>
+                    );
+                  })}
                 </div>
               </div>
             </div>

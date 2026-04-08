@@ -421,10 +421,13 @@ export default function NewDiaryPage() {
         const koName = aiData.name || "";
         const enName = aiData.name_original || "";
         const dbMatches = await searchDbMatches(koName, enName);
-        setSuggestions(dbMatches);
 
         if (dbMatches.length > 0) {
+          setSuggestions(dbMatches);
           applyWineFields(dbMatches[0]);
+        } else {
+          // DB에 없음 → AI 인식 결과 프리필, 후보 없음
+          setSuggestions([]);
         }
       } else {
         setAiResult(null);
@@ -691,73 +694,100 @@ export default function NewDiaryPage() {
               </div>
             )}
 
-            {/* AI 인식 성공 → DB 매칭 최고 후보 확인 */}
+            {/* AI 인식 성공 */}
             {aiResult && !aiNotFound && !showSearch && (
               <div className="flex flex-col gap-3">
-                {/* 선택된 와인 (DB 매칭 최고 후보 또는 AI 결과) */}
-                <div className="rounded-[20px] bg-surface/80 border border-accent/30 p-5 flex flex-col gap-3 backdrop-blur-md shadow-xl">
-                  <p className="text-xs text-accent font-medium">이 와인이 맞나요?</p>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-serif font-medium text-white text-lg leading-tight">{selectedWine?.name_ko || selectedWine?.name || notNull(aiResult.name)}</p>
-                      {(selectedWine?.name || notNull(aiResult.name_original)) && (
-                        <p className="text-sm text-zinc-400 italic mt-0.5 font-light">{selectedWine?.name || aiResult.name_original}</p>
-                      )}
-                      <div className="flex items-center gap-2 mt-2 flex-wrap">
-                        {(selectedWine?.type || aiResult.wine_type) && (
-                          <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-white/10 text-zinc-300 tracking-wide">
-                            {TYPE_KO[selectedWine?.type || aiResult.wine_type || ""] ?? (selectedWine?.type || aiResult.wine_type)}
-                          </span>
-                        )}
-                        {(selectedWine?.country || notNull(aiResult.country)) && (
-                          <span className="text-xs text-zinc-400 font-light">{selectedWine?.country || aiResult.country}</span>
-                        )}
-                        {(selectedWine?.grapes || notNull(aiResult.grape_variety)) && (
-                          <span className="text-xs text-zinc-500 font-light">🍇 {selectedWine?.grapes || aiResult.grape_variety}</span>
-                        )}
+                {suggestions && suggestions.length > 0 ? (
+                  <>
+                    {/* DB 매칭 결과 있음 */}
+                    <div className="rounded-[20px] bg-surface/80 border border-emerald-500/30 p-5 flex flex-col gap-3 backdrop-blur-md shadow-xl">
+                      <p className="text-xs text-emerald-400 font-medium">이 와인이 맞나요?</p>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-serif font-medium text-white text-lg leading-tight">{selectedWine?.name_ko || selectedWine?.name}</p>
+                          {selectedWine?.name && selectedWine.name !== selectedWine.name_ko && (
+                            <p className="text-sm text-zinc-400 italic mt-0.5 font-light">{selectedWine.name}</p>
+                          )}
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            {selectedWine?.type && (
+                              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-white/10 text-zinc-300 tracking-wide">
+                                {TYPE_KO[selectedWine.type] ?? selectedWine.type}
+                              </span>
+                            )}
+                            {selectedWine?.country && <span className="text-xs text-zinc-400 font-light">{selectedWine.country}</span>}
+                            {selectedWine?.grapes && <span className="text-xs text-zinc-500 font-light">🍇 {selectedWine.grapes}</span>}
+                          </div>
+                        </div>
+                        <span className="text-[10px] px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 flex-shrink-0 tracking-wide font-medium">DB 매칭</span>
                       </div>
                     </div>
-                    <span className={`text-[10px] px-2 py-1 rounded-lg flex-shrink-0 tracking-wide font-medium ${
-                      selectedWine?.wine_id ? "bg-emerald-500/20 text-emerald-400" : "bg-accent/20 text-accent"
-                    }`}>
-                      {selectedWine?.wine_id ? "DB 매칭" : "AI 인식"}
-                    </span>
-                  </div>
-                </div>
 
-                {/* 다른 후보 리스트 */}
-                {suggestions && suggestions.length > 1 && (
-                  <div className="flex flex-col gap-2">
-                    <p className="text-xs text-zinc-500 font-medium px-1">다른 와인인가요?</p>
-                    {suggestions.filter((w) => (w.wine_id ?? w.name) !== (selectedWine?.wine_id ?? selectedWine?.name)).slice(0, 4).map((wine, i) => (
-                      <button key={i} type="button" onClick={() => { applyWineFields(wine); }}
-                        className="w-full flex flex-col gap-0.5 p-3 rounded-xl border border-zinc-800 bg-zinc-900 hover:border-zinc-600 text-left transition-all">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-zinc-100 text-sm">{wine.name_ko || wine.name}</span>
+                    {/* 다른 후보 리스트 */}
+                    {suggestions.length > 1 && (
+                      <div className="flex flex-col gap-2">
+                        <p className="text-xs text-zinc-500 font-medium px-1">다른 와인인가요?</p>
+                        {suggestions.filter((w) => (w.wine_id ?? w.name) !== (selectedWine?.wine_id ?? selectedWine?.name)).slice(0, 4).map((wine, i) => (
+                          <button key={i} type="button" onClick={() => { applyWineFields(wine); }}
+                            className="w-full flex flex-col gap-0.5 p-3 rounded-xl border border-zinc-800 bg-zinc-900 hover:border-zinc-600 text-left transition-all">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-medium text-zinc-100 text-sm">{wine.name_ko || wine.name}</span>
+                            </div>
+                            {wine.name && wine.name !== wine.name_ko && (
+                              <span className="text-xs text-zinc-500 italic truncate">{wine.name}</span>
+                            )}
+                            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                              {wine.country && <span className="text-[10px] text-zinc-500">{wine.country}</span>}
+                              {wine.grapes && <span className="text-[10px] text-zinc-600">🍇 {wine.grapes}</span>}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => {
+                        setSuggestions(null);
+                        setShowSearch(true);
+                        setSelectedWine(null);
+                        setAiResult(null);
+                      }}
+                      className="text-zinc-500 text-xs text-center py-2 px-4 mx-auto rounded-full hover:bg-white/5 transition-colors font-light"
+                    >
+                      목록에 없음 — 직접 검색
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {/* DB에 없음 → AI 인식 결과 프리필 */}
+                    <div className="rounded-[20px] bg-surface/80 border border-white/10 p-5 flex flex-col gap-3 backdrop-blur-md shadow-xl">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-serif font-medium text-white text-lg leading-tight">{notNull(aiResult.name)}</p>
+                          {notNull(aiResult.name_original) && (
+                            <p className="text-sm text-zinc-400 italic mt-0.5 font-light">{aiResult.name_original}</p>
+                          )}
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            {aiResult.wine_type && (
+                              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-white/10 text-zinc-300 tracking-wide">
+                                {TYPE_KO[aiResult.wine_type] ?? aiResult.wine_type}
+                              </span>
+                            )}
+                            {notNull(aiResult.country) && <span className="text-xs text-zinc-400 font-light">{aiResult.country}</span>}
+                            {notNull(aiResult.grape_variety) && <span className="text-xs text-zinc-500 font-light">🍇 {aiResult.grape_variety}</span>}
+                          </div>
                         </div>
-                        {wine.name && wine.name !== wine.name_ko && (
-                          <span className="text-xs text-zinc-500 italic truncate">{wine.name}</span>
-                        )}
-                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                          {wine.country && <span className="text-[10px] text-zinc-500">{wine.country}</span>}
-                          {wine.grapes && <span className="text-[10px] text-zinc-600">🍇 {wine.grapes}</span>}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                        <span className="text-[10px] px-2 py-1 rounded-lg bg-zinc-700/50 text-zinc-400 flex-shrink-0 tracking-wide font-medium">AI 인식</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-zinc-500 text-center font-light">와인 DB에 일치하는 와인이 없습니다. 아래에서 정보를 확인해주세요.</p>
+                    <button
+                      onClick={() => { setShowSearch(true); setSelectedWine(null); setAiResult(null); }}
+                      className="text-zinc-500 text-xs text-center py-2 px-4 mx-auto rounded-full hover:bg-white/5 transition-colors font-light"
+                    >
+                      직접 검색하기
+                    </button>
+                  </>
                 )}
-
-                <button
-                  onClick={() => {
-                    setSuggestions(null);
-                    setShowSearch(true);
-                    setSelectedWine(null);
-                    setAiResult(null);
-                  }}
-                  className="text-zinc-500 text-xs text-center py-2 px-4 mx-auto rounded-full hover:bg-white/5 transition-colors font-light"
-                >
-                  목록에 없음 — 직접 검색
-                </button>
               </div>
             )}
 

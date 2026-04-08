@@ -52,7 +52,10 @@ export async function GET(request: Request) {
   });
   scored.sort((a, b) => b.score - a.score);
 
-  const wines: WineSuggestion[] = scored.slice(0, 10).map(({ w }) => ({
+  // 유사도 0.3 미만 제외
+  const filtered = scored.filter(({ score }) => score >= 0.3);
+
+  const wines: WineSuggestion[] = filtered.slice(0, 10).map(({ w }) => ({
     wine_id: w.id,
     name: w.name_en ?? w.name_ko,
     name_ko: w.name_ko,

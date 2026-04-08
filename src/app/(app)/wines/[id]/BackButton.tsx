@@ -7,7 +7,7 @@ export default function BackButton() {
   return (
     <button
       onClick={() => router.back()}
-      className="text-zinc-400 hover:text-zinc-200 text-2xl w-8"
+      className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white text-lg hover:bg-black/60 transition-colors"
     >
       ←
     </button>

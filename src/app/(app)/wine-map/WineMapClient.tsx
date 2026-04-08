@@ -289,7 +289,7 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
         )}
 
         {/* 플로팅 버튼들 */}
-        <div className={`absolute right-4 z-[999] flex flex-col gap-2 transition-all ${selectedGroup ? "bottom-32" : "bottom-4"}`}>
+        <div className={`absolute right-4 z-[999] flex flex-col gap-2 transition-all ${selectedGroup ? "bottom-40" : "bottom-4"}`}>
           <button
             onClick={goToMyLocation}
             className="w-10 h-10 rounded-full bg-surface/90 backdrop-blur-md border border-white/10 shadow-xl flex items-center justify-center text-zinc-300 hover:text-white transition-colors"
@@ -298,7 +298,7 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
           </button>
         </div>
 
-        <div className={`absolute left-1/2 -translate-x-1/2 z-[999] transition-all ${selectedGroup ? "bottom-32" : "bottom-4"}`}>
+        <div className={`absolute left-1/2 -translate-x-1/2 z-[999] transition-all ${selectedGroup ? "bottom-40" : "bottom-4"}`}>
           <button
             onClick={() => setShowList(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface/90 backdrop-blur-md border border-white/10 shadow-xl text-zinc-200 hover:text-white transition-colors"

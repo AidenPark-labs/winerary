@@ -113,14 +113,14 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
       <div className="relative z-10 flex flex-col min-h-screen">
 
         {/* ── 사진 히어로 ── */}
-        <div className="relative">
+        <div className="relative overflow-visible">
           {hasPhoto ? (
             <>
               <div
                 ref={scrollRef}
                 onScroll={handleScroll}
                 className="flex snap-x snap-mandatory"
-                style={{ overflowX: "scroll", scrollbarWidth: "none", touchAction: "pan-x pan-y" } as React.CSSProperties}
+                style={{ overflowX: "scroll", overflowY: "hidden", scrollbarWidth: "none", touchAction: "pan-x pan-y" } as React.CSSProperties}
               >
                 {photos.map((url, i) => (
                   <div key={i} className="relative flex-shrink-0 snap-center cursor-pointer" style={{ width: "100svw", height: "60vh" }} onClick={() => setLightbox(i)}>
@@ -130,7 +130,8 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
               </div>
 
               <div className="absolute top-0 inset-x-0 h-36 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
-              <div className="absolute bottom-0 inset-x-0 h-48 pointer-events-none" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 40%, transparent 100%)" }} />
+              {/* 하단 → 사진 밖으로 확장되는 그라디언트 */}
+              <div className="absolute inset-x-0 pointer-events-none" style={{ bottom: "-4rem", height: "12rem", background: "linear-gradient(to top, transparent 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.6) 60%, transparent 100%)" }} />
 
               {photos.length > 1 && (
                 <div className="absolute bottom-20 inset-x-0 flex justify-center gap-1.5 z-30 pointer-events-none">
@@ -175,7 +176,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
         </div>
 
         {/* ── 컨텐츠 ── */}
-        <div className={`flex flex-col gap-4 px-4 relative z-20 ${hasPhoto ? "-mt-16" : "pt-4"} ${readOnly ? "pb-36" : "pb-28"}`}>
+        <div className={`flex flex-col gap-4 px-4 relative z-20 ${hasPhoto ? "-mt-12" : "pt-4"} ${readOnly ? "pb-36" : "pb-28"}`}>
 
           {/* ── 글라스 카드 (날짜 + 동행) ── */}
           <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 px-5 py-3.5 shadow-2xl flex items-center justify-between">

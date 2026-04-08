@@ -200,8 +200,8 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
             </div>
           )}
 
-          {/* ── 액션 버튼 ── */}
-          <WineActions wine={wine} />
+          {/* ── 네이버 쇼핑 검색 ── */}
+          <NaverShopping query={wine.name_ko} />
 
           {/* ── 유사 와인 ── */}
           {similar && similar.length > 0 && (
@@ -223,7 +223,7 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
                       <p className="text-sm text-zinc-200 truncate">{w.name_ko}</p>
                       <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-500">
                         {w.price && <span className="text-emerald-400">{w.price.toLocaleString()}원</span>}
-                        {w.vivino_rating && <span className="text-purple-300">★ {Number(w.vivino_rating).toFixed(1)}</span>}
+                        {w.vivino_rating && <span className="text-rose-300">★ {Number(w.vivino_rating).toFixed(1)}</span>}
                         {w.country && <span>{w.country}</span>}
                       </div>
                     </div>
@@ -232,8 +232,9 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
               </div>
             </div>
           )}
-          {/* ── 네이버 쇼핑 검색 ── */}
-          <NaverShopping query={wine.name_ko} />
+
+          {/* ── 액션 버튼 ── */}
+          <WineActions wine={wine} />
 
           {/* ── 데이터 출처 ── */}
           <div className="flex items-center justify-center gap-1.5 pt-2 pb-4">

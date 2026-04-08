@@ -291,17 +291,17 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
         {/* 하단 영역: 버튼 + 카드 */}
         <div className="absolute bottom-4 left-0 right-0 z-[999] flex flex-col items-center gap-3 pointer-events-none">
           {/* 플로팅 버튼들 */}
-          <div className="flex items-center gap-3 pointer-events-auto">
+          <div className="w-full px-4 flex items-center justify-center relative pointer-events-none">
             <button
               onClick={() => setShowList(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface/90 backdrop-blur-md border border-white/10 shadow-xl text-zinc-200 hover:text-white transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface/90 backdrop-blur-md border border-white/10 shadow-xl text-zinc-200 hover:text-white transition-colors pointer-events-auto"
             >
               <List size={14} />
               <span className="text-xs font-medium">목록</span>
             </button>
             <button
               onClick={goToMyLocation}
-              className="w-10 h-10 rounded-full bg-surface/90 backdrop-blur-md border border-white/10 shadow-xl flex items-center justify-center text-zinc-300 hover:text-white transition-colors"
+              className="absolute right-4 w-10 h-10 rounded-full bg-surface/90 backdrop-blur-md border border-white/10 shadow-xl flex items-center justify-center text-zinc-300 hover:text-white transition-colors pointer-events-auto"
             >
               <Navigation size={16} />
             </button>

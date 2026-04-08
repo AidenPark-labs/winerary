@@ -391,20 +391,9 @@ function CalendarRecordCard({ record }: { record: WineRecord }) {
           <p className="font-serif font-medium text-white text-base tracking-wide leading-tight truncate">{record.name}</p>
         </div>
         
-        <div className="flex items-center gap-3">
-          {record.wine_type && (
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/5">
-              <span className={`w-2 h-2 rounded-full ${WINE_TYPE_COLORS[record.wine_type] ?? "bg-zinc-500"} shadow-sm`} />
-              <span className="text-[10px] text-zinc-300 font-medium">{TYPE_KO[record.wine_type] ?? record.wine_type}</span>
-            </div>
-          )}
-          {record.wine_vintage && (
-            <span className="text-zinc-400 text-[11px] font-semibold tracking-wider">{record.wine_vintage}</span>
-          )}
-          {record.location && (
-            <p className="text-[11px] text-zinc-500 truncate flex items-center gap-1 font-light"><MapPin size={10} /> {record.location}</p>
-          )}
-        </div>
+        {record.location && (
+          <p className="text-[11px] text-zinc-500 truncate flex items-center gap-1 font-light mt-0.5"><MapPin size={10} /> {record.location}</p>
+        )}
       </div>
       {(() => { const s = calcOverallScore(record); return s != null ? (
         <div className="flex flex-col items-center justify-center gap-0.5 flex-shrink-0 pl-1 h-14 bg-amber-400/10 px-3 rounded-2xl">

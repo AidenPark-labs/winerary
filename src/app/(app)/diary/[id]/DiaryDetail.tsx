@@ -180,56 +180,25 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
         {/* ── 컨텐츠 ── */}
         <div className={`flex flex-col gap-4 px-4 relative z-20 ${hasPhoto ? "-mt-16" : "pt-4"} ${readOnly ? "pb-36" : "pb-28"}`}>
 
-          {/* ── 와인 글라스 카드 (피드와 동일한 스타일) ── */}
+          {/* ── 와인 글라스 카드 (이름만 간결하게) ── */}
           {(() => {
-            const resolved = wineData ? resolveWineDisplay(wineData) : null;
-            const displayType = resolved?.wine_type ?? record.wine_type;
-            const displayGrapes = resolved?.grapes ?? record.grape_variety;
-            const displayCountry = resolved?.country ?? record.wine_country;
             const hasWineLink = !!(record.wine_id && wineData?.id);
 
             const card = (
-              <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 px-5 py-4 shadow-2xl">
-                {/* 와인명 + 빈티지 */}
-                <div className="flex items-baseline gap-2 flex-wrap">
-                  <h1 className="font-serif font-medium text-white text-xl tracking-wide leading-tight">{record.name}</h1>
-                  {record.wine_vintage && (
-                    <span className="text-base text-white/60 font-light">{record.wine_vintage}</span>
-                  )}
-                </div>
-                {record.wine_name_original && (
-                  <p className="text-xs text-zinc-300/70 italic font-light truncate mt-0.5">{record.wine_name_original}</p>
-                )}
-
-                {/* 칩: 타입, 국가, 품종, 도수, Vivino */}
-                <div className="flex items-center gap-1.5 flex-wrap mt-2.5">
-                  {displayType && (
-                    <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium">
-                      <span className={`w-1.5 h-1.5 rounded-full ${WINE_TYPE_COLORS[displayType] ?? "bg-zinc-500"}`} />
-                      {TYPE_KO[displayType] ?? displayType}
-                    </span>
-                  )}
-                  {displayCountry && (
-                    <span className="px-2 py-1 rounded-full bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium">{displayCountry}</span>
-                  )}
-                  {displayGrapes && (
-                    <span className="px-2 py-1 rounded-full bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium">🍇 {displayGrapes}</span>
-                  )}
-                  {resolved?.alcohol && (
-                    <span className="px-2 py-1 rounded-full bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium">{resolved.alcohol}</span>
-                  )}
-                  {wineData?.vivino_rating != null && (
-                    <span className="px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-400 font-medium">
-                      ★ {wineData.vivino_rating}
-                    </span>
-                  )}
-                </div>
-
-                {/* 와인 상세 링크 */}
-                {hasWineLink && (
-                  <div className="flex justify-end mt-2.5">
-                    <span className="text-[10px] text-zinc-500 font-medium">와인 상세 ›</span>
+              <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 px-5 py-4 shadow-2xl flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <h1 className="font-serif font-medium text-white text-xl tracking-wide leading-tight">{record.name}</h1>
+                    {record.wine_vintage && (
+                      <span className="text-base text-white/60 font-light">{record.wine_vintage}</span>
+                    )}
                   </div>
+                  {record.wine_name_original && (
+                    <p className="text-xs text-zinc-300/70 italic font-light truncate mt-0.5">{record.wine_name_original}</p>
+                  )}
+                </div>
+                {hasWineLink && (
+                  <span className="text-zinc-500 text-lg flex-shrink-0">›</span>
                 )}
               </div>
             );
@@ -348,16 +317,40 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
               )}
             </div>
 
-          {/* 태그 */}
-          {tags.length > 0 && (
-            <div className="flex gap-2 flex-wrap">
-              {tags.map((tag, i) => (
-                <span key={i} className="px-3 py-1.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-300 text-xs font-light">
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          )}
+          {/* 와인 세부 정보 + 태그 */}
+          {(() => {
+            const resolved = wineData ? resolveWineDisplay(wineData) : null;
+            const displayType = resolved?.wine_type ?? record.wine_type;
+            const displayGrapes = resolved?.grapes ?? record.grape_variety;
+            const displayCountry = resolved?.country ?? record.wine_country;
+
+            const chips = [
+              displayType && { label: TYPE_KO[displayType] ?? displayType, color: WINE_TYPE_COLORS[displayType] },
+              displayCountry && { label: displayCountry },
+              displayGrapes && { label: `🍇 ${displayGrapes}` },
+              resolved?.alcohol && { label: resolved.alcohol },
+              wineData?.vivino_rating != null && { label: `★ ${wineData.vivino_rating}`, amber: true },
+            ].filter(Boolean) as { label: string; color?: string; amber?: boolean }[];
+
+            const hasAny = chips.length > 0 || tags.length > 0;
+            if (!hasAny) return null;
+
+            return (
+              <div className="flex gap-1.5 flex-wrap">
+                {chips.map((c, i) => (
+                  <span key={`w-${i}`} className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-medium ${c.amber ? "bg-amber-500/10 border border-amber-500/20 text-amber-400" : "bg-white/5 border border-white/5 text-zinc-300"}`}>
+                    {c.color && <span className={`w-1.5 h-1.5 rounded-full ${c.color}`} />}
+                    {c.label}
+                  </span>
+                ))}
+                {tags.map((tag, i) => (
+                  <span key={`t-${i}`} className="px-2.5 py-1.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[11px] font-medium">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            );
+          })()}
         </div>
 
       </div>

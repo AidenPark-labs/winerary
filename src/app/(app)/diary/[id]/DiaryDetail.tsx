@@ -2,10 +2,12 @@
 
 import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
-import type { WineRecord } from "@/types";
+import type { WineRecord, RecordEvaluation } from "@/types";
 import { resolveWineDisplay } from "@/lib/wine-display";
+import { upsertRecordEvaluation } from "@/lib/actions/diary";
 import DeleteButton from "./DeleteButton";
 import ShareButton from "./ShareButton";
+import StarRating from "@/components/StarRating";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드", white: "화이트", rose: "로제",
@@ -61,7 +63,14 @@ const WINE_TYPE_COLORS: Record<string, string> = {
   sparkling: "bg-[#F3E5AB]", fortified: "bg-[#4A0E4E]", other: "bg-zinc-400",
 };
 
-export default function DiaryDetail({ record, readOnly = false, wineData = null }: { record: WineRecord; readOnly?: boolean; wineData?: WineData | null }) {
+export default function DiaryDetail({ record, readOnly = false, wineData = null, evaluations = [], myEvaluation = null, currentUserId = null }: {
+  record: WineRecord;
+  readOnly?: boolean;
+  wineData?: WineData | null;
+  evaluations?: RecordEvaluation[];
+  myEvaluation?: RecordEvaluation | null;
+  currentUserId?: string | null;
+}) {
   const photos: string[] = record.photos ?? [];
   const foods: { name: string }[] = (record.foods as { name: string }[]) ?? [];
   const companions: string[] = record.companions ?? [];
@@ -392,6 +401,15 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
               ))}
             </div>
           )}
+
+          {/* ━━━━━━━━━━ Evaluations (공유 평가) ━━━━━━━━━━ */}
+          <EvaluationSection
+            recordId={record.id}
+            readOnly={readOnly}
+            evaluations={evaluations}
+            myEvaluation={myEvaluation}
+            currentUserId={currentUserId}
+          />
         </div>
 
       </div>
@@ -429,6 +447,151 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
             </button>
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Evaluation Section ──────────────────────────────────────────────────────
+
+function EvaluationSection({ recordId, readOnly, evaluations, myEvaluation, currentUserId }: {
+  recordId: string;
+  readOnly: boolean;
+  evaluations: RecordEvaluation[];
+  myEvaluation: RecordEvaluation | null;
+  currentUserId: string | null;
+}) {
+  const [showForm, setShowForm] = useState(false);
+  const [rating, setRating] = useState(myEvaluation?.rating ?? 3);
+  const [valueScore, setValueScore] = useState(myEvaluation?.value_score ?? 3);
+  const [memo, setMemo] = useState(myEvaluation?.memo ?? "");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const otherEvals = evaluations.filter((e) => e.user_id !== currentUserId);
+  const hasMyEval = !!myEvaluation;
+  const canEvaluate = readOnly && currentUserId;
+
+  async function handleSubmit() {
+    setSaving(true);
+    const result = await upsertRecordEvaluation(recordId, {
+      rating,
+      value_score: valueScore,
+      memo: memo.trim() || null,
+    });
+    setSaving(false);
+    if (result.success) {
+      setSaved(true);
+      setShowForm(false);
+      setTimeout(() => setSaved(false), 2000);
+    }
+  }
+
+  // 평가가 없고 평가 권한도 없으면 렌더링 안 함
+  if (evaluations.length === 0 && !canEvaluate) return null;
+
+  return (
+    <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-violet-500/20 overflow-hidden shadow-2xl">
+      <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+        <p className="text-[10px] font-semibold text-violet-400 uppercase tracking-[0.15em]">Reviews</p>
+        {canEvaluate && !showForm && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="text-[11px] px-3 py-1 rounded-lg bg-violet-500/20 text-violet-300 border border-violet-500/30 hover:bg-violet-500/30 transition-colors"
+          >
+            {hasMyEval ? "수정" : "평가하기"}
+          </button>
+        )}
+      </div>
+
+      {/* 평가 입력 폼 */}
+      {showForm && (
+        <div className="px-5 pb-4 flex flex-col gap-3 border-b border-white/10">
+          <StarRating label="맛 평점" emoji="⭐" value={rating} max={5} step={0.5} onChange={setRating} />
+          <StarRating label="가성비" emoji="💰" value={valueScore} max={5} step={0.5} onChange={setValueScore} />
+          <textarea
+            value={memo}
+            onChange={(e) => setMemo(e.target.value)}
+            rows={2}
+            placeholder="한줄 코멘트 (선택)"
+            className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-zinc-100 text-sm font-light resize-none focus:outline-none focus:border-violet-500/50 transition-all placeholder:text-zinc-500"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowForm(false)}
+              className="flex-1 py-2.5 rounded-xl text-sm text-zinc-400 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+            >
+              취소
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={saving}
+              className="flex-1 py-2.5 rounded-xl text-sm text-white bg-violet-600 hover:bg-violet-500 disabled:opacity-50 transition-colors font-medium"
+            >
+              {saving ? "저장 중…" : hasMyEval ? "수정" : "저장"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {saved && (
+        <p className="px-5 py-2 text-xs text-emerald-400">평가가 저장되었습니다</p>
+      )}
+
+      {/* 내 평가 표시 */}
+      {myEvaluation && !showForm && (
+        <div className="px-5 py-3 border-b border-white/10">
+          <p className="text-[11px] text-violet-300 font-medium mb-2">내 평가</p>
+          <div className="flex items-center gap-4">
+            {myEvaluation.rating != null && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-zinc-500">맛</span>
+                <div className="flex">{renderStars(Number(myEvaluation.rating), 5)}</div>
+                <span className="text-xs font-bold text-white">{Number(myEvaluation.rating).toFixed(1)}</span>
+              </div>
+            )}
+            {myEvaluation.value_score != null && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-zinc-500">가성비</span>
+                <div className="flex">{renderStars(Number(myEvaluation.value_score), 5)}</div>
+                <span className="text-xs font-bold text-white">{Number(myEvaluation.value_score).toFixed(1)}</span>
+              </div>
+            )}
+          </div>
+          {myEvaluation.memo && (
+            <p className="text-xs text-zinc-300 font-light mt-2">{myEvaluation.memo}</p>
+          )}
+        </div>
+      )}
+
+      {/* 다른 사람 평가 */}
+      {otherEvals.map((ev) => (
+        <div key={ev.id} className="px-5 py-3 border-b border-white/10 last:border-b-0">
+          <p className="text-[11px] text-zinc-400 font-medium mb-2">{ev.nickname ?? "익명"}</p>
+          <div className="flex items-center gap-4">
+            {ev.rating != null && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-zinc-500">맛</span>
+                <div className="flex">{renderStars(Number(ev.rating), 5)}</div>
+                <span className="text-xs font-bold text-white">{Number(ev.rating).toFixed(1)}</span>
+              </div>
+            )}
+            {ev.value_score != null && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-zinc-500">가성비</span>
+                <div className="flex">{renderStars(Number(ev.value_score), 5)}</div>
+                <span className="text-xs font-bold text-white">{Number(ev.value_score).toFixed(1)}</span>
+              </div>
+            )}
+          </div>
+          {ev.memo && (
+            <p className="text-xs text-zinc-300 font-light mt-2">{ev.memo}</p>
+          )}
+        </div>
+      ))}
+
+      {evaluations.length === 0 && !showForm && (
+        <p className="px-5 py-3 text-xs text-zinc-600 font-light">아직 평가가 없습니다</p>
       )}
     </div>
   );

@@ -59,6 +59,18 @@ export interface RecordMention {
   }
 }
 
+export interface RecordEvaluation {
+  id: string
+  record_id: string
+  user_id: string
+  rating: number | null
+  value_score: number | null
+  memo: string | null
+  created_at: string
+  updated_at: string
+  nickname?: string
+}
+
 export interface WineSession {
   id: string
   code: string

@@ -160,3 +160,30 @@ export async function deleteWineRecord(id: string) {
   if (error) return { error: error.message };
   redirect("/diary");
 }
+
+export async function upsertRecordEvaluation(
+  recordId: string,
+  data: { rating: number | null; value_score: number | null; memo: string | null },
+) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const { error } = await supabase
+    .from("record_evaluations")
+    .upsert(
+      {
+        record_id: recordId,
+        user_id: user.id,
+        rating: data.rating,
+        value_score: data.value_score,
+        memo: data.memo || null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "record_id,user_id" },
+    );
+
+  if (error) return { error: error.message };
+  revalidatePath(`/diary/${recordId}`);
+  return { success: true };
+}

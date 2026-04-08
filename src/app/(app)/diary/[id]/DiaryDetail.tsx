@@ -105,10 +105,19 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
   currentNickname?: string;
   linkedRecords?: LinkedRecord[];
 }) {
-  const photos: string[] = record.photos ?? [];
+  const myPhotos: string[] = record.photos ?? [];
   const foods: { name: string }[] = (record.foods as { name: string }[]) ?? [];
   const companions: string[] = record.companions ?? [];
   const tags: string[] = record.tags ?? [];
+
+  // 내 사진 + 연결 기록 사진 통합
+  const allPhotos: { url: string; owner?: string }[] = [
+    ...myPhotos.map((url) => ({ url })),
+    ...(linkedRecords ?? []).flatMap((lr) =>
+      (lr.photos ?? []).map((url) => ({ url, owner: lr.owner_nickname }))
+    ),
+  ];
+  const photos = allPhotos.map((p) => p.url);
 
   const [currentPhoto, setCurrentPhoto] = useState(0);
   const [lightbox, setLightbox] = useState<number | null>(null);
@@ -174,9 +183,14 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
                 className="flex snap-x snap-mandatory"
                 style={{ overflowX: "scroll", overflowY: "hidden", scrollbarWidth: "none", touchAction: "pan-x pan-y" } as React.CSSProperties}
               >
-                {photos.map((url, i) => (
+                {allPhotos.map((p, i) => (
                   <div key={i} className="relative flex-shrink-0 snap-center cursor-pointer" style={{ width: "100svw", height: "60vh" }} onClick={() => setLightbox(i)}>
-                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <img src={p.url} alt="" className="w-full h-full object-cover" />
+                    {p.owner && (
+                      <span className="absolute bottom-24 left-4 px-2.5 py-1 rounded-full bg-blue-500/80 backdrop-blur-md text-[10px] text-white font-medium z-30">
+                        {p.owner}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -185,10 +199,14 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
               {/* 하단 → 사진 밖으로 확장되는 그라디언트 */}
               <div className="absolute inset-x-0 pointer-events-none" style={{ bottom: "-4rem", height: "12rem", background: "linear-gradient(to top, transparent 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.6) 60%, transparent 100%)" }} />
 
-              {photos.length > 1 && (
+              {allPhotos.length > 1 && (
                 <div className="absolute bottom-20 inset-x-0 flex justify-center gap-1.5 z-30 pointer-events-none">
-                  {photos.map((_, i) => (
-                    <div key={i} className={`h-1 rounded-full transition-all duration-300 ${i === currentPhoto ? "w-5 bg-white" : "w-1 bg-white/40"}`} />
+                  {allPhotos.map((p, i) => (
+                    <div key={i} className={`h-1 rounded-full transition-all duration-300 ${
+                      i === currentPhoto
+                        ? p.owner ? "w-5 bg-blue-400" : "w-5 bg-white"
+                        : p.owner ? "w-1 bg-blue-400/40" : "w-1 bg-white/40"
+                    }`} />
                   ))}
                 </div>
               )}

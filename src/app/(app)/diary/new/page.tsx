@@ -60,11 +60,15 @@ function similarity(a: string, b: string): number {
   if (!a || !b) return 0;
   if (a === b) return 1;
   if (a.includes(b) || b.includes(a)) return 0.8;
-  const shorter = a.length < b.length ? a : b;
-  const longer = a.length < b.length ? b : a;
-  let matches = 0;
-  for (const ch of shorter) { if (longer.includes(ch)) matches++; }
-  return matches / longer.length;
+  // 단어 기반 유사도 (공백/특수문자 분리)
+  const wordsA = a.replace(/['\-]/g, " ").split(/\s+/).filter((w) => w.length >= 2);
+  const wordsB = b.replace(/['\-]/g, " ").split(/\s+/).filter((w) => w.length >= 2);
+  if (wordsA.length === 0 || wordsB.length === 0) return 0;
+  let matchCount = 0;
+  for (const wa of wordsA) {
+    if (wordsB.some((wb) => wa.includes(wb) || wb.includes(wa))) matchCount++;
+  }
+  return matchCount / Math.max(wordsA.length, wordsB.length);
 }
 
 function notNull(v: string | null | undefined): string | null {
@@ -416,8 +420,18 @@ export default function NewDiaryPage() {
         // DB 매칭 검색
         const koName = aiData.name || "";
         const enName = aiData.name_original || "";
-        const dbMatches = await searchDbMatches(koName, enName);
+        let dbMatches = await searchDbMatches(koName, enName);
         setSuggestions(dbMatches);
+
+        // AI가 wine_id를 찾았으면 해당 와인을 최상단으로
+        if (aiData.wine_id && dbMatches.length > 0) {
+          const aiMatch = dbMatches.find((w) => w.wine_id === aiData.wine_id);
+          if (aiMatch) {
+            const rest = dbMatches.filter((w) => w.wine_id !== aiData.wine_id);
+            dbMatches = [aiMatch, ...rest];
+            setSuggestions(dbMatches);
+          }
+        }
 
         // 유사도 최고 후보 자동 선택 (suggestions는 유지)
         if (dbMatches.length > 0) {

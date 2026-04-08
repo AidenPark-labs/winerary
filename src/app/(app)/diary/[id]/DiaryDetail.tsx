@@ -209,6 +209,17 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
             return card;
           })()}
 
+          {/* 날짜 · 장소 */}
+          <div className="flex items-center gap-2 text-sm text-zinc-400">
+            <span>{dateStr}</span>
+            {placeStr && (
+              <>
+                <span className="text-zinc-600">·</span>
+                <span className="truncate">{placeStr}</span>
+              </>
+            )}
+          </div>
+
           {/* 링크 공유 버튼 */}
           {!readOnly && record.visibility === "link" && (
             <ShareButton id={record.id} />
@@ -261,21 +272,8 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
           )}
 
           {/* ── 경험 정보 그리드 ── */}
+          {(priceText || record.repurchase_intent || foods.length > 0 || companions.length > 0) && (
           <div className="rounded-2xl bg-surface/40 backdrop-blur-xl border border-white/5 overflow-hidden divide-y divide-white/5">
-            {/* 날짜 · 장소 */}
-            <div className="flex divide-x divide-white/5">
-              <div className="flex-1 px-4 py-3.5">
-                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Date</p>
-                <p className="text-sm text-white font-medium">{dateStr}</p>
-              </div>
-              {placeStr && (
-                <div className="flex-1 px-4 py-3.5">
-                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Place</p>
-                  <p className="text-sm text-white font-medium">{placeStr}</p>
-                </div>
-              )}
-            </div>
-
             {/* 가격 + 재구매 */}
             {(priceText || record.repurchase_intent) && (
                 <div className="flex divide-x divide-white/5">
@@ -316,6 +314,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                 </div>
               )}
             </div>
+          )}
 
           {/* 와인 세부 정보 + 태그 */}
           {(() => {

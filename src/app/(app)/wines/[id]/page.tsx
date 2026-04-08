@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { resolveWineDisplay } from "@/lib/wine-display";
 import VivinoRating from "./VivinoRating";
 import WineActions from "./WineActions";
 
@@ -20,6 +21,8 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
     .single();
 
   if (!wine) notFound();
+
+  const d = resolveWineDisplay(wine);
 
   // 같은 타입/국가의 유사 와인 추천
   const { data: similar } = await supabase
@@ -53,20 +56,20 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
           {wine.name_en && (
             <p className="text-sm text-zinc-500 italic mt-0.5">{wine.name_en}</p>
           )}
-          {(wine.producer || wine.country) && (
+          {(d.producer || d.country) && (
             <p className="text-sm text-zinc-400 mt-1">
-              {[wine.producer, wine.country, wine.region].filter(Boolean).join(" · ")}
+              {[d.producer, d.country, d.region].filter(Boolean).join(" · ")}
             </p>
           )}
           <div className="flex flex-wrap gap-2 mt-3">
-            {wine.wine_type && (
+            {d.wine_type && (
               <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 text-zinc-300">
-                {TYPE_KO[wine.wine_type] ?? wine.wine_type}
+                {TYPE_KO[d.wine_type] ?? d.wine_type}
               </span>
             )}
-            {wine.grape_variety && (
+            {d.grapes && (
               <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 text-zinc-300">
-                🍇 {wine.grape_variety}
+                🍇 {d.grapes}
               </span>
             )}
           </div>
@@ -89,11 +92,46 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
           />
         </div>
 
+        {/* 상세 정보 */}
+        {(d.style || d.alcohol || d.region || d.producer) && (
+          <div className="rounded-2xl bg-zinc-900 border border-zinc-800 overflow-hidden">
+            <div className="px-5 pt-4 pb-2">
+              <h3 className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Wine Details</h3>
+            </div>
+            <div className="px-5 pb-4 flex flex-col gap-2">
+              {d.producer && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-zinc-500">와이너리</span>
+                  <span className="text-sm text-zinc-200">{d.producer}</span>
+                </div>
+              )}
+              {d.region && (
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-xs text-zinc-500 flex-shrink-0 pt-0.5">지역</span>
+                  <span className="text-sm text-zinc-200 text-right">{d.region}</span>
+                </div>
+              )}
+              {d.style && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-zinc-500">스타일</span>
+                  <span className="text-sm text-zinc-200">{d.style}</span>
+                </div>
+              )}
+              {d.alcohol && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-zinc-500">도수</span>
+                  <span className="text-sm text-zinc-200">{d.alcohol}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* 설명 */}
-        {wine.description && !/예상됩니다|추정됩니다|부족하/.test(wine.description) && (
+        {d.description && !/예상됩니다|추정됩니다|부족하/.test(d.description) && (
           <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-5">
             <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-2">와인 설명</h3>
-            <p className="text-sm text-zinc-300 leading-relaxed">{wine.description}</p>
+            <p className="text-sm text-zinc-300 leading-relaxed">{d.description}</p>
           </div>
         )}
 

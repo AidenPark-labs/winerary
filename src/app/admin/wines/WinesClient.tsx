@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateWine, updateWineVivino, deleteWine } from "./actions";
+import { resolveWineDisplay } from "@/lib/wine-display";
 import type { VivinoCrawlResult, VivinoCrawlError } from "@/lib/vivino-crawler";
 
 const TYPE_KO: Record<string, string> = {
@@ -34,6 +35,14 @@ interface Wine {
   vivino_alcohol: string | null;
   vivino_allergens: string | null;
   vivino_description: string | null;
+  final_grapes: string | null;
+  final_region: string | null;
+  final_country: string | null;
+  final_producer: string | null;
+  final_wine_type: string | null;
+  final_alcohol: string | null;
+  final_style: string | null;
+  final_description: string | null;
   data_source: string | null;
   created_at: string;
   updated_at: string;
@@ -65,9 +74,7 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
   const [vivinoFilter, setVivinoFilter] = useState(initialVivino);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
-  const [editUrl, setEditUrl] = useState("");
-  const [editRating, setEditRating] = useState("");
-  const [editReviews, setEditReviews] = useState("");
+  const [editFields, setEditFields] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [crawling, setCrawling] = useState<string | null>(null);
@@ -76,22 +83,37 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
   const [urlInput, setUrlInput] = useState<string | null>(null); // wine id가 키, null이면 입력 모드 아님
   const [urlInputValue, setUrlInputValue] = useState("");
 
+  const FINAL_SCHEMA: { key: keyof Wine; label: string; placeholder: (w: Wine) => string }[] = [
+    { key: "final_wine_type", label: "타입", placeholder: (w) => w.wine_type || "" },
+    { key: "final_grapes", label: "품종", placeholder: (w) => w.vivino_grapes || w.grape_variety || "" },
+    { key: "final_country", label: "국가", placeholder: (w) => w.country || "" },
+    { key: "final_region", label: "지역", placeholder: (w) => w.vivino_region || w.region || "" },
+    { key: "final_producer", label: "생산자", placeholder: (w) => w.vivino_winery || w.producer || "" },
+    { key: "final_alcohol", label: "도수", placeholder: (w) => w.vivino_alcohol || "" },
+    { key: "final_style", label: "스타일", placeholder: (w) => w.vivino_style || "" },
+    { key: "final_description", label: "설명", placeholder: (w) => (w.vivino_description || w.description || "").slice(0, 60) },
+  ];
+
   function startEdit(w: Wine) {
     setEditing(w.id);
-    setEditUrl(w.vivino_url ?? "");
-    setEditRating(w.vivino_rating != null ? String(w.vivino_rating) : "");
-    setEditReviews(w.vivino_reviews != null ? String(w.vivino_reviews) : "");
+    const fields: Record<string, string> = {};
+    for (const { key } of FINAL_SCHEMA) {
+      const val = w[key];
+      fields[key] = val != null ? String(val) : "";
+    }
+    setEditFields(fields);
     setSaveMsg(null);
   }
 
   async function handleSave(id: string) {
     setSaving(true);
     setSaveMsg(null);
-    const result = await updateWine(id, {
-      vivino_url: editUrl.trim() || null,
-      vivino_rating: editRating ? parseFloat(editRating) : null,
-      vivino_reviews: editReviews ? parseInt(editReviews) : null,
-    });
+    const data: Record<string, string | null> = {};
+    for (const { key } of FINAL_SCHEMA) {
+      const raw = editFields[key]?.trim();
+      data[key] = raw || null;
+    }
+    const result = await updateWine(id, data);
     setSaving(false);
     if (result.error) {
       setSaveMsg(`오류: ${result.error}`);
@@ -280,6 +302,25 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
             {/* 확장 상세 */}
             {expanded === w.id && (
               <div className="border-t border-zinc-800 px-4 py-4 bg-zinc-900/50">
+                {/* 최종 표시값 */}
+                {(() => {
+                  const d = resolveWineDisplay(w);
+                  return (
+                    <div className="mb-4 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                      <p className="text-[10px] font-semibold text-emerald-400/70 uppercase tracking-wider mb-2">최종 표시값</p>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                        {d.wine_type && <span className="text-zinc-300"><span className="text-zinc-500 text-xs">종류</span> {TYPE_KO[d.wine_type] ?? d.wine_type}</span>}
+                        {d.grapes && <span className="text-zinc-300"><span className="text-zinc-500 text-xs">품종</span> {d.grapes}</span>}
+                        {d.country && <span className="text-zinc-300"><span className="text-zinc-500 text-xs">국가</span> {d.country}</span>}
+                        {d.region && <span className="text-zinc-300"><span className="text-zinc-500 text-xs">지역</span> {d.region}</span>}
+                        {d.producer && <span className="text-zinc-300"><span className="text-zinc-500 text-xs">생산자</span> {d.producer}</span>}
+                        {d.alcohol && <span className="text-zinc-300"><span className="text-zinc-500 text-xs">도수</span> {d.alcohol}</span>}
+                        {d.style && <span className="text-zinc-300"><span className="text-zinc-500 text-xs">스타일</span> {d.style}</span>}
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                   <InfoCell label="한국어명">{w.name_ko}</InfoCell>
                   {w.name_en && <InfoCell label="영문명">{w.name_en}</InfoCell>}
@@ -320,8 +361,8 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
                         >
                           URL로 수집
                         </button>
-                        <button onClick={() => startEdit(w)} className="text-[11px] px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700 transition-colors">
-                          수정
+                        <button onClick={() => startEdit(w)} className="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition-colors">
+                          오버라이드
                         </button>
                       </div>
                     ) : (
@@ -336,23 +377,20 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
                   </div>
 
                   {editing === w.id ? (
-                    <div className="flex flex-col gap-2">
-                      <div>
-                        <label className="text-zinc-500 text-[10px]">Vivino URL (상품 상세 페이지)</label>
-                        <input value={editUrl} onChange={(e) => setEditUrl(e.target.value)} placeholder="https://www.vivino.com/w/..."
-                          className="w-full mt-1 rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-200" />
-                      </div>
-                      <div className="flex gap-3">
-                        <div className="flex-1">
-                          <label className="text-zinc-500 text-[10px]">평점 (0.0~5.0)</label>
-                          <input type="number" step="0.1" min="0" max="5" value={editRating} onChange={(e) => setEditRating(e.target.value)} placeholder="4.2"
-                            className="w-full mt-1 rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-200" />
-                        </div>
-                        <div className="flex-1">
-                          <label className="text-zinc-500 text-[10px]">리뷰 수</label>
-                          <input type="number" min="0" value={editReviews} onChange={(e) => setEditReviews(e.target.value)} placeholder="1234"
-                            className="w-full mt-1 rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-200" />
-                        </div>
+                    <div>
+                      <p className="text-[10px] text-zinc-400 mb-2">비워두면 자동 선택 (Vivino &gt; 네이버), 입력하면 수동 오버라이드</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {FINAL_SCHEMA.map(({ key, label, placeholder }) => (
+                          <div key={key} className={key === "final_description" || key === "final_region" ? "col-span-2" : ""}>
+                            <label className="text-zinc-500 text-[10px]">{label}</label>
+                            <input
+                              value={editFields[key] ?? ""}
+                              onChange={(e) => setEditFields((prev) => ({ ...prev, [key]: e.target.value }))}
+                              placeholder={placeholder(w)}
+                              className="w-full mt-0.5 rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 placeholder:text-zinc-600"
+                            />
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ) : (

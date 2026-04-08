@@ -16,7 +16,7 @@ export default async function DiaryDetailPage({ params }: { params: Promise<{ id
   if (!record) notFound();
 
   // wines 테이블에서 Vivino 데이터 조회 (wine_id 우선, 없으면 name 매칭)
-  const wineFields = "description, vivino_url, vivino_rating, vivino_reviews, vivino_winery, vivino_grapes, vivino_region, vivino_style, vivino_alcohol, vivino_description";
+  const wineFields = "id, description, vivino_url, vivino_rating, vivino_reviews, vivino_winery, vivino_grapes, vivino_region, vivino_style, vivino_alcohol, vivino_description, grape_variety, region, country, producer, wine_type, final_grapes, final_region, final_country, final_producer, final_wine_type, final_alcohol, final_style, final_description";
   let wineData = null;
 
   if (record.wine_id) {

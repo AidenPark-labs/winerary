@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import type { WineRecord } from "@/types";
+import { resolveWineDisplay } from "@/lib/wine-display";
 import DeleteButton from "./DeleteButton";
 import ShareButton from "./ShareButton";
 
@@ -29,6 +30,7 @@ function renderStars(score: number, max = 5) {
 }
 
 interface WineData {
+  id?: string;
   description?: string | null;
   vivino_url?: string | null;
   vivino_rating?: number | null;
@@ -39,121 +41,72 @@ interface WineData {
   vivino_style?: string | null;
   vivino_alcohol?: string | null;
   vivino_description?: string | null;
+  grape_variety?: string | null;
+  region?: string | null;
+  country?: string | null;
+  producer?: string | null;
+  wine_type?: string | null;
+  final_grapes?: string | null;
+  final_region?: string | null;
+  final_country?: string | null;
+  final_producer?: string | null;
+  final_wine_type?: string | null;
+  final_alcohol?: string | null;
+  final_style?: string | null;
+  final_description?: string | null;
 }
 
-function WineInfoSection({ record, wineData }: { record: WineRecord; wineData: WineData | null }) {
-  const hasVivino = !!(wineData?.vivino_rating || wineData?.vivino_winery || wineData?.vivino_grapes);
+/* ── 컴팩트 와인 카드: 간략 정보 + 탭하면 와인 상세 ── */
+function WineCard({ record, wineData }: { record: WineRecord; wineData: WineData | null }) {
+  const resolved = wineData ? resolveWineDisplay(wineData) : null;
+  const displayType = resolved?.wine_type ?? record.wine_type;
+  const displayGrapes = resolved?.grapes ?? record.grape_variety;
+  const displayCountry = resolved?.country ?? record.wine_country;
+  const hasWineId = !!(record.wine_id && wineData?.id);
 
-  return (
-    <div className="rounded-3xl bg-surface/60 backdrop-blur-2xl border border-white/5 overflow-hidden shadow-xl">
-      <div className="px-5 pt-5 pb-3">
-        <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Wine Info</p>
-      </div>
+  const chips = [
+    displayType && (TYPE_KO[displayType] ?? displayType),
+    displayCountry,
+    displayGrapes,
+    resolved?.alcohol,
+  ].filter(Boolean);
 
-      {/* 기본 정보 (항상 표시) */}
-      <div className="px-5 pb-4 flex flex-col gap-2.5">
-        {record.wine_type && (
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-zinc-500">종류</span>
-            <span className="text-sm text-white font-light">{TYPE_KO[record.wine_type] ?? record.wine_type}</span>
-          </div>
-        )}
-        {(hasVivino ? wineData?.vivino_grapes : record.grape_variety) && (
-          <div className="flex items-start justify-between gap-4">
-            <span className="text-xs text-zinc-500 flex-shrink-0 pt-0.5">품종</span>
-            <span className="text-sm text-white font-light text-right">{hasVivino ? wineData!.vivino_grapes : record.grape_variety}</span>
-          </div>
-        )}
-        {record.wine_country && (
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-zinc-500">국가</span>
-            <span className="text-sm text-white font-light">{record.wine_country}</span>
-          </div>
-        )}
-        {record.wine_vintage && (
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-zinc-500">빈티지</span>
-            <span className="text-sm text-white font-light">{record.wine_vintage}</span>
+  if (chips.length === 0 && !wineData?.vivino_rating) return null;
+
+  const inner = (
+    <div className="rounded-2xl bg-surface/50 backdrop-blur-xl border border-white/5 px-4 py-3.5 flex items-center gap-3">
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-wrap gap-1.5">
+          {chips.map((c, i) => (
+            <span key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-white/8 text-zinc-300 border border-white/5">{c}</span>
+          ))}
+        </div>
+        {wineData?.vivino_rating != null && (
+          <div className="flex items-center gap-1.5 mt-1.5">
+            <span className="text-amber-400 text-xs font-medium">★ {wineData.vivino_rating}</span>
+            {wineData.vivino_reviews != null && (
+              <span className="text-zinc-600 text-[10px]">({wineData.vivino_reviews.toLocaleString()})</span>
+            )}
           </div>
         )}
       </div>
-
-      {/* Vivino 확장 정보 */}
-      {hasVivino && (
-        <>
-          <div className="border-t border-white/5 mx-5" />
-          <div className="px-5 py-4 flex flex-col gap-2.5">
-            {wineData?.vivino_winery && (
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-zinc-500">와이너리</span>
-                <span className="text-sm text-white font-light">{wineData.vivino_winery}</span>
-              </div>
-            )}
-            {wineData?.vivino_region && (
-              <div className="flex items-start justify-between gap-4">
-                <span className="text-xs text-zinc-500 flex-shrink-0 pt-0.5">지역</span>
-                <span className="text-sm text-white font-light text-right">{wineData.vivino_region}</span>
-              </div>
-            )}
-            {wineData?.vivino_style && (
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-zinc-500">스타일</span>
-                <span className="text-sm text-white font-light">{wineData.vivino_style}</span>
-              </div>
-            )}
-            {wineData?.vivino_alcohol && (
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-zinc-500">도수</span>
-                <span className="text-sm text-white font-light">{wineData.vivino_alcohol}</span>
-              </div>
-            )}
-            {wineData?.vivino_rating != null && (
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-zinc-500">Vivino 평점</span>
-                <span className="text-sm font-medium">
-                  <span className="text-amber-400">★ {wineData.vivino_rating}</span>
-                  {wineData.vivino_reviews != null && (
-                    <span className="text-zinc-500 font-light ml-1">({wineData.vivino_reviews.toLocaleString()})</span>
-                  )}
-                </span>
-              </div>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* 와인 설명 */}
-      {(wineData?.vivino_description || wineData?.description) && (
-        <>
-          <div className="border-t border-white/5 mx-5" />
-          <div className="px-5 py-4">
-            <p className="text-zinc-300 text-sm font-light leading-relaxed">{wineData?.vivino_description || wineData?.description}</p>
-          </div>
-        </>
-      )}
-
-      {/* Vivino 링크 */}
-      {wineData?.vivino_url && (
-        <>
-          <div className="border-t border-white/5 mx-5" />
-          <a
-            href={wineData.vivino_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 px-5 py-3.5 text-sm text-accent hover:bg-white/5 transition-colors font-light"
-          >
-            Vivino에서 보기 →
-          </a>
-        </>
+      {hasWineId && (
+        <span className="text-zinc-500 text-lg flex-shrink-0">›</span>
       )}
     </div>
   );
+
+  if (hasWineId) {
+    return <Link href={`/wines/${record.wine_id}`}>{inner}</Link>;
+  }
+  return inner;
 }
 
 export default function DiaryDetail({ record, readOnly = false, wineData = null }: { record: WineRecord; readOnly?: boolean; wineData?: WineData | null }) {
   const photos: string[] = record.photos ?? [];
   const foods: { name: string }[] = (record.foods as { name: string }[]) ?? [];
   const companions: string[] = record.companions ?? [];
+  const tags: string[] = record.tags ?? [];
 
   const [currentPhoto, setCurrentPhoto] = useState(0);
   const [lightbox, setLightbox] = useState<number | null>(null);
@@ -177,10 +130,24 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
   const bgPhoto = photos[currentPhoto] ?? photos[0];
   const hasPhoto = photos.length > 0;
 
+  // 날짜 + 장소 텍스트
+  const dateStr = new Date(record.drunk_at).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
+  const placeStr = record.place_name || record.location;
+
+  // 평점 계산
+  const scores = [record.rating, record.value_score, record.pairing_score].filter((v): v is number => v != null);
+  const avg = scores.length ? scores.reduce((a, b) => a + Number(b), 0) / scores.length : null;
+
+  // 가격 텍스트
+  const priceText = record.price != null ? (() => {
+    const unit = record.price_unit === "glass" ? "/잔" : record.price_type === "retail" ? " (소매)" : record.price_type === "market" ? " (매장)" : "";
+    return `${record.price.toLocaleString()}원${unit}`;
+  })() : null;
+
   return (
     <div className="relative min-h-screen bg-black">
 
-      {/* ── 블러 배경 (사진 컬러 확장) ── */}
+      {/* ── 블러 배경 ── */}
       {bgPhoto && (
         <div className="fixed inset-0 z-0 pointer-events-none transition-all duration-1000 ease-out" aria-hidden="true">
           <img src={bgPhoto} alt="" className="w-full h-full object-cover scale-150 blur-3xl saturate-200 opacity-40 mix-blend-screen" />
@@ -201,7 +168,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                 style={{ overflowX: "scroll", scrollbarWidth: "none", touchAction: "pan-x pan-y" } as React.CSSProperties}
               >
                 {photos.map((url, i) => (
-                  <div key={i} className="relative flex-shrink-0 snap-center cursor-pointer" style={{ width: "100svw", height: "68vh" }} onClick={() => setLightbox(i)}>
+                  <div key={i} className="relative flex-shrink-0 snap-center cursor-pointer" style={{ width: "100svw", height: "60vh" }} onClick={() => setLightbox(i)}>
                     <img src={url} alt="" className="w-full h-full object-cover" />
                   </div>
                 ))}
@@ -210,8 +177,8 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
               <div className="absolute top-0 inset-x-0 h-36 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
               <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-black to-transparent pointer-events-none" />
 
-              {/* 와인 이름 + 빈티지 + 원본명 + 날짜 */}
-              <div className="absolute bottom-0 inset-x-0 px-5 pb-7 z-10 pointer-events-none">
+              {/* 와인 이름 오버레이 */}
+              <div className="absolute bottom-0 inset-x-0 px-5 pb-6 z-10 pointer-events-none">
                 <div className="flex items-baseline gap-2 flex-wrap">
                   <h1 className="text-3xl font-bold text-white leading-tight drop-shadow-lg">{record.name}</h1>
                   {record.wine_vintage && (
@@ -221,14 +188,10 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                 {record.wine_name_original && (
                   <p className="text-sm text-white/60 italic mt-0.5 drop-shadow">{record.wine_name_original}</p>
                 )}
-                <p className="text-zinc-400 text-sm mt-1.5 drop-shadow">
-                  {new Date(record.drunk_at).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })}
-                  {record.location && ` · ${record.location}`}
-                </p>
               </div>
 
               {photos.length > 1 && (
-                <div className="absolute bottom-4 inset-x-0 flex justify-center gap-1.5 z-10 pointer-events-none">
+                <div className="absolute bottom-3 inset-x-0 flex justify-center gap-1.5 z-10 pointer-events-none">
                   {photos.map((_, i) => (
                     <div key={i} className={`h-1 rounded-full transition-all duration-300 ${i === currentPhoto ? "w-5 bg-white" : "w-1 bg-white/40"}`} />
                   ))}
@@ -236,7 +199,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
               )}
             </>
           ) : (
-            <div className="relative flex items-end px-5 pb-7 bg-surface border-b border-white/5" style={{ height: "35vh" }}>
+            <div className="relative flex items-end px-5 pb-6 bg-surface border-b border-white/5" style={{ height: "30vh" }}>
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                 <div className="w-20 h-20 rounded-full bg-white/5 border border-white/5 flex items-center justify-center">
                   <svg className="w-10 h-10 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1}>
@@ -246,23 +209,19 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
               </div>
               <div className="relative z-10 w-full">
                 <div className="flex items-baseline gap-2 flex-wrap">
-                  <h1 className="text-3xl font-serif font-medium text-white leading-tight drop-shadow-lg">{record.name}</h1>
+                  <h1 className="text-3xl font-bold text-white leading-tight">{record.name}</h1>
                   {record.wine_vintage && (
-                    <span className="text-xl text-white/70 font-light drop-shadow">{record.wine_vintage}</span>
+                    <span className="text-xl text-white/70 font-light">{record.wine_vintage}</span>
                   )}
                 </div>
                 {record.wine_name_original && (
-                  <p className="text-sm text-white/60 italic mt-0.5 drop-shadow font-light">{record.wine_name_original}</p>
+                  <p className="text-sm text-white/60 italic mt-0.5">{record.wine_name_original}</p>
                 )}
-                <p className="text-zinc-400 text-sm mt-1.5 drop-shadow font-light">
-                  {new Date(record.drunk_at).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })}
-                  {record.location && ` · ${record.location}`}
-                </p>
               </div>
             </div>
           )}
 
-          {/* 헤더 — 뒤로 / 수정 / 삭제 (또는 공유 브랜딩) */}
+          {/* 헤더 — 뒤로 / 수정 / 삭제 */}
           <div className="absolute top-0 inset-x-0 px-4 pt-12 flex items-center justify-between z-20 pointer-events-none">
             {readOnly ? (
               <span className="text-sm font-semibold text-white/70 tracking-widest">winerary</span>
@@ -283,115 +242,123 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
           </div>
         </div>
 
-        {/* ── 컨텐츠 영역 — 벤토 그리드 레이아웃 ── */}
-        <div className={`flex flex-col gap-5 px-4 pt-6 bg-transparent relative z-20 ${readOnly ? "pb-36" : "pb-28"}`}>
+        {/* ── 컨텐츠 ── */}
+        <div className={`flex flex-col gap-4 px-4 pt-5 bg-transparent relative z-20 ${readOnly ? "pb-36" : "pb-28"}`}>
+
+          {/* 날짜 · 장소 */}
+          <div className="flex items-center gap-2 text-sm text-zinc-400">
+            <span>{dateStr}</span>
+            {placeStr && (
+              <>
+                <span className="text-zinc-600">·</span>
+                <span className="truncate">{placeStr}</span>
+              </>
+            )}
+          </div>
 
           {/* 링크 공유 버튼 */}
           {!readOnly && record.visibility === "link" && (
             <ShareButton id={record.id} />
           )}
 
-          {/* 와인 정보 섹션 */}
-          <WineInfoSection record={record} wineData={wineData} />
+          {/* 와인 카드 (컴팩트) */}
+          <WineCard record={record} wineData={wineData} />
 
-          {/* ── 벤토 그리드 통계 패널 ── */}
-          <div className="grid grid-cols-2 gap-3 mt-2">
-            {/* 1. 종합 평점 (Full Width Bento) */}
-            {(record.rating || record.value_score || record.pairing_score) && (() => {
-              const scores = [record.rating, record.value_score, record.pairing_score].filter((v): v is number => v != null);
-              const avg = scores.length ? scores.reduce((a, b) => a + Number(b), 0) / scores.length : null;
-              if (avg == null) return null;
-              return (
-                <div className="col-span-2 flex items-center justify-between p-6 rounded-[28px] bg-surface/80 border border-white/5 shadow-2xl backdrop-blur-2xl relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-transparent pointer-events-none" />
-                  <div className="flex flex-col relative z-10 gap-2">
-                    <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Overall Score</span>
-                    <div className="flex items-center gap-1">{renderStars(avg, 5)}</div>
-                  </div>
-                  <span className="text-5xl font-serif font-bold text-white tracking-tighter relative z-10 drop-shadow-lg p-1">{avg.toFixed(1)}</span>
-                </div>
-              );
-            })()}
-
-            {/* 2. 세부 지표 (Columns) */}
-            <div className="col-span-2 grid grid-cols-3 gap-2 p-2 rounded-[28px] bg-black/40 border border-white/5 backdrop-blur-xl shadow-inner">
-              {record.rating && (
-                <div className="flex flex-col items-center justify-center py-5 px-2 rounded-[20px] bg-surface/60 border border-white/5 shadow-md">
-                  <span className="text-[9px] font-semibold text-zinc-500 tracking-[0.2em] mb-1.5 uppercase">Taste</span>
-                  <span className="text-xl font-bold text-white">{Number(record.rating).toFixed(1)}</span>
-                </div>
-              )}
-              {record.value_score && (
-                <div className="flex flex-col items-center justify-center py-5 px-2 rounded-[20px] bg-surface/60 border border-white/5 shadow-md">
-                  <span className="text-[9px] font-semibold text-zinc-500 tracking-[0.2em] mb-1.5 uppercase">Value</span>
-                  <span className="text-xl font-bold text-white">{Number(record.value_score).toFixed(1)}</span>
-                </div>
-              )}
-              {record.pairing_score && (
-                <div className="flex flex-col items-center justify-center py-5 px-2 rounded-[20px] bg-surface/60 border border-white/5 shadow-md">
-                  <span className="text-[9px] font-semibold text-zinc-500 tracking-[0.2em] mb-1.5 uppercase">Pairing</span>
-                  <span className="text-xl font-bold text-white">{record.pairing_score}</span>
-                </div>
-              )}
-            </div>
-
-            {/* 3. 구매 가격 */}
-            {record.price != null && (
-              <div className="col-span-2 flex items-center justify-between p-5 rounded-3xl bg-surface/60 border border-white/5 backdrop-blur-xl shadow-lg mt-1">
-                <span className="text-xs font-medium text-zinc-400 tracking-wider">구매 가격</span>
-                <span className="text-xl font-serif font-bold text-white">
-                  {record.price.toLocaleString()}
-                  <span className="text-sm font-light text-zinc-500 ml-1 tracking-widest">KRW</span>
-                </span>
-              </div>
-            )}
-
-            {/* 4. 재구매 의사 */}
-            {record.repurchase_intent && (
-              <div className="col-span-2 flex items-center justify-between p-5 rounded-3xl bg-surface/60 border border-white/5 backdrop-blur-xl shadow-lg mt-1">
-                <span className="text-xs font-medium text-zinc-400 tracking-wider">재구매 의사</span>
-                <span className="text-lg font-medium text-white">
-                  {{ yes: "🔄 완전 있음", maybe: "🤔 중간", no: "👋 안마실듯" }[record.repurchase_intent]}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* 페어링 음식 */}
-          {foods.length > 0 && (
-            <div className="rounded-3xl bg-surface/40 backdrop-blur-xl border border-white/5 p-5 shadow-lg mt-2">
-              <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em] mb-3">Pairing Food</p>
-              <div className="flex gap-2 flex-wrap">
-                {foods.map((f, i) => (
-                  <span key={i} className="px-4 py-2 rounded-2xl bg-white/5 border border-white/5 text-zinc-200 text-sm font-light shadow-sm tracking-wide">{f.name}</span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 함께한 사람 */}
-          {companions.length > 0 && (
-            <div className="rounded-3xl bg-surface/40 backdrop-blur-xl border border-white/5 p-5 shadow-lg mt-1">
-              <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em] mb-2">Companions</p>
-              <p className="text-zinc-200 text-sm font-light tracking-wide">{companions.join(", ")}</p>
-            </div>
-          )}
-
-          {/* 메모 */}
+          {/* ── 테이스팅 노트 (핵심 컨텐츠) ── */}
           {record.memo && (
-            <div className="rounded-3xl bg-surface/60 backdrop-blur-2xl border border-white/5 p-6 shadow-xl mt-1 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-                <svg className="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+            <div className="rounded-2xl bg-surface/60 backdrop-blur-2xl border border-white/5 p-5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-3 opacity-[0.06] pointer-events-none">
+                <svg className="w-14 h-14 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
               </div>
-              <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em] mb-3 relative z-10">Tasting Note</p>
-              <p className="text-zinc-200 text-[15px] font-light leading-relaxed whitespace-pre-wrap relative z-10 tracking-wide">{record.memo}</p>
+              <p className="text-zinc-200 text-[15px] font-light leading-relaxed whitespace-pre-wrap relative z-10">{record.memo}</p>
+            </div>
+          )}
+
+          {/* ── 평점 ── */}
+          {avg != null && (
+            <div className="rounded-2xl bg-surface/60 backdrop-blur-2xl border border-white/5 overflow-hidden">
+              {/* 종합 */}
+              <div className="flex items-center justify-between p-5 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-accent/8 to-transparent pointer-events-none" />
+                <div className="flex flex-col relative z-10 gap-1.5">
+                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">My Rating</span>
+                  <div className="flex items-center gap-1">{renderStars(avg, 5)}</div>
+                </div>
+                <span className="text-4xl font-bold text-white relative z-10">{avg.toFixed(1)}</span>
+              </div>
+              {/* 세부 */}
+              <div className="grid grid-cols-3 border-t border-white/5">
+                {record.rating != null && (
+                  <div className="flex flex-col items-center py-4 border-r border-white/5 last:border-r-0">
+                    <span className="text-[9px] font-semibold text-zinc-500 tracking-widest uppercase mb-1">Taste</span>
+                    <span className="text-lg font-bold text-white">{Number(record.rating).toFixed(1)}</span>
+                  </div>
+                )}
+                {record.value_score != null && (
+                  <div className="flex flex-col items-center py-4 border-r border-white/5 last:border-r-0">
+                    <span className="text-[9px] font-semibold text-zinc-500 tracking-widest uppercase mb-1">Value</span>
+                    <span className="text-lg font-bold text-white">{Number(record.value_score).toFixed(1)}</span>
+                  </div>
+                )}
+                {record.pairing_score != null && (
+                  <div className="flex flex-col items-center py-4">
+                    <span className="text-[9px] font-semibold text-zinc-500 tracking-widest uppercase mb-1">Pairing</span>
+                    <span className="text-lg font-bold text-white">{record.pairing_score}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── 경험 정보 그리드 ── */}
+          {(priceText || record.repurchase_intent || foods.length > 0 || companions.length > 0) && (
+            <div className="rounded-2xl bg-surface/40 backdrop-blur-xl border border-white/5 overflow-hidden divide-y divide-white/5">
+              {/* 가격 + 재구매 */}
+              {(priceText || record.repurchase_intent) && (
+                <div className="flex divide-x divide-white/5">
+                  {priceText && (
+                    <div className="flex-1 px-4 py-3.5">
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Price</p>
+                      <p className="text-sm text-white font-medium">{priceText}</p>
+                    </div>
+                  )}
+                  {record.repurchase_intent && (
+                    <div className="flex-1 px-4 py-3.5">
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Repurchase</p>
+                      <p className="text-sm text-white font-medium">
+                        {{ yes: "👍 재구매 의사 있음", maybe: "🤔 고민 중", no: "👋 다음에는 패스" }[record.repurchase_intent]}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 페어링 음식 */}
+              {foods.length > 0 && (
+                <div className="px-4 py-3.5">
+                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-2">Food Pairing</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {foods.map((f, i) => (
+                      <span key={i} className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 text-zinc-200 text-sm font-light">{f.name}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 함께한 사람 */}
+              {companions.length > 0 && (
+                <div className="px-4 py-3.5">
+                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Companions</p>
+                  <p className="text-zinc-200 text-sm font-light">{companions.join(", ")}</p>
+                </div>
+              )}
             </div>
           )}
 
           {/* 태그 */}
-          {(record.tags ?? []).length > 0 && (
+          {tags.length > 0 && (
             <div className="flex gap-2 flex-wrap">
-              {(record.tags ?? []).map((tag, i) => (
+              {tags.map((tag, i) => (
                 <span key={i} className="px-3 py-1.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-300 text-xs font-light">
                   #{tag}
                 </span>
@@ -405,7 +372,6 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
       {/* ── 풀스크린 라이트박스 ── */}
       {lightbox !== null && (
         <div className="fixed inset-0 z-50 bg-black/95 flex flex-col" onClick={() => setLightbox(null)}>
-          {/* 사진 스와이프 */}
           <div
             ref={lbRef}
             className="flex-1 flex snap-x snap-mandatory overflow-x-auto"
@@ -423,8 +389,6 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
               </div>
             ))}
           </div>
-
-          {/* 인디케이터 + 닫기 버튼 */}
           <div className="flex flex-col items-center gap-3 pb-24 pt-4">
             {photos.length > 1 && (
               <div className="flex justify-center gap-1.5">

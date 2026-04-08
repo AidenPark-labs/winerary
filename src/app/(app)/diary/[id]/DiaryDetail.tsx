@@ -228,16 +228,25 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
                 {placeStr}
               </p>
             )}
-            {tags.length > 0 && (
-              <div className="flex gap-1.5 flex-wrap">
-                {tags.map((tag, i) => (
-                  <span key={i} className="px-2 py-1 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[10px] font-medium">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
+
+          {/* ━━━━━━━━━━ Tags ━━━━━━━━━━ */}
+          {tags.length > 0 && (
+            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
+              <div className="px-5 pt-4 pb-2">
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Tags</p>
+              </div>
+              <div className="px-5 pb-3">
+                <div className="flex gap-1.5 flex-wrap">
+                  {tags.map((tag, i) => (
+                    <span key={i} className="px-3 py-1.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[11px] font-medium">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ━━━━━━━━━━ 1. Wine ━━━━━━━━━━ */}
           {(() => {
@@ -330,7 +339,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
           {foods.length > 0 && (
             <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
               <div className="px-5 pt-4 pb-2">
-                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Pairing</p>
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Pairing Food</p>
               </div>
               <div className="px-5 pb-3">
                 <div className="flex gap-1.5 flex-wrap">

@@ -228,20 +228,20 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                 <div className="flex flex-col divide-y divide-white/10">
                   {displayType && (
                     <div className="flex items-center justify-between px-5 py-3">
-                      <span className="text-xs text-zinc-400">종류</span>
+                      <span className="text-xs text-zinc-400">타입</span>
                       <span className="text-sm text-white font-medium">{TYPE_KO[displayType] ?? displayType}</span>
-                    </div>
-                  )}
-                  {displayCountry && (
-                    <div className="flex items-center justify-between px-5 py-3">
-                      <span className="text-xs text-zinc-400">국가</span>
-                      <span className="text-sm text-white font-medium">{displayCountry}</span>
                     </div>
                   )}
                   {displayGrapes && (
                     <div className="flex items-center justify-between px-5 py-3">
                       <span className="text-xs text-zinc-400">품종</span>
                       <span className="text-sm text-white font-medium text-right">{displayGrapes}</span>
+                    </div>
+                  )}
+                  {displayCountry && (
+                    <div className="flex items-center justify-between px-5 py-3">
+                      <span className="text-xs text-zinc-400">국가</span>
+                      <span className="text-sm text-white font-medium">{displayCountry}</span>
                     </div>
                   )}
                   {resolved?.alcohol && (

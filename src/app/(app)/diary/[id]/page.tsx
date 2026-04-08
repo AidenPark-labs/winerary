@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import DiaryDetail from "./DiaryDetail";
-import type { WineRecord, RecordEvaluation } from "@/types";
+import type { WineRecord, RecordEvaluation, LinkedRecord } from "@/types";
 
 export default async function DiaryDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -80,6 +80,52 @@ export default async function DiaryDetailPage({ params }: { params: Promise<{ id
     // 평가 테이블 조회 실패 시 무시
   }
 
+  // 연결된 경험 기록 조회
+  let linkedRecords: LinkedRecord[] = [];
+  try {
+    const { data: myLink } = await supabase
+      .from("shared_experience_records")
+      .select("experience_id")
+      .eq("record_id", id)
+      .maybeSingle();
+
+    if (myLink) {
+      const { data: siblings } = await supabase
+        .from("shared_experience_records")
+        .select("record_id")
+        .eq("experience_id", myLink.experience_id)
+        .neq("record_id", id);
+
+      if (siblings && siblings.length > 0) {
+        const siblingIds = siblings.map((s: { record_id: string }) => s.record_id);
+        const { data: siblingRecords } = await supabase
+          .from("wine_records")
+          .select("id, name, photos, rating, value_score, pairing_score, memo, repurchase_intent, drunk_at, user_id")
+          .in("id", siblingIds)
+          .is("deleted_at", null);
+
+        for (const sr of siblingRecords ?? []) {
+          const { data: profile } = await supabase.from("profiles").select("nickname").eq("id", sr.user_id).maybeSingle();
+          linkedRecords.push({
+            record_id: sr.id,
+            wine_name: sr.name,
+            photos: sr.photos ?? [],
+            rating: sr.rating,
+            value_score: sr.value_score,
+            pairing_score: sr.pairing_score,
+            memo: sr.memo,
+            repurchase_intent: sr.repurchase_intent,
+            drunk_at: sr.drunk_at,
+            owner_id: sr.user_id,
+            owner_nickname: profile?.nickname ?? "알 수 없음",
+          });
+        }
+      }
+    }
+  } catch {
+    // 연결 조회 실패 시 무시
+  }
+
   return (
     <DiaryDetail
       record={record as WineRecord}
@@ -90,6 +136,7 @@ export default async function DiaryDetailPage({ params }: { params: Promise<{ id
       currentUserId={user?.id ?? null}
       ownerNickname={ownerNickname}
       currentNickname={currentNickname}
+      linkedRecords={linkedRecords}
     />
   );
 }

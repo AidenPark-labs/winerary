@@ -263,6 +263,189 @@ export async function upsertRecordEvaluation(
   return { success: true };
 }
 
+// ─── Shared Experience (경험 연결) ────────────────────────────────────────────
+
+export async function linkRecords(myRecordId: string, targetRecordId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  // 내 기록인지 확인
+  const { data: myRecord } = await supabase
+    .from("wine_records")
+    .select("id, user_id")
+    .eq("id", myRecordId)
+    .eq("user_id", user.id)
+    .single();
+  if (!myRecord) return { error: "본인 기록만 연결할 수 있습니다" };
+
+  // 대상 기록 존재 확인
+  const { data: targetRecord } = await supabase
+    .from("wine_records")
+    .select("id")
+    .eq("id", targetRecordId)
+    .is("deleted_at", null)
+    .single();
+  if (!targetRecord) return { error: "대상 기록을 찾을 수 없습니다" };
+
+  // 이미 같은 experience에 있는지 확인
+  const { data: myLinks } = await supabase
+    .from("shared_experience_records")
+    .select("experience_id")
+    .eq("record_id", myRecordId);
+  const { data: targetLinks } = await supabase
+    .from("shared_experience_records")
+    .select("experience_id")
+    .eq("record_id", targetRecordId);
+
+  const myExpId = myLinks?.[0]?.experience_id ?? null;
+  const targetExpId = targetLinks?.[0]?.experience_id ?? null;
+
+  // 이미 같은 그룹
+  if (myExpId && targetExpId && myExpId === targetExpId) {
+    return { success: true, experienceId: myExpId };
+  }
+
+  let experienceId: string;
+
+  if (myExpId && !targetExpId) {
+    // 내 기록이 이미 그룹에 있으면 대상을 합류
+    experienceId = myExpId;
+    const { error } = await supabase.from("shared_experience_records").insert({
+      experience_id: experienceId,
+      record_id: targetRecordId,
+      linked_by: user.id,
+    });
+    if (error) return { error: error.message };
+  } else if (!myExpId && targetExpId) {
+    // 대상이 이미 그룹에 있으면 내 기록을 합류
+    experienceId = targetExpId;
+    const { error } = await supabase.from("shared_experience_records").insert({
+      experience_id: experienceId,
+      record_id: myRecordId,
+      linked_by: user.id,
+    });
+    if (error) return { error: error.message };
+  } else if (myExpId && targetExpId) {
+    // 둘 다 다른 그룹 → 대상 그룹의 기록들을 내 그룹으로 이동
+    experienceId = myExpId;
+    const { data: targetMembers } = await supabase
+      .from("shared_experience_records")
+      .select("record_id, linked_by")
+      .eq("experience_id", targetExpId);
+    for (const m of targetMembers ?? []) {
+      await supabase.from("shared_experience_records").upsert({
+        experience_id: experienceId,
+        record_id: m.record_id,
+        linked_by: m.linked_by,
+      }, { onConflict: "experience_id,record_id" });
+    }
+    // 빈 그룹 삭제
+    await supabase.from("shared_experiences").delete().eq("id", targetExpId);
+  } else {
+    // 둘 다 그룹 없음 → 새 그룹 생성
+    const { data: exp, error: expErr } = await supabase
+      .from("shared_experiences")
+      .insert({})
+      .select("id")
+      .single();
+    if (expErr || !exp) return { error: expErr?.message ?? "그룹 생성 실패" };
+    experienceId = exp.id;
+    const { error } = await supabase.from("shared_experience_records").insert([
+      { experience_id: experienceId, record_id: myRecordId, linked_by: user.id },
+      { experience_id: experienceId, record_id: targetRecordId, linked_by: user.id },
+    ]);
+    if (error) return { error: error.message };
+  }
+
+  revalidatePath(`/diary/${myRecordId}`);
+  revalidatePath(`/diary/${targetRecordId}`);
+  return { success: true, experienceId };
+}
+
+export async function unlinkRecord(recordId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  // 내 기록인지 확인
+  const { data: record } = await supabase
+    .from("wine_records")
+    .select("id, user_id")
+    .eq("id", recordId)
+    .eq("user_id", user.id)
+    .single();
+  if (!record) return { error: "본인 기록만 연결 해제할 수 있습니다" };
+
+  // 현재 연결 찾기
+  const { data: link } = await supabase
+    .from("shared_experience_records")
+    .select("id, experience_id")
+    .eq("record_id", recordId)
+    .single();
+  if (!link) return { error: "연결된 경험이 없습니다" };
+
+  // 삭제
+  await supabase.from("shared_experience_records").delete().eq("id", link.id);
+
+  // 남은 멤버 확인 → 1개 이하면 그룹 자체 삭제
+  const { count } = await supabase
+    .from("shared_experience_records")
+    .select("id", { count: "exact", head: true })
+    .eq("experience_id", link.experience_id);
+
+  if ((count ?? 0) <= 1) {
+    // 남은 1개도 삭제하고 그룹 삭제 (CASCADE로 자동 처리)
+    await supabase.from("shared_experiences").delete().eq("id", link.experience_id);
+  }
+
+  revalidatePath(`/diary/${recordId}`);
+  return { success: true };
+}
+
+export async function searchLinkableRecords(recordId: string, query: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized", records: [] };
+
+  // 내 기록의 날짜 조회
+  const { data: myRecord } = await supabase
+    .from("wine_records")
+    .select("drunk_at")
+    .eq("id", recordId)
+    .eq("user_id", user.id)
+    .single();
+  if (!myRecord) return { error: "기록을 찾을 수 없습니다", records: [] };
+
+  // 같은 날짜의 다른 유저 기록 검색 (닉네임 or 와인명으로 필터)
+  const { data: results } = await supabase
+    .from("wine_records")
+    .select("id, name, photos, drunk_at, user_id, profiles:user_id(nickname)")
+    .eq("drunk_at", myRecord.drunk_at)
+    .neq("user_id", user.id)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  const filtered = (results ?? [])
+    .map((r: Record<string, unknown>) => {
+      const profile = r.profiles as { nickname: string } | null;
+      return {
+        id: r.id as string,
+        name: r.name as string,
+        photos: (r.photos as string[]) ?? [],
+        drunk_at: r.drunk_at as string,
+        owner_nickname: profile?.nickname ?? "알 수 없음",
+      };
+    })
+    .filter((r) => {
+      if (!query) return true;
+      return r.name.includes(query) || r.owner_nickname.includes(query);
+    });
+
+  return { records: filtered };
+}
+
 export async function generateInviteCode(recordId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

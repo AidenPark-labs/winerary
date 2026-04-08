@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
-import type { WineRecord, RecordEvaluation } from "@/types";
+import type { WineRecord, RecordEvaluation, LinkedRecord } from "@/types";
 import { resolveWineDisplay } from "@/lib/wine-display";
 import DeleteButton from "./DeleteButton";
 import ShareButton from "./ShareButton";
@@ -94,7 +94,7 @@ const WINE_TYPE_COLORS: Record<string, string> = {
   sparkling: "bg-[#F3E5AB]", fortified: "bg-[#4A0E4E]", other: "bg-zinc-400",
 };
 
-export default function DiaryDetail({ record, readOnly = false, wineData = null, evaluations = [], myEvaluation = null, currentUserId = null, ownerNickname = "작성자", currentNickname = "" }: {
+export default function DiaryDetail({ record, readOnly = false, wineData = null, evaluations = [], myEvaluation = null, currentUserId = null, ownerNickname = "작성자", currentNickname = "", linkedRecords = [] }: {
   record: WineRecord;
   readOnly?: boolean;
   wineData?: WineData | null;
@@ -103,6 +103,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
   currentUserId?: string | null;
   ownerNickname?: string;
   currentNickname?: string;
+  linkedRecords?: LinkedRecord[];
 }) {
   const photos: string[] = record.photos ?? [];
   const foods: { name: string }[] = (record.foods as { name: string }[]) ?? [];
@@ -262,6 +263,29 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
             )}
           </div>
 
+          {/* ━━━━━━━━━━ 연결된 경험 ━━━━━━━━━━ */}
+          {!readOnly && (
+            <div className="flex items-center gap-2">
+              {linkedRecords.length > 0 ? (
+                <div className="flex-1 flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-blue-500/10 border border-blue-500/20">
+                  <span className="text-blue-400 text-xs">🔗</span>
+                  <span className="text-xs text-blue-300 font-light flex-1">
+                    {linkedRecords.map((lr) => lr.owner_nickname).join(", ")}님과 연결됨
+                  </span>
+                  <Link href={`/diary/${record.id}/link`} className="text-[11px] text-blue-400 hover:text-blue-300">관리</Link>
+                </div>
+              ) : (
+                <Link
+                  href={`/diary/${record.id}/link`}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
+                >
+                  <span className="text-zinc-500 text-xs">🔗</span>
+                  <span className="text-xs text-zinc-500 font-light">함께한 경험 연결하기</span>
+                </Link>
+              )}
+            </div>
+          )}
+
           {/* ━━━━━━━━━━ 1. Wine ━━━━━━━━━━ */}
           {(() => {
             const resolved = wineData ? resolveWineDisplay(wineData) : null;
@@ -395,6 +419,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
             currentUserId={currentUserId}
             ownerNickname={ownerNickname}
             currentNickname={currentNickname}
+            linkedRecords={linkedRecords}
           />
         </div>
 
@@ -536,7 +561,7 @@ function EvalCard({ label, isAuthor, rating, valueScore, pairingScore, memo, rep
 
 // ─── Evaluation Section ──────────────────────────────────────────────────────
 
-function EvaluationSection({ record, readOnly, evaluations, myEvaluation, currentUserId, ownerNickname, currentNickname }: {
+function EvaluationSection({ record, readOnly, evaluations, myEvaluation, currentUserId, ownerNickname, currentNickname, linkedRecords }: {
   record: WineRecord;
   readOnly: boolean;
   evaluations: RecordEvaluation[];
@@ -544,6 +569,7 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
   currentUserId: string | null;
   ownerNickname: string;
   currentNickname: string;
+  linkedRecords: LinkedRecord[];
 }) {
   const isOwner = !readOnly;
   const otherEvals = evaluations.filter((e) => e.user_id !== currentUserId);
@@ -620,7 +646,7 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
         );
       })()}
 
-      {/* 다른 평가자들 */}
+      {/* 다른 평가자들 (record_evaluations) */}
       {otherEvals.map((ev) => (
         <EvalCard
           key={ev.id}
@@ -632,6 +658,37 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
           repurchaseIntent={ev.repurchase_intent}
         />
       ))}
+
+      {/* 연결된 경험 기록의 평가 */}
+      {linkedRecords.length > 0 && linkedRecords.map((lr) => {
+        const lrAvg = calcAvgScore(lr.rating, lr.value_score, lr.pairing_score);
+        const hasScores = lr.rating != null || lr.value_score != null || lr.pairing_score != null;
+        if (!hasScores && !lr.memo && !lr.repurchase_intent) return null;
+        return (
+          <div key={lr.record_id} className="px-5 py-3.5 border-b border-white/10 last:border-b-0">
+            <div className="flex items-center justify-between mb-2.5">
+              <div className="flex items-center gap-2">
+                <p className="text-[11px] font-medium text-blue-400">{lr.owner_nickname}</p>
+                {lrAvg != null && <span className="text-sm font-bold text-blue-400">★ {lrAvg.toFixed(1)}</span>}
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400/70 border border-blue-500/20">연결</span>
+              </div>
+              <Link
+                href={`/diary/${lr.record_id}`}
+                className="text-[11px] px-2.5 py-1 rounded-lg bg-white/5 text-zinc-500 border border-white/10 hover:bg-white/10 transition-colors"
+              >
+                기록 보기
+              </Link>
+            </div>
+            <EvalCardContent
+              rating={lr.rating}
+              valueScore={lr.value_score}
+              pairingScore={lr.pairing_score}
+              memo={lr.memo}
+              repurchaseIntent={lr.repurchase_intent}
+            />
+          </div>
+        );
+      })}
 
       {/* 평가하기 버튼 (하단) */}
       {showEvaluateButton && (

@@ -105,6 +105,20 @@ export interface SessionComment {
   created_at: string
 }
 
+export interface LinkedRecord {
+  record_id: string
+  wine_name: string
+  photos: string[]
+  rating: number | null
+  value_score: number | null
+  pairing_score: number | null
+  memo: string | null
+  repurchase_intent: string | null
+  drunk_at: string
+  owner_id: string
+  owner_nickname: string
+}
+
 export interface WineSuggestion {
   wine_id?: string
   name: string

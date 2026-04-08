@@ -200,25 +200,24 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
         const rep = group[0];
         const pos = new kakao.maps.LatLng(rep.latitude, rep.longitude);
         const count = group.length;
-        const color = WINE_COLORS[rep.wine_type ?? ""] ?? WINE_COLORS.other;
 
         const wrapper = document.createElement("div");
         wrapper.style.cssText = "cursor:pointer; display:flex; flex-direction:column; align-items:center;";
 
         const circle = document.createElement("div");
         circle.style.cssText = `
-          background:${color}; color:white;
-          min-width:${count > 1 ? "32px" : "28px"}; height:${count > 1 ? "32px" : "28px"};
-          border-radius:50%;
+          background:#1c1c1e; color:#e4e4e7;
+          min-width:28px; height:28px; border-radius:14px;
           display:flex; align-items:center; justify-content:center;
-          font-size:${count > 1 ? "12px" : "14px"}; font-weight:700;
-          border:2.5px solid white; box-shadow:0 2px 8px rgba(0,0,0,0.4);
+          font-size:${count > 1 ? "11px" : "13px"}; font-weight:700;
+          border:2px solid #e11d48; box-shadow:0 2px 8px rgba(0,0,0,0.5);
+          padding:0 6px;
         `;
         circle.textContent = count > 1 ? String(count) : "";
         if (count <= 1) circle.innerHTML = "🍷";
 
         const tail = document.createElement("div");
-        tail.style.cssText = `width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid ${color}; margin-top:-1px;`;
+        tail.style.cssText = "width:2px; height:6px; background:#e11d48; border-radius:1px;";
 
         wrapper.appendChild(circle);
         wrapper.appendChild(tail);

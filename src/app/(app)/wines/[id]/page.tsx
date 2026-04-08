@@ -4,6 +4,7 @@ import Link from "next/link";
 import { resolveWineDisplay } from "@/lib/wine-display";
 import VivinoRating from "./VivinoRating";
 import WineActions from "./WineActions";
+import BackButton from "./BackButton";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드", white: "화이트", rose: "로제",
@@ -38,7 +39,7 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
     <div className="flex flex-col pb-28">
       {/* 헤더 */}
       <header className="px-5 pt-12 pb-4 flex items-center gap-3">
-        <Link href="/find" className="text-zinc-400 hover:text-zinc-200 text-2xl w-8">←</Link>
+        <BackButton />
         <h1 className="text-xl font-bold truncate">{wine.name_ko}</h1>
       </header>
 

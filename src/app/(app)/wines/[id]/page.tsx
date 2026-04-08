@@ -104,7 +104,7 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
         </div>
 
         {/* ── 컨텐츠 ── */}
-        <div className={`flex flex-col gap-4 px-4 relative z-20 pt-2 pb-16`}>
+        <div className="flex flex-col gap-4 px-4 relative z-20 pb-16" style={{ marginTop: "-5vh" }}>
 
           {/* ── 이름 카드 ── */}
           <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 px-5 py-4 shadow-2xl flex flex-col gap-1">

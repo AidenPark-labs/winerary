@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" fill="none">
+  <rect width="400" height="600" fill="#1a0a0e"/>
+  <ellipse cx="200" cy="520" rx="60" ry="8" fill="#2a1018" opacity="0.6"/>
+  <!-- base -->
+  <ellipse cx="200" cy="510" rx="50" ry="6" fill="#4a1525"/>
+  <rect x="195" y="350" width="10" height="160" fill="#4a1525"/>
+  <!-- bowl -->
+  <path d="M140 200 Q140 320 200 340 Q260 320 260 200 Z" fill="#722F37" opacity="0.9"/>
+  <path d="M145 200 Q145 300 200 320 Q220 312 235 290" fill="#8B3A42" opacity="0.3"/>
+  <!-- wine surface -->
+  <ellipse cx="200" cy="200" rx="60" ry="12" fill="#5a2030"/>
+  <!-- rim -->
+  <ellipse cx="200" cy="200" rx="60" ry="12" stroke="#6b3040" stroke-width="1.5" fill="none"/>
+  <!-- highlight -->
+  <path d="M155 220 Q155 280 180 300" stroke="#9a4050" stroke-width="1" opacity="0.4" fill="none"/>
+  <!-- label -->
+  <text x="200" y="560" text-anchor="middle" fill="#4a2030" font-family="serif" font-size="14" opacity="0.5">RED WINE</text>
+</svg>

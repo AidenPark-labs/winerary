@@ -73,42 +73,31 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
     if (fallback) similar = [...similar, ...fallback];
   }
 
-  const hasImage = !!wine.naver_image;
+  const placeholderMap: Record<string, string> = {
+    red: "/wine-placeholder-red.svg",
+    white: "/wine-placeholder-white.svg",
+    rose: "/wine-placeholder-rose.svg",
+  };
+  const heroImage = wine.naver_image || placeholderMap[wine.wine_type ?? ""] || "/wine-placeholder-default.svg";
 
   return (
     <div className="relative min-h-screen bg-black">
 
       {/* ── 블러 배경 ── */}
-      {hasImage && (
-        <div className="fixed inset-0 z-0 pointer-events-none" aria-hidden="true">
-          <img src={wine.naver_image} alt="" className="w-full h-full object-cover scale-150 blur-3xl saturate-200 opacity-30 mix-blend-screen" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/70 to-black" />
-        </div>
-      )}
+      <div className="fixed inset-0 z-0 pointer-events-none" aria-hidden="true">
+        <img src={heroImage} alt="" className="w-full h-full object-cover scale-150 blur-3xl saturate-200 opacity-30 mix-blend-screen" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/70 to-black" />
+      </div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
 
         {/* ── 이미지 히어로 ── */}
         <div className="relative overflow-visible">
-          {hasImage ? (
-            <>
-              <div className="flex items-center justify-center bg-zinc-900/50" style={{ height: "50vh" }}>
-                <img src={wine.naver_image} alt={wine.name_ko} className="w-full h-full object-contain" />
-              </div>
-              <div className="absolute top-0 inset-x-0 h-36 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
-              <div className="absolute inset-x-0 pointer-events-none" style={{ bottom: "-4rem", height: "12rem", background: "linear-gradient(to top, transparent 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.6) 60%, transparent 100%)" }} />
-            </>
-          ) : (
-            <div className="relative bg-surface border-b border-white/5" style={{ height: "20vh" }}>
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                <div className="w-16 h-16 rounded-full bg-white/5 border border-white/5 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1}>
-                    <path d="M8 22h8M12 15v7M12 15a6 6 0 0 0 6-6V3H6v6a6 6 0 0 0 6 6z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          )}
+          <div className="flex items-center justify-center bg-zinc-900/50" style={{ height: "50vh" }}>
+            <img src={heroImage} alt={wine.name_ko} className="w-full h-full object-contain" />
+          </div>
+          <div className="absolute top-0 inset-x-0 h-36 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 pointer-events-none" style={{ bottom: "-4rem", height: "12rem", background: "linear-gradient(to top, transparent 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.6) 60%, transparent 100%)" }} />
 
           {/* 헤더 — 뒤로가기 */}
           <div className="absolute top-0 inset-x-0 px-4 pt-12 flex items-center z-20 pointer-events-none">
@@ -119,7 +108,7 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
         </div>
 
         {/* ── 컨텐츠 ── */}
-        <div className={`flex flex-col gap-4 px-4 relative z-20 ${hasImage ? "-mt-12" : "pt-4"} pb-28`}>
+        <div className={`flex flex-col gap-4 px-4 relative z-20 pt-2 pb-16`}>
 
           {/* ── 이름 카드 ── */}
           <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 px-5 py-4 shadow-2xl flex flex-col gap-1">

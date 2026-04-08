@@ -321,19 +321,57 @@ export default function NewDiaryPage() {
       });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── AI 인식 후 DB 매칭 자동 검색 ──
+  // ── AI 인식 후 DB 매칭 자동 검색 (한국어 + 영문 둘 다 시도) ──
   useEffect(() => {
     if (!aiResult || aiNotFound || showSearch || fromRecordId) return;
-    const searchName = aiResult.name_original || aiResult.name || "";
-    if (searchName.length < 2) return;
+    const koName = aiResult.name || "";
+    const enName = aiResult.name_original || "";
+    if (koName.length < 2 && enName.length < 2) return;
     let cancelled = false;
     setSuggestLoading(true);
     setSuggestions(null);
-    fetch("/api/ai/suggest?q=" + encodeURIComponent(searchName))
-      .then((r) => r.json())
-      .then((data) => { if (!cancelled) setSuggestions(data.wines ?? []); })
-      .catch(() => { if (!cancelled) setSuggestions([]); })
-      .finally(() => { if (!cancelled) setSuggestLoading(false); });
+
+    async function search() {
+      const allWines: WineSuggestion[] = [];
+      const seenIds = new Set<string>();
+
+      for (const q of [koName, enName].filter(Boolean)) {
+        try {
+          const res = await fetch("/api/ai/suggest?q=" + encodeURIComponent(q));
+          const data = await res.json();
+          for (const w of data.wines ?? []) {
+            if (!seenIds.has(w.wine_id ?? w.name)) {
+              seenIds.add(w.wine_id ?? w.name);
+              allWines.push(w);
+            }
+          }
+        } catch { /* skip */ }
+        if (allWines.length >= 5) break;
+      }
+
+      // 영문 이름의 핵심 단어로도 추가 검색 (ex: "Killerman" from "Kilikanoon Killerman's Run...")
+      if (allWines.length === 0 && enName.length >= 2) {
+        const words = enName.split(/[\s']+/).filter((w: string) => w.length >= 4);
+        for (const word of words.slice(0, 3)) {
+          try {
+            const res = await fetch("/api/ai/suggest?q=" + encodeURIComponent(word));
+            const data = await res.json();
+            for (const w of data.wines ?? []) {
+              if (!seenIds.has(w.wine_id ?? w.name)) {
+                seenIds.add(w.wine_id ?? w.name);
+                allWines.push(w);
+              }
+            }
+          } catch { /* skip */ }
+          if (allWines.length >= 5) break;
+        }
+      }
+
+      if (!cancelled) setSuggestions(allWines);
+      if (!cancelled) setSuggestLoading(false);
+    }
+
+    search();
     return () => { cancelled = true; };
   }, [aiResult, aiNotFound, showSearch, fromRecordId]);
 

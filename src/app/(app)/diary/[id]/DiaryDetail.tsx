@@ -234,7 +234,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                   return nameRow;
                 })()}
                 {/* 와인 세부 정보 */}
-                <div className="flex flex-col divide-y divide-white/10">
+                <div className="flex flex-col">
                   {displayType && (
                     <div className="flex items-center justify-between px-5 py-3">
                       <span className="text-xs text-zinc-400">타입</span>
@@ -304,7 +304,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
 
           {/* ━━━━━━━━━━ 3. Experience ━━━━━━━━━━ */}
           {(priceText || placeStr || record.value_score != null) && (
-            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl divide-y divide-white/10">
+            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl flex flex-col">
               <div className="px-5 pt-4 pb-2">
                 <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Experience</p>
               </div>

@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { updateWine, deleteWine } from "./actions";
+import { updateWine, updateWineVivino, deleteWine } from "./actions";
+import type { VivinoCrawlResult, VivinoCrawlError } from "@/lib/vivino-crawler";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드 🍷", white: "화이트 🥂", rose: "로제 🌸",
@@ -69,6 +70,11 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
   const [editReviews, setEditReviews] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [crawling, setCrawling] = useState<string | null>(null);
+  const [crawlResult, setCrawlResult] = useState<Record<string, VivinoCrawlResult | VivinoCrawlError | null>>({});
+  const [crawlSaving, setCrawlSaving] = useState(false);
+  const [urlInput, setUrlInput] = useState<string | null>(null); // wine id가 키, null이면 입력 모드 아님
+  const [urlInputValue, setUrlInputValue] = useState("");
 
   function startEdit(w: Wine) {
     setEditing(w.id);
@@ -94,6 +100,64 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
       setEditing(null);
       router.refresh();
     }
+  }
+
+  async function handleCrawl(w: Wine, vivinoUrl?: string) {
+    setCrawling(w.id);
+    setCrawlResult((prev) => ({ ...prev, [w.id]: null }));
+    setUrlInput(null);
+    try {
+      const body = vivinoUrl
+        ? { vivinoUrl }
+        : { wineName: w.name_en || w.name_ko };
+      const res = await fetch("/api/admin/vivino/crawl", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      setCrawlResult((prev) => ({ ...prev, [w.id]: data }));
+    } catch {
+      setCrawlResult((prev) => ({ ...prev, [w.id]: { success: false as const, error: "네트워크 오류", step: "browser" as const } }));
+    }
+    setCrawling(null);
+  }
+
+  function startUrlInput(wineId: string) {
+    setUrlInput(wineId);
+    setUrlInputValue("");
+  }
+
+  async function handleCrawlApply(wineId: string) {
+    const result = crawlResult[wineId];
+    if (!result || !result.success) return;
+    setCrawlSaving(true);
+    const r = result as VivinoCrawlResult;
+    const res = await updateWineVivino(wineId, {
+      vivino_url: r.vivinoUrl,
+      vivino_page_url: r.vivinoUrl,
+      vivino_wine_id: r.vivinoWineId,
+      vivino_rating: r.rating,
+      vivino_reviews: r.reviews,
+      vivino_winery: r.facts.winery || null,
+      vivino_grapes: r.facts.grapes || null,
+      vivino_region: r.facts.region || null,
+      vivino_style: r.facts.style || null,
+      vivino_alcohol: r.facts.alcohol || null,
+      vivino_allergens: r.facts.allergens || null,
+      vivino_description: r.facts.description || null,
+    });
+    setCrawlSaving(false);
+    if (res.error) {
+      alert(`업데이트 실패: ${res.error}`);
+    } else {
+      setCrawlResult((prev) => { const next = { ...prev }; delete next[wineId]; return next; });
+      router.refresh();
+    }
+  }
+
+  function handleCrawlCancel(wineId: string) {
+    setCrawlResult((prev) => { const next = { ...prev }; delete next[wineId]; return next; });
   }
 
   function navigate(overrides: { page?: number; q?: string; type?: string; vivino?: string }) {
@@ -241,9 +305,25 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-zinc-500 text-[10px] uppercase tracking-wider font-semibold">Vivino 정보</span>
                     {editing !== w.id ? (
-                      <button onClick={() => startEdit(w)} className="text-[11px] px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700 transition-colors">
-                        수정
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleCrawl(w)}
+                          disabled={crawling === w.id}
+                          className="text-[11px] px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-400 border border-purple-500/30 hover:bg-purple-500/25 transition-colors disabled:opacity-50"
+                        >
+                          {crawling === w.id ? "수집 중…" : "이름으로 수집"}
+                        </button>
+                        <button
+                          onClick={() => startUrlInput(w.id)}
+                          disabled={crawling === w.id}
+                          className="text-[11px] px-2.5 py-1 rounded-lg bg-blue-500/15 text-blue-400 border border-blue-500/30 hover:bg-blue-500/25 transition-colors disabled:opacity-50"
+                        >
+                          URL로 수집
+                        </button>
+                        <button onClick={() => startEdit(w)} className="text-[11px] px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700 transition-colors">
+                          수정
+                        </button>
+                      </div>
                     ) : (
                       <div className="flex items-center gap-2">
                         {saveMsg && <span className="text-[11px] text-emerald-400">{saveMsg}</span>}
@@ -333,6 +413,101 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
                         <div className="flex items-start gap-2 mt-1">
                           <span className="text-zinc-500 text-xs w-20 flex-shrink-0 pt-0.5">Description</span>
                           <p className="text-zinc-300 text-xs leading-relaxed">{w.vivino_description}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* URL 직접 입력 */}
+                  {urlInput === w.id && (
+                    <div className="mt-3 pt-3 border-t border-zinc-700 flex items-center gap-2">
+                      <input
+                        value={urlInputValue}
+                        onChange={(e) => setUrlInputValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && urlInputValue.trim()) handleCrawl(w, urlInputValue.trim());
+                        }}
+                        placeholder="https://www.vivino.com/w/..."
+                        className="flex-1 rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => urlInputValue.trim() && handleCrawl(w, urlInputValue.trim())}
+                        className="text-[11px] px-3 py-1.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                      >
+                        수집
+                      </button>
+                      <button
+                        onClick={() => setUrlInput(null)}
+                        className="text-[11px] px-2.5 py-1.5 rounded-lg bg-zinc-800 text-zinc-400 border border-zinc-700 hover:bg-zinc-700"
+                      >
+                        취소
+                      </button>
+                    </div>
+                  )}
+
+                  {/* 수집 결과 미리보기 */}
+                  {crawlResult[w.id] && (
+                    <div className="mt-3 pt-3 border-t border-zinc-700">
+                      {crawlResult[w.id]!.success ? (() => {
+                        const r = crawlResult[w.id] as VivinoCrawlResult;
+                        return (
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-emerald-400 text-xs font-semibold">수집 완료 — {r.vivinoName}</span>
+                              <div className="flex items-center gap-2">
+                                {r.matchInfo && (
+                                  <span className="text-[10px] text-zinc-500">
+                                    매칭 {(r.matchInfo.firstMatchScore * 100).toFixed(0)}% · 교차 {(r.matchInfo.crossMatchScore * 100).toFixed(0)}% · 후보 {r.matchInfo.candidateCount}개
+                                  </span>
+                                )}
+                                <button onClick={() => handleCrawlCancel(w.id)} className="text-[11px] px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-400 border border-zinc-700 hover:bg-zinc-700">
+                                  취소
+                                </button>
+                                <button onClick={() => handleCrawlApply(w.id)} disabled={crawlSaving} className="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50">
+                                  {crawlSaving ? "저장 중…" : "업데이트"}
+                                </button>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+                              {[
+                                ["URL", r.vivinoUrl, w.vivino_page_url || w.vivino_url],
+                                ["평점", r.rating != null ? `★ ${r.rating}` : null, w.vivino_rating != null ? `★ ${w.vivino_rating}` : null],
+                                ["리뷰", r.reviews != null ? `${r.reviews.toLocaleString()}개` : null, w.vivino_reviews != null ? `${w.vivino_reviews.toLocaleString()}개` : null],
+                                ["Winery", r.facts.winery, w.vivino_winery],
+                                ["Grapes", r.facts.grapes, w.vivino_grapes],
+                                ["Region", r.facts.region, w.vivino_region],
+                                ["Style", r.facts.style, w.vivino_style],
+                                ["Alcohol", r.facts.alcohol, w.vivino_alcohol],
+                                ["Allergens", r.facts.allergens, w.vivino_allergens],
+                              ].filter(([, newVal]) => newVal).map(([label, newVal, oldVal]) => (
+                                <div key={label as string} className="flex items-start gap-2">
+                                  <span className="text-zinc-500 text-xs w-16 flex-shrink-0 pt-0.5">{label}</span>
+                                  <div className="min-w-0">
+                                    <span className="text-emerald-300 text-xs break-all">{newVal}</span>
+                                    {oldVal && oldVal !== newVal && (
+                                      <span className="text-zinc-600 text-[10px] block line-through truncate">{oldVal}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {r.facts.description && (
+                              <div className="mt-2 flex items-start gap-2">
+                                <span className="text-zinc-500 text-xs w-16 flex-shrink-0 pt-0.5">Desc</span>
+                                <p className="text-emerald-300/80 text-[11px] leading-relaxed">{r.facts.description.substring(0, 200)}{r.facts.description.length > 200 ? "…" : ""}</p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })() : (
+                        <div className="flex items-center justify-between">
+                          <span className="text-red-400 text-xs">
+                            수집 실패: {(crawlResult[w.id] as VivinoCrawlError).error}
+                          </span>
+                          <button onClick={() => handleCrawlCancel(w.id)} className="text-[11px] px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-400 border border-zinc-700 hover:bg-zinc-700">
+                            닫기
+                          </button>
                         </div>
                       )}
                     </div>

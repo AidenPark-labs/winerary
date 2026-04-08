@@ -198,13 +198,6 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
             const displayType = resolved?.wine_type ?? record.wine_type;
             const displayGrapes = resolved?.grapes ?? record.grape_variety;
             const displayCountry = resolved?.country ?? record.wine_country;
-            const wineChips = [
-              displayType && { label: TYPE_KO[displayType] ?? displayType, color: WINE_TYPE_COLORS[displayType] },
-              displayCountry && { label: displayCountry },
-              displayGrapes && { label: `🍇 ${displayGrapes}` },
-              resolved?.alcohol && { label: resolved.alcohol },
-            ].filter(Boolean) as { label: string; color?: string }[];
-
             const hasWineScores = record.rating != null || record.value_score != null;
 
             const hasWineLink = !!(record.wine_id && wineData?.id);
@@ -231,17 +224,33 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                   if (hasWineLink) return <Link href={`/wines/${record.wine_id}`}>{nameRow}</Link>;
                   return nameRow;
                 })()}
-                {/* 와인 세부 정보 칩 */}
-                {wineChips.length > 0 && (
-                  <div className="px-5 pb-3 flex gap-1.5 flex-wrap">
-                    {wineChips.map((c, i) => (
-                      <span key={i} className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium bg-white/5 border border-white/5 text-zinc-300">
-                        {c.color && <span className={`w-1.5 h-1.5 rounded-full ${c.color}`} />}
-                        {c.label}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                {/* 와인 세부 정보 */}
+                <div className="flex flex-col divide-y divide-white/10">
+                  {displayType && (
+                    <div className="flex items-center justify-between px-5 py-3">
+                      <span className="text-xs text-zinc-400">종류</span>
+                      <span className="text-sm text-white font-medium">{TYPE_KO[displayType] ?? displayType}</span>
+                    </div>
+                  )}
+                  {displayCountry && (
+                    <div className="flex items-center justify-between px-5 py-3">
+                      <span className="text-xs text-zinc-400">국가</span>
+                      <span className="text-sm text-white font-medium">{displayCountry}</span>
+                    </div>
+                  )}
+                  {displayGrapes && (
+                    <div className="flex items-center justify-between px-5 py-3">
+                      <span className="text-xs text-zinc-400">품종</span>
+                      <span className="text-sm text-white font-medium text-right">{displayGrapes}</span>
+                    </div>
+                  )}
+                  {resolved?.alcohol && (
+                    <div className="flex items-center justify-between px-5 py-3">
+                      <span className="text-xs text-zinc-400">도수</span>
+                      <span className="text-sm text-white font-medium">{resolved.alcohol}</span>
+                    </div>
+                  )}
+                </div>
                 {/* 맛 평점 */}
                 {record.rating != null && (
                   <div className="flex items-center justify-between px-5 py-3 border-t border-white/10">

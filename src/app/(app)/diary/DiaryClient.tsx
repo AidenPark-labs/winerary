@@ -353,7 +353,7 @@ function FeedCard({ record }: { record: WineRecord }) {
           {[
             record.location,
             foods.length > 0 ? `🍽 ${foods.map(f => f.name).join(", ")}` : null,
-            companions.length > 0 ? `with ${companions.map(c => `@${c}`).join(", ")}` : null,
+            companions.length > 0 ? `with ${companions.map(c => c.startsWith("@") ? c : `@${c}`).join(", ")}` : null,
           ].filter(Boolean).join(" · ")}
         </p>
         <div className="flex items-center gap-1.5 flex-wrap mt-2">

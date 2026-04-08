@@ -76,7 +76,7 @@ function PopupCarousel({ records, onClose }: { records: MapRecord[]; onClose: ()
   }, []);
 
   return (
-    <div className="absolute bottom-6 left-4 right-4 z-[1000] bg-surface/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
+    <div className="absolute bottom-24 left-4 right-4 z-[1000] bg-surface/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
       <button
         onClick={onClose}
         className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-black/40 text-zinc-400 hover:text-white hover:bg-black/60 transition-colors text-sm z-10"
@@ -198,7 +198,7 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
 
   return (
     <div className="flex flex-col h-[calc(100dvh-80px)] bg-background min-h-screen">
-      <header className="px-5 pt-8 pb-2 flex items-center justify-between border-b border-white/5 bg-background/80 backdrop-blur-md z-10">
+      <header className="px-5 pt-4 pb-2 flex items-center justify-between border-b border-white/5 bg-background/80 backdrop-blur-md z-10">
         <h1 className="text-2xl font-bold text-white">와인맵</h1>
         <span className="text-xs text-zinc-500">{records.length}개 기록 · {groupedByLocation().length}곳</span>
       </header>

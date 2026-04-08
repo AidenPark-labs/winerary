@@ -209,94 +209,78 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
             return card;
           })()}
 
-          {/* 날짜 · 장소 */}
-          <div className="flex items-center gap-2 text-sm text-zinc-400">
-            <span>{dateStr}</span>
-            {placeStr && (
-              <>
-                <span className="text-zinc-600">·</span>
-                <span className="truncate">{placeStr}</span>
-              </>
-            )}
-          </div>
-
           {/* 링크 공유 버튼 */}
           {!readOnly && record.visibility === "link" && (
             <ShareButton id={record.id} />
           )}
 
-          {/* ── 테이스팅 노트 (핵심 컨텐츠) ── */}
-          {record.memo && (
-            <div className="rounded-2xl bg-surface/60 backdrop-blur-2xl border border-white/5 p-5 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-3 opacity-[0.06] pointer-events-none">
-                <svg className="w-14 h-14 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
-              </div>
-              <p className="text-zinc-200 text-[15px] font-light leading-relaxed whitespace-pre-wrap relative z-10">{record.memo}</p>
-            </div>
-          )}
+          {/* ━━━━━━━━━━ 1. Wine ━━━━━━━━━━ */}
+          {(() => {
+            const resolved = wineData ? resolveWineDisplay(wineData) : null;
+            const displayType = resolved?.wine_type ?? record.wine_type;
+            const displayGrapes = resolved?.grapes ?? record.grape_variety;
+            const displayCountry = resolved?.country ?? record.wine_country;
+            const wineChips = [
+              displayType && { label: TYPE_KO[displayType] ?? displayType, color: WINE_TYPE_COLORS[displayType] },
+              displayCountry && { label: displayCountry },
+              displayGrapes && { label: `🍇 ${displayGrapes}` },
+              resolved?.alcohol && { label: resolved.alcohol },
+              wineData?.vivino_rating != null && { label: `★ ${wineData.vivino_rating}`, amber: true },
+            ].filter(Boolean) as { label: string; color?: string; amber?: boolean }[];
 
-          {/* ── 평점 ── */}
-          {avg != null && (
-            <div className="rounded-2xl bg-surface/60 backdrop-blur-2xl border border-white/5 overflow-hidden">
-              {/* 종합 */}
-              <div className="flex items-center justify-between p-5 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-accent/8 to-transparent pointer-events-none" />
-                <div className="flex flex-col relative z-10 gap-1.5">
-                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">My Rating</span>
-                  <div className="flex items-center gap-1">{renderStars(avg, 5)}</div>
-                </div>
-                <span className="text-4xl font-bold text-white relative z-10">{avg.toFixed(1)}</span>
-              </div>
-              {/* 세부 */}
-              <div className="grid grid-cols-3 border-t border-white/5">
-                {record.rating != null && (
-                  <div className="flex flex-col items-center py-4 border-r border-white/5 last:border-r-0">
-                    <span className="text-[9px] font-semibold text-zinc-500 tracking-widest uppercase mb-1">Taste</span>
-                    <span className="text-lg font-bold text-white">{Number(record.rating).toFixed(1)}</span>
-                  </div>
-                )}
-                {record.value_score != null && (
-                  <div className="flex flex-col items-center py-4 border-r border-white/5 last:border-r-0">
-                    <span className="text-[9px] font-semibold text-zinc-500 tracking-widest uppercase mb-1">Value</span>
-                    <span className="text-lg font-bold text-white">{Number(record.value_score).toFixed(1)}</span>
-                  </div>
-                )}
-                {record.pairing_score != null && (
-                  <div className="flex flex-col items-center py-4">
-                    <span className="text-[9px] font-semibold text-zinc-500 tracking-widest uppercase mb-1">Pairing</span>
-                    <span className="text-lg font-bold text-white">{record.pairing_score}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+            const hasWineScores = record.rating != null || record.value_score != null;
 
-          {/* ── 경험 정보 그리드 ── */}
-          {(priceText || record.repurchase_intent || foods.length > 0 || companions.length > 0) && (
-          <div className="rounded-2xl bg-surface/40 backdrop-blur-xl border border-white/5 overflow-hidden divide-y divide-white/5">
-            {/* 가격 + 재구매 */}
-            {(priceText || record.repurchase_intent) && (
-                <div className="flex divide-x divide-white/5">
-                  {priceText && (
-                    <div className="flex-1 px-4 py-3.5">
-                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Price</p>
-                      <p className="text-sm text-white font-medium">{priceText}</p>
+            return (
+              <div className="rounded-2xl bg-surface/60 backdrop-blur-2xl border border-white/5 overflow-hidden">
+                {/* 와인 칩 */}
+                {wineChips.length > 0 && (
+                  <div className="px-5 pt-4 pb-3 flex gap-1.5 flex-wrap">
+                    {wineChips.map((c, i) => (
+                      <span key={i} className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium ${c.amber ? "bg-amber-500/10 border border-amber-500/20 text-amber-400" : "bg-white/5 border border-white/5 text-zinc-300"}`}>
+                        {c.color && <span className={`w-1.5 h-1.5 rounded-full ${c.color}`} />}
+                        {c.label}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* 테이스팅 노트 */}
+                {record.memo && (
+                  <div className="px-5 pb-4 relative">
+                    <div className="absolute top-0 right-3 opacity-[0.05] pointer-events-none">
+                      <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
                     </div>
-                  )}
-                  {record.repurchase_intent && (
-                    <div className="flex-1 px-4 py-3.5">
-                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Repurchase</p>
-                      <p className="text-sm text-white font-medium">
-                        {{ yes: "👍 재구매 의사 있음", maybe: "🤔 고민 중", no: "👋 다음에는 패스" }[record.repurchase_intent]}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
+                    <p className="text-zinc-200 text-[15px] font-light leading-relaxed whitespace-pre-wrap relative z-10">{record.memo}</p>
+                  </div>
+                )}
 
-              {/* 페어링 음식 */}
+                {/* Taste + Value 점수 */}
+                {hasWineScores && (
+                  <div className="grid grid-cols-2 border-t border-white/5">
+                    {record.rating != null && (
+                      <div className="flex flex-col items-center py-4 border-r border-white/5">
+                        <span className="text-[9px] font-semibold text-zinc-500 tracking-widest uppercase mb-1">Taste</span>
+                        <span className="text-lg font-bold text-white">{Number(record.rating).toFixed(1)}</span>
+                      </div>
+                    )}
+                    {record.value_score != null && (
+                      <div className="flex flex-col items-center py-4">
+                        <span className="text-[9px] font-semibold text-zinc-500 tracking-widest uppercase mb-1">Value</span>
+                        <span className="text-lg font-bold text-white">{Number(record.value_score).toFixed(1)}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* ━━━━━━━━━━ 2. Pairing ━━━━━━━━━━ */}
+          {(foods.length > 0 || record.pairing_score != null) && (
+            <div className="rounded-2xl bg-surface/50 backdrop-blur-2xl border border-white/5 overflow-hidden">
+              {/* 음식 */}
               {foods.length > 0 && (
-                <div className="px-4 py-3.5">
+                <div className="px-5 pt-4 pb-3">
                   <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-2">Food Pairing</p>
                   <div className="flex gap-1.5 flex-wrap">
                     {foods.map((f, i) => (
@@ -305,51 +289,72 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                   </div>
                 </div>
               )}
-
-              {/* 함께한 사람 */}
-              {companions.length > 0 && (
-                <div className="px-4 py-3.5">
-                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Companions</p>
-                  <p className="text-zinc-200 text-sm font-light">{companions.join(", ")}</p>
+              {/* 궁합 점수 */}
+              {record.pairing_score != null && (
+                <div className="flex items-center justify-between px-5 py-3.5 border-t border-white/5">
+                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em]">Pairing Score</span>
+                  <div className="flex items-center gap-1">
+                    {renderStars(record.pairing_score, 5)}
+                    <span className="text-sm font-bold text-white ml-1">{record.pairing_score}</span>
+                  </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* 와인 세부 정보 + 태그 */}
-          {(() => {
-            const resolved = wineData ? resolveWineDisplay(wineData) : null;
-            const displayType = resolved?.wine_type ?? record.wine_type;
-            const displayGrapes = resolved?.grapes ?? record.grape_variety;
-            const displayCountry = resolved?.country ?? record.wine_country;
-
-            const chips = [
-              displayType && { label: TYPE_KO[displayType] ?? displayType, color: WINE_TYPE_COLORS[displayType] },
-              displayCountry && { label: displayCountry },
-              displayGrapes && { label: `🍇 ${displayGrapes}` },
-              resolved?.alcohol && { label: resolved.alcohol },
-              wineData?.vivino_rating != null && { label: `★ ${wineData.vivino_rating}`, amber: true },
-            ].filter(Boolean) as { label: string; color?: string; amber?: boolean }[];
-
-            const hasAny = chips.length > 0 || tags.length > 0;
-            if (!hasAny) return null;
-
-            return (
-              <div className="flex gap-1.5 flex-wrap">
-                {chips.map((c, i) => (
-                  <span key={`w-${i}`} className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-medium ${c.amber ? "bg-amber-500/10 border border-amber-500/20 text-amber-400" : "bg-white/5 border border-white/5 text-zinc-300"}`}>
-                    {c.color && <span className={`w-1.5 h-1.5 rounded-full ${c.color}`} />}
-                    {c.label}
-                  </span>
-                ))}
-                {tags.map((tag, i) => (
-                  <span key={`t-${i}`} className="px-2.5 py-1.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[11px] font-medium">
-                    #{tag}
-                  </span>
-                ))}
+          {/* ━━━━━━━━━━ 3. Experience ━━━━━━━━━━ */}
+          <div className="rounded-2xl bg-surface/40 backdrop-blur-xl border border-white/5 overflow-hidden divide-y divide-white/5">
+            {/* 날짜 + 장소 */}
+            <div className="flex divide-x divide-white/5">
+              <div className="flex-1 px-4 py-3.5">
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Date</p>
+                <p className="text-sm text-white font-medium">{dateStr}</p>
               </div>
-            );
-          })()}
+              {placeStr && (
+                <div className="flex-1 px-4 py-3.5">
+                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Place</p>
+                  <p className="text-sm text-white font-medium">{placeStr}</p>
+                </div>
+              )}
+            </div>
+            {/* 가격 + 재구매 */}
+            {(priceText || record.repurchase_intent) && (
+              <div className="flex divide-x divide-white/5">
+                {priceText && (
+                  <div className="flex-1 px-4 py-3.5">
+                    <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Price</p>
+                    <p className="text-sm text-white font-medium">{priceText}</p>
+                  </div>
+                )}
+                {record.repurchase_intent && (
+                  <div className="flex-1 px-4 py-3.5">
+                    <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Repurchase</p>
+                    <p className="text-sm text-white font-medium">
+                      {{ yes: "👍 재구매 의사 있음", maybe: "🤔 고민 중", no: "👋 다음에는 패스" }[record.repurchase_intent]}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+            {/* 함께한 사람 */}
+            {companions.length > 0 && (
+              <div className="px-4 py-3.5">
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Companions</p>
+                <p className="text-zinc-200 text-sm font-light">{companions.join(", ")}</p>
+              </div>
+            )}
+          </div>
+
+          {/* 태그 */}
+          {tags.length > 0 && (
+            <div className="flex gap-1.5 flex-wrap">
+              {tags.map((tag, i) => (
+                <span key={i} className="px-2.5 py-1.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[11px] font-medium">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
       </div>

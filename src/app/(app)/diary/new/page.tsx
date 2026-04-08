@@ -125,6 +125,7 @@ function fillWineFields(
     setWineVintage: (v: string) => void;
     setGrape: (v: string) => void;
     setGrapeCustom: (v: string) => void;
+    setBlendGrapes: (v: string[]) => void;
     setCountry: (v: string) => void;
     setCountryCustom: (v: string) => void;
     setSelectedWine: (v: WineSuggestion) => void;
@@ -145,9 +146,15 @@ function fillWineFields(
 
   const grapeVal = notNull(ai.grape_variety);
   if (grapeVal) {
-    const match = GRAPE_OPTIONS.find((g) => grapeVal.includes(g) || g.includes(grapeVal));
-    if (match) setters.setGrape(match);
-    else { setters.setGrape("__custom__"); setters.setGrapeCustom(grapeVal); }
+    const grapeParts = grapeVal.split(/[,/]+/).map((g) => g.trim()).filter(Boolean);
+    if (grapeParts.length > 1) {
+      setters.setGrape("__blend__");
+      setters.setBlendGrapes(grapeParts);
+    } else {
+      const match = GRAPE_OPTIONS.find((g) => grapeVal.includes(g) || g.includes(grapeVal));
+      if (match) setters.setGrape(match);
+      else { setters.setGrape("__custom__"); setters.setGrapeCustom(grapeVal); }
+    }
   }
 
   const countryVal = notNull(ai.country);
@@ -255,7 +262,7 @@ export default function NewDiaryPage() {
       vivino_url: vivinoUrl,
     };
     setAiResult(synth);
-    fillWineFields(synth, { setQuery, setWineNameOriginal, setWineType, setWineVintage, setGrape, setGrapeCustom, setCountry, setCountryCustom, setSelectedWine });
+    fillWineFields(synth, { setQuery, setWineNameOriginal, setWineType, setWineVintage, setGrape, setGrapeCustom, setBlendGrapes, setCountry, setCountryCustom, setSelectedWine });
 
     const dateParam = searchParams.get("date");
     if (dateParam) setDrunkAt(dateParam);
@@ -415,7 +422,7 @@ export default function NewDiaryPage() {
       if (!aiData.error && notNull(aiData.name)) {
         setAiResult(aiData);
         setAiNotFound(false);
-        fillWineFields(aiData, { setQuery, setWineNameOriginal, setWineType, setWineVintage, setGrape, setGrapeCustom, setCountry, setCountryCustom, setSelectedWine });
+        fillWineFields(aiData, { setQuery, setWineNameOriginal, setWineType, setWineVintage, setGrape, setGrapeCustom, setBlendGrapes, setCountry, setCountryCustom, setSelectedWine });
 
         // DB 매칭 검색 (AI 텍스트 → DB 유사도 검색)
         const koName = aiData.name || "";
@@ -469,9 +476,16 @@ export default function NewDiaryPage() {
     const typeMap: Record<string, WineType> = { red: "red", white: "white", rose: "rose", sparkling: "sparkling", fortified: "fortified", other: "other" };
     setWineType(typeMap[wine.type] ?? "");
     if (wine.grapes) {
-      const match = GRAPE_OPTIONS.find((g) => wine.grapes.includes(g) || g.includes(wine.grapes));
-      if (match) setGrape(match);
-      else { setGrape("__custom__"); setGrapeCustom(wine.grapes); }
+      const grapeParts = wine.grapes.split(/[,/]+/).map((g: string) => g.trim()).filter(Boolean);
+      if (grapeParts.length > 1) {
+        // 복수 품종 → 블렌드
+        setGrape("__blend__");
+        setBlendGrapes(grapeParts);
+      } else {
+        const match = GRAPE_OPTIONS.find((g) => wine.grapes.includes(g) || g.includes(wine.grapes));
+        if (match) setGrape(match);
+        else { setGrape("__custom__"); setGrapeCustom(wine.grapes); }
+      }
     }
     if (wine.country) {
       const match = COUNTRY_OPTIONS.find((c) => wine.country.includes(c));

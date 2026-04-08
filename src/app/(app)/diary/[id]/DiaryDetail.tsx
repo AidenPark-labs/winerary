@@ -228,24 +228,6 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
             )}
           </div>
 
-          {/* ━━━━━━━━━━ Tags ━━━━━━━━━━ */}
-          {tags.length > 0 && (
-            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
-              <div className="px-5 pt-4 pb-2">
-                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Tags</p>
-              </div>
-              <div className="px-5 pb-3">
-                <div className="flex gap-1.5 flex-wrap">
-                  {tags.map((tag, i) => (
-                    <span key={i} className="px-3 py-1.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[11px] font-medium">
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* ━━━━━━━━━━ 1. Wine ━━━━━━━━━━ */}
           {(() => {
             const resolved = wineData ? resolveWineDisplay(wineData) : null;
@@ -343,6 +325,24 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
                 <div className="flex gap-1.5 flex-wrap">
                   {foods.map((f, i) => (
                     <span key={i} className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 text-zinc-200 text-sm font-light">{f.name}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ━━━━━━━━━━ Tags ━━━━━━━━━━ */}
+          {tags.length > 0 && (
+            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
+              <div className="px-5 pt-4 pb-2">
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Tags</p>
+              </div>
+              <div className="px-5 pb-3">
+                <div className="flex gap-1.5 flex-wrap">
+                  {tags.map((tag, i) => (
+                    <span key={i} className="px-3 py-1.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[11px] font-medium">
+                      #{tag}
+                    </span>
                   ))}
                 </div>
               </div>

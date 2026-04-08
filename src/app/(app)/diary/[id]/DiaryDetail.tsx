@@ -552,16 +552,8 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
 
   return (
     <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
-      <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+      <div className="px-5 pt-4 pb-2">
         <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Reviews</p>
-        {showEvaluateButton && (
-          <Link
-            href={`/diary/${record.id}/evaluate`}
-            className="text-[11px] px-3 py-1 rounded-lg bg-violet-500/20 text-violet-300 border border-violet-500/30 hover:bg-violet-500/30 transition-colors"
-          >
-            평가하기
-          </Link>
-        )}
       </div>
 
       {/* 작성자 평가 */}
@@ -632,6 +624,18 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
           memo={ev.memo}
         />
       ))}
+
+      {/* 평가하기 버튼 (하단) */}
+      {showEvaluateButton && (
+        <div className="px-5 py-4">
+          <Link
+            href={`/diary/${record.id}/evaluate`}
+            className="block w-full py-3 rounded-xl bg-violet-500/15 text-violet-300 border border-violet-500/25 hover:bg-violet-500/25 transition-colors text-sm font-medium text-center"
+          >
+            평가하기
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

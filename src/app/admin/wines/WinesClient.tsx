@@ -69,6 +69,59 @@ function InfoCell({ label, children }: { label: string; children: React.ReactNod
   );
 }
 
+function EditableInfoCell({ label, value, placeholder, onSave }: {
+  label: string;
+  value: string;
+  placeholder?: string;
+  onSave: (value: string) => Promise<{ error?: string }>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (draft === value) { setEditing(false); return; }
+    setSaving(true);
+    const res = await onSave(draft);
+    setSaving(false);
+    if (!res.error) setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div onClick={(e) => e.stopPropagation()}>
+        <span className="text-zinc-500 text-[10px] uppercase tracking-wider font-semibold">{label}</span>
+        <div className="flex gap-1 mt-0.5">
+          <input
+            className="bg-zinc-800 border border-zinc-600 rounded px-2 py-0.5 text-sm text-zinc-200 flex-1 min-w-0"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder={placeholder}
+            autoFocus
+            onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") { setDraft(value); setEditing(false); } }}
+          />
+          <button onClick={handleSave} disabled={saving} className="text-xs text-emerald-400 hover:text-emerald-300 px-1">
+            {saving ? "..." : "저장"}
+          </button>
+          <button onClick={() => { setDraft(value); setEditing(false); }} className="text-xs text-zinc-500 hover:text-zinc-300 px-1">
+            취소
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div onClick={(e) => e.stopPropagation()} className="cursor-pointer group" onDoubleClick={() => setEditing(true)}>
+      <span className="text-zinc-500 text-[10px] uppercase tracking-wider font-semibold">{label}</span>
+      <div className="text-zinc-200 text-sm mt-0.5 flex items-center gap-1">
+        {value || <span className="text-zinc-600 italic">{placeholder}</span>}
+        <button onClick={() => setEditing(true)} className="text-zinc-600 hover:text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity text-xs">✎</button>
+      </div>
+    </div>
+  );
+}
+
 export default function WinesClient({ wines, totalCount, page, totalPages, search: initialSearch, filterType: initialType, vivinoFilter: initialVivino }: Props) {
   const router = useRouter();
   const [search, setSearch] = useState(initialSearch);
@@ -321,7 +374,16 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                   <InfoCell label="한국어명">{w.name_ko}</InfoCell>
-                  {w.name_en && <InfoCell label="영문명">{w.name_en}</InfoCell>}
+                  <EditableInfoCell
+                    label="영문명"
+                    value={w.name_en ?? ""}
+                    placeholder="영문명 입력"
+                    onSave={async (v) => {
+                      const res = await updateWine(w.id, { name_en: v || null });
+                      if (!res.error) router.refresh();
+                      return res;
+                    }}
+                  />
                   {w.wine_type && <InfoCell label="타입">{TYPE_KO[w.wine_type] ?? w.wine_type}</InfoCell>}
                   {w.producer && <InfoCell label="생산자">{w.producer}</InfoCell>}
                   {w.country && <InfoCell label="국가">{w.country}</InfoCell>}

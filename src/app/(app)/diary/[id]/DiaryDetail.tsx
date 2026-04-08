@@ -236,25 +236,25 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                 {/* 와인 세부 정보 */}
                 <div className="flex flex-col">
                   {displayType && (
-                    <div className="flex items-center justify-between px-5 py-3">
+                    <div className="flex items-center justify-between px-5 py-2">
                       <span className="text-xs text-zinc-400">타입</span>
                       <span className="text-sm text-white font-medium">{TYPE_KO[displayType] ?? displayType}</span>
                     </div>
                   )}
                   {displayGrapes && (
-                    <div className="flex items-center justify-between px-5 py-3">
+                    <div className="flex items-center justify-between px-5 py-2">
                       <span className="text-xs text-zinc-400">품종</span>
                       <span className="text-sm text-white font-medium text-right">{displayGrapes}</span>
                     </div>
                   )}
                   {displayCountry && (
-                    <div className="flex items-center justify-between px-5 py-3">
+                    <div className="flex items-center justify-between px-5 py-2">
                       <span className="text-xs text-zinc-400">국가</span>
                       <span className="text-sm text-white font-medium">{displayCountry}</span>
                     </div>
                   )}
                   {resolved?.alcohol && (
-                    <div className="flex items-center justify-between px-5 py-3">
+                    <div className="flex items-center justify-between px-5 py-2">
                       <span className="text-xs text-zinc-400">도수</span>
                       <span className="text-sm text-white font-medium">{resolved.alcohol}</span>
                     </div>
@@ -309,19 +309,19 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                 <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Experience</p>
               </div>
               {placeStr && (
-                <div className="flex items-center justify-between px-5 py-3">
+                <div className="flex items-center justify-between px-5 py-2">
                   <span className="text-xs text-zinc-400">장소</span>
                   <span className="text-sm text-white font-medium text-right">{placeStr}</span>
                 </div>
               )}
               {priceText && (
-                <div className="flex items-center justify-between px-5 py-3">
+                <div className="flex items-center justify-between px-5 py-2">
                   <span className="text-xs text-zinc-400">가격</span>
                   <span className="text-sm text-white font-medium">{priceText}</span>
                 </div>
               )}
               {record.value_score != null && (
-                <div className="flex items-center justify-between px-5 py-3">
+                <div className="flex items-center justify-between px-5 py-3 border-t border-white/10 mt-1">
                   <span className="text-xs text-zinc-400">가성비</span>
                   <div className="flex items-center gap-2">
                     <div className="flex">{renderStars(Number(record.value_score), 5)}</div>

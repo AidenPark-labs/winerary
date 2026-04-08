@@ -27,7 +27,7 @@ async function resolvePendingWine(
   // 기존 pending_wine 검색 (이름 정규화 비교)
   const { data: existing } = await supabase
     .from("pending_wines")
-    .select("id, record_count, status")
+    .select("id, record_count, status, name_en")
     .eq("name_ko", name)
     .eq("status", "pending")
     .limit(1)
@@ -35,9 +35,13 @@ async function resolvePendingWine(
 
   if (existing) {
     const newCount = (existing.record_count ?? 1) + 1;
+    const updates: Record<string, unknown> = { record_count: newCount, updated_at: new Date().toISOString() };
+    if (!existing.name_en && data.wine_name_original) {
+      updates.name_en = data.wine_name_original;
+    }
     await supabase
       .from("pending_wines")
-      .update({ record_count: newCount, updated_at: new Date().toISOString() })
+      .update(updates)
       .eq("id", existing.id);
     return existing.id;
   }

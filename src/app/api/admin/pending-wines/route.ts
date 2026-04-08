@@ -29,6 +29,20 @@ export async function POST(request: Request) {
   const { data: pending } = await admin.from("pending_wines").select("*").eq("id", id).single();
   if (!pending) return Response.json({ error: "Not found" }, { status: 404 });
 
+  // pending_wines에 name_en이 없으면 wine_records에서 가져오기
+  if (!pending.name_en) {
+    const { data: rec } = await admin
+      .from("wine_records")
+      .select("wine_name_original")
+      .eq("pending_wine_id", id)
+      .not("wine_name_original", "is", null)
+      .limit(1)
+      .single();
+    if (rec?.wine_name_original) {
+      pending.name_en = rec.wine_name_original;
+    }
+  }
+
   // wines에 이미 같은 이름이 있는지 확인
   const { data: existingWine } = await admin
     .from("wines")

@@ -214,9 +214,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
                   {companions.map((c, i) => (
                     <span key={i}>
                       {i > 0 && ", "}
-                      {c.startsWith("@") ? (
-                        <span className="text-violet-300">{c}</span>
-                      ) : c}
+                      <span className="text-violet-300">{c.startsWith("@") ? c : `@${c}`}</span>
                     </span>
                   ))}
                 </span>

@@ -131,6 +131,36 @@ export default async function DiaryDetailPage({ params }: { params: Promise<{ id
     // 연결 조회 실패 시 무시
   }
 
+  // 공유받은 기록 + 연결 안 됨 → 내 같은 날짜 기록 유사도 체크
+  let hasMatchingRecord = false;
+  if (!isOwner && user && linkedRecords.length === 0) {
+    try {
+      const { data: myDateRecords } = await supabase
+        .from("wine_records")
+        .select("name, wine_id")
+        .eq("user_id", user.id)
+        .eq("drunk_at", record.drunk_at)
+        .is("deleted_at", null);
+
+      if (myDateRecords && myDateRecords.length > 0) {
+        const sharedName = (record.name ?? "").toLowerCase().replace(/\s/g, "");
+        hasMatchingRecord = myDateRecords.some((r: { name: string; wine_id: string | null }) => {
+          if (record.wine_id && r.wine_id && record.wine_id === r.wine_id) return true;
+          const myName = (r.name ?? "").toLowerCase().replace(/\s/g, "");
+          if (myName === sharedName) return true;
+          if (myName.includes(sharedName) || sharedName.includes(myName)) return true;
+          const shorter = myName.length < sharedName.length ? myName : sharedName;
+          const longer = myName.length < sharedName.length ? sharedName : myName;
+          let matches = 0;
+          for (const ch of shorter) { if (longer.includes(ch)) matches++; }
+          return matches / longer.length >= 0.4;
+        });
+      }
+    } catch {
+      // 무시
+    }
+  }
+
   return (
     <DiaryDetail
       record={record as WineRecord}
@@ -142,6 +172,7 @@ export default async function DiaryDetailPage({ params }: { params: Promise<{ id
       ownerNickname={ownerNickname}
       currentNickname={currentNickname}
       linkedRecords={linkedRecords}
+      hasMatchingRecord={hasMatchingRecord}
     />
   );
 }

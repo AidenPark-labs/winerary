@@ -273,7 +273,7 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-80px)] bg-background">
+    <div className="flex flex-col h-[calc(100dvh-160px)] bg-background">
       <header className="px-5 pt-8 pb-2 flex items-center justify-between bg-background z-10">
         <h1 className="text-2xl font-bold text-white">와인맵</h1>
         <span className="text-xs text-zinc-500">{records.length}개 기록 · {groupedByLocation().length}곳</span>

@@ -20,12 +20,56 @@ export default async function LinkPage({ params }: { params: Promise<{ id: strin
 
   if (!record) notFound();
 
-  // 같은 날짜의 다른 유저 기록 조회
+  // 1) 내 기록에서 멘션한 유저 ID 조회
+  const { data: myMentions } = await supabase
+    .from("record_mentions")
+    .select("mentioned_user_id")
+    .eq("record_id", id);
+  const mentionedUserIds = (myMentions ?? []).map((m: { mentioned_user_id: string }) => m.mentioned_user_id);
+
+  // 2) 나를 멘션한 기록의 작성자 ID 조회 (같은 날짜)
+  const { data: mentionedByRecords } = await supabase
+    .from("record_mentions")
+    .select("record_id, wine_records!inner(user_id, drunk_at, deleted_at)")
+    .eq("mentioned_user_id", user.id);
+
+  const mentionedByUserIds = (mentionedByRecords ?? [])
+    .filter((m: Record<string, unknown>) => {
+      const wr = m.wine_records as { user_id: string; drunk_at: string; deleted_at: string | null } | null;
+      return wr && wr.drunk_at === record.drunk_at && wr.deleted_at === null;
+    })
+    .map((m: Record<string, unknown>) => {
+      const wr = m.wine_records as { user_id: string };
+      return wr.user_id;
+    });
+
+  // 합집합: 동행자 관계가 있는 유저 ID
+  const companionUserIds = [...new Set([...mentionedUserIds, ...mentionedByUserIds])];
+
+  if (companionUserIds.length === 0) {
+    return (
+      <div className="flex flex-col min-h-screen bg-zinc-950">
+        <header className="px-5 pt-12 pb-4 flex items-center gap-3 border-b border-zinc-800">
+          <Link href={`/diary/${id}`} className="text-zinc-400 hover:text-zinc-200 text-2xl">←</Link>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-bold text-white">경험 연결</h1>
+            <p className="text-xs text-zinc-500 truncate">{record.name} · {record.drunk_at}</p>
+          </div>
+        </header>
+        <div className="flex flex-col items-center justify-center flex-1 px-8 text-center gap-4">
+          <p className="text-zinc-500 text-sm font-light leading-relaxed">동행자(@멘션)로 등록된 유저의 기록만 연결할 수 있습니다.<br/>기록 수정에서 동행자를 추가해보세요.</p>
+          <Link href={`/diary/${id}`} className="text-sm text-violet-400 hover:text-violet-300">돌아가기</Link>
+        </div>
+      </div>
+    );
+  }
+
+  // 동행자 관계 유저들의 같은 날짜 기록만 조회
   const { data: candidates } = await supabase
     .from("wine_records")
     .select("id, name, photos, drunk_at, user_id")
     .eq("drunk_at", record.drunk_at)
-    .neq("user_id", user.id)
+    .in("user_id", companionUserIds)
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(50);

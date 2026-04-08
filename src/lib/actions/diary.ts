@@ -403,49 +403,6 @@ export async function unlinkRecord(recordId: string) {
   return { success: true };
 }
 
-export async function searchLinkableRecords(recordId: string, query: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Unauthorized", records: [] };
-
-  // 내 기록의 날짜 조회
-  const { data: myRecord } = await supabase
-    .from("wine_records")
-    .select("drunk_at")
-    .eq("id", recordId)
-    .eq("user_id", user.id)
-    .single();
-  if (!myRecord) return { error: "기록을 찾을 수 없습니다", records: [] };
-
-  // 같은 날짜의 다른 유저 기록 검색 (닉네임 or 와인명으로 필터)
-  const { data: results } = await supabase
-    .from("wine_records")
-    .select("id, name, photos, drunk_at, user_id, profiles:user_id(nickname)")
-    .eq("drunk_at", myRecord.drunk_at)
-    .neq("user_id", user.id)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false })
-    .limit(20);
-
-  const filtered = (results ?? [])
-    .map((r: Record<string, unknown>) => {
-      const profile = r.profiles as { nickname: string } | null;
-      return {
-        id: r.id as string,
-        name: r.name as string,
-        photos: (r.photos as string[]) ?? [],
-        drunk_at: r.drunk_at as string,
-        owner_nickname: profile?.nickname ?? "알 수 없음",
-      };
-    })
-    .filter((r) => {
-      if (!query) return true;
-      return r.name.includes(query) || r.owner_nickname.includes(query);
-    });
-
-  return { records: filtered };
-}
-
 export async function generateInviteCode(recordId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

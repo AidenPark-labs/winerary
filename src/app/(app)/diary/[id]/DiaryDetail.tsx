@@ -278,7 +278,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                   <span className="text-xs text-zinc-400">음식 궁합</span>
                   <div className="flex items-center gap-2">
                     <div className="flex">{renderStars(record.pairing_score, 5)}</div>
-                    <span className="text-sm font-bold text-white">{record.pairing_score}</span>
+                    <span className="text-sm font-bold text-white">{Number(record.pairing_score).toFixed(1)}</span>
                   </div>
                 </div>
               )}

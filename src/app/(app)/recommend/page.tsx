@@ -380,10 +380,10 @@ export default function RecommendPage() {
       {showAuthPrompt && <AuthPrompt message="와인을 저장하려면 로그인이 필요합니다" returnUrl="/recommend" />}
       <Toast message="내 와인에 추가되었어요!" visible={toast} onHide={() => setToast(false)} />
       {/* 헤더 */}
-      <header className="px-5 pt-12 pb-4 flex items-center justify-between flex-shrink-0">
+      <header className="px-5 pt-8 pb-2 flex items-center justify-between flex-shrink-0">
         <div>
-          <h1 className="text-2xl font-serif tracking-wide text-white">와인추천</h1>
-          <p className="text-zinc-500 text-xs mt-1 font-light">AI 소믈리에에게 추천받으세요</p>
+          <h1 className="text-2xl font-bold text-white">와인추천</h1>
+          <p className="text-zinc-500 text-sm mt-0.5">AI 소믈리에에게 추천받으세요</p>
         </div>
         <div className="flex items-center gap-2">
           <button

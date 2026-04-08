@@ -33,7 +33,7 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950">
-      <header className="px-5 pt-12 pb-4 flex items-center gap-3">
+      <header className="px-5 pt-8 pb-2 flex items-center gap-3">
         <Link href={`/diary/${id}`} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/20 transition-colors text-lg">←</Link>
         <h1 className="text-xl font-bold text-white">기록 수정</h1>
       </header>

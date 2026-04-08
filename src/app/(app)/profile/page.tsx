@@ -40,8 +40,8 @@ export default async function MyWinePage() {
     return (
       <>
         <div className="flex flex-col">
-          <header className="px-5 pt-12 pb-4">
-            <h1 className="text-2xl font-serif tracking-wide text-white">마이페이지</h1>
+          <header className="px-5 pt-8 pb-2">
+            <h1 className="text-2xl font-bold text-white">마이페이지</h1>
           </header>
           <div className="px-4 pb-28 flex flex-col gap-6">
             <div className="flex items-center gap-4">

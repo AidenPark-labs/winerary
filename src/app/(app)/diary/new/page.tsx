@@ -703,10 +703,10 @@ export default function NewDiaryPage() {
 
             {/* AI 인식 실패 알림 */}
             {aiNotFound && (
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-surface/50 border border-white/10 backdrop-blur-md">
-                <svg className="w-6 h-6 text-zinc-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-amber-500/20 p-5 shadow-2xl flex items-center gap-3">
+                <svg className="w-6 h-6 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                 <div>
-                  <p className="text-zinc-300 text-sm font-medium">와인을 인식하지 못했어요</p>
+                  <p className="text-zinc-200 text-sm font-medium">와인을 인식하지 못했어요</p>
                   <p className="text-zinc-500 text-xs mt-0.5 font-light">아래에서 직접 검색하거나 이름을 입력해주세요</p>
                 </div>
               </div>
@@ -811,116 +811,139 @@ export default function NewDiaryPage() {
 
             {/* 텍스트 검색 */}
             {(showSearch || (!aiResult && !aiNotFound)) && (
-              <div className="flex flex-col gap-3">
-                <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">와인 검색</h2>
-                <div className="flex gap-2">
-                  <input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleSearch())}
-                    placeholder="와인 이름 검색 (예: 샤또 마고)"
-                    className={iCls}
-                    autoFocus
-                  />
-                  <button type="button" onClick={handleSearch}
-                    disabled={suggestLoading || query.trim().length < 2}
-                    className="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-200 text-sm font-medium transition-colors whitespace-nowrap">
-                    {suggestLoading ? "…" : "검색"}
-                  </button>
+              <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
+                <div className="px-5 pt-4 pb-2">
+                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Search</p>
                 </div>
-
-                {suggestions !== null && suggestions.length === 0 && (
-                  <p className="text-sm text-zinc-500 px-1">결과가 없어요. 아래에서 직접 입력해주세요.</p>
-                )}
-                {suggestions && suggestions.length > 0 && (
-                  <ul className="flex flex-col gap-2">
-                    {suggestions.map((wine, i) => (
-                      <li key={i}>
-                        <button type="button" onClick={() => selectWine(wine)}
-                          className="w-full flex flex-col gap-0.5 p-3 rounded-xl border border-zinc-700 bg-zinc-900 hover:border-rose-600 text-left transition-colors">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-zinc-100 text-sm">{wine.name_ko}</span>
-                            <span className="text-xs text-zinc-500">{wine.name}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-xs text-zinc-500 flex-wrap">
-                            {wine.country && <span>{wine.country}</span>}
-                            {wine.type && <><span>·</span><span>{TYPE_KO[wine.type] ?? wine.type}</span></>}
-                          </div>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                {/* 검색으로 선택된 와인 */}
-                {selectedWine && (
-                  <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-accent/40 bg-accent/10">
-                    <div>
-                      <p className="font-semibold text-zinc-100 text-sm">{selectedWine.name_ko}</p>
-                      <p className="text-xs text-zinc-400">{selectedWine.name}</p>
-                    </div>
-                    <button type="button"
-                      onClick={() => { setSelectedWine(null); setSuggestions(null); }}
-                      className="text-zinc-500 hover:text-zinc-300"><CloseIcon size={14} /></button>
+                <div className="flex flex-col gap-3 px-5 pb-4">
+                  <div className="flex gap-2">
+                    <input
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleSearch())}
+                      placeholder="와인 이름 검색 (예: 샤또 마고)"
+                      className={iCls}
+                      autoFocus
+                    />
+                    <button type="button" onClick={handleSearch}
+                      disabled={suggestLoading || query.trim().length < 2}
+                      className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 disabled:opacity-30 text-zinc-300 text-sm font-medium transition-colors whitespace-nowrap">
+                      {suggestLoading ? "…" : "검색"}
+                    </button>
                   </div>
-                )}
+
+                  {suggestions !== null && suggestions.length === 0 && (
+                    <p className="text-xs text-zinc-500">결과가 없어요. 아래에서 직접 입력해주세요.</p>
+                  )}
+                  {suggestions && suggestions.length > 0 && (
+                    <ul className="flex flex-col gap-2">
+                      {suggestions.map((wine, i) => (
+                        <li key={i}>
+                          <button type="button" onClick={() => selectWine(wine)}
+                            className="w-full flex flex-col gap-0.5 p-3 rounded-xl border border-white/10 bg-black/20 hover:border-accent/40 text-left transition-all">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-medium text-zinc-100 text-sm">{wine.name_ko}</span>
+                            </div>
+                            {wine.name && wine.name !== wine.name_ko && (
+                              <span className="text-xs text-zinc-500 italic truncate">{wine.name}</span>
+                            )}
+                            <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 flex-wrap mt-0.5">
+                              {wine.country && <span>{wine.country}</span>}
+                              {wine.type && <><span>·</span><span>{TYPE_KO[wine.type] ?? wine.type}</span></>}
+                              {wine.grapes && <><span>·</span><span>🍇 {wine.grapes}</span></>}
+                            </div>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {selectedWine && (
+                    <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10">
+                      <div>
+                        <p className="font-medium text-zinc-100 text-sm">{selectedWine.name_ko}</p>
+                        <p className="text-xs text-zinc-400">{selectedWine.name}</p>
+                      </div>
+                      <button type="button" onClick={() => { setSelectedWine(null); setSuggestions(null); }}
+                        className="text-zinc-500 hover:text-zinc-300"><CloseIcon size={14} /></button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
-            {/* 세부 정보 (항상 표시, 수정 가능) */}
-            <div className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">
-                세부 정보 <span className="normal-case font-normal text-zinc-600">(수정 가능)</span>
-              </h2>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-zinc-500">원본 명칭 (영어/현지어)</label>
-                <input value={wineNameOriginal} onChange={(e) => setWineNameOriginal(e.target.value)}
-                  placeholder="예: Château Margaux" className={iCls} />
+            {/* 세부 정보 */}
+            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
+              <div className="px-5 pt-4 pb-2">
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Wine Details</p>
               </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-zinc-500">종류</label>
-                <select value={wineType} onChange={(e) => setWineType(e.target.value as WineType | "")} className={iCls}>
-                  <option value="">선택 안 함</option>
-                  {WINE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-zinc-500">품종</label>
-                <GrapeCombobox
-                  value={grape}
-                  onChange={(v) => { setGrape(v); if (v !== "__blend__") setBlendGrapes([]); }}
-                  wineType={wineType}
-                  className={iCls}
-                />
-                {grape === "__blend__" && (
-                  <BlendGrapeSelector grapes={blendGrapes} onChange={setBlendGrapes} wineType={wineType} />
+              <div className="flex flex-col gap-3 px-5 pb-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-400">원본 명칭</label>
+                  <input value={wineNameOriginal} onChange={(e) => setWineNameOriginal(e.target.value)}
+                    placeholder="영어/현지어" className={iCls} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-400">종류</label>
+                  <select value={wineType} onChange={(e) => setWineType(e.target.value as WineType | "")} className={iCls}>
+                    <option value="">선택 안 함</option>
+                    {WINE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-400">품종</label>
+                  <GrapeCombobox value={grape} onChange={(v) => { setGrape(v); if (v !== "__blend__") setBlendGrapes([]); }} wineType={wineType} className={iCls} />
+                  {grape === "__blend__" && <BlendGrapeSelector grapes={blendGrapes} onChange={setBlendGrapes} wineType={wineType} />}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs text-zinc-400">빈티지</label>
+                    <select value={wineVintage} onChange={(e) => setWineVintage(e.target.value)} className={iCls}>
+                      <option value="">선택 안 함</option>
+                      {vintageYears.map((y) => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs text-zinc-400">생산국</label>
+                    <select value={country} onChange={(e) => setCountry(e.target.value)} className={iCls}>
+                      <option value="">선택 안 함</option>
+                      {COUNTRY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                      <option value="__custom__">직접입력</option>
+                    </select>
+                  </div>
+                </div>
+                {country === "__custom__" && (
+                  <input value={countryCustom} onChange={(e) => setCountryCustom(e.target.value)} placeholder="생산국" className={iCls} />
+                )}
+                {/* 구분선 + 구매가격 */}
+                <div className="border-t border-white/5 my-1" />
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-400">구매가격</label>
+                  <div className="relative">
+                    <input type="number" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)}
+                      placeholder="선택" className={iCls + " pr-8"} />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">원</span>
+                  </div>
+                </div>
+                {price && (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex rounded-xl overflow-hidden border border-white/10">
+                      {([["retail", "소매가"], ["market", "매장가"]] as const).map(([v, l]) => (
+                        <button key={v} type="button" onClick={() => { setPriceType(v); if (v === "retail") setPriceUnit("bottle"); }}
+                          className={`flex-1 py-2.5 text-xs font-medium transition-colors ${priceType === v ? "bg-accent text-white" : "bg-black/40 text-zinc-500"}`}>{l}</button>
+                      ))}
+                    </div>
+                    {priceType === "market" && (
+                      <div className="flex rounded-xl overflow-hidden border border-white/10">
+                        {([["bottle", "바틀"], ["glass", "글라스"]] as const).map(([v, l]) => (
+                          <button key={v} type="button" onClick={() => setPriceUnit(v)}
+                            className={`flex-1 py-2.5 text-xs font-medium transition-colors ${priceUnit === v ? "bg-accent text-white" : "bg-black/40 text-zinc-500"}`}>{l}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs text-zinc-500">빈티지</label>
-                  <select value={wineVintage} onChange={(e) => setWineVintage(e.target.value)} className={iCls}>
-                    <option value="">선택 안 함</option>
-                    {vintageYears.map((y) => <option key={y} value={y}>{y}</option>)}
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs text-zinc-500">생산국</label>
-                  <select value={country} onChange={(e) => setCountry(e.target.value)} className={iCls}>
-                    <option value="">선택 안 함</option>
-                    {COUNTRY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
-                    <option value="__custom__">직접입력</option>
-                  </select>
-                </div>
-              </div>
-              {country === "__custom__" && (
-                <input value={countryCustom} onChange={(e) => setCountryCustom(e.target.value)}
-                  placeholder="예: 조지아" className={iCls} />
-              )}
             </div>
 
             <button
@@ -983,38 +1006,6 @@ export default function NewDiaryPage() {
                   <label className="text-xs text-zinc-400">함께한 사람</label>
                   <CompanionInput value={companionEntries} onChange={setCompanionEntries} className={iCls} />
                 </div>
-              </div>
-            </div>
-
-            {/* ── 구매가격 ── */}
-            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
-              <div className="px-5 pt-4 pb-2">
-                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Price</p>
-              </div>
-              <div className="flex flex-col gap-3 px-5 pb-4">
-                <div className="relative">
-                  <input type="number" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)}
-                    placeholder="구매가격 (선택)" className={iCls + " pr-8"} />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">원</span>
-                </div>
-                {price && (
-                  <div className="flex flex-col gap-2">
-                    <div className="flex rounded-xl overflow-hidden border border-white/10">
-                      {([["retail", "소매가"], ["market", "매장가"]] as const).map(([v, l]) => (
-                        <button key={v} type="button" onClick={() => { setPriceType(v); if (v === "retail") setPriceUnit("bottle"); }}
-                          className={`flex-1 py-2.5 text-xs font-medium transition-colors ${priceType === v ? "bg-accent text-white" : "bg-black/40 text-zinc-500"}`}>{l}</button>
-                      ))}
-                    </div>
-                    {priceType === "market" && (
-                      <div className="flex rounded-xl overflow-hidden border border-white/10">
-                        {([["bottle", "바틀"], ["glass", "글라스"]] as const).map(([v, l]) => (
-                          <button key={v} type="button" onClick={() => setPriceUnit(v)}
-                            className={`flex-1 py-2.5 text-xs font-medium transition-colors ${priceUnit === v ? "bg-accent text-white" : "bg-black/40 text-zinc-500"}`}>{l}</button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
 

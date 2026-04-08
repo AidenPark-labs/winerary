@@ -9,6 +9,7 @@ import PlaceSearch from "@/components/PlaceSearch";
 import BlendGrapeSelector from "@/components/BlendGrapeSelector";
 import GrapeCombobox from "@/components/GrapeCombobox";
 import CompanionInput from "@/components/CompanionInput";
+import { CloseIcon } from "@/components/Icons";
 
 const iCls = "w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3.5 text-zinc-100 focus:outline-none focus:border-accent focus:bg-black/60 transition-all font-light text-sm";
 
@@ -215,7 +216,7 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
         <div className="flex items-center justify-between mb-1">
           <h3 className="font-semibold text-zinc-100">기록 수정</h3>
           {onClose && (
-            <button type="button" onClick={onClose} className="text-zinc-500 hover:text-zinc-300 text-xl w-8 h-8 flex items-center justify-center">×</button>
+            <button type="button" onClick={onClose} className="text-zinc-500 hover:text-zinc-300 w-8 h-8 flex items-center justify-center"><CloseIcon size={16} /></button>
           )}
         </div>
 
@@ -231,7 +232,7 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
                 <img src={src} alt="" className="w-20 h-20 rounded-xl object-cover" />
                 <button type="button"
                   onClick={() => setPhotos((p) => p.filter((_, idx) => idx !== i))}
-                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-zinc-700 hover:bg-zinc-600 text-zinc-200 text-xs flex items-center justify-center">×</button>
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-zinc-700 hover:bg-zinc-600 text-zinc-200 flex items-center justify-center"><CloseIcon size={10} /></button>
               </div>
             ))}
             <button type="button" onClick={() => photoInputRef.current?.click()}
@@ -360,7 +361,7 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
               {foods.map((food, i) => (
                 <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-800 text-zinc-200 text-sm">
                   {food}
-                  <button type="button" onClick={() => setFoods((f) => f.filter((_, idx) => idx !== i))} className="text-zinc-500 hover:text-zinc-300">×</button>
+                  <button type="button" onClick={() => setFoods((f) => f.filter((_, idx) => idx !== i))} className="text-zinc-500 hover:text-zinc-300 leading-none"><CloseIcon size={12} /></button>
                 </span>
               ))}
             </div>
@@ -419,7 +420,7 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
               {tags.map((tag, i) => (
                 <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-900/40 border border-violet-800/50 text-violet-200 text-sm">
                   #{tag}
-                  <button type="button" onClick={() => setTags((t) => t.filter((_, idx) => idx !== i))} className="text-violet-400 hover:text-violet-200">×</button>
+                  <button type="button" onClick={() => setTags((t) => t.filter((_, idx) => idx !== i))} className="text-violet-400 hover:text-violet-200 leading-none"><CloseIcon size={12} /></button>
                 </span>
               ))}
             </div>

@@ -11,6 +11,7 @@ import PlaceSearch from "@/components/PlaceSearch";
 import BlendGrapeSelector from "@/components/BlendGrapeSelector";
 import GrapeCombobox from "@/components/GrapeCombobox";
 import CompanionInput from "@/components/CompanionInput";
+import { CloseIcon } from "@/components/Icons";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -620,7 +621,7 @@ export default function NewDiaryPage() {
                     </div>
                     <button type="button"
                       onClick={() => { setSelectedWine(null); setSuggestions(null); }}
-                      className="text-zinc-500 hover:text-zinc-300 text-lg">×</button>
+                      className="text-zinc-500 hover:text-zinc-300"><CloseIcon size={14} /></button>
                   </div>
                 )}
               </div>
@@ -708,7 +709,7 @@ export default function NewDiaryPage() {
                     <img src={src} alt="" className="w-20 h-20 rounded-xl object-cover" />
                     <button type="button"
                       onClick={() => { setPhotoPreviews((p) => p.filter((_, idx) => idx !== i)); setPhotos((p) => p.filter((_, idx) => idx !== i)); }}
-                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-zinc-700 hover:bg-zinc-600 text-zinc-200 text-xs flex items-center justify-center">×</button>
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-zinc-700 hover:bg-zinc-600 text-zinc-200 flex items-center justify-center"><CloseIcon size={10} /></button>
                   </div>
                 ))}
                 <button type="button" onClick={() => photoInputRef.current?.click()}
@@ -764,7 +765,7 @@ export default function NewDiaryPage() {
                   {foods.map((food, i) => (
                     <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-800 text-zinc-200 text-sm">
                       {food}
-                      <button type="button" onClick={() => setFoods((f) => f.filter((_, idx) => idx !== i))} className="text-zinc-500 hover:text-zinc-300 text-base leading-none">×</button>
+                      <button type="button" onClick={() => setFoods((f) => f.filter((_, idx) => idx !== i))} className="text-zinc-500 hover:text-zinc-300 leading-none"><CloseIcon size={12} /></button>
                     </span>
                   ))}
                 </div>
@@ -828,7 +829,7 @@ export default function NewDiaryPage() {
                   {tags.map((tag, i) => (
                     <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-900/40 border border-violet-800/50 text-violet-200 text-sm">
                       #{tag}
-                      <button type="button" onClick={() => setTags((t) => t.filter((_, idx) => idx !== i))} className="text-violet-400 hover:text-violet-200 text-base leading-none">×</button>
+                      <button type="button" onClick={() => setTags((t) => t.filter((_, idx) => idx !== i))} className="text-violet-400 hover:text-violet-200 leading-none"><CloseIcon size={12} /></button>
                     </span>
                   ))}
                 </div>

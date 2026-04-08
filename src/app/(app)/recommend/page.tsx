@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { checkAuth, setPendingAction, consumePendingAction } from "@/lib/auth-guard";
 import { Heart } from "lucide-react";
+import { CloseIcon } from "@/components/Icons";
 import Toast from "@/components/Toast";
 import AuthPrompt from "@/components/AuthPrompt";
 
@@ -154,9 +155,9 @@ function WishlistPanel({ items, onDelete, onClose }: {
                   </div>
                   <button
                     onClick={() => onDelete(item.id)}
-                    className="text-zinc-500 hover:text-accent text-xl flex-shrink-0 transition-colors w-8 h-8 flex items-center justify-center -mt-1 -mr-1 rounded-full hover:bg-white/5"
+                    className="text-zinc-500 hover:text-accent flex-shrink-0 transition-colors w-8 h-8 flex items-center justify-center -mt-1 -mr-1 rounded-full hover:bg-white/5"
                   >
-                    ×
+                    <CloseIcon size={14} />
                   </button>
                 </div>
                 <div className="flex gap-2 mt-2">

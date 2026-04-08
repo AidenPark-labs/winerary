@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { getGrapesByType } from "@/lib/grapes";
+import { ChevronIcon, CloseIcon } from "@/components/Icons";
 
 const iCls = "w-full rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-zinc-100 focus:outline-none focus:border-rose-600 transition-colors text-sm";
 
@@ -43,7 +44,7 @@ export default function BlendGrapeSelector({ grapes, onChange, wineType }: { gra
         </div>
         <button type="button" onClick={() => setOpen(!open)}
           className="px-3 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors text-sm flex-shrink-0">
-          {open ? "▲" : "▼"}
+          <ChevronIcon direction={open ? "up" : "down"} />
         </button>
       </div>
       {open && (
@@ -78,7 +79,7 @@ export default function BlendGrapeSelector({ grapes, onChange, wineType }: { gra
             <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-900/40 border border-rose-800/50 text-rose-200 text-sm">
               🍇 {g}
               <button type="button" onClick={() => onChange(grapes.filter((_, idx) => idx !== i))}
-                className="text-rose-400 hover:text-rose-200 text-base leading-none">×</button>
+                className="text-rose-400 hover:text-rose-200 leading-none"><CloseIcon size={12} /></button>
             </span>
           ))}
         </div>

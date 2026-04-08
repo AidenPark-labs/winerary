@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { getGrapesByType } from "@/lib/grapes";
+import { ChevronIcon, CloseIcon } from "@/components/Icons";
 
 interface GrapeComboboxProps {
   value: string;
@@ -47,12 +48,12 @@ export default function GrapeCombobox({ value, onChange, wineType, className }: 
           />
           {value && !open && (
             <button type="button" onClick={() => { onChange(""); setQuery(""); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 text-sm">×</button>
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"><CloseIcon size={12} /></button>
           )}
         </div>
         <button type="button" onClick={() => setOpen(!open)}
           className="px-3 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors text-sm flex-shrink-0">
-          {open ? "▲" : "▼"}
+          <ChevronIcon direction={open ? "up" : "down"} />
         </button>
       </div>
 

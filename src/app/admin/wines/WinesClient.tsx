@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { updateWine, updateWineVivino, deleteWine } from "./actions";
 import { resolveWineDisplay } from "@/lib/wine-display";
 import type { VivinoCrawlResult, VivinoCrawlError } from "@/lib/vivino-crawler";
+import { ChevronIcon } from "@/components/Icons";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드 🍷", white: "화이트 🥂", rose: "로제 🌸",
@@ -295,7 +296,7 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
                 {w.price && (
                   <span className="text-zinc-400 text-sm">{w.price.toLocaleString()}원</span>
                 )}
-                <span className="text-zinc-600 text-[10px]">{expanded === w.id ? "▲ 접기" : "▼ 상세"}</span>
+                <span className="text-zinc-600 text-[10px] inline-flex items-center gap-0.5"><ChevronIcon size={10} direction={expanded === w.id ? "up" : "down"} />{expanded === w.id ? "접기" : "상세"}</span>
               </div>
             </div>
 

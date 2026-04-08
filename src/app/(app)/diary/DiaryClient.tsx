@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { deleteWineRecord } from "@/lib/actions/diary";
 import { Map, CalendarDays, LayoutList, MoreVertical, Camera, Plus, MapPin, Wine as WineIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { CloseIcon } from "@/components/Icons";
 import type { WineRecord } from "@/types";
 
 const TYPE_KO: Record<string, string> = {
@@ -93,9 +94,9 @@ function MapPopupCarousel({ records, onClose }: { records: WineRecord[]; onClose
     <div className="absolute bottom-28 left-4 right-4 z-[1000] bg-surface/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
       <button
         onClick={onClose}
-        className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-black/40 text-zinc-400 hover:text-white hover:bg-black/60 transition-colors text-sm z-10"
+        className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-black/40 text-zinc-400 hover:text-white hover:bg-black/60 transition-colors z-10"
       >
-        ×
+        <CloseIcon size={14} />
       </button>
       <div
         ref={scrollRef}

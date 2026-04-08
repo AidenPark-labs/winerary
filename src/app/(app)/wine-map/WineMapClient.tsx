@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { MapPin, Map as MapIcon, Wine } from "lucide-react";
+import { CloseIcon } from "@/components/Icons";
 
 interface MapRecord {
   id: string;
@@ -104,8 +105,8 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
           <div className="absolute bottom-6 left-4 right-4 z-[1000] bg-surface/95 border border-white/10 rounded-2xl p-4 shadow-2xl backdrop-blur-md">
             <button
               onClick={() => setSelected(null)}
-              className="absolute top-3 right-3 text-zinc-500 hover:text-accent text-xl w-6 h-6 flex items-center justify-center transition-colors"
-            >×</button>
+              className="absolute top-3 right-3 text-zinc-500 hover:text-accent w-6 h-6 flex items-center justify-center transition-colors"
+            ><CloseIcon size={16} /></button>
             <Link href={`/diary/${selected.id}`} className="block">
               <div className="flex items-start gap-4">
                 {selected.photos?.[0] ? (

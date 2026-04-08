@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { CloseIcon } from "@/components/Icons";
 
 interface PlaceResult {
   title: string;
@@ -121,7 +122,7 @@ export default function PlaceSearch({ defaultValue = "", defaultLat = null, defa
         )}
         {selectedLat && !loading && (
           <button type="button" onClick={handleClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 text-sm">×</button>
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"><CloseIcon size={12} /></button>
         )}
       </div>
       {open && results.length > 0 && (

@@ -210,34 +210,24 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                 <div className="px-5 pt-4 pb-2">
                   <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Wine</p>
                 </div>
-                {/* 와인명 + 빈티지 + 와인 상세 링크 */}
-                <div className="px-5 pb-3">
-                  {(() => {
-                    const nameBlock = (
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="flex items-baseline gap-2 flex-wrap">
-                            <h1 className="font-serif font-medium text-white text-xl tracking-wide leading-tight">{record.name}</h1>
-                            {record.wine_vintage && (
-                              <span className="text-base text-white/60 font-light">{record.wine_vintage}</span>
-                            )}
-                          </div>
-                          {record.wine_name_original && (
-                            <p className="text-xs text-zinc-300/70 italic font-light truncate mt-0.5">{record.wine_name_original}</p>
-                          )}
-                        </div>
-                        {hasWineLink && (
-                          <span className="text-zinc-500 text-lg flex-shrink-0">›</span>
+                {/* 와인명 */}
+                {(() => {
+                  const nameRow = (
+                    <div className="flex items-center justify-between px-5 py-3">
+                      <span className="text-xs text-zinc-400">와인명</span>
+                      <div className="text-right min-w-0 flex-1 ml-4">
+                        <p className="text-sm text-white font-medium truncate">{record.name}{record.wine_vintage ? ` ${record.wine_vintage}` : ""}</p>
+                        {record.wine_name_original && (
+                          <p className="text-[11px] text-zinc-400 italic truncate">{record.wine_name_original}</p>
                         )}
                       </div>
-                    );
-                    if (hasWineLink) {
-                      return <Link href={`/wines/${record.wine_id}`}>{nameBlock}</Link>;
-                    }
-                    return nameBlock;
-                  })()}
-                </div>
-                {/* 와인 칩 */}
+                      {hasWineLink && <span className="text-zinc-500 text-lg ml-2 flex-shrink-0">›</span>}
+                    </div>
+                  );
+                  if (hasWineLink) return <Link href={`/wines/${record.wine_id}`}>{nameRow}</Link>;
+                  return nameRow;
+                })()}
+                {/* 와인 세부 정보 칩 */}
                 {wineChips.length > 0 && (
                   <div className="px-5 pb-3 flex gap-1.5 flex-wrap">
                     {wineChips.map((c, i) => (
@@ -248,8 +238,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                     ))}
                   </div>
                 )}
-
-                {/* 맛 평점 → 와인에 대한 평가 */}
+                {/* 맛 평점 */}
                 {record.rating != null && (
                   <div className="flex items-center justify-between px-5 py-3 border-t border-white/5">
                     <span className="text-xs text-zinc-400">맛 평점</span>

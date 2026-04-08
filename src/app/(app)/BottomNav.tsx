@@ -12,6 +12,16 @@ const tabs = [
   { href: "/profile", label: "마이페이지", Icon: User },
 ];
 
+// 탭 루트 경로 + 마이페이지 하위 허용 경로
+const TAB_ROOTS = new Set(["/diary", "/wine-map", "/find", "/recommend", "/profile"]);
+const PROFILE_SUB = ["/profile/edit", "/profile/wishlist"];
+
+function isTabRoot(path: string) {
+  if (TAB_ROOTS.has(path)) return true;
+  if (PROFILE_SUB.some((p) => path.startsWith(p))) return true;
+  return false;
+}
+
 export default function BottomNav() {
   const path = usePathname();
   const router = useRouter();
@@ -33,6 +43,10 @@ export default function BottomNav() {
       router.push(href);
     });
   }
+
+  const visible = isTabRoot(path);
+
+  if (!visible) return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-white/5 flex pb-safe">

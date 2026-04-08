@@ -27,14 +27,18 @@ export async function GET(request: Request) {
 
   const supabase = await createClient();
 
-  // 검색 패턴: 전체 + 핵심 단어(3글자 이상)
+  // 검색 패턴: 전체 + 공백무시 + 핵심 단어(3글자 이상)
   const exact = `%${q}%`;
+  const noSpace = q.replace(/\s+/g, "");
+  const fuzzy = "%" + noSpace.split("").join("%") + "%";
   const words = q.split(/[\s']+/).filter((w) => w.length >= 3);
   const wordPatterns = words.slice(0, 4).map((w) => `%${w}%`);
 
   const orConditions = [
     `name_ko.ilike.${exact}`,
     `name_en.ilike.${exact}`,
+    `name_ko.ilike.${fuzzy}`,
+    `name_en.ilike.${fuzzy}`,
     ...wordPatterns.flatMap((p) => [`name_ko.ilike.${p}`, `name_en.ilike.${p}`]),
   ];
 

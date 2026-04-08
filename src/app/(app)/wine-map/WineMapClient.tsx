@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
-import { MapPin, Map as MapIcon, Wine } from "lucide-react";
+import { MapPin, Map as MapIcon, Wine, Navigation, List } from "lucide-react";
 import { CloseIcon } from "@/components/Icons";
 
 interface MapRecord {
@@ -23,37 +23,34 @@ const WINE_COLORS: Record<string, string> = {
   sparkling: "#0ea5e9", fortified: "#8b5cf6", other: "#52525b"
 };
 
-function MapRecordCard({ record }: { record: MapRecord }) {
+// ─── 하단 카드 (큰 사진 + 정보) ──────────────────────────────────────────────
+
+function BottomCard({ record, onClose }: { record: MapRecord; onClose: () => void }) {
   return (
     <Link href={`/diary/${record.id}`} className="block">
-      <div className="flex items-start gap-4">
+      <div className="flex gap-4">
         {record.photos?.[0] ? (
-          <img src={record.photos[0]} alt="" className="w-16 h-16 rounded-xl object-cover flex-shrink-0 border border-white/5 shadow-sm" />
+          <img src={record.photos[0]} alt="" className="w-24 h-24 rounded-2xl object-cover flex-shrink-0 border border-white/10" />
         ) : (
-          <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center flex-shrink-0">
-            <Wine className="w-6 h-6 text-zinc-600" />
+          <div className="w-24 h-24 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
+            <Wine className="w-8 h-8 text-zinc-700" />
           </div>
         )}
-        <div className="flex-1 min-w-0 pr-4 flex flex-col pt-0.5">
-          <p className="text-[15px] font-semibold text-white truncate flex items-center gap-2">
-            <span
-              className="w-2.5 h-2.5 flex-shrink-0 rounded-full shadow-sm"
-              style={{ backgroundColor: WINE_COLORS[record.wine_type ?? ""] ?? WINE_COLORS.other }}
-            />
-            {record.name}
-          </p>
-          <p className="text-xs text-zinc-400 mt-1 flex items-center gap-1.5 font-light truncate">
-            <MapPin className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
+        <div className="flex-1 min-w-0 flex flex-col justify-center pr-6">
+          <p className="text-base font-bold text-white truncate">{record.name}</p>
+          {record.rating != null && (
+            <div className="flex items-center gap-1 mt-1">
+              <span className="text-amber-400 text-sm">★</span>
+              <span className="text-sm font-bold text-amber-400">{Number(record.rating).toFixed(1)}</span>
+            </div>
+          )}
+          <p className="text-xs text-zinc-500 mt-1 flex items-center gap-1 font-light truncate">
+            <MapPin className="w-3 h-3 flex-shrink-0" />
             {record.place_name || record.location}
           </p>
-          <div className="flex items-center gap-2 mt-1.5">
-            <span className="text-[11px] text-zinc-500 font-light px-1.5 py-0.5 rounded-md border border-white/5 bg-white/5">
-              {new Date(record.drunk_at).toLocaleDateString("ko-KR", { year: "numeric", month: "short", day: "numeric" })}
-            </span>
-            {record.rating != null && (
-              <span className="text-[11px] text-amber-400 font-medium px-1.5 py-0.5 rounded-md border border-amber-500/10 bg-amber-500/10">★ {record.rating}</span>
-            )}
-          </div>
+          <span className="text-[10px] text-zinc-600 mt-1">
+            {new Date(record.drunk_at).toLocaleDateString("ko-KR", { year: "numeric", month: "short", day: "numeric" })}
+          </span>
         </div>
       </div>
     </Link>
@@ -76,7 +73,7 @@ function PopupCarousel({ records, onClose }: { records: MapRecord[]; onClose: ()
   }, []);
 
   return (
-    <div className="absolute bottom-32 left-4 right-4 z-[1000] bg-surface/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
+    <div className="absolute bottom-28 left-3 right-3 z-[1000] bg-surface/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
       <button
         onClick={onClose}
         className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-black/40 text-zinc-400 hover:text-white hover:bg-black/60 transition-colors text-sm z-10"
@@ -90,7 +87,7 @@ function PopupCarousel({ records, onClose }: { records: MapRecord[]; onClose: ()
       >
         {records.map((r) => (
           <div key={r.id} className="snap-center flex-shrink-0 w-full p-4">
-            <MapRecordCard record={r} />
+            <BottomCard record={r} onClose={onClose} />
           </div>
         ))}
       </div>
@@ -99,8 +96,8 @@ function PopupCarousel({ records, onClose }: { records: MapRecord[]; onClose: ()
           {records.map((_, i) => (
             <span
               key={i}
-              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                i === activeIdx ? "bg-accent w-4" : "bg-zinc-600"
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i === activeIdx ? "bg-accent w-5" : "bg-zinc-600 w-1.5"
               }`}
             />
           ))}
@@ -110,11 +107,49 @@ function PopupCarousel({ records, onClose }: { records: MapRecord[]; onClose: ()
   );
 }
 
+// ─── 목록 뷰 ────────────────────────────────────────────────────────────────
+
+function ListView({ records, onClose }: { records: MapRecord[]; onClose: () => void }) {
+  return (
+    <div className="absolute inset-0 z-[1001] bg-background/95 backdrop-blur-xl flex flex-col">
+      <div className="px-5 pt-4 pb-3 flex items-center justify-between border-b border-white/5">
+        <h2 className="text-lg font-bold text-white">기록 목록</h2>
+        <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-zinc-400 hover:text-white transition-colors">
+          <CloseIcon size={16} />
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto pb-24">
+        {records.map((r) => (
+          <Link key={r.id} href={`/diary/${r.id}`} className="flex items-center gap-4 px-5 py-3.5 border-b border-white/5 hover:bg-white/5 transition-colors">
+            {r.photos?.[0] ? (
+              <img src={r.photos[0]} alt="" className="w-14 h-14 rounded-xl object-cover flex-shrink-0 border border-white/10" />
+            ) : (
+              <div className="w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
+                <Wine className="w-5 h-5 text-zinc-700" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-white truncate">{r.name}</p>
+              <p className="text-xs text-zinc-500 font-light truncate mt-0.5">{r.place_name || r.location}</p>
+            </div>
+            {r.rating != null && (
+              <span className="text-xs font-bold text-amber-400 flex-shrink-0">★ {Number(r.rating).toFixed(1)}</span>
+            )}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── 메인 ────────────────────────────────────────────────────────────────────
+
 export default function WineMapClient({ records }: { records: MapRecord[] }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const [loaded, setLoaded] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<MapRecord[] | null>(null);
+  const [showList, setShowList] = useState(false);
 
   const groupedByLocation = useCallback(() => {
     const groups = new window.Map<string, MapRecord[]>();
@@ -126,6 +161,16 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
     });
     return Array.from(groups.values());
   }, [records]);
+
+  function goToMyLocation() {
+    if (!mapInstanceRef.current || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const kakao = (window as any).kakao;
+      const loc = new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+      mapInstanceRef.current.setCenter(loc);
+      mapInstanceRef.current.setLevel(5);
+    });
+  }
 
   useEffect(() => {
     if (typeof window === "undefined" || records.length === 0) return;
@@ -145,58 +190,72 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
     if (mapInstanceRef.current) return;
     const kakao = (window as any).kakao;
 
-    const bounds = new kakao.maps.LatLngBounds();
-    records.forEach((r) => bounds.extend(new kakao.maps.LatLng(r.latitude, r.longitude)));
+    // 현재 위치 기반으로 센터링 시도, 실패 시 기록 bounds
+    const initMap = (center: any, level: number) => {
+      const map = new kakao.maps.Map(mapRef.current, { center, level });
+      mapInstanceRef.current = map;
 
-    const map = new kakao.maps.Map(mapRef.current, {
-      center: bounds.getCenter?.() ?? new kakao.maps.LatLng(37.5665, 126.978),
-      level: 8,
-    });
-    map.setBounds(bounds, 80);
-    if (map.getLevel() < 5) map.setLevel(5);
-    mapInstanceRef.current = map;
+      const groups = groupedByLocation();
+      groups.forEach((group) => {
+        const rep = group[0];
+        const pos = new kakao.maps.LatLng(rep.latitude, rep.longitude);
+        const count = group.length;
+        const color = WINE_COLORS[rep.wine_type ?? ""] ?? WINE_COLORS.other;
 
-    const groups = groupedByLocation();
-    groups.forEach((group) => {
-      const rep = group[0];
-      const pos = new kakao.maps.LatLng(rep.latitude, rep.longitude);
+        const markerHtml = `<div style="cursor:pointer; display:flex; flex-direction:column; align-items:center;">
+          <div style="
+            background:${color}; color:white;
+            min-width:${count > 1 ? "32px" : "28px"}; height:${count > 1 ? "32px" : "28px"};
+            border-radius:50%;
+            display:flex; align-items:center; justify-content:center;
+            font-size:${count > 1 ? "12px" : "14px"}; font-weight:700;
+            border:2.5px solid white; box-shadow:0 2px 8px rgba(0,0,0,0.4);
+          ">${count > 1 ? count : "🍷"}</div>
+          <div style="width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid ${color}; margin-top:-1px;"></div>
+        </div>`;
 
-      // 다크 테마 커스텀 마커
-      const count = group.length;
-      const markerHtml = `<div style="
-        cursor:pointer;
-        display:flex; flex-direction:column; align-items:center;
-      ">
-        <div style="
-          background:#1c1c1e; color:#e4e4e7;
-          min-width:28px; height:28px; border-radius:14px;
-          display:flex; align-items:center; justify-content:center;
-          font-size:11px; font-weight:700;
-          border:2px solid #e11d48; box-shadow:0 2px 8px rgba(0,0,0,0.5);
-          padding:0 6px;
-        ">${count > 1 ? count : "🍷"}</div>
-        <div style="
-          width:2px; height:6px; background:#e11d48; border-radius:1px;
-        "></div>
-      </div>`;
-
-      const overlay = new kakao.maps.CustomOverlay({
-        position: pos,
-        content: markerHtml,
-        yAnchor: 1,
-        zIndex: 2,
-        clickable: true,
-      });
-      overlay.setMap(map);
-
-      const el = overlay.getContent() as HTMLElement;
-      if (el && el.addEventListener) {
-        el.addEventListener("click", () => {
-          setSelectedGroup(group);
-          map.panTo(pos);
+        const overlay = new kakao.maps.CustomOverlay({
+          position: pos,
+          content: markerHtml,
+          yAnchor: 1,
+          zIndex: 2,
+          clickable: true,
         });
-      }
-    });
+        overlay.setMap(map);
+
+        const el = overlay.getContent() as HTMLElement;
+        if (el && el.addEventListener) {
+          el.addEventListener("click", () => {
+            setSelectedGroup(group);
+            map.panTo(pos);
+          });
+        }
+      });
+    };
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const center = new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+          initMap(center, 5);
+        },
+        () => {
+          // 위치 권한 거부 시 기록 bounds로
+          const bounds = new kakao.maps.LatLngBounds();
+          records.forEach((r) => bounds.extend(new kakao.maps.LatLng(r.latitude, r.longitude)));
+          const center = bounds.getCenter?.() ?? new kakao.maps.LatLng(37.5665, 126.978);
+          initMap(center, 8);
+          mapInstanceRef.current.setBounds(bounds, 80);
+        },
+        { timeout: 3000 }
+      );
+    } else {
+      const bounds = new kakao.maps.LatLngBounds();
+      records.forEach((r) => bounds.extend(new kakao.maps.LatLng(r.latitude, r.longitude)));
+      const center = bounds.getCenter?.() ?? new kakao.maps.LatLng(37.5665, 126.978);
+      initMap(center, 8);
+      mapInstanceRef.current.setBounds(bounds, 80);
+    }
   }, [loaded, records, groupedByLocation]);
 
   if (records.length === 0) {
@@ -210,8 +269,8 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-80px)] bg-background min-h-screen">
-      <header className="px-5 pt-8 pb-2 flex items-center justify-between border-b border-white/5 bg-background/80 backdrop-blur-md z-10">
+    <div className="flex flex-col h-[calc(100dvh-80px)] bg-background">
+      <header className="px-5 pt-8 pb-2 flex items-center justify-between bg-background z-10">
         <h1 className="text-2xl font-bold text-white">와인맵</h1>
         <span className="text-xs text-zinc-500">{records.length}개 기록 · {groupedByLocation().length}곳</span>
       </header>
@@ -225,11 +284,37 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
           </div>
         )}
 
+        {/* 플로팅 버튼들 */}
+        <div className="absolute bottom-28 right-4 z-[999] flex flex-col gap-2">
+          <button
+            onClick={goToMyLocation}
+            className="w-11 h-11 rounded-full bg-surface/90 backdrop-blur-md border border-white/10 shadow-xl flex items-center justify-center text-zinc-300 hover:text-white transition-colors"
+          >
+            <Navigation size={18} />
+          </button>
+        </div>
+
+        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-[999]">
+          <button
+            onClick={() => setShowList(true)}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-surface/90 backdrop-blur-md border border-white/10 shadow-xl text-zinc-200 hover:text-white transition-colors"
+          >
+            <List size={16} />
+            <span className="text-sm font-medium">목록</span>
+          </button>
+        </div>
+
+        {/* 선택된 장소 카드 */}
         {selectedGroup && (
           <PopupCarousel
             records={selectedGroup}
             onClose={() => setSelectedGroup(null)}
           />
+        )}
+
+        {/* 목록 뷰 */}
+        {showList && (
+          <ListView records={records} onClose={() => setShowList(false)} />
         )}
       </div>
     </div>

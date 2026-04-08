@@ -501,7 +501,7 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
     <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
       <div className="px-5 pt-4 pb-2 flex items-center justify-between">
         <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Reviews</p>
-        {canEvaluate && !hasMyEval && (
+        {currentUserId && !hasMyEval && (
           <Link
             href={`/diary/${record.id}/evaluate`}
             className="text-[11px] px-3 py-1 rounded-lg bg-violet-500/20 text-violet-300 border border-violet-500/30 hover:bg-violet-500/30 transition-colors"

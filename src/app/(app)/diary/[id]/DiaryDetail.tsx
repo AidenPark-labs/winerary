@@ -180,12 +180,11 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
 
           {/* ── 글라스 카드 (별점 + 날짜 + 동행) ── */}
           <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 px-5 py-3.5 shadow-2xl flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               {record.rating != null && (
-                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/30 border border-white/10 text-amber-400 text-xs font-bold">
-                  ★ {Number(record.rating).toFixed(1)}
-                </span>
+                <span className="text-amber-400 text-sm font-bold">★ {Number(record.rating).toFixed(1)}</span>
               )}
+              {record.rating != null && <span className="text-white/20">|</span>}
               <span className="text-sm text-white font-medium">{dateStr}</span>
             </div>
             {companions.length > 0 && (

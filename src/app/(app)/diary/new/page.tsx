@@ -153,7 +153,7 @@ function fillWineFields(
     } else {
       const match = GRAPE_OPTIONS.find((g) => grapeVal.includes(g) || g.includes(grapeVal));
       if (match) setters.setGrape(match);
-      else { setters.setGrape("__custom__"); setters.setGrapeCustom(grapeVal); }
+      else setters.setGrape(grapeVal); // GrapeCombobox에 직접 표시
     }
   }
 
@@ -488,7 +488,7 @@ export default function NewDiaryPage() {
       } else {
         const match = GRAPE_OPTIONS.find((g) => wine.grapes.includes(g) || g.includes(wine.grapes));
         if (match) setGrape(match);
-        else { setGrape("__custom__"); setGrapeCustom(wine.grapes); }
+        else setGrape(wine.grapes); // GrapeCombobox는 직접 등록 문자열을 표시
       }
     }
     if (wine.country) {

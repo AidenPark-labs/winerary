@@ -284,6 +284,7 @@ function CardMenu({ recordId }: { recordId: string }) {
 function FeedCard({ record }: { record: WineRecord }) {
   const photos: string[] = record.photos ?? [];
   const foods: { name: string }[] = (record.foods as { name: string }[]) ?? [];
+  const companions: string[] = record.companions ?? [];
   const thumb = photos[0];
 
   return (
@@ -349,9 +350,11 @@ function FeedCard({ record }: { record: WineRecord }) {
           <p className="text-xs text-zinc-300/80 italic font-light truncate drop-shadow-sm">{record.wine_name_original}</p>
         )}
         <p className="text-[11px] text-zinc-400 font-light tracking-wide mt-1">
-          {new Date(record.drunk_at).toLocaleDateString("ko-KR", { year: "numeric", month: "short", day: "numeric" })}
-          {record.location && ` · ${record.location}`}
-          {foods.length > 0 && ` · 🍽 ${foods.map(f => f.name).join(", ")}`}
+          {[
+            record.location,
+            foods.length > 0 ? `🍽 ${foods.map(f => f.name).join(", ")}` : null,
+            companions.length > 0 ? `with ${companions.map(c => `@${c}`).join(", ")}` : null,
+          ].filter(Boolean).join(" · ")}
         </p>
         <div className="flex items-center gap-1.5 flex-wrap mt-2">
           {record.wine_type && (

@@ -417,25 +417,31 @@ export default function NewDiaryPage() {
         setAiNotFound(false);
         fillWineFields(aiData, { setQuery, setWineNameOriginal, setWineType, setWineVintage, setGrape, setGrapeCustom, setCountry, setCountryCustom, setSelectedWine });
 
-        // DB 매칭 검색
+        // DB 매칭
         const koName = aiData.name || "";
         const enName = aiData.name_original || "";
-        let dbMatches = await searchDbMatches(koName, enName);
-        setSuggestions(dbMatches);
+        let primaryMatch: WineSuggestion | null = null;
 
-        // AI가 wine_id를 찾았으면 해당 와인을 최상단으로
-        if (aiData.wine_id && dbMatches.length > 0) {
-          const aiMatch = dbMatches.find((w) => w.wine_id === aiData.wine_id);
-          if (aiMatch) {
-            const rest = dbMatches.filter((w) => w.wine_id !== aiData.wine_id);
-            dbMatches = [aiMatch, ...rest];
-            setSuggestions(dbMatches);
-          }
+        // 1) AI가 wine_id를 찾았으면 직접 조회
+        if (aiData.wine_id) {
+          try {
+            const res = await fetch(`/api/wine/${aiData.wine_id}`);
+            if (res.ok) primaryMatch = await res.json();
+          } catch { /* skip */ }
         }
 
-        // 유사도 최고 후보 자동 선택 (suggestions는 유지)
-        if (dbMatches.length > 0) {
-          applyWineFields(dbMatches[0]);
+        // 2) 대안 후보 검색
+        const altMatches = await searchDbMatches(koName, enName);
+
+        // primaryMatch를 최상단에, 중복 제거
+        const allMatches = primaryMatch
+          ? [primaryMatch, ...altMatches.filter((w) => w.wine_id !== primaryMatch!.wine_id)]
+          : altMatches;
+
+        setSuggestions(allMatches);
+
+        if (allMatches.length > 0) {
+          applyWineFields(allMatches[0]);
         }
       } else {
         setAiResult(null);

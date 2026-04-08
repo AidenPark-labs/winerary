@@ -416,7 +416,7 @@ function EvalCardContent({ rating, valueScore, pairingScore, memo, repurchaseInt
         <div className="flex flex-col gap-2">
           {rating != null && (
             <div className="flex items-center justify-between">
-              <span className="text-xs text-zinc-500">맛 평점</span>
+              <span className="text-xs text-zinc-500">와인 평점</span>
               <div className="flex items-center gap-2">
                 <div className="flex">{renderStars(Number(rating), 5)}</div>
                 <span className="text-xs font-bold text-white w-7 text-right">{Number(rating).toFixed(1)}</span>
@@ -444,8 +444,8 @@ function EvalCardContent({ rating, valueScore, pairingScore, memo, repurchaseInt
         </div>
       )}
       {repurchaseIntent && (
-        <div className="flex items-center gap-1.5 mt-2">
-          <span className="text-xs text-zinc-500">재구매</span>
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-xs text-zinc-500">재구매의사</span>
           <span className="text-xs font-medium text-white">
             {{ yes: "👍 있음", maybe: "🤔 고민 중", no: "👋 패스" }[repurchaseIntent] ?? repurchaseIntent}
           </span>

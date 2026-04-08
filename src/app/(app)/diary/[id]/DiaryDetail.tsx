@@ -99,6 +99,15 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
     return `${record.price.toLocaleString()}원${unit}`;
   })() : null;
 
+  // 종합 평점: 맛 + 가성비 + (음식이 있으면 음식궁합)
+  const overallScore = (() => {
+    const scores: number[] = [];
+    if (record.rating != null) scores.push(Number(record.rating));
+    if (record.value_score != null) scores.push(Number(record.value_score));
+    if (foods.length > 0 && record.pairing_score != null) scores.push(Number(record.pairing_score));
+    return scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
+  })();
+
   return (
     <div className="relative min-h-screen bg-black">
 
@@ -181,10 +190,10 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
           {/* ── 글라스 카드 (별점 + 날짜 + 동행) ── */}
           <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 px-5 py-3.5 shadow-2xl flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {record.rating != null && (
-                <span className="text-amber-400 text-sm font-bold">★ {Number(record.rating).toFixed(1)}</span>
+              {overallScore != null && (
+                <span className="text-amber-400 text-sm font-bold">★ {overallScore.toFixed(1)}</span>
               )}
-              {record.rating != null && <span className="text-white/20">|</span>}
+              {overallScore != null && <span className="text-white/20">|</span>}
               <span className="text-sm text-white font-medium">{dateStr}</span>
             </div>
             {companions.length > 0 && (

@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import type { WineRecord } from "@/types";
+import type { WineRecord, CompanionEntry } from "@/types";
 
 const PROMOTE_THRESHOLD = 3;
 
@@ -52,7 +52,40 @@ async function resolvePendingWine(
   return created?.id ?? null;
 }
 
-export async function createWineRecord(data: Partial<WineRecord>) {
+/** companions 중 멘션된 유저를 record_mentions에 동기화 */
+async function syncMentions(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  recordId: string,
+  companionEntries: CompanionEntry[] | null,
+) {
+  // 기존 멘션 삭제
+  await supabase.from("record_mentions").delete().eq("record_id", recordId);
+
+  if (!companionEntries?.length) return;
+
+  const userCodes = companionEntries
+    .map((e) => e.userCode)
+    .filter((c): c is string => c !== null);
+
+  if (userCodes.length === 0) return;
+
+  // user_code → user_id 조회
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, user_code")
+    .in("user_code", userCodes);
+
+  if (!profiles?.length) return;
+
+  const rows = profiles.map((p) => ({
+    record_id: recordId,
+    mentioned_user_id: p.id,
+  }));
+
+  await supabase.from("record_mentions").insert(rows);
+}
+
+export async function createWineRecord(data: Partial<WineRecord> & { companion_entries?: CompanionEntry[] }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
@@ -63,10 +96,14 @@ export async function createWineRecord(data: Partial<WineRecord>) {
     pendingWineId = await resolvePendingWine(supabase, user.id, data);
   }
 
+  const companionEntries = data.companion_entries;
+  const insertData = { ...data };
+  delete (insertData as Record<string, unknown>).companion_entries;
+
   const { data: record, error } = await supabase
     .from("wine_records")
     .insert({
-      ...data,
+      ...insertData,
       user_id: user.id,
       wine_id: data.wine_id || null,
       pending_wine_id: pendingWineId,
@@ -78,21 +115,32 @@ export async function createWineRecord(data: Partial<WineRecord>) {
     console.error("[createWineRecord] error:", error.message, "data keys:", Object.keys(data));
     return { error: error.message };
   }
+
+  await syncMentions(supabase, record.id, companionEntries ?? null);
   redirect(`/diary/${record.id}`);
 }
 
-export async function updateWineRecord(id: string, data: Partial<WineRecord>) {
+export async function updateWineRecord(id: string, data: Partial<WineRecord> & { companion_entries?: CompanionEntry[] }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
+  const companionEntries = data.companion_entries;
+  const updateData = { ...data };
+  delete (updateData as Record<string, unknown>).companion_entries;
+
   const { error } = await supabase
     .from("wine_records")
-    .update({ ...data, updated_at: new Date().toISOString() })
+    .update({ ...updateData, updated_at: new Date().toISOString() })
     .eq("id", id)
     .eq("user_id", user.id);
 
   if (error) return { error: error.message };
+
+  if (companionEntries !== undefined) {
+    await syncMentions(supabase, id, companionEntries ?? null);
+  }
+
   revalidatePath(`/diary/${id}`);
   revalidatePath("/diary");
   return { success: true };

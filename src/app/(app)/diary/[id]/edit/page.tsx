@@ -16,6 +16,21 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
 
   if (!record) notFound();
 
+  // 멘션된 유저 코드 조회 (편집 시 복원용)
+  const { data: mentions } = await supabase
+    .from("record_mentions")
+    .select("mentioned_user_id, profiles:mentioned_user_id(nickname, user_code)")
+    .eq("record_id", id);
+
+  const mentionCodes: Record<string, string> = {};
+  (mentions ?? []).forEach((m: unknown) => {
+    const row = m as { profiles: { nickname: string; user_code: string } | { nickname: string; user_code: string }[] | null };
+    const p = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+    if (p) mentionCodes[p.nickname] = p.user_code;
+  });
+
+  const recordWithMentions = { ...record, _mentionCodes: mentionCodes };
+
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950">
       <header className="px-5 pt-12 pb-4 flex items-center gap-3 border-b border-zinc-800">
@@ -23,7 +38,7 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
         <h1 className="text-xl font-bold">기록 수정</h1>
       </header>
       <div className="px-4 py-6 pb-28">
-        <EditForm record={record as WineRecord} redirectAfterSave={`/diary/${id}`} />
+        <EditForm record={recordWithMentions as WineRecord} redirectAfterSave={`/diary/${id}`} />
       </div>
     </div>
   );

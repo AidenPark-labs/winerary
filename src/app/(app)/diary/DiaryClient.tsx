@@ -286,9 +286,11 @@ function FeedCard({ record }: { record: WineRecord }) {
               <Camera size={12} /> {photos.length}
             </span>
           )}
-          <div className="pointer-events-auto">
-            <CardMenu recordId={record.id} />
-          </div>
+          {!(record as unknown as Record<string, unknown>)._shared && (
+            <div className="pointer-events-auto">
+              <CardMenu recordId={record.id} />
+            </div>
+          )}
         </div>
       </div>
 
@@ -297,6 +299,11 @@ function FeedCard({ record }: { record: WineRecord }) {
 
       {/* 하단 슬림 글라스 패널 */}
       <div className="relative z-20 mt-auto px-5 py-4 bg-black/40 backdrop-blur-2xl border-t border-white/10 pointer-events-none">
+        {Boolean((record as unknown as Record<string, unknown>)._shared) && (
+          <span className="inline-block px-2 py-0.5 rounded-md bg-violet-500/20 border border-violet-500/30 text-[10px] text-violet-300 font-medium mb-1">
+            {String((record as unknown as Record<string, unknown>)._ownerNickname ?? "공유")} 님의 기록
+          </span>
+        )}
         <h2 className="font-serif font-medium text-white text-lg tracking-wide leading-tight line-clamp-1 drop-shadow-md">
           {record.name}
         </h2>

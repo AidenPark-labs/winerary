@@ -197,7 +197,17 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
               <span className="text-sm text-white font-medium">{dateStr}</span>
             </div>
             {companions.length > 0 && (
-              <span className="text-xs text-zinc-300/70 font-light">with {companions.join(", ")}</span>
+              <span className="text-xs text-zinc-300/70 font-light">
+                with{" "}
+                {companions.map((c, i) => (
+                  <span key={i}>
+                    {i > 0 && ", "}
+                    {c.startsWith("@") ? (
+                      <span className="text-violet-300">{c}</span>
+                    ) : c}
+                  </span>
+                ))}
+              </span>
             )}
           </div>
 

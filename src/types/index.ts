@@ -42,6 +42,23 @@ export interface FoodRecord {
   note?: string
 }
 
+export interface CompanionEntry {
+  name: string
+  userCode: string | null
+}
+
+export interface RecordMention {
+  id: string
+  record_id: string
+  mentioned_user_id: string
+  created_at: string
+  profile?: {
+    nickname: string
+    avatar_url: string | null
+    user_code: string
+  }
+}
+
 export interface WineSession {
   id: string
   code: string

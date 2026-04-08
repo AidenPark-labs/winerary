@@ -3,12 +3,13 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { updateWineRecord } from "@/lib/actions/diary";
-import type { WineRecord, WineType } from "@/types";
+import type { WineRecord, WineType, CompanionEntry } from "@/types";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import StarRating from "@/components/StarRating";
 import PlaceSearch from "@/components/PlaceSearch";
 import BlendGrapeSelector from "@/components/BlendGrapeSelector";
 import GrapeCombobox from "@/components/GrapeCombobox";
+import CompanionInput from "@/components/CompanionInput";
 
 const iCls = "w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3.5 text-zinc-100 focus:outline-none focus:border-accent focus:bg-black/60 transition-all font-light text-sm";
 
@@ -123,7 +124,16 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
   const [placeLocation, setPlaceLocation] = useState(record.location ?? "");
   const [placeLat, setPlaceLat] = useState<number | null>(record.latitude ?? null);
   const [placeLng, setPlaceLng] = useState<number | null>(record.longitude ?? null);
-  const [companions, setCompanions] = useState(record.companions?.join(", ") ?? "");
+  const [companionEntries, setCompanionEntries] = useState<CompanionEntry[]>(() => {
+    const mentionCodes = ((record as unknown as Record<string, unknown>)._mentionCodes ?? {}) as Record<string, string>;
+    return (record.companions ?? []).map((c) => {
+      if (c.startsWith("@")) {
+        const name = c.slice(1);
+        return { name, userCode: mentionCodes[name] ?? null };
+      }
+      return { name: c, userCode: null };
+    });
+  });
 
   // 음식
   const [foods, setFoods] = useState<string[]>((record.foods ?? []).map((f) => f.name));
@@ -185,7 +195,8 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
       latitude: placeLat,
       longitude: placeLng,
       drunk_at: drunkAt,
-      companions: companions ? companions.split(",").map((s) => s.trim()).filter(Boolean) : null,
+      companions: companionEntries.length > 0 ? companionEntries.map((e) => e.userCode ? `@${e.name}` : e.name) : null,
+      companion_entries: companionEntries.length > 0 ? companionEntries : undefined,
       memo: memo || null,
       tags: tags.length > 0 ? tags : null,
       rating,
@@ -342,7 +353,7 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
             className={iCls}
             placeholder="장소 검색…"
           />
-          <input value={companions} onChange={(e) => setCompanions(e.target.value)} placeholder="함께한 사람 (쉼표 구분)" className={iCls} />
+          <CompanionInput value={companionEntries} onChange={setCompanionEntries} className={iCls} />
         </section>
 
         {/* ── 페어링 음식 ── */}

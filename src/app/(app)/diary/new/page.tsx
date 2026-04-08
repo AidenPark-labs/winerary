@@ -3,13 +3,14 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { extractPhotoDate } from "@/lib/exif";
-import type { WineSuggestion, WineType } from "@/types";
+import type { WineSuggestion, WineType, CompanionEntry } from "@/types";
 import { createWineRecord } from "@/lib/actions/diary";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import StarRating from "@/components/StarRating";
 import PlaceSearch from "@/components/PlaceSearch";
 import BlendGrapeSelector from "@/components/BlendGrapeSelector";
 import GrapeCombobox from "@/components/GrapeCombobox";
+import CompanionInput from "@/components/CompanionInput";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -193,7 +194,7 @@ export default function NewDiaryPage() {
   const [location, setLocation] = useState("");
   const [placeLat, setPlaceLat] = useState<number | null>(null);
   const [placeLng, setPlaceLng] = useState<number | null>(null);
-  const [companions, setCompanions] = useState("");
+  const [companionEntries, setCompanionEntries] = useState<CompanionEntry[]>([]);
   const [foodInput, setFoodInput] = useState("");
   const [foods, setFoods] = useState<string[]>([]);
   const [rating, setRating] = useState(3);
@@ -379,7 +380,8 @@ export default function NewDiaryPage() {
       place_name: location || null,
       latitude: placeLat,
       longitude: placeLng,
-      companions: companions ? companions.split(",").map((s) => s.trim()).filter(Boolean) : null,
+      companions: companionEntries.length > 0 ? companionEntries.map((e) => e.userCode ? `@${e.name}` : e.name) : null,
+      companion_entries: companionEntries.length > 0 ? companionEntries : undefined,
       foods: foods.map((name) => ({ name })),
       rating,
       pairing_score: foods.length > 0 ? pairingScore : null,
@@ -716,7 +718,7 @@ export default function NewDiaryPage() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm text-zinc-400">함께한 사람</label>
-                <input value={companions} onChange={(e) => setCompanions(e.target.value)} className={iCls} placeholder="쉼표로 구분 (예: 지연, 민준)" />
+                <CompanionInput value={companionEntries} onChange={setCompanionEntries} className={iCls} />
               </div>
             </section>
 

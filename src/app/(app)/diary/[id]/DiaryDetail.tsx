@@ -178,12 +178,10 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
         <div className={`flex flex-col gap-4 px-4 relative z-20 ${hasPhoto ? "-mt-16" : "pt-4"} ${readOnly ? "pb-36" : "pb-28"}`}>
 
           {/* ── 글라스 카드 (날짜 + 동행) ── */}
-          <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 px-5 py-4 shadow-2xl">
-            <p className="text-sm text-white font-medium">{dateStr}</p>
-            {(placeStr || companions.length > 0) && (
-              <p className="text-xs text-zinc-300/70 font-light mt-1 truncate">
-                {[placeStr, companions.length > 0 && `with ${companions.join(", ")}`].filter(Boolean).join(" · ")}
-              </p>
+          <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 px-5 py-3.5 shadow-2xl flex items-center justify-between">
+            <span className="text-sm text-white font-medium">{dateStr}</span>
+            {companions.length > 0 && (
+              <span className="text-xs text-zinc-300/70 font-light">with {companions.join(", ")}</span>
             )}
           </div>
 
@@ -206,7 +204,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
             const hasWineLink = !!(record.wine_id && wineData?.id);
 
             return (
-              <div className="rounded-2xl bg-surface/60 backdrop-blur-2xl border border-white/5 overflow-hidden">
+              <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
                 <div className="px-5 pt-4 pb-2">
                   <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Wine</p>
                 </div>
@@ -240,7 +238,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                 )}
                 {/* 맛 평점 */}
                 {record.rating != null && (
-                  <div className="flex items-center justify-between px-5 py-3 border-t border-white/5">
+                  <div className="flex items-center justify-between px-5 py-3 border-t border-white/10">
                     <span className="text-xs text-zinc-400">맛 평점</span>
                     <div className="flex items-center gap-2">
                       <div className="flex">{renderStars(Number(record.rating), 5)}</div>
@@ -254,7 +252,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
 
           {/* ━━━━━━━━━━ 2. Pairing ━━━━━━━━━━ */}
           {(foods.length > 0 || record.pairing_score != null) && (
-            <div className="rounded-2xl bg-surface/50 backdrop-blur-2xl border border-white/5 overflow-hidden">
+            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
               <div className="px-5 pt-4 pb-2">
                 <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Pairing</p>
               </div>
@@ -269,7 +267,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
               )}
               {/* 음식 궁합 점수 → 페어링에 대한 평가 */}
               {record.pairing_score != null && (
-                <div className="flex items-center justify-between px-5 py-3 border-t border-white/5">
+                <div className="flex items-center justify-between px-5 py-3 border-t border-white/10">
                   <span className="text-xs text-zinc-400">음식 궁합</span>
                   <div className="flex items-center gap-2">
                     <div className="flex">{renderStars(record.pairing_score, 5)}</div>
@@ -282,7 +280,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
 
           {/* ━━━━━━━━━━ 3. Experience ━━━━━━━━━━ */}
           {(priceText || placeStr || record.value_score != null) && (
-            <div className="rounded-2xl bg-surface/40 backdrop-blur-xl border border-white/5 overflow-hidden divide-y divide-white/5">
+            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl divide-y divide-white/10">
               <div className="px-5 pt-4 pb-2">
                 <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Experience</p>
               </div>
@@ -312,7 +310,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
 
           {/* ━━━━━━━━━━ Verdict (메모 + 재구매) ━━━━━━━━━━ */}
           {(record.memo || record.repurchase_intent) && (
-            <div className="rounded-2xl bg-surface/50 backdrop-blur-2xl border border-white/5 overflow-hidden">
+            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
               <div className="px-5 pt-4 pb-2">
                 <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Verdict</p>
               </div>
@@ -325,7 +323,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                 </div>
               )}
               {record.repurchase_intent && (
-                <div className="flex items-center justify-between px-5 py-3 border-t border-white/5">
+                <div className="flex items-center justify-between px-5 py-3 border-t border-white/10">
                   <span className="text-xs text-zinc-400">재구매 의사</span>
                   <span className="text-sm font-medium text-white">
                     {{ yes: "👍 있음", maybe: "🤔 고민 중", no: "👋 패스" }[record.repurchase_intent]}

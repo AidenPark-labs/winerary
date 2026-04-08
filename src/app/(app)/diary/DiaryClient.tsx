@@ -214,9 +214,6 @@ function MapView({ records }: { records: WineRecord[] }) {
     );
   }
 
-  const current = selectedGroup?.[selectedIdx] ?? null;
-  const total = selectedGroup?.length ?? 0;
-
   return (
     <div className="relative" style={{ height: "calc(100dvh - 200px)" }}>
       <div ref={mapRef} className="absolute inset-0" />

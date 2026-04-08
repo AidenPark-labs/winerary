@@ -89,11 +89,11 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
 
         {/* ── 이미지 히어로 ── */}
         <div className="relative overflow-visible">
-          <div className="flex items-center justify-center bg-zinc-900/50" style={{ height: "50vh" }}>
+          <div className="flex items-center justify-center" style={{ height: "50vh" }}>
             <img src={heroImage} alt={wine.name_ko} className="w-full h-full object-contain" />
           </div>
           <div className="absolute top-0 inset-x-0 h-36 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
-          <div className="absolute inset-x-0 bottom-0 pointer-events-none bg-background" style={{ height: "40%", maskImage: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.02) 15%, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.15) 35%, rgba(0,0,0,0.3) 45%, rgba(0,0,0,0.5) 55%, rgba(0,0,0,0.7) 65%, rgba(0,0,0,0.85) 75%, rgba(0,0,0,0.94) 85%, rgba(0,0,0,0.98) 92%, rgba(0,0,0,1) 100%)", WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.02) 15%, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.15) 35%, rgba(0,0,0,0.3) 45%, rgba(0,0,0,0.5) 55%, rgba(0,0,0,0.7) 65%, rgba(0,0,0,0.85) 75%, rgba(0,0,0,0.94) 85%, rgba(0,0,0,0.98) 92%, rgba(0,0,0,1) 100%)" } as React.CSSProperties} />
+          <div className="absolute inset-x-0 bottom-0 pointer-events-none bg-background" style={{ height: "50%", maskImage: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.02) 15%, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.15) 35%, rgba(0,0,0,0.3) 45%, rgba(0,0,0,0.5) 55%, rgba(0,0,0,0.7) 65%, rgba(0,0,0,0.85) 75%, rgba(0,0,0,0.94) 85%, rgba(0,0,0,0.98) 92%, rgba(0,0,0,1) 100%)", WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.02) 15%, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.15) 35%, rgba(0,0,0,0.3) 45%, rgba(0,0,0,0.5) 55%, rgba(0,0,0,0.7) 65%, rgba(0,0,0,0.85) 75%, rgba(0,0,0,0.94) 85%, rgba(0,0,0,0.98) 92%, rgba(0,0,0,1) 100%)" } as React.CSSProperties} />
 
           {/* 헤더 — 뒤로가기 */}
           <div className="absolute top-0 inset-x-0 px-4 pt-12 flex items-center z-20 pointer-events-none">

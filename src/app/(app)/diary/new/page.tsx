@@ -260,18 +260,59 @@ export default function NewDiaryPage() {
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
         if (!data) return;
-        const synth: AiResult = {
-          name: data.name ?? "",
-          name_original: data.wine_name_original ?? data.name ?? "",
-          wine_type: data.wine_type ?? undefined,
-          country: data.wine_country ?? undefined,
-          grape_variety: data.grape_variety,
-          vintage: data.wine_vintage ?? null,
-          vivino_url: data.wine_vivino_url ?? undefined,
+        const name = data.name ?? "";
+        const nameOrig = data.wine_name_original ?? name;
+
+        // 와인명 직접 세팅
+        setQuery(name);
+        setWineNameOriginal(nameOrig);
+
+        // 타입
+        if (data.wine_type) {
+          const typeMap: Record<string, WineType> = { red: "red", white: "white", rose: "rose", sparkling: "sparkling", fortified: "fortified", other: "other" };
+          setWineType(typeMap[data.wine_type] ?? "");
+        }
+
+        // 빈티지
+        if (data.wine_vintage) setWineVintage(String(data.wine_vintage));
+
+        // 품종
+        if (data.grape_variety) {
+          const grapeVal = data.grape_variety as string;
+          const blendMatch = grapeVal.match(/^블렌드\s*\((.+)\)$/);
+          if (blendMatch) {
+            setGrape("__blend__");
+            setBlendGrapes(blendMatch[1].split(",").map((s: string) => s.trim()));
+          } else if (grapeVal === "블렌드") {
+            setGrape("__blend__");
+          } else {
+            const match = GRAPE_OPTIONS.find((g) => grapeVal.includes(g));
+            if (match) setGrape(match);
+            else { setGrape(grapeVal); }
+          }
+        }
+
+        // 국가 — 직접 세팅
+        if (data.wine_country) {
+          const match = COUNTRY_OPTIONS.find((c) => data.wine_country.includes(c));
+          if (match) setCountry(match);
+          else { setCountry("__custom__"); setCountryCustom(data.wine_country); }
+        }
+
+        // selectedWine (저장 시 wine_id 유지)
+        setSelectedWine({
           wine_id: data.wine_id ?? undefined,
-        };
-        setAiResult(synth);
-        fillWineFields(synth, { setQuery, setWineNameOriginal, setWineType, setWineVintage, setGrape, setGrapeCustom, setCountry, setCountryCustom, setSelectedWine });
+          name: nameOrig,
+          name_ko: name,
+          producer: "",
+          country: data.wine_country ?? "",
+          type: data.wine_type ?? "",
+          grapes: data.grape_variety ?? "",
+          vintage_range: "",
+          vivino_url: data.wine_vivino_url ?? "",
+        });
+
+        // 날짜, 장소
         if (data.drunk_at) setDrunkAt(data.drunk_at);
         if (data.place_name) setLocation(data.place_name);
         if (data.latitude) setPlaceLat(data.latitude);

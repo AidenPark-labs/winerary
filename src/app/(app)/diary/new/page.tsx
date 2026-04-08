@@ -937,156 +937,171 @@ export default function NewDiaryPage() {
         {/* Step 3 — 감상 기록                             */}
         {/* ══════════════════════════════════════════════ */}
         {step === "review" && (
-          <form onSubmit={(e) => e.preventDefault()} className="flex flex-col px-4 pb-8 gap-6 overflow-y-auto">
+          <form onSubmit={(e) => e.preventDefault()} className="flex flex-col px-4 pb-8 gap-4 overflow-y-auto">
             {error && <p className="text-accent text-sm bg-accent/10 border border-accent/20 rounded-xl px-4 py-3 text-center">{error}</p>}
 
-            {/* 사진 */}
-            <section className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">사진</h2>
+            {/* ── 사진 ── */}
+            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 p-5 shadow-2xl">
+              <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em] mb-3">Photos</p>
               <div className="flex gap-2 flex-wrap">
                 {photoPreviews.map((src, i) => (
                   <div key={i} className="relative w-20 h-20">
-                    <img src={src} alt="" className="w-20 h-20 rounded-xl object-cover" />
+                    <img src={src} alt="" className="w-20 h-20 rounded-xl object-cover border border-white/10" />
                     <button type="button"
                       onClick={() => { setPhotoPreviews((p) => p.filter((_, idx) => idx !== i)); setPhotos((p) => p.filter((_, idx) => idx !== i)); }}
                       className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-zinc-700 hover:bg-zinc-600 text-zinc-200 flex items-center justify-center"><CloseIcon size={10} /></button>
                   </div>
                 ))}
                 <button type="button" onClick={() => photoInputRef.current?.click()}
-                  className="w-20 h-20 rounded-xl border-2 border-dashed border-zinc-700 hover:border-rose-600 flex flex-col items-center justify-center gap-1 text-zinc-500 hover:text-rose-400 transition-colors">
-                  <span className="text-2xl">+</span>
-                  <span className="text-xs">사진 추가</span>
+                  className="w-20 h-20 rounded-xl border-2 border-dashed border-white/10 hover:border-accent/50 flex flex-col items-center justify-center gap-1 text-zinc-500 hover:text-accent transition-colors">
+                  <span className="text-xl">+</span>
+                  <span className="text-[10px]">추가</span>
                 </button>
               </div>
               <input ref={photoInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handlePhotoChange} />
-            </section>
-
-            {/* 경험 정보 */}
-            <section className="flex flex-col gap-4">
-              <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">경험 정보</h2>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm text-zinc-400">날짜</label>
-                <input type="date" value={drunkAt} onChange={(e) => setDrunkAt(e.target.value)} className={iCls} />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm text-zinc-400">장소</label>
-                <PlaceSearch
-                  onChange={(p) => { setLocation(p.name); setPlaceLat(p.lat); setPlaceLng(p.lng); }}
-                  className={iCls}
-                  placeholder="장소 검색…"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm text-zinc-400">함께한 사람</label>
-                <CompanionInput value={companionEntries} onChange={setCompanionEntries} className={iCls} />
-              </div>
-            </section>
-
-            {/* 페어링 음식 */}
-            <section className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">페어링 음식</h2>
-              <div className="flex gap-2">
-                <input value={foodInput} onChange={(e) => setFoodInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      const v = foodInput.trim();
-                      if (v && !foods.includes(v)) { setFoods((f) => [...f, v]); setFoodInput(""); }
-                    }
-                  }}
-                  placeholder="음식 이름 입력 후 추가" className={iCls} />
-                <button type="button"
-                  onClick={() => { const v = foodInput.trim(); if (v && !foods.includes(v)) { setFoods((f) => [...f, v]); setFoodInput(""); } }}
-                  disabled={!foodInput.trim()}
-                  className="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-200 text-sm font-medium transition-colors">추가</button>
-              </div>
-              {foods.length > 0 && (
-                <div className="flex gap-2 flex-wrap">
-                  {foods.map((food, i) => (
-                    <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-800 text-zinc-200 text-sm">
-                      {food}
-                      <button type="button" onClick={() => setFoods((f) => f.filter((_, idx) => idx !== i))} className="text-zinc-500 hover:text-zinc-300 leading-none"><CloseIcon size={12} /></button>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {/* 가격 */}
-            <section className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">가격</h2>
-              <div className="relative">
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  placeholder="가격 (선택)"
-                  className={iCls + " pr-8"}
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">원</span>
-              </div>
-              {price && (
-                <div className="flex flex-col gap-2">
-                  <div className="flex rounded-xl overflow-hidden border border-zinc-700">
-                    {([["retail", "소매가"], ["market", "매장가"]] as const).map(([v, l]) => (
-                      <button key={v} type="button" onClick={() => { setPriceType(v); if (v === "retail") setPriceUnit("bottle"); }}
-                        className={`flex-1 py-2 text-sm transition-colors ${priceType === v ? "bg-accent text-white" : "bg-black/40 text-zinc-400"}`}>{l}</button>
-                    ))}
-                  </div>
-                  {priceType === "market" && (
-                    <div className="flex rounded-xl overflow-hidden border border-zinc-700">
-                      {([["bottle", "바틀"], ["glass", "글라스"]] as const).map(([v, l]) => (
-                        <button key={v} type="button" onClick={() => setPriceUnit(v)}
-                          className={`flex-1 py-2 text-sm transition-colors ${priceUnit === v ? "bg-accent text-white" : "bg-black/40 text-zinc-400"}`}>{l}</button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </section>
-
-            {/* 태그 */}
-            <section className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">태그</h2>
-              <div className="flex gap-2">
-                <input value={tagInput} onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      const v = tagInput.trim().replace(/^#/, "");
-                      if (v && !tags.includes(v)) { setTags((t) => [...t, v]); setTagInput(""); }
-                    }
-                  }}
-                  placeholder="#태그 입력 후 추가" className={iCls} />
-                <button type="button"
-                  onClick={() => { const v = tagInput.trim().replace(/^#/, ""); if (v && !tags.includes(v)) { setTags((t) => [...t, v]); setTagInput(""); } }}
-                  disabled={!tagInput.trim()}
-                  className="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-200 text-sm font-medium transition-colors">추가</button>
-              </div>
-              {tags.length > 0 && (
-                <div className="flex gap-2 flex-wrap">
-                  {tags.map((tag, i) => (
-                    <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-900/40 border border-violet-800/50 text-violet-200 text-sm">
-                      #{tag}
-                      <button type="button" onClick={() => setTags((t) => t.filter((_, idx) => idx !== i))} className="text-violet-400 hover:text-violet-200 leading-none"><CloseIcon size={12} /></button>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {/* 공개 범위 */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm text-zinc-400">공개 범위</label>
-              <select value={visibility} onChange={(e) => setVisibility(e.target.value as "private" | "link" | "public")} className={iCls}>
-                <option value="private">비공개</option>
-                <option value="link">링크 공유</option>
-                <option value="public">전체 공개</option>
-              </select>
             </div>
 
-            <div className="flex flex-col gap-3 mt-4">
+            {/* ── 경험 (날짜 + 장소 + 동행) ── */}
+            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
+              <div className="px-5 pt-4 pb-2">
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Experience</p>
+              </div>
+              <div className="flex flex-col gap-4 px-5 pb-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-400">날짜</label>
+                  <input type="date" value={drunkAt} onChange={(e) => setDrunkAt(e.target.value)} className={iCls} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-400">장소</label>
+                  <PlaceSearch
+                    onChange={(p) => { setLocation(p.name); setPlaceLat(p.lat); setPlaceLng(p.lng); }}
+                    className={iCls}
+                    placeholder="장소 검색…"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-400">함께한 사람</label>
+                  <CompanionInput value={companionEntries} onChange={setCompanionEntries} className={iCls} />
+                </div>
+              </div>
+            </div>
+
+            {/* ── 구매가격 ── */}
+            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
+              <div className="px-5 pt-4 pb-2">
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Price</p>
+              </div>
+              <div className="flex flex-col gap-3 px-5 pb-4">
+                <div className="relative">
+                  <input type="number" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)}
+                    placeholder="구매가격 (선택)" className={iCls + " pr-8"} />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">원</span>
+                </div>
+                {price && (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex rounded-xl overflow-hidden border border-white/10">
+                      {([["retail", "소매가"], ["market", "매장가"]] as const).map(([v, l]) => (
+                        <button key={v} type="button" onClick={() => { setPriceType(v); if (v === "retail") setPriceUnit("bottle"); }}
+                          className={`flex-1 py-2.5 text-xs font-medium transition-colors ${priceType === v ? "bg-accent text-white" : "bg-black/40 text-zinc-500"}`}>{l}</button>
+                      ))}
+                    </div>
+                    {priceType === "market" && (
+                      <div className="flex rounded-xl overflow-hidden border border-white/10">
+                        {([["bottle", "바틀"], ["glass", "글라스"]] as const).map(([v, l]) => (
+                          <button key={v} type="button" onClick={() => setPriceUnit(v)}
+                            className={`flex-1 py-2.5 text-xs font-medium transition-colors ${priceUnit === v ? "bg-accent text-white" : "bg-black/40 text-zinc-500"}`}>{l}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ── 페어링 음식 ── */}
+            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
+              <div className="px-5 pt-4 pb-2">
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Pairing Food</p>
+              </div>
+              <div className="flex flex-col gap-3 px-5 pb-4">
+                <div className="flex gap-2">
+                  <input value={foodInput} onChange={(e) => setFoodInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const v = foodInput.trim();
+                        if (v && !foods.includes(v)) { setFoods((f) => [...f, v]); setFoodInput(""); }
+                      }
+                    }}
+                    placeholder="음식 이름" className={iCls} />
+                  <button type="button"
+                    onClick={() => { const v = foodInput.trim(); if (v && !foods.includes(v)) { setFoods((f) => [...f, v]); setFoodInput(""); } }}
+                    disabled={!foodInput.trim()}
+                    className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 disabled:opacity-30 text-zinc-300 text-sm font-medium transition-colors whitespace-nowrap">추가</button>
+                </div>
+                {foods.length > 0 && (
+                  <div className="flex gap-1.5 flex-wrap">
+                    {foods.map((food, i) => (
+                      <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 text-zinc-200 text-sm font-light">
+                        {food}
+                        <button type="button" onClick={() => setFoods((f) => f.filter((_, idx) => idx !== i))} className="text-zinc-500 hover:text-zinc-300 leading-none"><CloseIcon size={12} /></button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ── 태그 ── */}
+            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
+              <div className="px-5 pt-4 pb-2">
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Tags</p>
+              </div>
+              <div className="flex flex-col gap-3 px-5 pb-4">
+                <div className="flex gap-2">
+                  <input value={tagInput} onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const v = tagInput.trim().replace(/^#/, "");
+                        if (v && !tags.includes(v)) { setTags((t) => [...t, v]); setTagInput(""); }
+                      }
+                    }}
+                    placeholder="#태그" className={iCls} />
+                  <button type="button"
+                    onClick={() => { const v = tagInput.trim().replace(/^#/, ""); if (v && !tags.includes(v)) { setTags((t) => [...t, v]); setTagInput(""); } }}
+                    disabled={!tagInput.trim()}
+                    className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 disabled:opacity-30 text-zinc-300 text-sm font-medium transition-colors whitespace-nowrap">추가</button>
+                </div>
+                {tags.length > 0 && (
+                  <div className="flex gap-1.5 flex-wrap">
+                    {tags.map((tag, i) => (
+                      <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[11px] font-medium">
+                        #{tag}
+                        <button type="button" onClick={() => setTags((t) => t.filter((_, idx) => idx !== i))} className="text-violet-400 hover:text-violet-200 leading-none"><CloseIcon size={10} /></button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ── 공개 범위 ── */}
+            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
+              <div className="px-5 pt-4 pb-2">
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Settings</p>
+              </div>
+              <div className="px-5 pb-4">
+                <label className="text-xs text-zinc-400 mb-1.5 block">공개 범위</label>
+                <select value={visibility} onChange={(e) => setVisibility(e.target.value as "private" | "link" | "public")} className={iCls}>
+                  <option value="private">비공개</option>
+                  <option value="link">링크 공유</option>
+                  <option value="public">전체 공개</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 mt-2 pb-20">
               <button type="button" onClick={() => handleSaveRecord(true)} disabled={saving}
                 className="w-full py-4 rounded-2xl bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-medium transition-all shadow-lg shadow-accent/20 active:scale-[0.98]">
                 저장 후 평가하기

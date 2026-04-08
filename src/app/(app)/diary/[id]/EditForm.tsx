@@ -449,7 +449,7 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
           </div>
         </div>
 
-        <div className="pb-14">
+        <div className="pb-16">
           <button type="submit" disabled={saving} className="w-full py-4 rounded-2xl bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-medium transition-all shadow-lg shadow-accent/20 active:scale-[0.98]">
             저장
           </button>

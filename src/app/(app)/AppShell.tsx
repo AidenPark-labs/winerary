@@ -17,7 +17,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const hasNav = isTabRoot(path);
 
   return (
-    <div className={`flex flex-col flex-1 ${hasNav ? "pb-14" : ""}`}>
+    <div className={`flex flex-col flex-1 ${hasNav ? "pb-16" : ""}`}>
       {children}
       <BottomNav />
     </div>

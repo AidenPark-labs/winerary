@@ -57,7 +57,7 @@ export default function BottomNav() {
           <button
             key={href}
             onClick={() => handleTap(href)}
-            className={`flex-1 flex flex-col items-center py-2 gap-0.5 text-[10px] sm:text-xs transition-all duration-300 ${
+            className={`flex-1 flex flex-col items-center py-2.5 gap-1 text-[10px] sm:text-xs transition-all duration-300 ${
               active || loading ? "text-accent" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >

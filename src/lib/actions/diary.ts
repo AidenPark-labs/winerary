@@ -401,25 +401,76 @@ export async function linkRecords(myRecordId: string, targetRecordId: string) {
     if (error) return { error: error.message };
   }
 
-  // 연결 후 중복 평가 정리: 상대방 기록에 남긴 게스트 평가 삭제
-  // 내가 상대 기록에 남긴 평가
-  await adminDb
+  // 연결 후 중복 평가 정리 + 미평가 시 게스트 평가 복사
+  // 1) 내가 상대 기록에 남긴 게스트 평가 → 내 기록에 평가 없으면 복사 후 삭제
+  const { data: myGuestEval } = await adminDb
     .from("record_evaluations")
-    .delete()
+    .select("rating, value_score, pairing_score, memo, repurchase_intent")
     .eq("record_id", targetRecordId)
-    .eq("user_id", user.id);
-  // 상대가 내 기록에 남긴 평가 (상대 user_id 조회)
-  const { data: targetOwner } = await adminDb
-    .from("wine_records")
-    .select("user_id")
-    .eq("id", targetRecordId)
-    .single();
-  if (targetOwner) {
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (myGuestEval) {
+    const { data: myRecordData } = await adminDb
+      .from("wine_records")
+      .select("rating")
+      .eq("id", myRecordId)
+      .single();
+    // 내 기록에 아직 평가가 없으면 게스트 평가를 복사
+    if (myRecordData && myRecordData.rating == null) {
+      await adminDb
+        .from("wine_records")
+        .update({
+          rating: myGuestEval.rating,
+          value_score: myGuestEval.value_score,
+          pairing_score: myGuestEval.pairing_score,
+          memo: myGuestEval.memo,
+          repurchase_intent: myGuestEval.repurchase_intent,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", myRecordId);
+    }
     await adminDb
       .from("record_evaluations")
       .delete()
+      .eq("record_id", targetRecordId)
+      .eq("user_id", user.id);
+  }
+
+  // 2) 상대가 내 기록에 남긴 게스트 평가 → 상대 기록에 평가 없으면 복사 후 삭제
+  const { data: targetOwner } = await adminDb
+    .from("wine_records")
+    .select("user_id, rating")
+    .eq("id", targetRecordId)
+    .single();
+  if (targetOwner) {
+    const { data: theirGuestEval } = await adminDb
+      .from("record_evaluations")
+      .select("rating, value_score, pairing_score, memo, repurchase_intent")
       .eq("record_id", myRecordId)
-      .eq("user_id", targetOwner.user_id);
+      .eq("user_id", targetOwner.user_id)
+      .maybeSingle();
+
+    if (theirGuestEval) {
+      if (targetOwner.rating == null) {
+        await adminDb
+          .from("wine_records")
+          .update({
+            rating: theirGuestEval.rating,
+            value_score: theirGuestEval.value_score,
+            pairing_score: theirGuestEval.pairing_score,
+            memo: theirGuestEval.memo,
+            repurchase_intent: theirGuestEval.repurchase_intent,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", targetRecordId);
+      }
+      await adminDb
+        .from("record_evaluations")
+        .delete()
+        .eq("record_id", myRecordId)
+        .eq("user_id", targetOwner.user_id);
+    }
   }
 
   revalidatePath(`/diary/${myRecordId}`);

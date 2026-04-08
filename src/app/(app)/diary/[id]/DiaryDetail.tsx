@@ -419,7 +419,6 @@ function EvalCardContent({ rating, valueScore, pairingScore, memo, repurchaseInt
               <span className="text-xs text-zinc-500">와인 평점</span>
               <div className="flex items-center gap-2">
                 <div className="flex">{renderStars(Number(rating), 5)}</div>
-                <span className="text-xs font-bold text-white w-7 text-right">{Number(rating).toFixed(1)}</span>
               </div>
             </div>
           )}
@@ -428,7 +427,6 @@ function EvalCardContent({ rating, valueScore, pairingScore, memo, repurchaseInt
               <span className="text-xs text-zinc-500">가성비</span>
               <div className="flex items-center gap-2">
                 <div className="flex">{renderStars(Number(valueScore), 5)}</div>
-                <span className="text-xs font-bold text-white w-7 text-right">{Number(valueScore).toFixed(1)}</span>
               </div>
             </div>
           )}
@@ -437,7 +435,6 @@ function EvalCardContent({ rating, valueScore, pairingScore, memo, repurchaseInt
               <span className="text-xs text-zinc-500">음식 궁합</span>
               <div className="flex items-center gap-2">
                 <div className="flex">{renderStars(Number(pairingScore), 5)}</div>
-                <span className="text-xs font-bold text-white w-7 text-right">{Number(pairingScore).toFixed(1)}</span>
               </div>
             </div>
           )}

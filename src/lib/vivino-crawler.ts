@@ -1,4 +1,5 @@
 import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 
 const STOP_WORDS = new Set([
   "la", "le", "de", "du", "des", "les", "el", "il", "di", "da", "del",
@@ -68,10 +69,15 @@ export type VivinoCrawlResponse = VivinoCrawlResult | VivinoCrawlError;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function launchBrowser() {
+  const isLocal = process.env.NODE_ENV === "development";
   const browser = await puppeteer.launch({
-    executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    executablePath: isLocal
+      ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+      : await chromium.executablePath(),
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: isLocal
+      ? ["--no-sandbox", "--disable-setuid-sandbox"]
+      : chromium.args,
   });
   const page = await browser.newPage();
   await page.setUserAgent(

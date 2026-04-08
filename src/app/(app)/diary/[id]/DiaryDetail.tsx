@@ -232,9 +232,12 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
 
             return (
               <div className="rounded-2xl bg-surface/60 backdrop-blur-2xl border border-white/5 overflow-hidden">
+                <div className="px-5 pt-4 pb-2">
+                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Wine</p>
+                </div>
                 {/* 와인 칩 */}
                 {wineChips.length > 0 && (
-                  <div className="px-5 pt-4 pb-3 flex gap-1.5 flex-wrap">
+                  <div className="px-5 pb-3 flex gap-1.5 flex-wrap">
                     {wineChips.map((c, i) => (
                       <span key={i} className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium ${c.amber ? "bg-amber-500/10 border border-amber-500/20 text-amber-400" : "bg-white/5 border border-white/5 text-zinc-300"}`}>
                         {c.color && <span className={`w-1.5 h-1.5 rounded-full ${c.color}`} />}
@@ -278,10 +281,12 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
           {/* ━━━━━━━━━━ 2. Pairing ━━━━━━━━━━ */}
           {(foods.length > 0 || record.pairing_score != null) && (
             <div className="rounded-2xl bg-surface/50 backdrop-blur-2xl border border-white/5 overflow-hidden">
+              <div className="px-5 pt-4 pb-2">
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Pairing</p>
+              </div>
               {/* 음식 */}
               {foods.length > 0 && (
-                <div className="px-5 pt-4 pb-3">
-                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-2">Food Pairing</p>
+                <div className="px-5 pb-3">
                   <div className="flex gap-1.5 flex-wrap">
                     {foods.map((f, i) => (
                       <span key={i} className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 text-zinc-200 text-sm font-light">{f.name}</span>
@@ -292,7 +297,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
               {/* 궁합 점수 */}
               {record.pairing_score != null && (
                 <div className="flex items-center justify-between px-5 py-3.5 border-t border-white/5">
-                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em]">Pairing Score</span>
+                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em]">Score</span>
                   <div className="flex items-center gap-1">
                     {renderStars(record.pairing_score, 5)}
                     <span className="text-sm font-bold text-white ml-1">{record.pairing_score}</span>
@@ -304,6 +309,9 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
 
           {/* ━━━━━━━━━━ 3. Experience ━━━━━━━━━━ */}
           <div className="rounded-2xl bg-surface/40 backdrop-blur-xl border border-white/5 overflow-hidden divide-y divide-white/5">
+            <div className="px-5 pt-4 pb-2">
+              <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Experience</p>
+            </div>
             {/* 날짜 + 장소 */}
             <div className="flex divide-x divide-white/5">
               <div className="flex-1 px-4 py-3.5">

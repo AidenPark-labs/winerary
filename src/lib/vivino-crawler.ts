@@ -1,5 +1,5 @@
 import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium";
+import chromium from "@sparticuz/chromium-min";
 
 const STOP_WORDS = new Set([
   "la", "le", "de", "du", "des", "les", "el", "il", "di", "da", "del",
@@ -73,7 +73,9 @@ async function launchBrowser() {
   const browser = await puppeteer.launch({
     executablePath: isLocal
       ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-      : await chromium.executablePath(),
+      : await chromium.executablePath(
+          "https://github.com/nichochar/chromium-brotli-bin/releases/download/v134.0.0/chromium-v134.0.0-pack.tar"
+        ),
     headless: true,
     args: isLocal
       ? ["--no-sandbox", "--disable-setuid-sandbox"]

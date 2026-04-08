@@ -409,8 +409,8 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
             </div>
           )}
 
-          {/* ━━━━━━━━━━ Tags ━━━━━━━━━━ */}
-          {tags.length > 0 && (
+          {/* ━━━━━━━━━━ Tags (본인만 표시) ━━━━━━━━━━ */}
+          {!readOnly && tags.length > 0 && (
             <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
               <div className="px-5 pt-4 pb-2">
                 <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Tags</p>

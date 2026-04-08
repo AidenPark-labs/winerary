@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
 import DiaryDetail from "./DiaryDetail";
 import type { WineRecord, RecordEvaluation, LinkedRecord } from "@/types";
@@ -80,17 +81,21 @@ export default async function DiaryDetailPage({ params }: { params: Promise<{ id
     // 평가 테이블 조회 실패 시 무시
   }
 
-  // 연결된 경험 기록 조회
+  // 연결된 경험 기록 조회 (RLS 우회)
+  const adminDb = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
   let linkedRecords: LinkedRecord[] = [];
   try {
-    const { data: myLink } = await supabase
+    const { data: myLink } = await adminDb
       .from("shared_experience_records")
       .select("experience_id")
       .eq("record_id", id)
       .maybeSingle();
 
     if (myLink) {
-      const { data: siblings } = await supabase
+      const { data: siblings } = await adminDb
         .from("shared_experience_records")
         .select("record_id")
         .eq("experience_id", myLink.experience_id)

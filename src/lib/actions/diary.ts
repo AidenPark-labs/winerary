@@ -1,9 +1,17 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import type { WineRecord, CompanionEntry } from "@/types";
+
+function createAdminDb() {
+  return createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
 
 const PROMOTE_THRESHOLD = 3;
 
@@ -288,12 +296,15 @@ export async function linkRecords(myRecordId: string, targetRecordId: string) {
     .single();
   if (!targetRecord) return { error: "대상 기록을 찾을 수 없습니다" };
 
+  // RLS를 우회하는 서비스 클라이언트 (shared_experience 테이블 조작용)
+  const adminDb = createAdminDb();
+
   // 이미 같은 experience에 있는지 확인
-  const { data: myLinks } = await supabase
+  const { data: myLinks } = await adminDb
     .from("shared_experience_records")
     .select("experience_id")
     .eq("record_id", myRecordId);
-  const { data: targetLinks } = await supabase
+  const { data: targetLinks } = await adminDb
     .from("shared_experience_records")
     .select("experience_id")
     .eq("record_id", targetRecordId);
@@ -309,49 +320,44 @@ export async function linkRecords(myRecordId: string, targetRecordId: string) {
   let experienceId: string;
 
   if (myExpId && !targetExpId) {
-    // 내 기록이 이미 그룹에 있으면 대상을 합류
     experienceId = myExpId;
-    const { error } = await supabase.from("shared_experience_records").insert({
+    const { error } = await adminDb.from("shared_experience_records").insert({
       experience_id: experienceId,
       record_id: targetRecordId,
       linked_by: user.id,
     });
     if (error) return { error: error.message };
   } else if (!myExpId && targetExpId) {
-    // 대상이 이미 그룹에 있으면 내 기록을 합류
     experienceId = targetExpId;
-    const { error } = await supabase.from("shared_experience_records").insert({
+    const { error } = await adminDb.from("shared_experience_records").insert({
       experience_id: experienceId,
       record_id: myRecordId,
       linked_by: user.id,
     });
     if (error) return { error: error.message };
   } else if (myExpId && targetExpId) {
-    // 둘 다 다른 그룹 → 대상 그룹의 기록들을 내 그룹으로 이동
     experienceId = myExpId;
-    const { data: targetMembers } = await supabase
+    const { data: targetMembers } = await adminDb
       .from("shared_experience_records")
       .select("record_id, linked_by")
       .eq("experience_id", targetExpId);
     for (const m of targetMembers ?? []) {
-      await supabase.from("shared_experience_records").upsert({
+      await adminDb.from("shared_experience_records").upsert({
         experience_id: experienceId,
         record_id: m.record_id,
         linked_by: m.linked_by,
       }, { onConflict: "experience_id,record_id" });
     }
-    // 빈 그룹 삭제
-    await supabase.from("shared_experiences").delete().eq("id", targetExpId);
+    await adminDb.from("shared_experiences").delete().eq("id", targetExpId);
   } else {
-    // 둘 다 그룹 없음 → 새 그룹 생성
-    const { data: exp, error: expErr } = await supabase
+    const { data: exp, error: expErr } = await adminDb
       .from("shared_experiences")
       .insert({})
       .select("id")
       .single();
     if (expErr || !exp) return { error: expErr?.message ?? "그룹 생성 실패" };
     experienceId = exp.id;
-    const { error } = await supabase.from("shared_experience_records").insert([
+    const { error } = await adminDb.from("shared_experience_records").insert([
       { experience_id: experienceId, record_id: myRecordId, linked_by: user.id },
       { experience_id: experienceId, record_id: targetRecordId, linked_by: user.id },
     ]);
@@ -377,26 +383,25 @@ export async function unlinkRecord(recordId: string) {
     .single();
   if (!record) return { error: "본인 기록만 연결 해제할 수 있습니다" };
 
+  const adminDb = createAdminDb();
+
   // 현재 연결 찾기
-  const { data: link } = await supabase
+  const { data: link } = await adminDb
     .from("shared_experience_records")
     .select("id, experience_id")
     .eq("record_id", recordId)
     .single();
   if (!link) return { error: "연결된 경험이 없습니다" };
 
-  // 삭제
-  await supabase.from("shared_experience_records").delete().eq("id", link.id);
+  await adminDb.from("shared_experience_records").delete().eq("id", link.id);
 
-  // 남은 멤버 확인 → 1개 이하면 그룹 자체 삭제
-  const { count } = await supabase
+  const { count } = await adminDb
     .from("shared_experience_records")
     .select("id", { count: "exact", head: true })
     .eq("experience_id", link.experience_id);
 
   if ((count ?? 0) <= 1) {
-    // 남은 1개도 삭제하고 그룹 삭제 (CASCADE로 자동 처리)
-    await supabase.from("shared_experiences").delete().eq("id", link.experience_id);
+    await adminDb.from("shared_experiences").delete().eq("id", link.experience_id);
   }
 
   revalidatePath(`/diary/${recordId}`);

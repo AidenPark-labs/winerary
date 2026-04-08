@@ -74,7 +74,7 @@ async function launchBrowser() {
     executablePath: isLocal
       ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
       : await chromium.executablePath(
-          "https://github.com/nichochar/chromium-brotli-bin/releases/download/v134.0.0/chromium-v134.0.0-pack.tar"
+          "https://github.com/Sparticuz/chromium/releases/download/v143.0.4/chromium-v143.0.4-pack.x64.tar"
         ),
     headless: true,
     args: isLocal

@@ -202,34 +202,39 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
         const count = group.length;
         const color = WINE_COLORS[rep.wine_type ?? ""] ?? WINE_COLORS.other;
 
-        const markerHtml = `<div style="cursor:pointer; display:flex; flex-direction:column; align-items:center;">
-          <div style="
-            background:${color}; color:white;
-            min-width:${count > 1 ? "32px" : "28px"}; height:${count > 1 ? "32px" : "28px"};
-            border-radius:50%;
-            display:flex; align-items:center; justify-content:center;
-            font-size:${count > 1 ? "12px" : "14px"}; font-weight:700;
-            border:2.5px solid white; box-shadow:0 2px 8px rgba(0,0,0,0.4);
-          ">${count > 1 ? count : "🍷"}</div>
-          <div style="width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid ${color}; margin-top:-1px;"></div>
-        </div>`;
+        const wrapper = document.createElement("div");
+        wrapper.style.cssText = "cursor:pointer; display:flex; flex-direction:column; align-items:center;";
+
+        const circle = document.createElement("div");
+        circle.style.cssText = `
+          background:${color}; color:white;
+          min-width:${count > 1 ? "32px" : "28px"}; height:${count > 1 ? "32px" : "28px"};
+          border-radius:50%;
+          display:flex; align-items:center; justify-content:center;
+          font-size:${count > 1 ? "12px" : "14px"}; font-weight:700;
+          border:2.5px solid white; box-shadow:0 2px 8px rgba(0,0,0,0.4);
+        `;
+        circle.textContent = count > 1 ? String(count) : "";
+        if (count <= 1) circle.innerHTML = "🍷";
+
+        const tail = document.createElement("div");
+        tail.style.cssText = `width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid ${color}; margin-top:-1px;`;
+
+        wrapper.appendChild(circle);
+        wrapper.appendChild(tail);
+        wrapper.addEventListener("click", () => {
+          setSelectedGroup(group);
+          map.panTo(pos);
+        });
 
         const overlay = new kakao.maps.CustomOverlay({
           position: pos,
-          content: markerHtml,
+          content: wrapper,
           yAnchor: 1,
           zIndex: 2,
           clickable: true,
         });
         overlay.setMap(map);
-
-        const el = overlay.getContent() as HTMLElement;
-        if (el && el.addEventListener) {
-          el.addEventListener("click", () => {
-            setSelectedGroup(group);
-            map.panTo(pos);
-          });
-        }
       });
     };
 

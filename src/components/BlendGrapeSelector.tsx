@@ -43,7 +43,7 @@ export default function BlendGrapeSelector({ grapes, onChange, wineType }: { gra
           />
         </div>
         <button type="button" onClick={() => setOpen(!open)}
-          className="px-3 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors text-sm flex-shrink-0">
+          className="px-3.5 py-3 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors flex-shrink-0">
           <ChevronIcon direction={open ? "up" : "down"} />
         </button>
       </div>

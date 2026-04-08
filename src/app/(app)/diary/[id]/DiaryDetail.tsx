@@ -106,7 +106,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
       {bgPhoto && (
         <div className="fixed inset-0 z-0 pointer-events-none transition-all duration-1000 ease-out" aria-hidden="true">
           <img src={bgPhoto} alt="" className="w-full h-full object-cover scale-150 blur-3xl saturate-200 opacity-40 mix-blend-screen" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/60 to-black" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/70 to-black" />
         </div>
       )}
 
@@ -130,7 +130,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
               </div>
 
               <div className="absolute top-0 inset-x-0 h-36 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
-              <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+              <div className="absolute bottom-0 inset-x-0 h-48 pointer-events-none" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 40%, transparent 100%)" }} />
 
               {photos.length > 1 && (
                 <div className="absolute bottom-20 inset-x-0 flex justify-center gap-1.5 z-30 pointer-events-none">

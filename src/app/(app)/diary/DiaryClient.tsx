@@ -699,7 +699,7 @@ export default function DiaryClient({ records, linkedMap = {} }: { records: Wine
 
       ) : viewMode === "grid" ? (
         /* ── 그리드 뷰 ── */
-        <div className="grid grid-cols-3 gap-1.5 px-4 pb-28 overflow-y-auto">
+        <div className="grid grid-cols-2 gap-2 px-4 pb-28 overflow-y-auto">
           {filteredRecords.map((r) => (
             <GridCard key={r.id} record={r} linked={linkedMap[r.id]} />
           ))}

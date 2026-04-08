@@ -282,7 +282,7 @@ function CardMenu({ recordId }: { recordId: string }) {
 
 // ─── Feed Card ────────────────────────────────────────────────────────────────
 
-function FeedCard({ record }: { record: WineRecord }) {
+function FeedCard({ record, linked }: { record: WineRecord; linked?: LinkedInfo[] }) {
   const photos: string[] = record.photos ?? [];
   const foods: { name: string }[] = (record.foods as { name: string }[]) ?? [];
   const companions: string[] = record.companions ?? [];
@@ -400,6 +400,22 @@ function FeedCard({ record }: { record: WineRecord }) {
             </span>
           ))}
         </div>
+        {linked && linked.length > 0 && (
+          <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5">
+            <span className="text-blue-400 text-[10px]">🔗</span>
+            {linked.map((l) => (
+              <div key={l.linked_record_id} className="flex items-center gap-1.5">
+                {l.linked_photos[0] && (
+                  <img src={l.linked_photos[0]} alt="" className="w-5 h-5 rounded-full object-cover border border-white/10" />
+                )}
+                <span className="text-[10px] text-blue-300 font-medium">{l.linked_nickname}</span>
+                {l.linked_rating != null && (
+                  <span className="text-[10px] text-blue-400/70">★ {Number(l.linked_rating).toFixed(1)}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </Link>
   );
@@ -448,7 +464,7 @@ function CalendarRecordCard({ record }: { record: WineRecord }) {
 
 // ─── Date Group Carousel ─────────────────────────────────────────────────────
 
-function DateGroupCarousel({ date, records: groupRecords }: { date: string; records: WineRecord[] }) {
+function DateGroupCarousel({ date, records: groupRecords, linkedMap }: { date: string; records: WineRecord[]; linkedMap: Record<string, LinkedInfo[]> }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIdx, setActiveIdx] = useState(0);
 
@@ -491,7 +507,7 @@ function DateGroupCarousel({ date, records: groupRecords }: { date: string; reco
       >
         {groupRecords.map((r) => (
           <div key={r.id} className="snap-center flex-shrink-0 w-full">
-            <FeedCard record={r} />
+            <FeedCard record={r} linked={linkedMap[r.id]} />
           </div>
         ))}
       </div>
@@ -513,7 +529,9 @@ function DateGroupCarousel({ date, records: groupRecords }: { date: string; reco
 
 // ─── Main Client Component ────────────────────────────────────────────────────
 
-export default function DiaryClient({ records }: { records: WineRecord[] }) {
+export type LinkedInfo = { record_id: string; linked_record_id: string; linked_name: string; linked_photos: string[]; linked_rating: number | null; linked_nickname: string };
+
+export default function DiaryClient({ records, linkedMap = {} }: { records: WineRecord[]; linkedMap?: Record<string, LinkedInfo[]> }) {
   const [viewMode, setViewMode] = useState<ViewMode>("feed");
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
@@ -639,7 +657,7 @@ export default function DiaryClient({ records }: { records: WineRecord[] }) {
           {Object.entries(recordsByDate)
             .sort(([a], [b]) => b.localeCompare(a))
             .map(([date, dateRecords]) => (
-              <DateGroupCarousel key={date} date={date} records={dateRecords} />
+              <DateGroupCarousel key={date} date={date} records={dateRecords} linkedMap={linkedMap} />
             ))}
         </div>
 

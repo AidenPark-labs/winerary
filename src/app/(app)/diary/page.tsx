@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import type { WineRecord } from "@/types";
 import DiaryClient from "./DiaryClient";
 import AuthPrompt from "@/components/AuthPrompt";
@@ -62,5 +63,86 @@ export default async function DiaryPage() {
     ...sharedRecords.filter((r) => !ownIds.has(r.id)),
   ].sort((a, b) => new Date(b.drunk_at).getTime() - new Date(a.drunk_at).getTime());
 
-  return <DiaryClient records={allRecords as WineRecord[]} />;
+  // 연결된 경험 정보 조회
+  const adminDb = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+  type LinkedInfo = { record_id: string; linked_record_id: string; linked_name: string; linked_photos: string[]; linked_rating: number | null; linked_nickname: string };
+  let linkedMap: Record<string, LinkedInfo[]> = {};
+  try {
+    const allIds = allRecords.map((r) => r.id);
+    const { data: links } = await adminDb
+      .from("shared_experience_records")
+      .select("experience_id, record_id")
+      .in("record_id", allIds);
+
+    if (links && links.length > 0) {
+      // experience_id → record_ids 맵
+      const expMap: Record<string, string[]> = {};
+      links.forEach((l: { experience_id: string; record_id: string }) => {
+        (expMap[l.experience_id] ??= []).push(l.record_id);
+      });
+
+      // 각 experience에서 연결된 다른 기록 조회
+      const expIds = Object.keys(expMap);
+      const { data: allExpLinks } = await adminDb
+        .from("shared_experience_records")
+        .select("experience_id, record_id")
+        .in("experience_id", expIds);
+
+      // 내 기록이 아닌 연결 기록 ID 수집
+      const otherRecordIds = new Set<string>();
+      const myIdSet = new Set(allIds);
+      (allExpLinks ?? []).forEach((l: { record_id: string }) => {
+        if (!myIdSet.has(l.record_id)) otherRecordIds.add(l.record_id);
+      });
+
+      if (otherRecordIds.size > 0) {
+        const { data: otherRecords } = await adminDb
+          .from("wine_records")
+          .select("id, name, photos, rating, user_id")
+          .in("id", [...otherRecordIds])
+          .is("deleted_at", null);
+
+        const otherUserIds = [...new Set((otherRecords ?? []).map((r: { user_id: string }) => r.user_id))];
+        const { data: profiles } = otherUserIds.length > 0
+          ? await adminDb.from("profiles").select("id, nickname").in("id", otherUserIds)
+          : { data: [] };
+        const nickMap: Record<string, string> = {};
+        (profiles ?? []).forEach((p: { id: string; nickname: string }) => { nickMap[p.id] = p.nickname; });
+
+        const otherMap: Record<string, { name: string; photos: string[]; rating: number | null; nickname: string }> = {};
+        (otherRecords ?? []).forEach((r: { id: string; name: string; photos: string[]; rating: number | null; user_id: string }) => {
+          otherMap[r.id] = { name: r.name, photos: r.photos ?? [], rating: r.rating, nickname: nickMap[r.user_id] ?? "알 수 없음" };
+        });
+
+        // 내 기록 → 연결 기록 매핑
+        (allExpLinks ?? []).forEach((l: { experience_id: string; record_id: string }) => {
+          const myRecordsInExp = expMap[l.experience_id] ?? [];
+          if (myIdSet.has(l.record_id)) return; // 내 기록은 스킵
+          const other = otherMap[l.record_id];
+          if (!other) return;
+          myRecordsInExp.forEach((myId) => {
+            (linkedMap[myId] ??= []).push({
+              record_id: myId,
+              linked_record_id: l.record_id,
+              linked_name: other.name,
+              linked_photos: other.photos,
+              linked_rating: other.rating,
+              linked_nickname: other.nickname,
+            });
+          });
+        });
+      }
+    }
+  } catch {
+    // 연결 조회 실패 시 무시
+  }
+
+  // 연결된 기록은 피드에서 제거 (내 카드에 통합 표시)
+  const linkedOtherIds = new Set(Object.values(linkedMap).flat().map((l) => l.linked_record_id));
+  const filteredRecords = allRecords.filter((r) => !linkedOtherIds.has(r.id));
+
+  return <DiaryClient records={filteredRecords as WineRecord[]} linkedMap={linkedMap} />;
 }

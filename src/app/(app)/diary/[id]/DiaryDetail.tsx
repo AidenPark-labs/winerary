@@ -443,15 +443,19 @@ function EvalCardContent({ rating, valueScore, pairingScore, memo, repurchaseInt
           )}
         </div>
       )}
-      {memo && (
-        <p className="text-[13px] text-zinc-300 font-light mt-2.5 leading-relaxed whitespace-pre-wrap">{memo}</p>
-      )}
       {repurchaseIntent && (
         <div className="flex items-center gap-1.5 mt-2">
           <span className="text-xs text-zinc-500">재구매</span>
           <span className="text-xs font-medium text-white">
             {{ yes: "👍 있음", maybe: "🤔 고민 중", no: "👋 패스" }[repurchaseIntent] ?? repurchaseIntent}
           </span>
+        </div>
+      )}
+      {memo && (
+        <div className="relative mt-3 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/5">
+          <span className="absolute top-1 left-2.5 text-3xl text-white/10 font-serif leading-none select-none pointer-events-none">"</span>
+          <p className="text-[13px] text-zinc-300 font-light leading-relaxed whitespace-pre-wrap pl-4">{memo}</p>
+          <span className="absolute bottom-0 right-3 text-3xl text-white/10 font-serif leading-none select-none pointer-events-none">"</span>
         </div>
       )}
     </>

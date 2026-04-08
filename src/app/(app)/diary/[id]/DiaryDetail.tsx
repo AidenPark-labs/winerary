@@ -251,12 +251,27 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                       <span className="text-sm text-white font-medium">{TYPE_KO[displayType] ?? displayType}</span>
                     </div>
                   )}
-                  {displayGrapes && (
-                    <div className="flex items-center justify-between px-5 py-2">
-                      <span className="text-xs text-zinc-400">품종</span>
-                      <span className="text-sm text-white font-medium text-right">{displayGrapes}</span>
-                    </div>
-                  )}
+                  {displayGrapes && (() => {
+                    const blendMatch = displayGrapes.match(/^(블렌드|blend)\s*\((.+)\)$/i);
+                    if (blendMatch) {
+                      const subGrapes = blendMatch[2];
+                      return (
+                        <div className="px-5 py-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-zinc-400">품종</span>
+                            <span className="text-sm text-white font-medium">블렌드</span>
+                          </div>
+                          <p className="text-xs text-zinc-500 font-light text-right mt-1 leading-relaxed">{subGrapes}</p>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="flex items-center justify-between px-5 py-2">
+                        <span className="text-xs text-zinc-400">품종</span>
+                        <span className="text-sm text-white font-medium text-right">{displayGrapes}</span>
+                      </div>
+                    );
+                  })()}
                   {displayCountry && (
                     <div className="flex items-center justify-between px-5 py-2">
                       <span className="text-xs text-zinc-400">국가</span>

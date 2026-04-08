@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { extractPhotoDate } from "@/lib/exif";
 import type { WineSuggestion, WineType, CompanionEntry } from "@/types";
-import { createWineRecord, updateWineRecord } from "@/lib/actions/diary";
+import { createWineRecord, updateWineRecord, linkRecords } from "@/lib/actions/diary";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import StarRating from "@/components/StarRating";
 import PlaceSearch from "@/components/PlaceSearch";
@@ -213,6 +213,8 @@ export default function NewDiaryPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedRecordId, setSavedRecordId] = useState<string | null>(null);
+  const [linkSuggestions, setLinkSuggestions] = useState<{ recordId: string; wineName: string; ownerNickname: string }[]>([]);
+  const [linkingId, setLinkingId] = useState<string | null>(null);
 
   const iCls = "w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3.5 text-zinc-100 focus:outline-none focus:border-accent focus:bg-black/60 transition-all font-light text-sm";
   const currentYear = new Date().getFullYear();
@@ -395,7 +397,10 @@ export default function NewDiaryPage() {
     if (result && 'id' in result) {
       const id = result.id as string;
       setSavedRecordId(id);
+      const linkable = (result as { linkable?: { recordId: string; wineName: string; ownerNickname: string }[] }).linkable ?? [];
+      if (linkable.length > 0) setLinkSuggestions(linkable);
       if (goToRate) setStep("rate");
+      else if (linkable.length > 0) setStep("rate"); // 연결 제안을 rate 단계에서 보여줌
       else router.push(`/diary/${id}`);
     }
   }
@@ -908,6 +913,35 @@ export default function NewDiaryPage() {
               <textarea value={memo} onChange={(e) => setMemo(e.target.value)} rows={4}
                 className={iCls + " resize-none"} placeholder="이 와인에 대한 인상, 향, 맛, 분위기를 자유롭게 적어보세요…" />
             </section>
+
+            {/* 연결 제안 */}
+            {linkSuggestions.length > 0 && (
+              <section className="rounded-2xl bg-blue-500/10 border border-blue-500/20 p-4 flex flex-col gap-3">
+                <p className="text-sm text-blue-300 font-medium">🔗 함께한 기록을 연결할까요?</p>
+                {linkSuggestions.map((s) => (
+                  <div key={s.recordId} className="flex items-center justify-between bg-black/20 rounded-xl px-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="text-sm text-white truncate">{s.wineName}</p>
+                      <p className="text-xs text-zinc-500">{s.ownerNickname}</p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={linkingId === s.recordId}
+                      onClick={async () => {
+                        if (!savedRecordId) return;
+                        setLinkingId(s.recordId);
+                        await linkRecords(savedRecordId, s.recordId);
+                        setLinkSuggestions((prev) => prev.filter((p) => p.recordId !== s.recordId));
+                        setLinkingId(null);
+                      }}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30 transition-colors disabled:opacity-50 flex-shrink-0"
+                    >
+                      {linkingId === s.recordId ? "연결 중…" : "연결"}
+                    </button>
+                  </div>
+                ))}
+              </section>
+            )}
 
             <div className="flex flex-col gap-3 mt-4">
               <button type="submit" disabled={saving}

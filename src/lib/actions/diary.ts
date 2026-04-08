@@ -125,7 +125,44 @@ export async function createWineRecord(data: Partial<WineRecord> & { companion_e
   }
 
   await syncMentions(supabase, record.id, companionEntries ?? null);
-  return { id: record.id };
+
+  // 연결 가능 기록 검색: 상대방이 나를 멘션 + 같은 날짜
+  let linkable: { recordId: string; wineName: string; ownerNickname: string }[] = [];
+  try {
+    const adminDb = createAdminDb();
+    const { data: mentionedBy } = await adminDb
+      .from("record_mentions")
+      .select("record_id")
+      .eq("mentioned_user_id", user.id);
+
+    if (mentionedBy && mentionedBy.length > 0) {
+      const mentionRecordIds = mentionedBy.map((m: { record_id: string }) => m.record_id);
+      const { data: candidates } = await adminDb
+        .from("wine_records")
+        .select("id, name, user_id")
+        .in("id", mentionRecordIds)
+        .eq("drunk_at", data.drunk_at)
+        .neq("user_id", user.id)
+        .is("deleted_at", null);
+
+      if (candidates && candidates.length > 0) {
+        const uids = [...new Set(candidates.map((c: { user_id: string }) => c.user_id))];
+        const { data: profiles } = await adminDb.from("profiles").select("id, nickname").in("id", uids);
+        const nickMap: Record<string, string> = {};
+        (profiles ?? []).forEach((p: { id: string; nickname: string }) => { nickMap[p.id] = p.nickname; });
+
+        linkable = candidates.map((c: { id: string; name: string; user_id: string }) => ({
+          recordId: c.id,
+          wineName: c.name,
+          ownerNickname: nickMap[c.user_id] ?? "알 수 없음",
+        }));
+      }
+    }
+  } catch {
+    // 연결 검색 실패 시 무시
+  }
+
+  return { id: record.id, linkable };
 }
 
 export async function updateWineRecord(id: string, data: Partial<WineRecord> & { companion_entries?: CompanionEntry[] }) {

@@ -6,6 +6,7 @@ import VivinoRating from "./VivinoRating";
 import WineActions from "./WineActions";
 import BackButton from "./BackButton";
 import NaverShopping from "./NaverShopping";
+import { getWineImage } from "@/lib/wine-placeholder";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드", white: "화이트", rose: "로제",
@@ -73,12 +74,7 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
     if (fallback) similar = [...similar, ...fallback];
   }
 
-  const placeholderMap: Record<string, string> = {
-    red: "/wine-placeholder-red.svg",
-    white: "/wine-placeholder-white.svg",
-    rose: "/wine-placeholder-rose.svg",
-  };
-  const heroImage = wine.naver_image || placeholderMap[wine.wine_type ?? ""] || "/wine-placeholder-default.svg";
+  const heroImage = getWineImage(wine.naver_image, wine.wine_type);
 
   return (
     <div className="relative min-h-screen bg-black">
@@ -205,9 +201,7 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
                     href={`/wines/${w.id}`}
                     className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] transition-colors"
                   >
-                    {w.naver_image && (
-                      <img src={w.naver_image} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-zinc-700" />
-                    )}
+                    <img src={getWineImage(w.naver_image, w.wine_type)} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-zinc-700" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-zinc-200 truncate">{w.name_ko}</p>
                       <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-500">

@@ -6,6 +6,7 @@ import { updateWine, updateWineVivino, deleteWine } from "./actions";
 import { resolveWineDisplay } from "@/lib/wine-display";
 import type { VivinoCrawlResult, VivinoCrawlError } from "@/lib/vivino-crawler";
 import { ChevronIcon } from "@/components/Icons";
+import { getWineImage } from "@/lib/wine-placeholder";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드 🍷", white: "화이트 🥂", rose: "로제 🌸",
@@ -257,11 +258,7 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
             {/* 카드 기본 뷰 */}
             <div className="flex items-center gap-4 p-4">
               {/* 썸네일 */}
-              {w.naver_image ? (
-                <img src={w.naver_image} alt={w.name_ko} className="w-14 h-14 rounded-xl object-cover flex-shrink-0 border border-zinc-700" />
-              ) : (
-                <div className="w-14 h-14 rounded-xl bg-zinc-800 flex items-center justify-center flex-shrink-0 text-zinc-600 text-xl">🍷</div>
-              )}
+              <img src={getWineImage(w.naver_image, w.wine_type)} alt={w.name_ko} className="w-14 h-14 rounded-xl object-cover flex-shrink-0 border border-zinc-700" />
 
               {/* 기본 정보 */}
               <div className="flex-1 min-w-0">

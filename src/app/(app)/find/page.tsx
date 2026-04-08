@@ -7,6 +7,7 @@ import { Search, HelpCircle, Wine, Camera, Image as ImageIcon, AlertCircle } fro
 import { extractPhotoDate } from "@/lib/exif";
 import { checkAuth, setPendingAction, consumePendingAction } from "@/lib/auth-guard";
 import Toast from "@/components/Toast";
+import { getWineImage } from "@/lib/wine-placeholder";
 import AuthPrompt from "@/components/AuthPrompt";
 
 const TYPE_KO: Record<string, string> = {
@@ -464,9 +465,7 @@ export default function FindPage() {
                   href={`/wines/${wine.id}`}
                   className="flex items-center gap-3 p-3 rounded-2xl bg-surface/80 border border-white/5 text-left hover:border-white/20 transition-all backdrop-blur-sm"
                 >
-                  {wine.naver_image && (
-                    <img src={wine.naver_image} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-white/5" />
-                  )}
+                  <img src={getWineImage(wine.naver_image, wine.wine_type)} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-white/5" />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-white text-sm truncate">{wine.name_ko}</p>
                     {wine.name_en && <p className="text-xs text-zinc-500 mt-0.5 truncate">{wine.name_en}</p>}

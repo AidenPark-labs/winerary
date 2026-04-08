@@ -161,7 +161,8 @@ export default function NewDiaryPage() {
   const searchParams = useSearchParams();
 
   const hasUrlParams = !!searchParams.get("name");
-  const [step, setStep] = useState<Step>(hasUrlParams ? "wine" : "photo");
+  const fromRecordId = searchParams.get("from");
+  const [step, setStep] = useState<Step>(hasUrlParams || fromRecordId ? "wine" : "photo");
 
   // ── Photo step state ──
   const fileRef = useRef<HTMLInputElement>(null);
@@ -249,6 +250,33 @@ export default function NewDiaryPage() {
       setPhotoPreviews([photoParam]);
       setLocalPreview(photoParam);
     }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── from 파라미터: 공유 기록에서 프리필 ──
+  const [fromLinkTarget, setFromLinkTarget] = useState<string | null>(fromRecordId);
+  useEffect(() => {
+    if (!fromRecordId) return;
+    fetch(`/api/record/${fromRecordId}/prefill`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (!data) return;
+        const synth: AiResult = {
+          name: data.name ?? "",
+          name_original: data.wine_name_original ?? data.name ?? "",
+          wine_type: data.wine_type ?? undefined,
+          country: data.wine_country ?? undefined,
+          grape_variety: data.grape_variety,
+          vintage: data.wine_vintage ?? null,
+          vivino_url: data.wine_vivino_url ?? undefined,
+          wine_id: data.wine_id ?? undefined,
+        };
+        setAiResult(synth);
+        fillWineFields(synth, { setQuery, setWineNameOriginal, setWineType, setWineVintage, setGrape, setGrapeCustom, setCountry, setCountryCustom, setSelectedWine });
+        if (data.drunk_at) setDrunkAt(data.drunk_at);
+        if (data.place_name) setLocation(data.place_name);
+        if (data.latitude) setPlaceLat(data.latitude);
+        if (data.longitude) setPlaceLng(data.longitude);
+      });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Step 1: Photo selection ──
@@ -397,10 +425,15 @@ export default function NewDiaryPage() {
     if (result && 'id' in result) {
       const id = result.id as string;
       setSavedRecordId(id);
+      // from 기록과 자동 연결
+      if (fromLinkTarget) {
+        await linkRecords(id, fromLinkTarget);
+        setFromLinkTarget(null);
+      }
       const linkable = (result as { linkable?: { recordId: string; wineName: string; ownerNickname: string }[] }).linkable ?? [];
       if (linkable.length > 0) setLinkSuggestions(linkable);
       if (goToRate) setStep("rate");
-      else if (linkable.length > 0) setStep("rate"); // 연결 제안을 rate 단계에서 보여줌
+      else if (linkable.length > 0) setStep("rate");
       else router.push(`/diary/${id}`);
     }
   }

@@ -294,13 +294,22 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
             </div>
           )}
           {readOnly && currentUserId && linkedRecords.length === 0 && (
-            <Link
-              href={`/diary/${record.id}/link-mine`}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/15 transition-colors"
-            >
-              <span className="text-blue-400 text-xs">🔗</span>
-              <span className="text-xs text-blue-300 font-light">나도 이 와인 기록했어요</span>
-            </Link>
+            <div className="flex gap-2">
+              <Link
+                href={`/diary/${record.id}/link-mine`}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/15 transition-colors"
+              >
+                <span className="text-blue-400 text-xs">🔗</span>
+                <span className="text-xs text-blue-300 font-light">내 기록 연결</span>
+              </Link>
+              <Link
+                href={`/diary/new?from=${record.id}`}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-violet-500/10 border border-violet-500/20 hover:bg-violet-500/15 transition-colors"
+              >
+                <span className="text-violet-400 text-xs">✏️</span>
+                <span className="text-xs text-violet-300 font-light">나도 기록하기</span>
+              </Link>
+            </div>
           )}
 
           {/* ━━━━━━━━━━ 1. Wine ━━━━━━━━━━ */}

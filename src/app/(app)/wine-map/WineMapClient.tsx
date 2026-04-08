@@ -73,7 +73,7 @@ function PopupCarousel({ records, onClose }: { records: MapRecord[]; onClose: ()
   }, []);
 
   return (
-    <div className="absolute bottom-4 left-3 right-3 z-[1000] bg-surface/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
+    <div className="bg-surface/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
       <button
         onClick={onClose}
         className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-black/40 text-zinc-400 hover:text-white hover:bg-black/60 transition-colors text-sm z-10"
@@ -288,33 +288,35 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
           </div>
         )}
 
-        {/* 플로팅 버튼들 */}
-        <div className={`absolute right-4 z-[999] flex flex-col gap-2 transition-all ${selectedGroup ? (selectedGroup.length > 1 ? "bottom-[152px]" : "bottom-36") : "bottom-4"}`}>
-          <button
-            onClick={goToMyLocation}
-            className="w-10 h-10 rounded-full bg-surface/90 backdrop-blur-md border border-white/10 shadow-xl flex items-center justify-center text-zinc-300 hover:text-white transition-colors"
-          >
-            <Navigation size={16} />
-          </button>
-        </div>
+        {/* 하단 영역: 버튼 + 카드 */}
+        <div className="absolute bottom-4 left-0 right-0 z-[999] flex flex-col items-center gap-3 pointer-events-none">
+          {/* 플로팅 버튼들 */}
+          <div className="flex items-center gap-3 pointer-events-auto">
+            <button
+              onClick={() => setShowList(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface/90 backdrop-blur-md border border-white/10 shadow-xl text-zinc-200 hover:text-white transition-colors"
+            >
+              <List size={14} />
+              <span className="text-xs font-medium">목록</span>
+            </button>
+            <button
+              onClick={goToMyLocation}
+              className="w-10 h-10 rounded-full bg-surface/90 backdrop-blur-md border border-white/10 shadow-xl flex items-center justify-center text-zinc-300 hover:text-white transition-colors"
+            >
+              <Navigation size={16} />
+            </button>
+          </div>
 
-        <div className={`absolute left-1/2 -translate-x-1/2 z-[999] transition-all ${selectedGroup ? (selectedGroup.length > 1 ? "bottom-[152px]" : "bottom-36") : "bottom-4"}`}>
-          <button
-            onClick={() => setShowList(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface/90 backdrop-blur-md border border-white/10 shadow-xl text-zinc-200 hover:text-white transition-colors"
-          >
-            <List size={14} />
-            <span className="text-xs font-medium">목록</span>
-          </button>
+          {/* 선택된 장소 카드 */}
+          {selectedGroup && (
+            <div className="w-full px-3 pointer-events-auto">
+              <PopupCarousel
+                records={selectedGroup}
+                onClose={() => setSelectedGroup(null)}
+              />
+            </div>
+          )}
         </div>
-
-        {/* 선택된 장소 카드 */}
-        {selectedGroup && (
-          <PopupCarousel
-            records={selectedGroup}
-            onClose={() => setSelectedGroup(null)}
-          />
-        )}
 
         {/* 목록 뷰 */}
         {showList && (

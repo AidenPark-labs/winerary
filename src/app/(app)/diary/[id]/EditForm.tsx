@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { updateWineRecord } from "@/lib/actions/diary";
 import type { WineRecord, WineType, CompanionEntry } from "@/types";
 import LoadingOverlay from "@/components/LoadingOverlay";
-import StarRating from "@/components/StarRating";
 import PlaceSearch from "@/components/PlaceSearch";
 import BlendGrapeSelector from "@/components/BlendGrapeSelector";
 import GrapeCombobox from "@/components/GrapeCombobox";
@@ -139,15 +138,10 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
   const [foods, setFoods] = useState<string[]>((record.foods ?? []).map((f) => f.name));
   const [foodInput, setFoodInput] = useState("");
 
-  // 평점/가격
-  const [rating, setRating] = useState(record.rating ?? 3);
-  const [pairingScore, setPairingScore] = useState(record.pairing_score ?? 3);
+  // 가격
   const [price, setPrice] = useState(record.price != null ? String(record.price) : "");
   const [priceType, setPriceType] = useState<"market" | "retail">(record.price_type ?? "retail");
   const [priceUnit, setPriceUnit] = useState<"bottle" | "glass">(record.price_unit ?? "bottle");
-  const [valueScore, setValueScore] = useState(record.value_score ?? 3);
-  const [repurchaseIntent, setRepurchaseIntent] = useState<"yes" | "maybe" | "no" | null>(record.repurchase_intent ?? null);
-  const [memo, setMemo] = useState(record.memo ?? "");
   const [tags, setTags] = useState<string[]>(record.tags ?? []);
   const [tagInput, setTagInput] = useState("");
   const [visibility, setVisibility] = useState(record.visibility);
@@ -197,15 +191,10 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
       drunk_at: drunkAt,
       companions: companionEntries.length > 0 ? companionEntries.map((e) => e.userCode ? `@${e.name}` : e.name) : null,
       companion_entries: companionEntries.length > 0 ? companionEntries : undefined,
-      memo: memo || null,
       tags: tags.length > 0 ? tags : null,
-      rating,
-      pairing_score: foods.length > 0 ? pairingScore : null,
       price: price ? parseInt(price) : null,
       price_type: price ? priceType : null,
       price_unit: price ? priceUnit : null,
-      value_score: valueScore,
-      repurchase_intent: repurchaseIntent,
       foods: foods.map((name) => ({ name })),
       visibility,
     });
@@ -407,33 +396,6 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
         </section>
 
         {/* ── 평점 ── */}
-        <section className="flex flex-col gap-3">
-          <label className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">평점</label>
-          <StarRating label="와인 평점" emoji="⭐" value={rating} max={5} step={0.5} onChange={setRating} />
-          <StarRating label="가성비 만족도" emoji="💰" value={valueScore} max={5} step={0.5} onChange={setValueScore} />
-          {foods.length > 0 && (
-            <StarRating label="음식 궁합" emoji="🍽️" value={pairingScore} max={5} step={1} onChange={setPairingScore} />
-          )}
-        </section>
-
-        {/* ── 재구매 의사 ── */}
-        <section className="flex flex-col gap-2">
-          <label className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">재구매 의사</label>
-          <div className="flex gap-2">
-            {([["yes", "완전 있음", "🔄"], ["maybe", "중간", "🤔"], ["no", "안마실듯", "👋"]] as const).map(([val, label, emoji]) => (
-              <button key={val} type="button"
-                onClick={() => setRepurchaseIntent(repurchaseIntent === val ? null : val)}
-                className={`flex-1 py-3 rounded-2xl text-sm font-medium border transition-all ${repurchaseIntent === val ? "bg-accent/20 border-accent text-accent" : "bg-surface/60 border-white/5 text-zinc-400 hover:bg-white/5"}`}>
-                <span className="block text-lg mb-0.5">{emoji}</span>
-                {label}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* ── 메모 ── */}
-        <textarea value={memo} onChange={(e) => setMemo(e.target.value)} rows={3} placeholder="메모" className={iCls + " resize-none"} />
-
         {/* ── 태그 ── */}
         <section className="flex flex-col gap-2">
           <label className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">태그</label>

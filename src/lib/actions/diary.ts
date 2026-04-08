@@ -161,6 +161,39 @@ export async function deleteWineRecord(id: string) {
   redirect("/diary");
 }
 
+export async function updateRecordOwnerEvaluation(
+  recordId: string,
+  data: {
+    rating: number | null;
+    value_score: number | null;
+    pairing_score: number | null;
+    memo: string | null;
+    repurchase_intent: string | null;
+  },
+) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const { error } = await supabase
+    .from("wine_records")
+    .update({
+      rating: data.rating,
+      value_score: data.value_score,
+      pairing_score: data.pairing_score,
+      memo: data.memo,
+      repurchase_intent: data.repurchase_intent,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", recordId)
+    .eq("user_id", user.id);
+
+  if (error) return { error: error.message };
+  revalidatePath(`/diary/${recordId}`);
+  revalidatePath("/diary");
+  return { success: true };
+}
+
 export async function upsertRecordEvaluation(
   recordId: string,
   data: { rating: number | null; value_score: number | null; pairing_score: number | null; memo: string | null },

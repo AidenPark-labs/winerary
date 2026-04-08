@@ -2,21 +2,30 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { upsertRecordEvaluation } from "@/lib/actions/diary";
+import { updateRecordOwnerEvaluation, upsertRecordEvaluation } from "@/lib/actions/diary";
 import StarRating from "@/components/StarRating";
+
+const REPURCHASE_OPTIONS = [
+  { value: "yes", label: "👍 있음" },
+  { value: "maybe", label: "🤔 고민 중" },
+  { value: "no", label: "👋 패스" },
+] as const;
 
 export default function EvaluateForm({
   recordId,
+  mode,
   hasFoods,
   existing,
 }: {
   recordId: string;
+  mode: "owner" | "guest";
   hasFoods: boolean;
   existing: {
     rating: number | null;
     value_score: number | null;
     pairing_score: number | null;
     memo: string | null;
+    repurchase_intent?: string | null;
   } | null;
 }) {
   const router = useRouter();
@@ -26,18 +35,29 @@ export default function EvaluateForm({
   const [valueScore, setValueScore] = useState(existing?.value_score ?? 3);
   const [pairingScore, setPairingScore] = useState(existing?.pairing_score ?? 3);
   const [memo, setMemo] = useState(existing?.memo ?? "");
+  const [repurchase, setRepurchase] = useState(existing?.repurchase_intent ?? null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit() {
     setSaving(true);
     setError(null);
-    const result = await upsertRecordEvaluation(recordId, {
-      rating,
-      value_score: valueScore,
-      pairing_score: hasFoods ? pairingScore : null,
-      memo: memo.trim() || null,
-    });
+
+    const result = mode === "owner"
+      ? await updateRecordOwnerEvaluation(recordId, {
+          rating,
+          value_score: valueScore,
+          pairing_score: hasFoods ? pairingScore : null,
+          memo: memo.trim() || null,
+          repurchase_intent: repurchase,
+        })
+      : await upsertRecordEvaluation(recordId, {
+          rating,
+          value_score: valueScore,
+          pairing_score: hasFoods ? pairingScore : null,
+          memo: memo.trim() || null,
+        });
+
     setSaving(false);
     if (result.error) {
       setError(result.error);
@@ -57,15 +77,39 @@ export default function EvaluateForm({
         )}
       </div>
 
-      <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 p-5">
-        <label className="text-xs text-zinc-400 font-medium mb-2 block">한줄 코멘트</label>
-        <textarea
-          value={memo}
-          onChange={(e) => setMemo(e.target.value)}
-          rows={3}
-          placeholder="이 와인에 대한 감상을 남겨보세요 (선택)"
-          className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-zinc-100 text-sm font-light resize-none focus:outline-none focus:border-violet-500/50 transition-all placeholder:text-zinc-500"
-        />
+      <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 p-5 flex flex-col gap-4">
+        <div>
+          <label className="text-xs text-zinc-400 font-medium mb-2 block">한줄 코멘트</label>
+          <textarea
+            value={memo}
+            onChange={(e) => setMemo(e.target.value)}
+            rows={3}
+            placeholder="이 와인에 대한 감상을 남겨보세요 (선택)"
+            className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-zinc-100 text-sm font-light resize-none focus:outline-none focus:border-violet-500/50 transition-all placeholder:text-zinc-500"
+          />
+        </div>
+
+        {mode === "owner" && (
+          <div>
+            <label className="text-xs text-zinc-400 font-medium mb-2 block">재구매 의향</label>
+            <div className="flex gap-2">
+              {REPURCHASE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setRepurchase(repurchase === opt.value ? null : opt.value)}
+                  className={`flex-1 py-2.5 rounded-xl text-sm border transition-all ${
+                    repurchase === opt.value
+                      ? "bg-violet-500/20 border-violet-500/40 text-white"
+                      : "bg-black/40 border-white/10 text-zinc-500 hover:border-white/20"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {error && (

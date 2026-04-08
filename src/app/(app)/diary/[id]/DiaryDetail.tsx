@@ -489,19 +489,22 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
   myEvaluation: RecordEvaluation | null;
   currentUserId: string | null;
 }) {
+  const isOwner = !readOnly;
   const otherEvals = evaluations.filter((e) => e.user_id !== currentUserId);
   const hasMyEval = !!myEvaluation;
-  const canEvaluate = readOnly && currentUserId;
 
   // 작성자 평가 데이터 (record 자체에서 추출)
   const authorHasEval = record.rating != null || record.value_score != null ||
     record.pairing_score != null || record.memo != null || record.repurchase_intent != null;
 
+  // 본인 기록이면 작성자 평가가 곧 내 평가
+  const showEvaluateButton = currentUserId && !hasMyEval && !(isOwner && authorHasEval);
+
   return (
     <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
       <div className="px-5 pt-4 pb-2 flex items-center justify-between">
         <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Reviews</p>
-        {currentUserId && !hasMyEval && (
+        {showEvaluateButton && (
           <Link
             href={`/diary/${record.id}/evaluate`}
             className="text-[11px] px-3 py-1 rounded-lg bg-violet-500/20 text-violet-300 border border-violet-500/30 hover:bg-violet-500/30 transition-colors"
@@ -513,15 +516,26 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
 
       {/* 작성자 평가 */}
       {authorHasEval && (
-        <EvalCard
-          label="작성자"
-          isAuthor
-          rating={record.rating}
-          valueScore={record.value_score}
-          pairingScore={record.pairing_score}
-          memo={record.memo}
-          repurchaseIntent={record.repurchase_intent}
-        />
+        <div className="px-5 py-3.5 border-b border-white/10 last:border-b-0">
+          <div className="flex items-center justify-between mb-2.5">
+            <p className="text-[11px] font-medium text-amber-400">작성자 (작성자)</p>
+            {isOwner && (
+              <Link
+                href={`/diary/${record.id}/evaluate`}
+                className="text-[11px] px-2.5 py-1 rounded-lg bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10 transition-colors"
+              >
+                수정
+              </Link>
+            )}
+          </div>
+          <EvalCardContent
+            rating={record.rating}
+            valueScore={record.value_score}
+            pairingScore={record.pairing_score}
+            memo={record.memo}
+            repurchaseIntent={record.repurchase_intent}
+          />
+        </div>
       )}
 
       {/* 내 평가 (공유받은 유저) */}

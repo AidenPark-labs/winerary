@@ -1,6 +1,25 @@
 import { createClient } from "@/lib/supabase/server";
 import type { WineSuggestion } from "@/types";
 
+function wordSimilarity(query: string, target: string): number {
+  if (!query || !target) return 0;
+  const qNorm = query.toLowerCase().replace(/['\-]/g, " ");
+  const tNorm = target.toLowerCase().replace(/['\-]/g, " ");
+  if (qNorm === tNorm) return 1;
+  if (tNorm.includes(qNorm) || qNorm.includes(tNorm)) return 0.9;
+
+  const qWords = qNorm.split(/\s+/).filter((w) => w.length >= 2);
+  const tWords = tNorm.split(/\s+/).filter((w) => w.length >= 2);
+  if (qWords.length === 0 || tWords.length === 0) return 0;
+
+  // 쿼리 단어 중 타겟에 포함된 비율
+  let matchCount = 0;
+  for (const qw of qWords) {
+    if (tWords.some((tw) => tw.includes(qw) || qw.includes(tw))) matchCount++;
+  }
+  return matchCount / qWords.length;
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim();
@@ -8,19 +27,14 @@ export async function GET(request: Request) {
 
   const supabase = await createClient();
 
-  // 공백 무시 검색 패턴
-  const fuzzy = "%" + q.replace(/\s+/g, "").split("").join("%") + "%";
+  // 검색 패턴: 전체 + 핵심 단어(3글자 이상)
   const exact = `%${q}%`;
-
-  // 핵심 단어 패턴 (3글자 이상 단어 AND 조합)
   const words = q.split(/[\s']+/).filter((w) => w.length >= 3);
-  const wordPatterns = words.slice(0, 3).map((w) => `%${w}%`);
+  const wordPatterns = words.slice(0, 4).map((w) => `%${w}%`);
 
   const orConditions = [
     `name_ko.ilike.${exact}`,
     `name_en.ilike.${exact}`,
-    `name_ko.ilike.${fuzzy}`,
-    `name_en.ilike.${fuzzy}`,
     ...wordPatterns.flatMap((p) => [`name_ko.ilike.${p}`, `name_en.ilike.${p}`]),
   ];
 
@@ -28,9 +42,17 @@ export async function GET(request: Request) {
     .from("wines")
     .select("id, name_ko, name_en, wine_type, country, grape_variety, producer, price, vivino_url, vivino_rating")
     .or(orConditions.join(","))
-    .limit(20);
+    .limit(30);
 
-  const wines: WineSuggestion[] = (data ?? []).map((w) => ({
+  // 서버에서 유사도 정렬
+  const scored = (data ?? []).map((w) => {
+    const koScore = wordSimilarity(q, w.name_ko ?? "");
+    const enScore = wordSimilarity(q, w.name_en ?? "");
+    return { w, score: Math.max(koScore, enScore) };
+  });
+  scored.sort((a, b) => b.score - a.score);
+
+  const wines: WineSuggestion[] = scored.slice(0, 10).map(({ w }) => ({
     wine_id: w.id,
     name: w.name_en ?? w.name_ko,
     name_ko: w.name_ko,

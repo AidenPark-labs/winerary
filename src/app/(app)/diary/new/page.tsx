@@ -417,31 +417,14 @@ export default function NewDiaryPage() {
         setAiNotFound(false);
         fillWineFields(aiData, { setQuery, setWineNameOriginal, setWineType, setWineVintage, setGrape, setGrapeCustom, setCountry, setCountryCustom, setSelectedWine });
 
-        // DB 매칭
+        // DB 매칭 검색 (AI 텍스트 → DB 유사도 검색)
         const koName = aiData.name || "";
         const enName = aiData.name_original || "";
-        let primaryMatch: WineSuggestion | null = null;
+        const dbMatches = await searchDbMatches(koName, enName);
+        setSuggestions(dbMatches);
 
-        // 1) AI가 wine_id를 찾았으면 직접 조회
-        if (aiData.wine_id) {
-          try {
-            const res = await fetch(`/api/wine/${aiData.wine_id}`);
-            if (res.ok) primaryMatch = await res.json();
-          } catch { /* skip */ }
-        }
-
-        // 2) 대안 후보 검색
-        const altMatches = await searchDbMatches(koName, enName);
-
-        // primaryMatch를 최상단에, 중복 제거
-        const allMatches = primaryMatch
-          ? [primaryMatch, ...altMatches.filter((w) => w.wine_id !== primaryMatch!.wine_id)]
-          : altMatches;
-
-        setSuggestions(allMatches);
-
-        if (allMatches.length > 0) {
-          applyWineFields(allMatches[0]);
+        if (dbMatches.length > 0) {
+          applyWineFields(dbMatches[0]);
         }
       } else {
         setAiResult(null);

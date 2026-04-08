@@ -262,7 +262,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                 </div>
                 {/* 맛 평점 */}
                 {record.rating != null && (
-                  <div className="flex items-center justify-between px-5 py-3 border-t border-white/10">
+                  <div className="flex items-center justify-between px-5 py-3.5 border-t border-white/10">
                     <span className="text-xs text-zinc-400">맛 평점</span>
                     <div className="flex items-center gap-2">
                       <div className="flex">{renderStars(Number(record.rating), 5)}</div>
@@ -291,7 +291,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
               )}
               {/* 음식 궁합 점수 → 페어링에 대한 평가 */}
               {record.pairing_score != null && (
-                <div className="flex items-center justify-between px-5 py-3 border-t border-white/10">
+                <div className="flex items-center justify-between px-5 py-3.5 border-t border-white/10">
                   <span className="text-xs text-zinc-400">음식 궁합</span>
                   <div className="flex items-center gap-2">
                     <div className="flex">{renderStars(record.pairing_score, 5)}</div>
@@ -321,7 +321,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                 </div>
               )}
               {record.value_score != null && (
-                <div className="flex items-center justify-between px-5 py-3 border-t border-white/10 mt-1">
+                <div className="flex items-center justify-between px-5 py-3.5 border-t border-white/10 mt-1">
                   <span className="text-xs text-zinc-400">가성비</span>
                   <div className="flex items-center gap-2">
                     <div className="flex">{renderStars(Number(record.value_score), 5)}</div>
@@ -347,7 +347,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                 </div>
               )}
               {record.repurchase_intent && (
-                <div className="flex items-center justify-between px-5 py-3 border-t border-white/10">
+                <div className="flex items-center justify-between px-5 py-3.5 border-t border-white/10">
                   <span className="text-xs text-zinc-400">재구매 의사</span>
                   <span className="text-sm font-medium text-white">
                     {{ yes: "👍 있음", maybe: "🤔 고민 중", no: "👋 패스" }[record.repurchase_intent]}

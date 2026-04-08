@@ -198,27 +198,38 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
         {/* ── 컨텐츠 ── */}
         <div className={`flex flex-col gap-4 px-4 relative z-20 ${hasPhoto ? "-mt-12" : "pt-4"} ${readOnly ? "pb-36" : "pb-28"}`}>
 
-          {/* ── 글라스 카드 (별점 + 날짜 + 동행) ── */}
-          <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 px-5 py-3.5 shadow-2xl flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {overallScore != null && (
-                <span className="text-amber-400 text-sm font-bold">★ {overallScore.toFixed(1)}</span>
+          {/* ── 글라스 카드 (별점 + 날짜 + 동행 + 태그) ── */}
+          <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 px-5 py-3.5 shadow-2xl flex flex-col gap-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {overallScore != null && (
+                  <span className="text-amber-400 text-sm font-bold">★ {overallScore.toFixed(1)}</span>
+                )}
+                {overallScore != null && <span className="text-white/20">|</span>}
+                <span className="text-sm text-white font-medium">{dateStr}</span>
+              </div>
+              {companions.length > 0 && (
+                <span className="text-xs text-zinc-300/70 font-light">
+                  with{" "}
+                  {companions.map((c, i) => (
+                    <span key={i}>
+                      {i > 0 && ", "}
+                      {c.startsWith("@") ? (
+                        <span className="text-violet-300">{c}</span>
+                      ) : c}
+                    </span>
+                  ))}
+                </span>
               )}
-              {overallScore != null && <span className="text-white/20">|</span>}
-              <span className="text-sm text-white font-medium">{dateStr}</span>
             </div>
-            {companions.length > 0 && (
-              <span className="text-xs text-zinc-300/70 font-light">
-                with{" "}
-                {companions.map((c, i) => (
-                  <span key={i}>
-                    {i > 0 && ", "}
-                    {c.startsWith("@") ? (
-                      <span className="text-violet-300">{c}</span>
-                    ) : c}
+            {tags.length > 0 && (
+              <div className="flex gap-1.5 flex-wrap">
+                {tags.map((tag, i) => (
+                  <span key={i} className="px-2 py-1 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[10px] font-medium">
+                    #{tag}
                   </span>
                 ))}
-              </span>
+              </div>
             )}
           </div>
 
@@ -336,17 +347,6 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
                 </div>
               )}
               <div className="pb-2" />
-            </div>
-          )}
-
-          {/* 태그 */}
-          {tags.length > 0 && (
-            <div className="flex gap-1.5 flex-wrap">
-              {tags.map((tag, i) => (
-                <span key={i} className="px-2.5 py-1.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[11px] font-medium">
-                  #{tag}
-                </span>
-              ))}
             </div>
           )}
 

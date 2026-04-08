@@ -11,7 +11,7 @@ export default function NewSessionPage() {
   return (
     <div className="flex flex-col">
       <header className="px-5 pt-12 pb-4 flex items-center gap-3">
-        <button onClick={() => router.back()} className="text-zinc-400 hover:text-zinc-200 text-2xl">←</button>
+        <button onClick={() => router.back()} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/20 transition-colors text-lg">←</button>
         <h1 className="text-xl font-bold">공유 세션 만들기</h1>
       </header>
 

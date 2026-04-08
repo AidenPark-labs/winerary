@@ -621,7 +621,7 @@ export default function DiaryClient({ records, linkedMap = {} }: { records: Wine
   return (
     <div className="flex flex-col flex-1">
       <header className="px-5 pt-12 pb-4 flex items-center justify-between flex-shrink-0">
-        <h1 className="text-3xl font-serif tracking-wide text-white">와인노트</h1>
+        <h1 className="text-2xl font-serif tracking-wide text-white">와인노트</h1>
         <Link
           href="/diary/new"
           className="w-10 h-10 flex items-center justify-center rounded-full bg-accent hover:bg-accent/90 text-white shadow-lg shadow-accent/20 transition-all active:scale-[0.95]"

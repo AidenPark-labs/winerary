@@ -27,8 +27,8 @@ export default async function EvaluatePage({ params }: { params: Promise<{ id: s
     const hasExisting = record.rating != null || record.value_score != null;
     return (
       <div className="flex flex-col min-h-screen bg-zinc-950">
-        <header className="px-5 pt-12 pb-4 flex items-center gap-3 border-b border-zinc-800">
-          <Link href={`/diary/${id}`} className="text-zinc-400 hover:text-zinc-200 text-2xl">←</Link>
+        <header className="px-5 pt-12 pb-4 flex items-center gap-3">
+          <Link href={`/diary/${id}`} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/20 transition-colors text-lg">←</Link>
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold text-white">평가 {hasExisting ? "수정" : "작성"}</h1>
             <p className="text-xs text-zinc-500 truncate">{record.name}</p>
@@ -62,8 +62,8 @@ export default async function EvaluatePage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950">
-      <header className="px-5 pt-12 pb-4 flex items-center gap-3 border-b border-zinc-800">
-        <Link href={`/diary/${id}`} className="text-zinc-400 hover:text-zinc-200 text-2xl">←</Link>
+      <header className="px-5 pt-12 pb-4 flex items-center gap-3">
+        <Link href={`/diary/${id}`} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/20 transition-colors text-lg">←</Link>
         <div className="flex-1 min-w-0">
           <h1 className="text-xl font-bold text-white">평가 {existing ? "수정" : "작성"}</h1>
           <p className="text-xs text-zinc-500 truncate">{record.name}</p>

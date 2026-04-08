@@ -615,9 +615,9 @@ export default function NewDiaryPage() {
 
         {/* ── Header ── */}
         <header className="px-5 pt-12 pb-4 flex items-center gap-3 flex-shrink-0">
-          <button onClick={handleBack} className="text-zinc-400 hover:text-zinc-200 text-2xl w-8">←</button>
+          <button onClick={handleBack} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/20 transition-colors text-lg">←</button>
           <div className="flex-1">
-            <h1 className="text-lg font-bold">
+            <h1 className="text-xl font-bold text-white">
               {step === "photo" && "와인 사진 찍기"}
               {step === "wine" && "와인 정보 확인"}
               {step === "review" && "경험 기록"}

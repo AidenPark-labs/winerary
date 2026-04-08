@@ -1,0 +1,449 @@
+type,status,name_ko,name_en,naver_value,vivino_value,id
+grape,DIFFERENT,"펜폴즈 쿠능가 힐 쉬라즈","Penfolds Koonunga Hill Shiraz","쉬라즈","Cabernet Sauvignon",1509f325-af46-4029-9905-16592e7a3e08
+grape,DIFFERENT,"파밀 페랭 지공다스","Famille Perrin Gigondas 2012","그르나슈","Shiraz/Syrah, Grenache",2e31bb28-11e0-49f6-b350-d112d3e57bd0
+grape,DIFFERENT,"코노수르 비씨클레타 까르미네르","Concha y Toro Bicicleta Carménère","까르미네르","Carménère, Cabernet Sauvignon",9c3b0077-74a3-497f-a67e-5519b0e5479c
+grape,DIFFERENT,"포울스 레이디스 후 슛 데얼 런치 쉬라즈","Fowles Ladies Who Shoot Their Lunch Shiraz","쉬라즈","Chardonnay",3750930f-6c42-46f6-80c4-046ef86c981a
+grape,DIFFERENT,"더 프리즈너 레드 블렌드","The Prisoner Red Blend","진판델, 까베르네 소비뇽, 시라","Shiraz/Syrah, Cabernet Sauvignon, Petite Sirah, Charbono",a52ad431-0ef2-4829-b059-18966ef10d42
+grape,DIFFERENT,"그르기치 힐스 이스테이트 나파 밸리 소비뇽 블랑","Grgich Hills Estate Napa Valley Sauvignon Blanc","소비뇽 블랑","Cabernet Sauvignon",6aba3e32-d10d-4c63-ba76-a979cda61558
+grape,DIFFERENT,"울프 블라스 빌야라 쉬라즈","Wolf Blass Billabong Shiraz","쉬라즈","Cabernet Sauvignon",c69c1cf0-8eec-4410-a8ae-9d2c1da81bf5
+grape,DIFFERENT,"펜폴즈 쿠능가 힐 쉬라즈 2017","Penfolds Koonunga Hill Shiraz","쉬라즈","Cabernet Sauvignon",77d5bec7-9bd3-4569-b419-996bfd2a6ccb
+grape,DIFFERENT,"도멘 오트 샤토 로마쌍 반돌 레드","Domaines Ott Château de Selle Rosé 2020","무르베드르","Shiraz/Syrah, Mourvedre, Cinsault, Grenache",de4bc983-c613-4f08-b4f4-bf141cfecfb4
+grape,DIFFERENT,"Domaine Michel Magnien Gevrey-Chambertin Seuvrées Vieilles Vignes","Domaine Michel Magnien Gevrey-Chambertin Seuvrées Vieilles Vignes","피노 누아","Shiraz/Syrah",e479bae1-cb0b-4009-ae03-81bc852604b4
+grape,DIFFERENT,"폴 쉐노 블랑 드 블랑 까바 브뤼 리제르바","Paul Cheneau Blanc de Blancs Cava Brut Reserva","차르도네","Macabeo, Xarel-lo, Parellada",6af89f19-c250-4de8-b0fc-b3e1c6212ad4
+grape,DIFFERENT,"O 리슬링/쇼비뇽블랑","O Riesling/Sauvignon Blanc","리슬링, 쇼비뇽블랑","Riesling, Sauvignon Blanc",f306907d-8ff6-4019-8021-49dd091c516d
+grape,DIFFERENT,"SL 프리미티보 수수마니엘로 IGT 살렌토","SL Primitivo Susumaniello IGT Salento","프리미티보, 수수마니엘로","Primitivo, Susumaniello",c44ca536-d56a-4d6d-aed8-4a830839df98
+grape,DIFFERENT,"폰타나프레다 브라케토 다퀴 2018","Fontanafredda Brachetto d'Acqui 2018","브라케토","Brachetto",c4c5d27c-81c8-4930-a126-9a540cbfff23
+grape,DIFFERENT,"샤토 라 플뢰르 페트뤼스 2008","Chateau La Fleur Petrus 2008","메를로, 까베르네 프랑","Merlot, Cabernet Sauvignon",cbd8ef65-433a-413b-8811-1879376d1d2e
+grape,DIFFERENT,"아델리나 쉬라즈 마타로","Adelina Shiraz Mataro","쉬라즈, 마타로","Arneis",d7c7a5ab-ecf1-44b6-8dd4-81b0ac1ce676
+grape,DIFFERENT,"쌩 클레어 파이오니어 블록 게브르츠트라미너","Saint Clair Pioneer Block Gewurztraminer","게브르츠트라미너","Gewürztraminer",ed88301a-2914-4a44-86d7-bb1aff1cd697
+grape,DIFFERENT,"라피스 루나 피노 누아","Lapis Luna Pinot Noir","피노 누아","Negroamaro",eab0487f-7151-42b9-886e-39e81209bbfd
+grape,DIFFERENT,"안델루나 1300 말백","Andeluna 1300 Malbec","말백","Malbec",744d9917-5cdd-477c-a5bc-00fa82d87590
+grape,DIFFERENT,"토마시 아마로네 델라 발폴리첼라 클라시코","Tommasi Amarone della Valpolicella Classico","아마로네","Corvinone, Oseleta, Corvina, Rondinella",96fac5da-d727-43da-bd7f-2b169375488e
+grape,DIFFERENT,"뵈브 클리코 로제","Veuve Clicquot Rosé","알 수 없음","Pinot Meunier, Pinot Noir, Chardonnay",c1861595-3143-4911-920d-adb3105584af
+grape,DIFFERENT,"모엣 샹동 로제 임페리얼","Moët Chandon Rosé Impérial","알 수 없음","45% Pinot Noir, 40% Pinot Meunier, 15% Chardonnay",fe1774ad-3e4a-4633-af06-d5861055bb6c
+grape,DIFFERENT,"우마니 론끼 비고르 화이트","Umani Ronchi Vigor White","알 수 없음","Sangiovese, Merlot",50ad9df1-5a26-4f10-accd-25a26a2083ed
+grape,DIFFERENT,"울프 블라스 레드라벨 쉬라즈","Wolf Blass Red Label Shiraz","쉬라즈","Cabernet Sauvignon",ea59c021-dce2-4b18-867d-7d0e5c195c5f
+grape,DIFFERENT,"토소 피오코 디 비테 브라케토 다퀴","Toso Fioco di Vite Brachetto d'Acqui","브라케토","Brachetto",74ca0665-c567-45b1-adbf-6ecfd9a00b1a
+grape,DIFFERENT,"드루비에 부르고뉴 샤르도네","Drouhin Bourgogne Chardonnay","샤르도네","Pinot Noir",43219c9a-b18e-48ac-bc72-a257066d8d87
+grape,DIFFERENT,"1865 셀렉티드 빈야드 카르미네르","1865 Selected Vineyard Carmenere","카르미네르","Carménère",8d2ca347-73bf-41f9-a8f6-79bab1d1c20b
+grape,DIFFERENT,"로체노 네렐로 마스칼레세 로제","Roceno Nerello Mascalese Rosé","네렐로 마스칼레세","Nerello Mascalese",44858350-5fd0-4768-861a-88696ccbb6c4
+grape,DIFFERENT,"알파카 까베네 메를로","Alpaca Cabernet Merlot","까베네, 메를로","Cabernet Sauvignon, Merlot",50e77753-45ef-42f0-91bf-f3145bda1568
+grape,DIFFERENT,"제롬 프레보 라 끌로즈리 팩시밀리 로제 블랑 드 누아 엑스트라 브뤼","Jérôme Prévost La Closerie Fac-similé Rosé Blanc de Noirs Extra Brut","피노 누아","Pinot Meunier",23cf582f-15de-493f-bf1b-7858acf57084
+grape,DIFFERENT,"앙시앙 땅 소비뇽 샤르도네","Ancien Temps Sauvignon Chardonnay","소비뇽, 샤르도네","Chardonnay, Sauvignon Blanc",e28da68b-2411-440d-a21c-3a27c657577b
+grape,DIFFERENT,"스마일리 샤도네이 메를로","Smiley Chardonnay Merlot","메를로","Chardonnay",55085fbf-9a58-493f-913d-1a9c884ca460
+grape,DIFFERENT,"프라미에 쉬라즈","Premier Shiraz","쉬라즈","Chardonnay",fbd0be51-00ed-4d68-8022-37d227a8fabb
+grape,DIFFERENT,"메시아스 포트 화이트 스위트","Messias Port White Sweet","알 수 없음","Codega de Larinho, Rabigato, Malvasia Fina",e29c936b-da6d-42bf-ad51-642dfe097490
+grape,DIFFERENT,"안단티노 그레카니코 피노 그리지오","Antantino Grecanico Pinot Grigio","피노 그리지오","Pinot Grigio, Grecanico",719bc4cf-75e9-4ed4-bdf0-1014191ecf97
+grape,DIFFERENT,"아르망 드 브레냑 브뤼 골드 샹파뉴","Armand de Brignac Brut Gold Champagne","샤르도네, 피노 누아르, 피노 뮈니에","40% Chardonnay, 40% Pinot Noir, 20% Pinot Meunier",34bac906-ec0b-46c6-96aa-041727e8d699
+grape,DIFFERENT,"샤토 라 플뢰르 페트뤼스","Château La Fleur-Pétrus","메를로, 카베르네 프랑","Merlot, Cabernet Sauvignon",cdfd5af9-e8a3-4d45-9dc2-6608b99dd1c3
+grape,DIFFERENT,"샤또 몬텔레나 나파 샤르도네","Château Montelena Napa Chardonnay","샤르도네","Cabernet Sauvignon",c63dcead-f14d-4a28-bc01-9bdc8a960a72
+grape,DIFFERENT,"도멘 꼼뜨 조르주 드 보그 뮈지니 블랑 그랑 크뤼","Domaine Comte Georges de Vogue Musigny Blanc Grand Cru 2021","피노 그리","Chardonnay",8cb7d474-3b26-41ca-a3b7-c81e19244e4d
+grape,DIFFERENT,"발디까바 로쏘 디 몬탈치노","Valdicava Rosso di Montalcino","산지오베세","Chardonnay",ed50d6c8-60cd-4083-a9b1-bc332c3c8f2e
+grape,DIFFERENT,"서던 오션 소비뇽블랑","Southern Ocean Sauvignon Blanc","소비뇽블랑","Cabernet Sauvignon",ddf854ff-5c7b-4eb3-ba8f-466cc71b09d1
+grape,DIFFERENT,"슐롱베르거 게뷔르츠트라미너","Schlumberger Gewurztraminer","게뷔르츠트라미너","Riesling, Gewürztraminer",1955f1af-cdf1-4cea-b340-78335610ee97
+grape,DIFFERENT,"테탱제 프레스티주 로제 샹파뉴","Taittinger Prestige Rosé Champagne","샤르도네, 피노 누아르, 피노 뮈니에","45% Pinot Noir, 35% Chardonnay, 20% Pinot Meunier",75f95e95-a2b5-4871-b825-025dedc4c081
+grape,VIVINO_MORE,"엘 에네미고 말벡","El Enemigo Malbec","말벡","Cabernet Franc, Petit Verdot, Malbec",88b89231-1503-42d8-a468-c3edfeb159a3
+grape,VIVINO_MORE,"빈티지 롱바텀 헨리스 드라이브 쉬라즈-까베르네 소비뇽","Vintage Longbottom Henrys Drive Shiraz-Cabernet Sauvignon","쉬라즈, 까베르네 소비뇽","Merlot, Shiraz/Syrah, Cabernet Sauvignon",029b2661-dc85-411e-bf75-17751c4616ec
+grape,VIVINO_MORE,"이스까이 말벡 - 까베르네 프랑","Eschalier Malbec - Cabernet Franc","말벡, 까베르네 프랑","Cabernet Sauvignon, Cabernet Franc, Malbec, Merlot, Petit Verdot",57e9278c-e99b-4360-8589-456845e35d8d
+grape,VIVINO_MORE,"끌로 뒤 발 메를로","Clos du Val Merlot","메를로","Merlot, Cabernet Sauvignon, Cabernet Franc, Petit Verdot",8ffff154-8a14-49fc-bbd2-000dc118f668
+grape,VIVINO_MORE,"스텔라 벨라 쉬라즈","Stella Bella Shiraz","쉬라즈","Shiraz/Syrah, Cabernet Sauvignon",1cf31beb-c7d9-452e-a3b2-93aa02518e05
+grape,VIVINO_MORE,"샤토 물통 로칠드","Château Mouton Rothschild","카베르네 소비뇽","Merlot, Cabernet Sauvignon",1d5e079d-c637-4e8a-9021-372611a37f8a
+grape,VIVINO_MORE,"홍시에 프리미엄 피노누아","Honciee Premium Pinot Noir","피노누아","Chardonnay, Pinot Noir",291bec7a-1a39-4586-a143-785c719d8f53
+grape,VIVINO_MORE,"돔 루이나르 블랑 드 블랑 엑스트라 브뤼 2013","Dom Ruinart Blanc de Blancs Extra Brut 2013","샤르도네","Chardonnay, Pinot Noir, Pinot Meunier",2d84c888-8fb0-46fa-8402-87f31fc805ed
+grape,VIVINO_MORE,"3 샤또 피노 누아 생 귈렘","3 Château Pinot Noir Saint-Guillaume","피노누아","Grenache, Pinot Noir",31d48bf7-934e-4ef7-8467-ab1251ebc11b
+grape,VIVINO_MORE,"쉬머 소비뇽 블랑","Shimmer Sauvignon Blanc","소비뇽 블랑","Sauvignon Blanc, Pinot Grigio",39dd4a85-95a4-4fa0-9343-76fc96c13fc1
+grape,VIVINO_MORE,"G7 까베르네 소비뇽","G7 Cabernet Sauvignon","까베르네 소비뇽","Merlot, Cabernet Sauvignon",3abd2d9f-d3c1-44a1-95bc-fd062bdcd703
+grape,VIVINO_MORE,"솔 드 칠레 리저브 샤르도네","Sol de Chile Reserve Chardonnay","샤르도네","Chardonnay, Sauvignon Blanc",3d683daa-6274-4c96-b5e3-7919465633b2
+grape,VIVINO_MORE,"엔조 빈센조 아마로네 델라 DOCG","Enzo Vincenzo Amarone della Valpolicella DOCG","코르비나","Corvina, Rondinella, Corvinone",a561ebe4-92bd-4870-b578-e733fc8def35
+grape,VIVINO_MORE,"다다 카베르네 소비뇽 시라","Dada Cabernet Sauvignon Shiraz","카베르네 소비뇽, 시라","Shiraz/Syrah, Cabernet Sauvignon, Carménère",4e4ed0b2-0fba-4247-bd92-c08b1ae058d1
+grape,VIVINO_MORE,"알파카 까베르네 소비뇽","Alpaca Cabernet Sauvignon","까베르네 소비뇽","Cabernet Sauvignon, Merlot",5d8ecbf0-2afd-40b5-b093-21f3d2728184
+grape,VIVINO_MORE,"알라메다 까베르네 소비뇽","Alameda Cabernet Sauvignon","까베르네 소비뇽","Cabernet Sauvignon, Merlot",66233579-92bd-4bf0-99a7-f8674f287d0a
+grape,VIVINO_MORE,"더 블랙 쉬라즈","The Black Shiraz","쉬라즈","Shiraz/Syrah, Durif",aa39c033-c023-4ad4-ac3c-aa55e7913445
+grape,VIVINO_MORE,"빈야드 쉬라즈","Vineyard Shiraz","쉬라즈","Shiraz/Syrah, Merlot",86976f4a-aa31-416f-987e-2b3588a39489
+grape,VIVINO_MORE,"스카나비노 피노 샤르도네","Scanavino Pinot Chardonnay","샤르도네","Chardonnay, Pinot Noir",e92ac05a-1ad0-422a-a10e-6b7467e9b702
+grape,VIVINO_MORE,"몬테스 셀렉트 까베르네 소비뇽","Montes Select Cabernet Sauvignon","까베르네 소비뇽","Cabernet Sauvignon, Carménère",c2f8bdf4-8cbb-4019-9654-b51ea79fa6e5
+grape,VIVINO_MORE,"산테로 피노 샤르도네","Santero Pinot Chardonnay","샤르도네","Chardonnay, Pinot Bianco",ce3edb03-49f6-43ed-9097-d7446077657e
+grape,VIVINO_MORE,"챠오 프리미티보 메를로 IGT","Ciao Primitivo Merlot IGT","메를로","Merlot, Primitivo",8d5a46cc-4ed9-4595-9009-c3d6afbf6bd4
+grape,VIVINO_MORE,"제이콥스 크릭 1847 쉬라즈","Jacob's Creek 1847 Shiraz","쉬라즈","Shiraz/Syrah, Cabernet Sauvignon",150c1e96-4c74-4259-ac7a-0f7d5b1409f3
+grape,VIVINO_MORE,"라 지오이오사 로제 밀레지마토 프로세코 DOCG","La Gioiosa Rosé Millesimato Prosecco DOCG","글레라","Pinot Nero, Glera",03fa5766-9f58-437f-8079-5f0a94d93f2e
+grape,VIVINO_MORE,"에네미고 말벡","Enemigo Malbec","말벡","Cabernet Franc, Petit Verdot, Malbec",611d1022-6b7b-4524-b521-5d899f733216
+grape,VIVINO_MORE,"까테나 자파타 까테나 알타 까베르네소비뇽","Catena Zapata Catena Alta Cabernet Sauvignon","까베르네 소비뇽","Cabernet Sauvignon, Malbec",d04bba5d-d238-4696-ba75-9ed22faf1067
+grape,VIVINO_MORE,"샤토 라피트 로칠드","Château Lafite Rothschild","카베르네 소비뇽","Merlot, Cabernet Sauvignon, Petit Verdot",74ba7e45-9b3e-4c55-a9e0-5fa0018a3ac7
+grape,VIVINO_MORE,"스내퍼 락 소비뇽 로제","Snapper Rock Sauvignon Rosé","소비뇽 블랑","Pinot Noir, Sauvignon Blanc",9c42bfa2-5476-4977-8972-6ed7a3a4f379
+grape,VIVINO_MORE,"샤또 무통 로칠드 2015","Château Mouton Rothschild 2015","카베르네 소비뇽","Merlot, Cabernet Sauvignon",92f4ca2d-32ac-42fd-8bf5-55d9e5e87df7
+grape,VIVINO_MORE,"샤토 오손 보르도 블렌드","Château Ausone Bordeaux Blend","카베르네 소비뇽","Cabernet Franc, Malbec, Merlot, Petit Verdot, Cabernet Sauvignon",f2e46e94-e4c3-4655-ba3b-3acb1f431e71
+grape,VIVINO_MORE,"루이 로드레르 필리프 스타르크 브뤼 나뛰르 로제 샹파뉴","Louis Roederer x Philippe Starck Brut Nature Rosé Champagne","피노 누아, 샤르도네","Chardonnay, Pinot Noir, Pinot Meunier",a907e656-4cb3-4e93-a6fe-5fbad724645c
+grape,VIVINO_MORE,"제이콥스 크릭 클래식 쉬라즈","Jacobs Creek Classic Shiraz","쉬라즈","Shiraz/Syrah, Cabernet Sauvignon",93bc036b-78da-4b71-bf58-ded79bda99e3
+grape,VIVINO_MORE,"페트뤼스","Petrus","메를롯","Merlot, Cabernet Sauvignon",a574e8fb-2591-4e4b-9e1e-b4a969ba876d
+grape,VIVINO_MORE,"비냐 빅 에이 까베르네 소비뇽","Viña Big A Cabernet Sauvignon","까베르네 소비뇽","Cabernet Sauvignon, Merlot",b3e9ef97-6845-4b35-bdeb-8512d641cda9
+grape,VIVINO_MORE,"샤또 무통 로칠드 2022","Château Mouton Rothschild 2022","카베르네 소비뇽","Merlot, Cabernet Sauvignon",ac95c522-4d6f-4a8e-840f-a7bc6d8daf92
+grape,VIVINO_MORE,"라 리오하나 보나르다 말벡","La Riojana Bonarda Malbec","말벡","Malbec, Bonarda",ace35e14-9d81-46ae-abe8-9e4be5473fa6
+grape,VIVINO_MORE,"샤토 피숑 롱그빌 바롱 2018","Château Pichon Longueville Baron 2018","카베르네 소비뇽","Merlot, Cabernet Sauvignon, Cabernet Franc",42e0aba0-d862-4a6e-b728-b91be36e5018
+grape,VIVINO_MORE,"샤또 라 미숑 오 브리옹","Château La Mission Haut-Brion","카베르네 소비뇽","Merlot, Cabernet Sauvignon, Cabernet Franc, Petit Verdot, Malbec",b4cdef4c-5d9c-48a1-9005-6e1af46d83d1
+grape,VIVINO_MORE,"샤토 라 미시옹 오 브리옹","Château La Mission Haut-Brion","카베르네 소비뇽","Merlot, Cabernet Sauvignon, Cabernet Franc, Petit Verdot, Malbec",e11ce598-fdc3-432f-a4a9-6d3a540b311a
+grape,VIVINO_MORE,"홀라쇼 소비뇽 블랑","Hola Chao Sauvignon Blanc","소비뇽 블랑","Sauvignon Blanc, Verdejo, Airen",32bde4ca-7144-4bf4-b470-dec5e9a404e1
+grape,VIVINO_MORE,"샤또 로스 볼도스 모멘토스 메를로","Château Los Boldos Momentos Merlot","메를로","Cabernet Sauvignon, Merlot",b26ab722-36b4-4020-86b3-18f018c2cde8
+grape,VIVINO_MORE,"라 또르데라 알네 프로세코 밀레지마토","La Tordera Alni Prosecco Millesimato","글레라","Glera, Chardonnay",51c495d6-becb-43b0-b2c6-f5c29e7646bf
+grape,VIVINO_MORE,"킹스 오브 프로히비션 쉬라즈","Kings of Prohibition Shiraz","쉬라즈","Shiraz/Syrah, Cabernet Sauvignon",b70427dc-b1d6-4a98-b320-0bf2e26b2e5b
+grape,VIVINO_MORE,"카이켄 떼루아 시리즈 말벡","Kaiken Terroir Series Malbec","말벡","Petit Verdot, Bonarda, Malbec",b549ac70-912b-4898-a515-d0f2daf30fcc
+grape,VIVINO_MORE,"돔 루이나르 블랑 드 블랑 엑스트라 브뤼","Dom Ruinart Blanc de Blancs Extra Brut","샤르도네","Chardonnay, Pinot Noir, Pinot Meunier",8e1507f6-39cd-4e5a-8c91-a75dfddcfdff
+grape,VIVINO_MORE,"페렐라다 스타즈 리제르바 까바 브뤼 나뚜르","Parellada Stars Reserva Cava Brut Nature","파렐라다","Chardonnay, Pinot Noir, Macabeo, Xarel-lo, Parellada",8a67cf43-4fe4-446d-845a-5bf0e2ddc758
+grape,VIVINO_MORE,"슈플라이 쉬라즈","Supply Shiraz","쉬라즈","Grenache, Shiraz/Syrah",06292de2-2ec6-415a-a42b-f57e78c4b292
+grape,VIVINO_MORE,"샤토 마고","Château Margaux","카베르네 소비뇽","Merlot, Cabernet Sauvignon, Cabernet Franc",da9da0d7-f57b-49e2-bcaa-37ab90c7f005
+grape,VIVINO_MORE,"비냐마이포 클래식 시리즈 소비뇽 블랑","Viña Maipo Classic Series Sauvignon Blanc","소비뇽 블랑","Chardonnay, Sauvignon Blanc",e1c49c7b-7b7b-403d-9027-76cb48fe1f95
+grape,VIVINO_MORE,"몬테스 클래식 까베르네 소비뇽","Montes Classic Cabernet Sauvignon","까베르네 소비뇽","Merlot, Cabernet Sauvignon, Malbec",2c8524c5-1bdc-4ff6-b56d-2990edd497b3
+grape,VIVINO_MORE,"아르볼레다 까베르네 소비뇽","Arboleda Cabernet Sauvignon","까베르네 소비뇽","Cabernet Sauvignon, Cabernet Franc",76d54ef3-3a47-41ed-9c86-b471b77db6e3
+grape,VIVINO_MORE,"장 레옹 메를로","Jean León Merlot","메를로","Merlot, Petit Verdot",efd38cb9-4f4a-47ce-8e35-e4849e3b381f
+grape,NAVER_MORE,"폰타나프레다 르프롱드 모스카토 다스티","Fontanapredda Le Fronde Moscato d'Asti","모스카토","Moscato",856200bc-3954-40e2-81d3-95e52db57010
+grape,NAVER_MORE,"샤토 라 미션 오 브리옹 라 미션 오 브리옹 블랑","Château La Mission Haut-Brion La Mission Haut-Brion Blanc","소비뇽 블랑, 세미용","Sémillon",018dfb24-6848-495d-82e7-cf51b1e6abaa
+grape,NAVER_MORE,"쌩 클레어 파이오니어 블록 게뷔르츠트라미너","Saint Claire Pioneer Block Gewürztraminer","게뷔르츠트라미너","Gewürztraminer",8fc18cf3-c8b5-4f54-adf8-f12f97d52f2a
+grape,NAVER_MORE,"프레스코발디 카스텔지오콘도 브루넬로 디 몬탈치노","Frescobaldi Castelgiocondo Brunello di Montalcino","브루넬로","Sangiovese",21851ab2-98a2-4340-89d5-50ab4d3c54a0
+grape,NAVER_MORE,"다렌버그 더 데알릭트 빈야드 그르나슈","D'Arenberg The Derelict Vineyard Grenache","그르나슈","Grenache",9478f8f9-e006-40cf-aa65-a83a4804a932
+grape,NAVER_MORE,"폴 로제 큐베 윈스턴 처칠 브뤼","Pol Roger Cuvée Sir Winston Churchill Brut","샤르도네, 피노 누아, 피노 뫼니에","Chardonnay, Pinot Noir",951d2946-29e2-4e33-8a7e-729314317773
+grape,NAVER_MORE,"투썩 점퍼 울프 피노 그리지오","Tussock Jumper Wolf Pinot Grigio","피노 그리지오","Pinot Grigio",2f0b5fca-6b90-4f52-99d1-92ae8d0f667d
+grape,NAVER_MORE,"챠오 피노 그리지오","Ciao Pinot Grigio","피노그리지오","Pinot Grigio",311ab3ec-7964-414b-b241-6d3a8001ff56
+grape,NAVER_MORE,"프란시스 포드 코폴라 로쏘 & 비앙코 피노 그리지오","Francis Ford Coppola Rosso & Bianco Pinot Grigio","피노 그리지오","Pinot Gris",3837ed4b-dbd4-436c-82f9-9594bc5bdfbc
+grape,NAVER_MORE,"펜폴즈 쿠능가 힐 쉬라즈 까베르네","Penfolds Koonunga Hill Shiraz Cabernet","쉬라즈, 까베르네 소비뇽","Cabernet Sauvignon",38375fbe-35d9-4696-adfa-9c70e2125b06
+grape,NAVER_MORE,"보테가 일 비노 포에티 프로세코 브뤼","Bottega Il Vino Poeti Prosecco Brut","프로세코","100% Glera",4085e767-c976-4d98-9346-ebc855dc97b1
+grape,NAVER_MORE,"간치아 모스카토 다스티","Gancia Moscato d'Asti","모스카토","100% Moscato",49c17f7b-819f-45e7-ab54-72b361fa888b
+grape,NAVER_MORE,"더치 홉 쉬라즈 무르베드르","Dutch Hop Shiraz Mourvèdre","쉬라즈, 무르베드르","Shiraz/Syrah, Mourvedre",49dd4818-4a73-4757-8d67-50af8cd42245
+grape,NAVER_MORE,"모란데 비티스 우니카 쉬라 까베르네 소비뇽","Morande Vitis Unica Syrah Cabernet Sauvignon","쉬라, 까베르네 소비뇽","Cabernet Sauvignon",a6962f41-2b72-49ed-88c1-8dccd0f56f4a
+grape,NAVER_MORE,"예르만 피노 그리지오","Jermann Pinot Grigio","피노그리지오","Pinot Grigio",abf0ff13-463f-4719-987c-f1ed0eff6bf2
+grape,NAVER_MORE,"프로메사 모스카토","Promesa Moscato","모스카토","Moscato",55bb1e7d-d92b-4242-abf5-132857c41912
+grape,NAVER_MORE,"알파카 까르미네르","Alpaca Carmenere","까르미네르","Carménère",b3d59371-fb95-4eac-868b-016bd4b0d0dd
+grape,NAVER_MORE,"얄룸바 옥스포드 랜딩 까베르네 쉬라즈","Yalumba Oxford Landing Cabernet Shiraz","까베르네 소비뇽, 쉬라즈","Cabernet Sauvignon",6dcc8c50-64f2-418c-a095-53cfda715427
+grape,NAVER_MORE,"오리모스 그랑 리저브 GSM","Orimos Grand Reserve GSM","그르나슈, 쉬라즈, 무르베드르","Shiraz/Syrah, Grenache, Mourvedre",24777099-4492-4cd6-8015-fb96f27fc235
+grape,NAVER_MORE,"피케라스 쉬라-모나스트렐","Piqueras Syrah-Monastrell","쉬라, 모나스트렐","Shiraz/Syrah, Monastrell",c7d68bf2-f9a1-4977-a506-498acfb6f726
+grape,NAVER_MORE,"스칼리올라 파르팔레 모스카토 다스티","Scagliola Farfalle Moscato d'Asti","모스카토","Moscato",7be3fd6a-01be-4bb4-ad20-630553380afa
+grape,NAVER_MORE,"칸티 모스카토 다스티 DOCG","Canty Moscato d'Asti DOCG","모스카토","Moscato",7c61f3cd-8306-46cc-84c6-e5ef4fd6ac2d
+grape,NAVER_MORE,"피터 메르테스 골드 에디션 리슬링 카버넷","Peter Mertes Gold Edition Riesling Cabernet","리슬링, 카버넷","Riesling",41f85498-4ca1-4c33-ac94-e7729d96824a
+grape,NAVER_MORE,"산테로 피노 샤르도네 스푸만테","Santero Pinot Chardonnay Spumante","피노, 샤르도네","Chardonnay, Pinot Bianco",8ce0ef63-52ac-4f0f-bf40-f25c02c02cb4
+grape,NAVER_MORE,"메종 카스텔 그르나슈 미디움 스위트","Maison Castel Grenache Medium Sweet","그르나슈","Grenache",a0a7bc63-a234-40f9-9620-aebf733a0d07
+grape,NAVER_MORE,"도멘 롱보 르 보타니스트 무흐베드르 쉬라","Domaine Longbo Le Botaniste Mourvèdre Syrah","무흐베드르, 쉬라","Mourvedre, Shiraz/Syrah",de1d8e52-0372-4fcb-aec4-b66ee0375b13
+grape,NAVER_MORE,"스칼리올라 프리모 바치오 모스카토 다스티","Scagliola Primo Bacio Moscato d'Asti","모스카토","Moscato Bianco",f26315fc-2022-4071-95ac-068a8aa7b83a
+grape,NAVER_MORE,"칸티나 자카니니 달 트랄체토 피노 그리지오","Cantina Zaccagnini Dal Tralcetto Pinot Grigio","피노 그리지오","Pinot Grigio",c46dce2b-e786-4647-bf86-4d8c4a23dbb1
+grape,NAVER_MORE,"토레셀라 피노 그리지오","Torresella Pinot Grigio","피노그리지오","Pinot Grigio",ed3c7ab4-4867-41de-b3f4-e5acd6e2ff55
+grape,NAVER_MORE,"펜폴즈 빈 2 쉬라즈 마타로","Penfolds Bin 2 Shiraz Mataro","쉬라즈, 마타로","Shiraz/Syrah",f6b4cf61-542f-4ff9-991f-c3b319f91b27
+grape,NAVER_MORE,"타파스 가르나차 로제","Tapas Garnacha Rosé","가르나차","Garnacha",8129a579-043c-4e8f-ad92-043eea9f0fec
+grape,NAVER_MORE,"아델리나 그르나슈","Adelina Grenache","그르나슈","Grenache",8f422b6a-67a2-49b8-bdce-8e61dcaff4ed
+grape,NAVER_MORE,"K 빈트너스 더 보이 그르나슈","K Vintners The Boy Grenache","그르나슈","Grenache",a741e19f-16b5-4611-b3aa-30d1d459501b
+grape,NAVER_MORE,"일 피아또 파스타 피노 그리지오 로제","Il Piatto Pasta Pinot Grigio Rosé","피노 그리지오","Pinot Grigio",5ff8416f-f04a-4219-a708-d437faccbd0c
+grape,NAVER_MORE,"타파스 가르나차 레드","Tapas Garnacha","가르나차","Garnacha",3e09f037-3737-41d8-a701-0ddf6cb0c29e
+grape,NAVER_MORE,"반피 부르넬로 디 몬탈치노","Banfi Brunello di Montalcino","브루넬로","Sangiovese",ef6e455a-f0db-4aa5-944e-57074e936ecd
+grape,NAVER_MORE,"칸티 아스티 리버티","Canti Asti Liberty","모스카토","Moscato",e05a22c9-bd27-4ca0-94a2-1f287acb1e49
+grape,NAVER_MORE,"샤토 라 미션 오 브리옹 블랑 2012","Château La Mission Haut Brion Blanc 2012","소비뇽 블랑, 세미용","Sémillon",621571e8-c265-4d7a-922c-4eb8d9bf004b
+grape,NAVER_MORE,"클로나킬라 쉬라즈 비오니에","Clonakilla Shiraz Viognier","쉬라즈, 비오니에","Viognier",23c9158e-fc3b-4e0d-9c25-f51be4b1dc89
+grape,NAVER_MORE,"베서니 퍼스트 빌리지 그르나슈","Bethany First Village Grenache","그르나슈","Grenache",49e21416-7890-4974-97d3-c19daaa79d71
+grape,NAVER_MORE,"파올로 사라코 모스카토 다스티","Paolo Saracco Moscato d'Asti","모스카토","Moscato Bianco",9c00b512-c4ab-47c5-addf-02bfbc94025c
+grape,NAVER_MORE,"루나리아 피노 그리지오","Lunaria Pinot Grigio","피노 그리지오","Pinot Gris",a613b2f5-bf43-411b-b5c8-b0df8e37ff07
+grape,NAVER_MORE,"제이콥스 크릭 샤르도네 피노 누아","Jacob's Creek Chardonnay Pinot Noir","샤르도네, 피노 누아","100% Chardonnay",7ec3c1bf-8b20-40af-b4c6-8e7776a6ab95
+grape,NAVER_MORE,"펜폴즈 빈 389 까베르네 쉬라즈","Penfolds Bin 389 Cabernet Shiraz","까베르네, 쉬라즈","Cabernet Sauvignon",5b98e378-3108-4785-8c96-52560d6d43c4
+grape,NAVER_MORE,"펜폴즈 빈 8 까베르네 쉬라즈","Penfolds Bin 8 Cabernet Shiraz","까베르네 소비뇽, 쉬라즈","Cabernet Sauvignon",a1a9b388-005e-4fea-9ffe-e6653043b5da
+grape,NAVER_MORE,"팀스미스 마타로 그르나슈 쉬라즈","Timsmith Mataro Grenache Shiraz","마타로, 그르나슈, 쉬라즈","Grenache, Mataro, Shiraz/Syrah",8613de23-b9f0-489e-8fd6-7b266f9fe418
+grape,NAVER_MORE,"다렌버그 래핑 맥파이 쉬라즈 비오니에","D'Arenberg Wrapping Magpie Shiraz Viognier","쉬라즈, 비오니에","Shiraz/Syrah",b3358396-d4d4-4fa7-8721-ff9007acb49b
+grape,NAVER_MORE,"하디스 스탬프 샤르도네 세미용","Hardys Stamp Chardonnay Semillon","샤르도네, 세미용","Chardonnay, Sémillon",736d6b8f-5aca-49f6-ba1c-bd68089b76b5
+grape,NAVER_MORE,"조닌 벤티테레 피노 그리지오","Zonin Ventiterre Pinot Grigio","피노 그리지오","Pinot Grigio",9e204b87-bc5e-4780-a701-aa70c6614330
+grape,NAVER_MORE,"젬마 디 루나 피노 그리지오","Gemma di Luna Pinot Grigio","피노 그리지오","Pinot Grigio",92a93fe1-a83e-4afa-a206-702c95de8ab4
+grape,NAVER_MORE,"로버트 몬다비 우드브릿지 피노 그리지오","Robert Mondavi Woodbridge Pinot Grigio","피노 그리지오","Pinot Gris",eb0fb74b-ce55-4efa-acd4-0bbc5cb8d682
+grape,NAVER_MORE,"브라운 브라더스 모스카토 피노 그리지오","Brown Brothers Moscato Pinot Grigio","모스카토, 피노 그리지오","Moscato",a2a2d68a-7ef4-4c33-9952-f580a2dc1d57
+grape,NAVER_MORE,"버디 그르나슈","Buddy Grenache","그르나슈","Grenache",46f45179-ecd2-43fe-9285-3a62f8cbf70f
+grape,NAVER_MORE,"트레드 소프틀리 그르나슈","Tread Softly Grenache","그르나슈","Grenache",ea428416-044e-40fb-a191-971ee804502a
+grape,NAVER_MORE,"바타시올로 피노 샤르도네 스푸만테 브뤼","Batasciolo Pinot Chardonnay Spumante Brut","피노, 샤르도네","Chardonnay, Pinot Noir",0d4964d5-b17d-49c8-82cc-778b34bd92e8
+grape,NAVER_MORE,"빌카르 살몬 엘리자베스 살몬 브뤼 로제","Billecart Salmon Elisabeth Salmon Brut Rosé","피노 누아, 샤르도네","Chardonnay",37b377eb-8ebb-482a-b863-26edc8793051
+grape,NAVER_MORE,"제라르 베르트랑 꼬뜨 로즈 뮈스까 로제","Gérard Bertrand Côte Rosé Muscat","뮈스까","Muscat Blanc",e9955e71-0bd8-4522-b500-52e59468beed
+grape,NAVER_MORE,"테를란 피노 그리지오","Terlan Pinot Grigio","피노 그리지오","Pinot Grigio",89dce027-7087-4112-82a8-a046ecffb0e5
+grape,NAVER_MORE,"프레스코발디 아템스 피노 그리지오","Frescobaldi Artemis Pinot Grigio","피노 그리지오","Pinot Grigio",8caafa68-3693-446e-9ca8-b19d9512555e
+grape,NAVER_MORE,"비에티 모스카토 다스티","Vietti Moscato d'Asti","모스카토","Moscato Bianco",7b507b3e-24d0-4ad1-bf73-2b6bc2887767
+grape,NAVER_MORE,"리비오펠루가 피노그리지오","Livio Felluga Pinot Grigio","피노그리지오","Pinot Gris",c3cfd247-594f-42b6-be48-38e1f291b9a7
+grape,NAVER_MORE,"트레드 소프틀리 피노누아 & 소비뇽블랑 세트","Tread Softly Pinot Noir & Sauvignon Blanc Set","피노 누아, 소비뇽블랑","Pinot Noir",d849fbcc-cd1f-4e12-aa20-50f9d22e8a47
+grape,NAVER_MORE,"엘레베 시라 그르나슈","Elevé Syrah Grenache","시라, 그르나슈","Shiraz/Syrah, Grenache",de69a395-e4d1-4d54-8057-a217768a5124
+grape,NAVER_MORE,"칸티 모스카토 콜레지오네 파밀리아 IGT","Canti Moscato Collezione Famiglia IGT","모스카토","Moscato",de828e51-3ce0-46e5-84e5-88d9acc2c1ea
+grape,NAVER_MORE,"얄룸바 Y 시리즈 쉬라즈 비오니에","Yalumba Y Series Shiraz Viognier","쉬라즈, 비오니에","Viognier",ec95fd15-72a9-45bb-9ae2-91550e2f9336
+grape,NAVER_MORE,"브라운 브라더스 모스카토 로제 스파클링","Brown Brothers Moscato Rosé Sparkling","모스카토","Moscato",ecfeb7d2-8225-4b26-a3e8-3637efd7731d
+grape,NAVER_MORE,"간치아 모스카토 로제","Gancia Moscato Rosé","모스카토","100% Moscato",95228e97-f3a0-4031-9d38-e3e75dde91ab
+grape,NAVER_MORE,"안나 스피나토 피노 그리지오 DOC","Anna Spinato Pinot Grigio DOC","피노 그리지오","Pinot Grigio",ea769175-3556-49bd-9e1d-5bcc983a6027
+grape,NAVER_MORE,"그랜트 버지 5th 제네레이션 바로사 까베르네 메를로","Grant Burge 5th Generation Barossa Cabernet Merlot","까베르네, 메를로","Merlot",f9fee815-17c1-4a7f-a09c-9abfa0c827d6
+grape,NAVER_MORE,"지디 바이라 모스카토 다스티","G.D. Vajra Moscato d'Asti","모스카토","Moscato",f1a71d00-ff49-483b-9868-a7da24897e71
+grape,NAVER_MORE,"모엣 샹동 그랑 빈티지 브뤼 로제 샹파뉴","Moët & Chandon Grand Vintage Brut Rosé Champagne","샤르도네, 피노 누아, 피노 뫼니에","Pinot Noir",420e4d2c-9e5e-4bc8-849c-5a163cfedc48
+grape,NAVER_MORE,"캐빗 컬렉션 피노 그리지오","Cavit Collection Pinot Grigio","피노 그리지오","Pinot Gris",599a1fcd-54c7-49e3-998b-7f39b8c98c29
+grape,NAVER_MORE,"Coume del Mas Banyuls Quintessence","Coume del Mas Banyuls Quintessence","그르나슈","Grenache",d9f5bdff-f1e3-4687-ad0e-c922a1e8143c
+grape,NAVER_MORE,"빌라 욜란다 모스카토 다스티 블랙 에디션","Villa Yolanda Moscato d'Asti Black Edition","모스카토","Moscato",d66d491f-3518-4c1a-b724-3dfc7a358b22
+grape,NAVER_MORE,"타파스 가르나차","Tapas Garnacha","가르나차","Garnacha",3d5f71b5-f657-4384-8299-cd313364a2bc
+grape,NAVER_MORE,"루나리아 피노 그리지오 펫낫","Lunaria Pinot Grigio Pet Nat","피노 그리지오","Pinot Grigio",06777f25-8d63-47cc-a93e-f07cdc7cb993
+grape,NAVER_MORE,"데툰다 프리잔테 스파클링 모스카토 로제","Detunda Frizzante Sparkling Moscato Rosé","모스카토","Moscato",145865a1-461e-46bb-ab29-3c97668c7dbd
+grape,NAVER_MORE,"맥매니스 쁘띠 쉬라","McManis Petite Sirah","쁘띠 쉬라","Petite Sirah",d605921f-c41d-4ad9-9d18-5747cbd188a5
+region,DIFFERENT,"조던 까베르네 소비뇽","Jordan Cabernet Sauvignon","나파 밸리","United States / California / North Coast / Sonoma County / Alexander Valley",0379f1a7-cb3c-43b6-b2a1-b7633c9a77fe
+region,DIFFERENT,"칼레라 드 빌리어스 빈야드 피노 누아","Calera De Villiers Vineyard Pinot Noir","미정","United States / California / Central Coast / San Benito County / Mount Harlan",0a85c61d-db9b-4c10-8513-df990f7cacc9
+region,DIFFERENT,"로쉐 마제 메를로","Roche Mazet Merlot","롱그독","France / Vin de Pays / Pays d'Oc",0e5baa9a-3596-4788-9e4f-a554791c8e14
+region,DIFFERENT,"카펜터 락 소비뇽 블랑","Carpenter Rock Sauvignon Blanc","말보로","Australia / South Australia / Limestone Coast / Mount Gambier",11060cd8-cd92-44b3-96c6-ef5ce58e8af3
+region,DIFFERENT,"플로리앙 몰레 피노 누아","Florian Molle Pinot Noir","부르고뉴","France / Loire Valley / Upper Loire / Sancerre",2029247f-b13c-4f6f-a9a3-a3d6e94d90aa
+region,DIFFERENT,"라인 39 메를로","Line 39 Merlot","워싱턴","United States / California / Central Coast",272a6a98-8f8a-497d-b9ff-d8394c8bd3f9
+region,DIFFERENT,"얄리 스페셜 셀렉션 샤르도네","Yalumba Special Selection Chardonnay","바로사 밸리","United States / California / North Coast / Napa County / Napa Valley",3023cb61-93df-4fe1-94d9-2a9d43afbb22
+region,DIFFERENT,"3 샤또 피노 누아 생 귈렘","3 Château Pinot Noir Saint-Guillaume","부르고뉴","France / Vin de France",31d48bf7-934e-4ef7-8467-ab1251ebc11b
+region,DIFFERENT,"베린저 파운더스 까베르네 소비뇽","Beringer Founders Cabernet Sauvignon","나파 밸리","United States / California",3a20a0aa-c35f-4e2d-b4df-ba4e0e08d484
+region,DIFFERENT,"플뤼거 피노 누아","Pfluger Pinot Noir","미정","Germany / Pfalz",4f3e9ccb-bf8f-4145-bde6-82bc9fb503ee
+region,DIFFERENT,"프레스코발디 아템스 샤도네이","Frescobaldi Artemis Chardonnay","토스카나","Australia / New South Wales / South Coast / Southern Highlands",514bb098-6739-40e8-af01-0d25dcd908f4
+region,DIFFERENT,"파이로스 싱글빈야드 블록넘버포 말벡","Pyros Single Vineyard Block Number Four Malbec","멘도자","Argentina / San Juan / Pedernal Valley",1407c9d4-8b39-4ab8-82fd-e10a6d99e97c
+region,DIFFERENT,"플라워스 씨 뷰 릿지 피노 누아","Flowers Sea View Ridge Pinot Noir","미정","United States / California / North Coast / Sonoma County / Sonoma Coast",5fc56c88-2b01-4bae-91e3-fc0ad0dde32e
+region,DIFFERENT,"더 힐트 이스테이트 피노 누아","The Hilt Estate Pinot Noir","미정","United States / California / Central Coast / Santa Barbara County / Sta. Rita Hills",65faeefb-fede-4fae-b3af-063ad1601ece
+region,DIFFERENT,"도멘 그로 프레르 에 수르 부르고뉴 피노 누아","Domaine Gros Frère et Sœur Bourgogne Pinot Noir","부르고뉴","France / Vin de France",70da5bbc-289d-4400-beda-6af575ca15c8
+region,DIFFERENT,"하이랜드 에스테이트 올드 바인 피노 누아","Highland Estate Old Vine Pinot Noir","캘리포니아","United States / Oregon / Willamette Valley / Ribbon Ridge",c639bd2e-2642-482d-8351-5b288c2e4b4f
+region,DIFFERENT,"모아나 파크 에스테이트 말보로 리저브 피노 누아","Moana Park Estate Marlborough Reserve Pinot Noir","말보로","New Zealand / South Island / Central Otago",35fbd6a8-909b-47c0-9182-0d3b9791a732
+region,DIFFERENT,"벨레 그로스 데리만 빈야드 피노 누아","Belle Glos Derman Vineyard Pinot Noir","미정","United States / California / Central Coast / Santa Barbara County / Santa Maria Valley",cea9ce95-07d7-4576-b550-a741124745fa
+region,DIFFERENT,"로맹 트리보 그랑크뤼 퓌르 샤르도네","Romain Triboi Grand Cru Pur Chardonnay","부르고뉴","France / Champagne / Champagne Grand Cru",3c823e7f-e7af-459e-a661-7e6587c1a398
+region,DIFFERENT,"G7 소비뇽 블랑","G7 Sauvignon Blanc","말보로","Chile / Central Valley / Maule Valley / Loncomilla Valley",124b314f-582e-4098-b881-0421763061a3
+region,DIFFERENT,"로버트 몬다비 에스테이트 피노누아","Robert Mondavi Estate Pinot Noir","나파 밸리","United States / California",a2556ea2-2bb4-4a25-8302-acf681436834
+region,DIFFERENT,"로버트 몬다비 빈트 프라이빗 셀렉션 메를로","Robert Mondavi Vintage Private Selection Merlot","나파 밸리","United States / California",a854e3e7-0bb4-42bd-8a3e-4c3e67059720
+region,DIFFERENT,"도멘 슐룸베르거 피노 누아","Domaine Schlumberger Pinot Noir","알자스","France / Vin de Pays / Méditerranée / Var",a8911a52-6b3f-4ed8-98a1-86afa61dc0a9
+region,DIFFERENT,"마르케스 데 리스칼 1860 템프라니요","Marqués de Riscal 1860 Tempranillo","리오하","Spain / Castilla y León",de4499e2-72bd-4bc1-bcc6-7f8843f7f68e
+region,DIFFERENT,"롱 로우 소비뇽 블랑","Long Row Sauvignon Blanc","말보로","Australia / South Australia",e64acd83-597f-4d5a-a6e0-72c3bb166ed3
+region,DIFFERENT,"스카나비노 피노 샤르도네","Scanavino Pinot Chardonnay","피에몬테","Italy / Vino d'Italia",e92ac05a-1ad0-422a-a10e-6b7467e9b702
+region,DIFFERENT,"마르께스 데 까사 콘차 메를로","Marqués de Casa Concha Merlot","마이포 밸리","Chile / Central Valley / Maule Valley",f17818ed-d692-4e27-90b3-c1f66106449e
+region,DIFFERENT,"펄리셔 펜카로우 소비뇽 블랑","Palliser Pencarrow Sauvignon Blanc","말보로","New Zealand / North Island / Wairarapa / Martinborough",f0d22117-192f-4848-a486-544a726df2a5
+region,DIFFERENT,"로쉐 마제 까베르네 소비뇽","Roche Mazet Cabernet Sauvignon","랑그독","France / Vin de Pays / Pays d'Oc",4cf95a22-161f-45d0-b33f-113a2753a06e
+region,DIFFERENT,"레이몬드 R 컬렉션 까베르네 소비뇽","Raymond R Collection Cabernet Sauvignon","나파 밸리","United States / California",13cf0428-7efa-4140-8e12-14398b1dbcdb
+region,DIFFERENT,"라피스 루나 피노 누아","Lapis Luna Pinot Noir","미정","United States / California / North Coast",eab0487f-7151-42b9-886e-39e81209bbfd
+region,DIFFERENT,"더 페데럴리스트 샤르도네","The Federalist Chardonnay","소노마","United States / California / North Coast / Mendocino County",bc7bb402-2a20-4b77-94ef-1cca692e69bf
+region,DIFFERENT,"마르케스 데 리스칼 템프라니요","Marqués de Riscal Tempranillo","리오하","Spain / Castilla y León",f0d31766-3055-4f0c-aa1c-620681580597
+region,DIFFERENT,"트리엔느 로제","Triennes Rosé","프로방스","France / Vin de Pays / Méditerranée",4338f96b-5cac-4f78-8a50-f6e9af3e0e21
+region,DIFFERENT,"덕혼 디코이 까베르네 소비뇽","Duckhorn Decoy Cabernet Sauvignon","나파 밸리","United States / California",3458c130-9da2-4775-a17d-e0a26d97fad3
+region,DIFFERENT,"덕혼 포스트마크 샤르도네","Duckhorn Postmark Chardonnay","나파 밸리","United States / California / North Coast / Sonoma County",0de43c13-df11-4db5-abc0-c2b58ebef2f3
+region,DIFFERENT,"9 라이브스 리저브 까베르네 소비뇽","9 Lives Reserve Cabernet Sauvignon","캘리포니아","Chile / Central Valley",c8ed9f0d-40b4-47ed-acef-19d8723a7c24
+region,DIFFERENT,"비냐 마이포 클래식 시리즈 까베르네 소비뇽","Viña Maipo Classic Series Cabernet Sauvignon","마이포 밸리","Chile / Central Valley",3b3e6379-67f8-4a90-b0ef-db3c990aabb7
+region,DIFFERENT,"가이서픽 까베르네 소비뇽","Geyser Peak Cabernet Sauvignon","소노마 카운티","United States / California",2c6d35ab-4305-482c-9d98-5a8935dda4ae
+region,DIFFERENT,"몬테스 알파 소비뇽 블랑","Montes Alpha Sauvignon Blanc","카사블랑카 밸리","Chile / Aconcagua / San Antonio Valley / Leyda Valley",f42b57c5-e8e2-4675-a7dd-969de1412567
+region,DIFFERENT,"티키 싱글 빈야드 소비뇽 블랑","Tiki Single Vineyard Sauvignon Blanc","말보로","New Zealand / South Island / Canterbury / Waipara",84200b5d-8174-401c-9687-8c6e6fe9ed33
+region,DIFFERENT,"벅 쉑 버번 배럴 까베르네 소비뇽","Buck Shack Bourbon Barrel Cabernet Sauvignon","캘리포니아","United States / Lake County",52d70dd9-706b-4d01-995f-296ac6fd2c27
+region,DIFFERENT,"프란첸 리슬링 그로쎄스 게백스","Franzen Riesling Grosses Gewächs","모젤","Germany / Franken / Stetten (Franken)",a10963b4-b7e3-4b44-a255-b149a22b1e9a
+region,DIFFERENT,"클라우디 베이 테 와히 피노 누아","Cloudy Bay Te Wahi Pinot Noir","말보로","New Zealand / South Island / Central Otago",06255257-759e-440c-a273-f39161119a3a
+region,DIFFERENT,"로버트 몬다비 프라이빗 셀렉션 버번 배럴 까베르네 소비뇽","Robert Mondavi Private Selection Bourbon Barrel Cabernet Sauvignon","나파 밸리","United States / California",97aa6d02-26e6-4ee0-9900-ecc2d8e56e0e
+region,DIFFERENT,"제이콥스 크릭 샤르도네 피노 누아","Jacob's Creek Chardonnay Pinot Noir","미정","Australia / South Eastern Australia",7ec3c1bf-8b20-40af-b4c6-8e7776a6ab95
+region,DIFFERENT,"트라피체 아스티카 말벡","Trapiche Astica Malbec","멘도자","Argentina / La Rioja",d07c4350-e6c8-483a-9f8c-248c135d0b02
+region,DIFFERENT,"닥터 파우스트 리슬링 스페트레제","Doctor Faust Riesling Spätlese","모젤","Germany / Nahe",1b53bcc5-0e64-4aa8-a145-265ed383f7c1
+region,DIFFERENT,"조셉 페블레 부르고뉴 피노누아","Joseph Phelps Burgundy Pinot Noir","부르고뉴","United States / California / North Coast / Sonoma County / Sonoma Coast",63ba20e8-0785-4651-9877-5942fc6b5841
+region,DIFFERENT,"노 파인 프린트 소비뇽 블랑","No Fine Print Sauvignon Blanc","말보로","United States / California",e39f2238-f6fb-44c3-a544-2948f0fa8f21
+region,DIFFERENT,"모지 펫 낫 피노 누아","Mozi Pet Nat Pinot Noir","미정","Russia / Krasnodar",6dc58829-a022-4520-864a-300ba2148343
+region,DIFFERENT,"프레스코발디 아템스 피노 그리지오","Frescobaldi Artemis Pinot Grigio","토스카나","Australia / New South Wales / South Coast / Southern Highlands",8caafa68-3693-446e-9ca8-b19d9512555e
+region,DIFFERENT,"페데리코 파테니나 까바 브뤼 로제","Federico Paternina Cava Brut Rosé","펜에데스","Spain / Cava",92831db3-558f-4c5e-9479-afd8b71971ac
+region,DIFFERENT,"탈보트 칼리 하트 피노 누아","Talbot Cali Heart Pinot Noir","캘리포니아","Hungary / Észak-Dunántúl / Etyek-Buda",ea8a16e5-f317-4be8-be95-52167ee2ab1a
+region,DIFFERENT,"알파 박스 앤 다이스 타로 프로세코","Alpha Box and Dice Taro Prosecco","베네토","Australia / New South Wales / Big Rivers / Murray Darling",e37fb7e6-2137-454a-84dc-05bfc1881b57
+region,DIFFERENT,"프레스코발디 아템스 샤르도네","Frescobaldi Artemis Chardonnay","토스카나","Australia / New South Wales / South Coast / Southern Highlands",ebb7fb30-cfb1-4ece-a722-6ac4b26b0d5d
+region,DIFFERENT,"메종 루이 라뚜르 도멘 드 발무아신 피노 누아","Maison Louis Latour Domaine de Valmoissine Pinot Noir","부르고뉴","France / Vin de Pays / Méditerranée / Var",ed7df3f3-4937-48c8-8657-6e38e466ab7c
+region,DIFFERENT,"프리츠 빈디쉬 크리스마스 동방박사 리슬링 슈페트레제","Fritz Windisch Christkindles Riesling Spätlese","모젤","Germany / Rheinhessen / Nierstein",f1b41359-b61f-4747-bb72-d38b189f5072
+region,DIFFERENT,"라포스톨 그랑 셀렉션 메를로","Lapostolle Grand Selection Merlot","마이포 밸리","Chile / Central Valley / Rapel Valley",4b16981a-7f27-4c63-8f4b-d1a7973d8c73
+region,DIFFERENT,"얄리 와일드 스완 샤르도네","Yalumba Wild Swan Chardonnay","바로사 밸리","Chile / Central Valley",9ea63c23-7230-479d-8ebe-48a5272f9da2
+region,DIFFERENT,"사이드웨이 피노 누아","Sideways Pinot Noir","미정","Chile / Aconcagua / Casablanca Valley",1591ff63-a906-4820-92e0-fc2654d52ed8
+region,DIFFERENT,"로저 구라트 코랄 로제 브뤼","Roger Goulart Coral Rosé Brut","샹파뉴","Spain / Cava",1abc23c2-452f-48ed-adf6-ffea72649bc3
+region,DIFFERENT,"제이 윌크스 피노 누아","J. Wilkes Pinot Noir","미정","United States / California / Central Coast / Santa Barbara County / Santa Maria Valley",c9554cf0-cfe1-4304-a517-cabadebb25c0
+region,UNKNOWN,"트라피체 멜로디아스 말벡","Trapiche Melodias Malbec","멘도사","Argentina / Mendoza",10e56fc4-84b6-4382-8328-2d4d7e3231c5
+region,UNKNOWN,"까사레나 505 말벡","Casarena 505 Malbec","멘도사","Argentina / Mendoza",902e87ee-3a64-4b52-be4d-38c29d9671ed
+region,UNKNOWN,"오 봉 클리마 녹스 알렉산더 피노 누아","Au Bon Climat Knox Alexander Pinot Noir","산타 마리아 밸리","United States / California / Central Coast / Santa Barbara County / Santa Maria Valley",10ed83d0-4dad-40b5-8468-aa6260780242
+region,UNKNOWN,"크리오스 말벡","Crios Malbec","멘도사","Argentina / Mendoza / Uco Valley",90aee6f6-08d4-4374-85b6-b38f09c66569
+region,UNKNOWN,"돈호프 리슬링 프류티 블랙 라벨","Donnhoff Riesling Fruity Black Label","나헤","Germany / Nahe",18daf57a-34f7-4a76-bfae-6d840f5bbff2
+region,UNKNOWN,"샤토 물통 로칠드","Château Mouton Rothschild","폐약","France / Bordeaux / Médoc / Pauillac",1d5e079d-c637-4e8a-9021-372611a37f8a
+region,UNKNOWN,"안티갈 아두엔투스 말벡","Antigal Aduentus Malbec","멘도사","Argentina / Mendoza / Uco Valley",255f90f9-f4b7-4887-998e-e170535547e0
+region,UNKNOWN,"쿠메우 리버 에스테이트 샤르도네","Kumeu River Estate Chardonnay","오클랜드","New Zealand / North Island / Auckland / Kumeu",1faa2d86-2e31-48e0-8769-0e5683a1ad40
+region,UNKNOWN,"마르케스 데 리스칼 소비뇽 블랑","Marqués de Riscal Sauvignon Blanc","루에다","Spain / Castilla y León / Rueda",25a0a6d7-e6e2-402d-8a32-2f5d8f2fa09a
+region,UNKNOWN,"사뮤엘 빌로 샤블리 1er 크뤼 푸르숨","Samuel Billaud Chablis 1er Cru Fourchaumes","부르고뉴 샤블리","France / Bourgogne / Chablis / Chablis Premier Cru / Chablis 1er Cru 'Fourchaume'",2773ca6b-d118-4e3a-b227-7a1522d9eb38
+region,UNKNOWN,"샤또 생 미셸 콜롬비아 밸리 까베르네 소비뇽","Chateau Ste. Michelle Columbia Valley Cabernet Sauvignon","콜롬비아 밸리","United States / Washington / Columbia Valley",952c3fb3-13b6-4d35-ae17-818b8c639d1d
+region,UNKNOWN,"쏜 클락 떼라 바로사 쉬라즈","Thorn Clarke Terra Barossa Shiraz","남호주 바로사","Australia / South Australia / Barossa",958983d1-b456-4f48-a9d9-4e0fc3324b99
+region,UNKNOWN,"샤또 달레이 꼬뜨 뒤 주라 피노 누아","Château Daléy Côtes du Jura Pinot Noir","꼬뜨 뒤 주라","France / Jura / Côtes du Jura",28e00243-7545-4be6-b11d-276320b75551
+region,UNKNOWN,"핀카 라스 모라스 리제르바 말벡","Finca las Moras Reserva Malbec","산후안","Argentina / San Juan",914ba1d1-fd19-426c-b3eb-420bc2b3fcc3
+region,UNKNOWN,"사무엘 빌로 샤블리 1에르 크뤼 포르노 2022","Samuel Billaud Chablis 1er Cru Fourneaux 2022","샤블리","France / Bourgogne / Chablis / Chablis Premier Cru / Chablis 1er Cru 'Les Fourneaux'",96c71e47-9c33-486a-9522-11062556def7
+region,UNKNOWN,"제이 로어 에스테이트 세븐 오크 까베르네 소비뇽","J Lohr Estates Seven Oaks Cabernet Sauvignon","패서 로블스","United States / California / Central Coast / San Luis Obispo County / Paso Robles",299fe20c-bc37-4614-ac5c-f475c1f0f141
+region,UNKNOWN,"보르고 알 솔레 2","Borgo al Sole 2","Puegnago del Garda","Italy / Northern Italy / Veneto / Verona",2aa74537-cc40-4fd5-aa45-2ba28ad2ffb2
+region,UNKNOWN,"두글라제 알라자니 밸리 화이트","Dugladze Alazani Valley White","알라자니 밸리","Georgia / Kakheti",03ec1cb1-b96a-43d0-9ddd-91257dbe06f9
+region,UNKNOWN,"투썩 점퍼 울프 피노 그리지오","Tussock Jumper Wolf Pinot Grigio","알려지지 않음","Italy / Northern Italy / Veneto / delle Venezie",2f0b5fca-6b90-4f52-99d1-92ae8d0f667d
+region,UNKNOWN,"케이머스 에멀로 소비뇽 블랑","Caymus Emuló Sauvignon Blanc","나파밸리","United States / California / North Coast / Napa County / Napa Valley",3003f8d7-c250-4710-8833-692f1f876a75
+region,UNKNOWN,"샤토 피젝 프리미에 그랑 크뤼 클래세","Château Figeac Premier Grand Cru Classé","생테밀리옹","France / Bordeaux / Libournais / Saint-Émilion / Saint-Émilion Grand Cru",3185080f-5da1-4668-bf69-2ce410b2c419
+region,UNKNOWN,"마스터타르단 쇼비뇽 블랑 리저브","Master Tardan Sauvignon Blanc Reserve","루에다","United States / California",3a6a7c4e-35d8-4ee0-829e-af24b790f15f
+region,UNKNOWN,"카르멘 톨텐 카베르네 소비뇽","Carmen Tolten Cabernet Sauvignon","마우르칭","Chile / Central Valley",9d35910a-616b-4ec2-946b-3827a2ae325e
+region,UNKNOWN,"도멘 오뜨 샤토 로마상 방돌 레드","Domaines Ott Château Romassan Bandol Rouge","방돌","France / Provence / Bandol",3d919831-c91d-4ca9-ad11-f22f737eb8d9
+region,UNKNOWN,"사무엘 빌로 샤블리 1에르 크뤼 몽맹 2022","Samuel Billaud Chablis 1er Cru Montmains 2022","샤블리","France / Bourgogne / Chablis / Chablis Premier Cru / Chablis 1er Cru 'Montmains'",3f21cfe8-4567-4639-a6b4-b22e32f821b7
+region,UNKNOWN,"투쿠맨 말벡","Tucumán Malbec","투쿠만","Argentina / Mendoza / Lunlunta",3db31cd3-80fe-4daf-957b-90825979e822
+region,UNKNOWN,"채피브로스 시노니무스 바로사 쉬라즈","Chapibros Synonymous Barossa Shiraz","바로사","Australia / South Australia / Barossa",9ed75c38-b1b5-4783-adfa-8887c3c30177
+region,UNKNOWN,"이 콰트로 모리","I Quattro Mori","Venice","Italy / Central Italy / Lazio",415b65ca-d57c-4653-84cb-591c6e9a72da
+region,UNKNOWN,"더 사디 패밀리 콜루멜라 레드 와인 2023","The Sadie Family Columella Red Wine 2023","스왈트랜드","South Africa / Western Cape / Coastal Region / Swartland",48a6da6d-c5c7-4c3f-886f-d992e476d2fe
+region,UNKNOWN,"까테나 자파타 루카 말벡","Catena Zapata Luca Malbec","멘도사","Argentina / Mendoza",4766e543-58bb-4ca5-8ad3-f40cfcc19118
+region,UNKNOWN,"칸티나 자카니니 달 트랄체토 몬테풀치아노 다부르쪼","Cantina Zaccagnini Dal Tralcetto Montepulciano d'Abruzzo","아브루초","Italy / Central Italy / Abruzzo / Montepulciano d'Abruzzo",a44ae38f-47aa-41ca-9997-959e695eff9b
+region,UNKNOWN,"월터 핸젤 에스테이트 샤르도네","Walter Hanzel Estate Chardonnay","윌라메트 밸리","United States / California / North Coast / Sonoma County / Russian River Valley",49a4b441-1894-43b7-a571-5bc8637eea8b
+region,UNKNOWN,"코노 수르 비씨클레타 피노 누아","Cono Sur Bicicleta Pinot Noir","중앙 밸리","Chile / Central Valley",4d1ae4fa-d391-45c3-9f32-74b1cdc2d645
+region,UNKNOWN,"카사 트라몬토","Casa Tramonto","체팔루","United States / New York / Finger Lakes",4d3cc133-424f-452b-ba77-89a75c2b2d3e
+region,UNKNOWN,"옐로우 테일 까베르네 소비뇽","Yellow Tail Cabernet Sauvignon","뉴사우스웨일즈","Australia / South Eastern Australia",4db043e8-3e4f-4a95-81cf-16f7898568ad
+region,UNKNOWN,"샤블리 1에르 크뤼 푸르쇼므","Chablis 1er Cru Fourchaumes","샤블리","France / Bourgogne / Chablis / Chablis Premier Cru / Chablis 1er Cru 'Fourchaume'",4959d28a-c7f4-4bb0-b60c-e425c9688a64
+region,UNKNOWN,"엔조 빈센조 아마로네 델라 DOCG","Enzo Vincenzo Amarone della Valpolicella DOCG","발폴리첼라","Italy / Northern Italy / Veneto / Valpolicella / Amarone della Valpolicella",a561ebe4-92bd-4870-b578-e733fc8def35
+region,UNKNOWN,"비네롱 드 뷕시 부르고뉴 꼬뜨 샬로네즈 피노 누아","Vinerond de Buxys Bourgogne Côte Chalonnaise Pinot Noir","부르고뉴 꼬뜨 샬로네즈","France / Bourgogne / Côte Chalonnaise",4d2948cf-9cfa-46dd-adeb-f8ad22c55ed0
+region,UNKNOWN,"보데가스 에트차트 카파야테 그랑 리저브 말벡","Bodegas Etchart Cafayate Grand Reserve Malbec","카파야테","Argentina / Salta / Calchaqui Valley / Cafayate Valley",a7718767-8e38-4da5-9283-6857f2f50904
+region,UNKNOWN,"예르만 피노 그리지오","Jermann Pinot Grigio","프리울리-베네치아 줄리아","Italy / Northern Italy / Friuli-Venezia Giulia / Venezia Giulia",abf0ff13-463f-4719-987c-f1ed0eff6bf2
+region,UNKNOWN,"퀸 애들레이드 리슬링","Queen Adelaide Riesling","애들레이드","Australia / South Eastern Australia",51a306d3-84c6-4e73-85e5-d8d20df44b91
+region,UNKNOWN,"인칸토 스위트","Incanto Sweet","Naples","Italy / Southern Italy / Terre Siciliane / Marsala",5100e8c9-8a88-4a6a-af1b-6649850368b5
+region,UNKNOWN,"오스틴 호프 까베르네 소비뇽","Austin Hope Cabernet Sauvignon","파소 로블레스","United States / California / Central Coast / San Luis Obispo County / Paso Robles",b44b9e95-2c48-4162-b7e2-36526912da53
+region,UNKNOWN,"산디 산타 리타 힐즈 샤르도네","Sandy Santa Rita Hills Chardonnay","산타 리타 힐즈","United States / California / Central Coast / Santa Barbara County / Sta. Rita Hills",41d9e9f4-a904-47ca-9d22-76b02f60b5a8
+region,UNKNOWN,"크로스반 바이 폴 홉스 피노 누아 소노마 코스트","Crossbarn by Paul Hobbs Pinot Noir Sonoma Coast","소노마 코스트","United States / California / North Coast / Sonoma County / Sonoma Coast",5d1fe8b6-04f2-4337-9f6f-c4d1951f42af
+region,UNKNOWN,"사뮤엘 빌로 샤블리 1er 크뤼 푸르노","Samuel Billaud Chablis 1er Cru Fourneaux","부르고뉴 샤블리","France / Bourgogne / Chablis / Chablis Premier Cru / Chablis 1er Cru 'Les Fourneaux'",bc519137-679f-4fe2-a37a-be3ebbc5a7f1
+region,UNKNOWN,"군트럼 드라이 리슬링","Guntrum Dry Riesling","라인헤센","Germany / Rheinhessen",30eba13c-bf1c-4c4f-b922-1a203e6f8ea1
+region,UNKNOWN,"사무엘 빌로 몬 드 밀리외 샤블리 프리미에 크뤼 2021","Samuel Billaud Mont de Milieu Chablis Premier Cru 2021","샤블리","France / Bourgogne / Chablis / Chablis Premier Cru / Chablis 1er Cru 'Mont de Milieu'",bd6c3f7c-b601-4261-b954-c84ed30159cf
+region,UNKNOWN,"에라주리즈 맥스 까베르네 소비뇽","Errazuriz Max Cabernet Sauvignon","아콩카과","Chile / Aconcagua / Aconcagua Valley",76cda73f-081a-4f71-ac0d-7b1aa854a525
+region,UNKNOWN,"피케라스 쉬라-모나스트렐","Piqueras Syrah-Monastrell","알바세테","Spain / Castilla / Almansa",c7d68bf2-f9a1-4977-a506-498acfb6f726
+region,UNKNOWN,"까테나 자파타 알라모스 말벡","Catena Zapata Alamos Malbec","멘도사","Argentina / Mendoza",51caba0a-d307-4986-9aa4-90d470c3a164
+region,UNKNOWN,"프로그스 립 메를로 러더포드","Frog's Leap Merlot Rutherford","나파 밸리 러더포드","United States / California / North Coast / Napa County / Napa Valley / Rutherford",5b481dc9-94dd-450f-92d7-5421a0132fe1
+region,UNKNOWN,"로만디올라 일 파보네 도로 산지오베제 리제르바","Romandola Il Pavone d'Oro Sangiovese Riserva","로마냐","Italy / Northern Italy / Emilia-Romagna / Romagna / Sangiovese di Romagna",83f12f75-afe6-430c-8115-bf05b5b2e73d
+region,UNKNOWN,"도멘 뒤로셰 부르고뉴 꼬뜨 도르 피노 누아","Domaine Duroche Bourgogne Côte d'Or Pinot Noir","부르고뉴, 꼬뜨 도르","France / Bourgogne / Bourgogne Côte d’Or",d484fb36-ee10-4f25-9e7a-6e89da824836
+region,UNKNOWN,"펠튼 로드 칼버트 피노 누아","Felton Road Calvert Pinot Noir","센트럴 오타고","New Zealand / South Island / Central Otago",d4f4f5eb-3951-421f-ba44-49300f9a0fc5
+region,UNKNOWN,"게리 패럴 러시안 리버 셀렉션 피노 누아","Gary Farrell Russian River Selection Pinot Noir","러시안 리버","United States / California / North Coast / Sonoma County / Russian River Valley",a205db4e-5a2a-459b-8070-e2c8ebe9acb3
+region,UNKNOWN,"바스 필립 에스테이트 피노 누아","Bass Phillip Estate Pinot Noir","빅토리아","Australia / Victoria",d5d9479e-8959-43fb-9be9-48536ccfe711
+region,UNKNOWN,"스톨러 던디 힐 피노 누아","Stoller Dundee Hill Pinot Noir","오리건 윌라메트 밸리","United States / Oregon / Willamette Valley / Dundee Hills",8ac9a2ab-d39d-460e-9417-1169e372b0e1
+region,UNKNOWN,"군트럼 리슬링 루이스 콘스탄틴","Guntrum Riesling Louis Constantin","라인헤센","Germany / Rheinhessen",dac3f395-d007-47fd-94ec-c8df0a0eaeb3
+region,UNKNOWN,"그랜트 버지 쏜 리슬링","Grant Burge Thorn Riesling","바로싸 밸리","Australia / South Australia / Barossa / Eden Valley",c1ca12cc-4b57-48aa-8443-e4d9bccbebc1
+region,UNKNOWN,"토레스 알토 라스니브스 그랑 리제르바 까베르네 소비뇽","Torres Alto Las Nieves Gran Reserva Cabernet Sauvignon","페네데스","Chile / Central Valley / Curico Valley",dc062377-9950-4daf-894c-7674eb318d55
+region,UNKNOWN,"도멘 오트 샤토 로마쌍 반돌 레드","Domaines Ott Château de Selle Rosé 2020","반돌","France / Provence / Côtes de Provence",de4bc983-c613-4f08-b4f4-bf141cfecfb4
+region,UNKNOWN,"사뮤엘 빌로 샤블리 1er 크뤼 몽맹","Samuel Billaud Chablis 1er Cru Montmains","부르고뉴 샤블리","France / Bourgogne / Chablis / Chablis Premier Cru / Chablis 1er Cru 'Montmains'",de6e41ae-be35-4806-a2b4-4561696d24d8
+region,UNKNOWN,"카멜 로드 몬테레이 피노 누아","Camel Road Monterey Pinot Noir","몬테레이","United States / California / Central Coast / Monterey County / Monterey",e50c0125-c030-4087-97c7-15263fa58410
+region,UNKNOWN,"파트리샤 그린 이스테이트 피노 누아 리본 릿지","Patricia Green Estate Pinot Noir Ribbon Ridge","오리건 윌라메트 밸리","United States / Oregon / Willamette Valley / Ribbon Ridge",e6bf11d9-0eab-43cf-84d5-3ed5c8b70899
+region,UNKNOWN,"펜폴즈 쿠능가 힐 까베르네 소비뇽","Penfolds Koonunga Hill Cabernet Sauvignon","쿠능가 힐","Australia / South Australia / Barossa",aade55dd-ab21-48f8-87a9-d3904fe851df
+region,UNKNOWN,"라 지오이오사 트레비소 프로세코","La Gioiosa Treviso Prosecco","트레비소","Italy / Northern Italy / Veneto / Prosecco / Prosecco di Treviso",ecc135fc-d7d2-45e7-a119-c343457c65d7
+region,UNKNOWN,"클라우디 베이 피노 누아","Cloudy Bay Pinot Noir","마를버러","New Zealand / South Island / Marlborough",b2ac12ea-2bc2-4834-8813-a08fe574e402
+region,UNKNOWN,"샤토 생 미셸 컬럼비아 밸리 까베르네 소비뇽","Chateau Ste. Michelle Columbia Valley Cabernet Sauvignon","컬럼비아 밸리","United States / Washington / Columbia Valley",fba7a050-4b7e-4a4b-97bc-40a91039236a
+region,UNKNOWN,"카르페니 말볼티 1868 프로세코 DOCG","Carpene Malvolti 1868 Prosecco DOCG","콘엘리아노 발도비아데네","Italy / Northern Italy / Veneto / Prosecco / Conegliano-Valdobbiadene Prosecco / Conegliano-Valdobbiadene Prosecco Superiore",f9f53699-564e-42a7-9069-26180e1b834a
+region,UNKNOWN,"SL 프리미티보 수수마니엘로 IGT 살렌토","SL Primitivo Susumaniello IGT Salento","살렌토","Italy / Southern Italy / Puglia / Salento",c44ca536-d56a-4d6d-aed8-4a830839df98
+region,UNKNOWN,"샤푸티에 콩드리외 고또 드 셰리","Chapoutier Condrieu Coteau de Chéry","론 콩드리외","France / Rhone Valley / Northern Rhône / Condrieu",0b92f121-5c2e-4428-b491-5f22b918babf
+region,UNKNOWN,"19 크라임스 까베르네 소비뇽","19 Crimes Cabernet Sauvignon","사우스 이스턴 호주","Australia / Victoria",13d97b91-7fb8-45bd-a8dd-1f28b92ccd8c
+region,UNKNOWN,"에라주리즈 맥스 마스터 블렌드","Errazuriz Max Master Blend","아콩카과 밸리","Chile / Aconcagua / Aconcagua Valley",6166f906-4acc-48ef-8d7e-257bc117f02f
+region,UNKNOWN,"로마냐 산지오베제 수페리오레 리제르바","Romagna Sangiovese Superiore Riserva","로마냐","Italy / Northern Italy / Emilia-Romagna / Romagna / Sangiovese di Romagna",62a67021-2896-44ea-bcbe-8a6021bf180f
+region,UNKNOWN,"보테가 리파소 발폴리첼라 수페리오레","Bottega Ripasso Valpolicella Superiore","발폴리첼라","Italy / Northern Italy / Veneto / Valpolicella / Valpolicella Ripasso",63df3386-b908-4e53-9567-ccc0276e1582
+region,UNKNOWN,"다렌버그 스텀프 점프 소비뇽 블랑","D'Arenberg Stump Jump Sauvignon Blanc","애들레이드","Australia / South Australia / Fleurieu / McLaren Vale",64b0de34-430d-499f-9991-434cbd35fb9f
+region,UNKNOWN,"위라 위라 애들레이드 쉬라즈","Wirra Wirra Adelaide Shiraz","애들레이드","Australia / South Australia / Mount Lofty Ranges / Adelaide Hills",72004a15-e14b-4b92-9b2a-9234280e62e2
+region,UNKNOWN,"그라함 엑스트라 드라이 화이트 포트","Graham's Extra Dry White Port","도우로 밸리","Portugal / Northern Portugal / Duriense / Porto",74978514-9f65-48c9-ba3e-105dcf89b52f
+region,UNKNOWN,"샤블리 1에르 크뤼 보꾸팽","Chablis 1er Cru Vaucoupin","샤블리","France / Bourgogne / Chablis / Chablis Premier Cru / Chablis 1er Cru 'Vaucoupin'",cbb88922-444e-4619-8b8a-6419ab2fd950
+region,UNKNOWN,"로스 바스코스 소비뇽 블랑","Los Vascos Sauvignon Blanc","카차포알 밸리","Chile / Aconcagua / Casablanca Valley",e26cbd70-66c3-4ab1-b5ae-7c0c9fc09d05
+region,UNKNOWN,"바인굿 크놀 로이브너 리슬링 페데슈필","Weingut Knoll Loibner Riesling Federspiel","바흐라우","Austria / Weinland / Niederösterreich / Wachau",ee48405f-acbd-43da-bd18-a5e4254b44d5
+region,UNKNOWN,"울프 블라스 레드라벨 샤도네이","Wolf Blass Red Label Chardonnay","사우스 호주","Australia / South Eastern Australia",f7b15c70-4e9a-46bd-9cef-85923de68789
+region,UNKNOWN,"찔리켄 리슬링 트로켄","Zilliken Riesling Trocken","자르","Germany / Mosel",122b897a-b447-4f4d-a6ff-f9cea1757556
+region,UNKNOWN,"텍스트북 나파 까베르네 소비뇽","Textbook Napa Cabernet Sauvignon","나파","United States / California / North Coast / Napa County / Napa Valley / Oakville",673246a0-336e-43f5-b84b-a882f4a36291
+region,UNKNOWN,"그라함 10년 토니 포트","Graham's 10 Year Tawny Port","포르토","Portugal / Northern Portugal / Duriense / Porto",7e386c13-d366-470f-ac6f-743309dc1e31
+region,UNKNOWN,"토마시 아마로네 델라 발폴리첼라 클라시코","Tommasi Amarone della Valpolicella Classico","발폴리첼라","Italy / Northern Italy / Veneto / Valpolicella / Amarone della Valpolicella / Amarone della Valpolicella Classico",96fac5da-d727-43da-bd7f-2b169375488e
+region,UNKNOWN,"로버트 몬다비 에스테이트 퓌메 블랑","Robert Mondavi Estate Fumé Blanc","오크빌","United States / California / North Coast / Napa County / Napa Valley",23328497-89d0-4434-82be-c1e91880c128
+region,UNKNOWN,"우마니 론끼 비고르 화이트","Umani Ronchi Vigor White","알 수 없음","Italy / Central Italy / Marche",50ad9df1-5a26-4f10-accd-25a26a2083ed
+region,UNKNOWN,"람부르스코 로제 아마빌레","Lambrusco Rosé Amabile","에밀리아-로마냐","Italy / Northern Italy / Emilia-Romagna / Emilia",dab4e3a4-925c-4b6e-b926-a37b728133f3
+region,UNKNOWN,"에네미고 말벡","Enemigo Malbec","멘도사","Argentina / Mendoza",611d1022-6b7b-4524-b521-5d899f733216
+region,UNKNOWN,"스칼라브로네 볼게리 로제","Scalabrone Bolgheri Rosé","볼게리","Italy / Central Italy / Toscana / Bolgheri",fd16e5ec-8897-41c4-9aba-fdca81b68758
+region,UNKNOWN,"몬테스 알파 메를로","Montes Alpha Merlot","쿠리코 밸리","Chile / Central Valley / Rapel Valley / Colchagua Valley",6bec479d-ec66-4670-9104-63ed534bab7a
+region,UNKNOWN,"앙리 부르주아 쁘띠 부르주아 소비뇽 블랑","Henri Bourgeois Petit Bourgeois Sauvignon Blanc","상세르","France / Vin de Pays / Val de Loire",45cbc88e-8ecf-4bff-ab86-337285f46ec5
+region,UNKNOWN,"샤또 몬텔레나 나파 샤도네이","Château Montelena Napa Chardonnay","나파밸리","United States / California / North Coast / Napa County / Napa Valley",bdee86b5-76ae-4579-ae47-702a9ccdfd13
+region,UNKNOWN,"클레어 밸리 리슬링 트레일 앤드 클레어 밸리 코티지","Clare Valley Riesling Trail and Clare Valley Cottage","클레어 밸리","Australia / South Australia / Mount Lofty Ranges / Clare Valley",3464f64a-5429-41ad-8dfc-dcc8d84b3b86
+region,UNKNOWN,"얄룸바 바로사 쉬라즈","Yalumba Barossa Shiraz","바로사","Australia / South Australia / Barossa",6caa4673-444c-4156-9e41-e5926ab50953
+region,UNKNOWN,"빌라누 까바 가우디 리제르바 로제 브뤼","Villanueva Cava Gaudí Reserva Brut Rosé","까바","Spain / Cava",50ec1903-203b-47ab-876b-aea059995b05
+region,UNKNOWN,"클로나킬라 쉬라즈 비오니에","Clonakilla Shiraz Viognier","캔버라 지구","Australia / New South Wales / Southern New South Wales / Canberra District",23c9158e-fc3b-4e0d-9c25-f51be4b1dc89
+region,UNKNOWN,"더 세이디 패밀리 팔라디우스 화이트 와인","The Sadie Family Palladius White Wine","스와르틀랜드","South Africa / Western Cape / Coastal Region / Swartland",12c21ef4-2d24-4139-9df7-1e95d2c48e94
+region,UNKNOWN,"보데가스 에트차르트 카파야테 리저브 말벡","Bodegas Etchart Cafayate Reserva Malbec","카파야테","Argentina / Salta",466ddbb2-893c-49ad-85f4-7df93dd9ad7a
+region,UNKNOWN,"앤젤린 멘도치노 피노 누아","Angeline Mendocino Pinot Noir","멘도치노","United States / California / North Coast / Mendocino County",857c1902-e281-473f-95e0-cc3af031506a
+region,UNKNOWN,"바로사 잉크 까베르네 소비뇽","Barossa Ink Cabernet Sauvignon","바로사","Australia / South Australia / Barossa",6d0aa930-dd45-4abb-928f-eedb65594aef
+region,UNKNOWN,"큐 말벡","Q Malbec","멘도사","Argentina / Mendoza / Uco Valley",6dccaa97-ca75-474a-9940-b27ec5fae12c
+region,UNKNOWN,"에라주리즈 맥스 리제르바 까베르네 소비뇽","Errázuriz Max Reserva Cabernet Sauvignon","아콩카과","Chile / Aconcagua / Aconcagua Valley",7ac7b6b4-3264-4f96-896e-d12505200819
+region,UNKNOWN,"도멘 파비앙 코쉬 샤르도네 부르고뉴 꼬뜨 도르 2022","Domaine Fabien Coche Chardonnay Bourgogne Côte d'Or 2022","부르고뉴 꼬뜨 도르","France / Bourgogne",8cb91287-3323-4abe-ad06-3a0699ad7c4d
+region,UNKNOWN,"폰세카 타우니 포트","Fonseca Tawny Port","포르토","Portugal / Northern Portugal / Duriense / Porto",934e250d-bde3-4966-883c-fe1eb9f67f0a
+region,UNKNOWN,"쏜 클락 밀튼 팍 샤르도네","Thorn Clarke Milton Park Chardonnay","밀튼 팍","Australia / South Australia",95083b49-5ca1-401e-84ef-e067d941bb0e
+region,UNKNOWN,"파올로 사라코 모스카토 다스티","Paolo Saracco Moscato d'Asti","다스티","Italy / Northern Italy / Piemonte / Moscato d'Asti",9c00b512-c4ab-47c5-addf-02bfbc94025c
+region,UNKNOWN,"블루 넌 리슬링","Blue Nun Riesling","라인","Germany / Rheinhessen",eb056abc-7a55-4466-88bf-6f53bf8ba5f4
+region,UNKNOWN,"된호프 리슬링 트로켄","Dönnhoff Riesling Trocken","나헤","Germany / Nahe",7aa7378c-3ca0-40da-b68c-4f7730d4c5d3
+region,UNKNOWN,"산타리타 메달야 레알 까베르네 소비뇽","Santa Rita Medalla Real Cabernet Sauvignon","마포초 밸리","Chile / Central Valley / Maipo Valley",9da0d073-eabb-46dd-b7aa-3cce2c54bcd8
+region,UNKNOWN,"샤토 오손 보르도 블렌드","Château Ausone Bordeaux Blend","생테밀리옹","France / Bordeaux",f2e46e94-e4c3-4655-ba3b-3acb1f431e71
+region,UNKNOWN,"샤토 앙젤루스 생테밀리옹 그랑 크뤼","Château Angelus Saint-Émilion Grand Cru","보르도 생테밀리옹","France / Bordeaux / Libournais / Saint-Émilion / Saint-Émilion Grand Cru",16ac06ed-0c02-4bb5-b2bb-8ac54662fc2d
+region,UNKNOWN,"라 크레마 몬터레이 피노 누아","La Crema Monterey Pinot Noir","몬터레이","United States / California / Central Coast / Monterey County / Monterey",5acd1775-d887-4f6f-8b2f-3891cb5a3029
+region,UNKNOWN,"사뮈엘 비요 몽맹 샤블리 프르미에 크뤼","Samuel Billaud Montmains Chablis Premier Cru","샤블리","France / Bourgogne / Chablis / Chablis Premier Cru / Chablis 1er Cru 'Montmains'",ce56c5d7-c62e-4a63-b83d-63dd34da54f0
+region,UNKNOWN,"하트포드 코트 러시안 리버밸리 피노 누아","Hartford Court Russian River Valley Pinot Noir","러시안 리버밸리","United States / California / North Coast / Sonoma County / Russian River Valley",d69cd303-e9fb-4945-986b-c35abb2c1610
+region,UNKNOWN,"해롯즈 샤블리","Harrods Chablis","샤블리","France / Bourgogne / Chablis",4412edcf-f7e1-4c6f-a74e-1a7d008222ea
+region,UNKNOWN,"파베리 프로세코 발도비아데네","Faveri Prosecco Valdobbiadene","발도비아데네","Italy / Northern Italy / Veneto / Prosecco / Conegliano-Valdobbiadene Prosecco",a18d6d5c-a727-4b76-95c5-6b1b13481525
+region,UNKNOWN,"쇼 앤 스미스 쉬라즈","Shaw and Smith Shiraz","애들레이드 힐스","Australia / South Australia / Mount Lofty Ranges / Adelaide Hills",9deb124a-96f8-4569-952b-c56dfa9ada9f
+region,UNKNOWN,"스텔라 벨라 샤르도네","Stella Bella Chardonnay","마가렛 리버","Australia / Western Australia / South West Australia / Margaret River",a0a96799-131b-483a-99e6-c21c57ebeb4f
+region,UNKNOWN,"지아콘디 산지오베제","Giacondi Sangiovese","알려지지 않음","Italy / Northern Italy / Emilia-Romagna / Emilia / Rubicone",a216fe30-cb3b-4856-a877-c4e91a0b6cfa
+region,UNKNOWN,"엘 에스테코 돈 데이비드 블렌드 오브 떼루아","El Esteco Don David Blend of Terroir","살타","Argentina / Salta / Calchaqui Valley",f763ca44-6bc5-46f1-8c58-940ec65aa08e
+region,UNKNOWN,"몬테스 알파 말벡","Montes Alpha Malbec","콜차과","Chile / Central Valley / Rapel Valley / Colchagua Valley",3b2c4ae2-5b55-4df9-b2f3-c3630dfc7655
+region,UNKNOWN,"콘트라비엔토 말벡","Contraviento Malbec","멘도사","Argentina / San Juan / Pedernal Valley",6e7578ae-ee78-4448-ab69-de3853a714b2
+region,UNKNOWN,"펠튼 로드 배녹번 피노 누아","Felton Road Bannockburn Pinot Noir","센트럴 오타고","New Zealand / South Island / Central Otago / Bannockburn",cfa7ab77-266d-45f9-9060-f9242bfb4a31
+region,UNKNOWN,"19 크라임스 말벡","19 Crimes Malbec","남부","Argentina / Mendoza",74d205d4-880d-4088-8ace-61dd042e0d79
+region,UNKNOWN,"파이로스 아펠라시옹 말벡","Pyros Appellation Malbec","멘도사","Argentina / San Juan / Pedernal Valley",3ce578ab-bc04-4335-be37-d412bb62f926
+region,UNKNOWN,"쇼 앤 스미스 M3 샤르도네","Shaw and Smith M3 Chardonnay","애들레이드","Australia / South Australia / Mount Lofty Ranges / Adelaide Hills",5c75f844-abba-44ea-9fa9-bb69657b3cb2
+region,UNKNOWN,"비트만 베스트호프너 리슬링 트로켄","Wittmann Besthofner Riesling Trocken","라인헤센","Germany / Rheinhessen",bf274fd6-ec7b-45f9-9974-917dc61ffcfd
+region,UNKNOWN,"샤또 레 알베르 블랑 섹 소비뇽 블랑","Chateau Les Alberts Blanc Sec Sauvignon Blanc","루아르 밸리","France / Bordeaux",d1e5f384-14ae-4844-8351-e86b1e25bebd
+region,UNKNOWN,"군트럼 리슬링 아우스레제","Guntrum Riesling Auslese","라인헤센","Germany / Rheinhessen",b37d357e-e602-4497-bae0-af5d843e82e0
+region,UNKNOWN,"비트만 몰슈타인 리슬링 트로켄 GG","Wittmann Mölstein Riesling Trocken GG","라인헤센","Germany / Rheinhessen",8328f1ae-2d0e-4f39-a926-9da22570371b
+region,UNKNOWN,"반 폭셈 자르 리슬링","Von Volxem Saar Riesling","자르","Germany / Mosel",a00eb428-f1ad-490d-8ab8-b8bf5574ea29
+region,UNKNOWN,"사쏘레갈레 산지오베제","Sassoregale Sangiovese","알려지지 않음","Italy / Central Italy / Toscana / Maremma Toscana",ac64518f-5c8a-4271-846e-f00005425402
+region,UNKNOWN,"아델스하임 윌라멧 피노 누아","Adelsheim Willamette Pinot Noir","윌러멧 밸리","United States / Oregon / Willamette Valley",b5ba4647-ff06-4c2a-b6c5-39a267452194
+region,UNKNOWN,"다렌버그 드라이 댐 리슬링","D'Arenberg Dry Dam Riesling","맥클라렌 베일","Australia / South Australia / Fleurieu / McLaren Vale",88412815-d948-48f5-95c3-2e8395db5284
+region,UNKNOWN,"메시아스 포트 화이트 스위트","Messias Port White Sweet","도우루","Portugal / Northern Portugal / Duriense / Porto",e29c936b-da6d-42bf-ad51-642dfe097490
+region,UNKNOWN,"파쏘 세그레토 아파시멘토 산지오베제 루비코네","Passo Segreto Appassimento Sangiovese Rubicone","루비코네","Italy / Northern Italy / Emilia-Romagna",194c0c20-2a69-4858-82db-bf4e4a1622e2
+region,UNKNOWN,"브라운 브라더스 모스카토 피노 그리지오","Brown Brothers Moscato Pinot Grigio","빅토리아","Australia / Victoria",a2a2d68a-7ef4-4c33-9952-f580a2dc1d57
+region,UNKNOWN,"레알 보데가 라 만차 템프라니요","Real Bodega La Mancha Tempranillo","라 만차","Spain / Castilla / La Mancha",e162b129-393c-4a98-854e-63b117e08062
+region,UNKNOWN,"도멘 바슐레 모노 마랑주 1er 크뤼 라 퓌시에르 루주","Domaine Bachelet Monnot Maranges 1er Cru La Fussière Rouge","부르고뉴 마랑주","France / Bourgogne / Côte de Beaune / Maranges / Maranges Premier Cru / Maranges 1er Cru 'La Fussière'",044a7a6d-cfb5-44a8-952c-e56c3154f6f1
+region,UNKNOWN,"반피 끼안티","Banfi Chianti","끼안티","Italy / Central Italy / Toscana / Chianti / Chianti Classico",06725399-f68a-4f20-8a66-5e4810752f57
+region,UNKNOWN,"라 바로니에르 로제 당주","La Baronnière Rosé d'Anjou","앙주","France / Loire Valley / Middle Loire / Anjou",5ac1b666-7eae-493a-8b57-3f686b0a6113
+region,UNKNOWN,"사뮈엘 빌로 샤블리 1er 크뤼 몬 드 밀리외","Samuel Billaud Chablis 1er Cru Mont de Milieu","샤블리","France / Bourgogne / Chablis / Chablis Premier Cru / Chablis 1er Cru 'Mont de Milieu'",ccc9676c-524c-4cfc-b750-bfef928e1871
+region,UNKNOWN,"Château Branaire-Ducru","Château Branaire-Ducru","생-줄리앙","France / Bordeaux / Médoc / Saint-Julien",b36acd66-83a7-402f-97f6-762eef28dcf7
+region,UNKNOWN,"E. Guigal Ermitage Ex-Voto","E. Guigal Ermitage Ex-Voto","론 밸리","France / Rhone Valley / Northern Rhône / Hermitage",cde8bc5a-7c9a-4173-8522-7e11b88019e6
+region,UNKNOWN,"라브노 몬테 드 토네르 샤블리 프리미에 크뤼","Raveneau Montée de Tonnerre Chablis Premier Cru","샤블리","France / Bourgogne / Chablis / Chablis Premier Cru / Chablis 1er Cru 'Montee de Tonnerre'",1aaa50f4-6cf4-4103-94bc-150f37528628
+region,UNKNOWN,"보르고 알 솔레","Borgo al Sole","푸에냐고 델 가르다","Italy / Northern Italy / Veneto / Verona",a44c548b-dec8-4ae9-b2e2-7655e389d808
+region,UNKNOWN,"펠튼 로드 블록 5 피노 누아","Felton Road Block 5 Pinot Noir","센트럴 오타고","New Zealand / South Island / Central Otago",6f77a537-784b-4dab-b935-b488b7285c76
+region,UNKNOWN,"베를린 리슬링","Berlin Riesling","베를린","Germany / Mosel",ad1b8eee-3a6b-45fd-bd75-01fcbf007cc5
+region,UNKNOWN,"까사 마린 카르타헤나 리슬링","Casa Marin Cartagena Riesling","카르타헤나","Chile / Aconcagua / San Antonio Valley",07ac3247-b973-4cfc-bef8-a242555ecbbd
+region,UNKNOWN,"하시엔다 드 아린자노 샤르도네","Hacienda de Arinzano Chardonnay","나바라","Spain / Navarra / Arínzano",04c54f34-db10-46e5-a390-79a12974ae85
+region,UNKNOWN,"360 루아르 소비뇽 블랑","360 Loire Sauvignon Blanc","루아르 밸리","France / Vin de Pays / Val de Loire",bce1a13e-1b66-4253-822d-fa22715a91b8
+region,UNKNOWN,"도멘 뒤 프린스 르 셴 뒤 프린스 카오르 말벡","Domaine du Prince Le Chêne du Prince Cahors Malbec","카오르","France / South West France / Haut-Pays / Cahors",6af01b9f-28ed-4a4c-bb46-32be470c4cab
+region,UNKNOWN,"조닌 끼안티","Zonin Chianti","끼안티","Italy / Central Italy / Toscana / Chianti",6c71c714-77fa-42ea-a264-76a24e3ccff5
+region,UNKNOWN,"킬리카눈 킬러맨스 런 리슬링","Kilikanoon Killerman's Run Riesling","클레어 밸리","Australia / South Australia / Mount Lofty Ranges / Clare Valley",23806146-3a80-439b-b22f-fc5fd2557104
+region,UNKNOWN,"샌드맨 파인 화이트 포트","Sandeman Fine White Port","도우로 밸리","Portugal / Northern Portugal / Duriense / Porto",2170f3e0-ec0c-4b51-83f2-02ae00be7d49
+region,UNKNOWN,"도멘 장닌 날레 머큐레이 1er 크뤼 레 노그","Domaine Jeanin Naltet Mercurey 1er Cru Les Nougues","부르고뉴 머큐레이","France / Bourgogne / Côte Chalonnaise / Mercurey / Mercurey Premier Cru / Mercurey 1er Cru 'Les Naugues'",1a0b8815-fbf8-4a7c-b39d-88a8c0304f00
+region,UNKNOWN,"까스텔로 반피 키안티","Castello Banfi Chianti","키안티","Italy / Central Italy / Toscana / Chianti",285412a6-e1f0-4bf6-8a8f-877979a287a9
+region,UNKNOWN,"몬테스 엔젤스 시크릿 까베르네 소비뇽","Montes Angels Secret Cabernet Sauvignon","콜차과 밸리","Chile / Central Valley / Rapel Valley / Colchagua Valley",6db8fe09-24e4-450a-a420-7d295252a4d6
+region,UNKNOWN,"몬테스 클래식 말벡","Montes Classic Malbec","아르라우카니아","Chile / Central Valley / Rapel Valley / Colchagua Valley",241723c0-d3f7-40c0-8fc9-23db1218d6e2
+region,UNKNOWN,"마테틱 코라릴로 까베르네 소비뇽","Matetic Corralillo Cabernet Sauvignon","산 안토니오 밸리","Chile / Central Valley / Maipo Valley",d80733c6-25a4-45e6-85ff-8fb731a06b7b
+region,UNKNOWN,"까테나 자파타 까테나 샤도네이","Catena Zapata Catena Chardonnay","투팜파","Argentina / Mendoza",3f7cf8e7-cdcd-48a3-89e0-a1867f5ea515
+region,UNKNOWN,"꽁까도로 프로세코 뀌베 노빌레 브륏","Conca d'Oro Prosecco Cuvée Nobile Brut","트레비소","Italy / Northern Italy / Veneto / Prosecco / Prosecco di Treviso",e3bd6392-0616-4eb6-9795-5a8fb8e646d8
+region,UNKNOWN,"바이 파 파사이드 바이 파 피노 누아","By Farr Geelong Pinot Noir","질롱","Australia / Victoria / Port Phillip / Geelong",b8e02c4a-c2bd-4e4f-b850-683aeab28faa
+region,UNKNOWN,"메달라 말벡","Medalla Malbec","멘도사","Argentina / Mendoza",6ea46b05-1600-48ab-805c-35fc6bbe4fac
+region,UNKNOWN,"부르고뉴 꼬뜨 샬로네즈 샤르도네","Bourgogne Côte Chalonnaise Chardonnay","부르고뉴 꼬뜨 샬로네즈","France / Bourgogne / Côte Chalonnaise",82650603-96ce-4307-b192-18aaea60fb39
+region,UNKNOWN,"텔리아니 밸리 킨즈마라울리 레드 세미 스위트","Teliani Valley Kindzmarauli Semi Sweet","킨즈마라울리","Georgia / Kakheti / Kindzmarauli",886a579d-c143-4af4-a6e1-a52d4a8ebdc7
+region,UNKNOWN,"아마란타 몬테풀치아노 다브루조","Amaranta Montepulciano d'Abruzzo","아브루초","Italy / Central Italy / Abruzzo / Montepulciano d'Abruzzo",e9a142ce-67b6-4b35-9698-8f988dd8c935
+region,UNKNOWN,"비에티 모스카토 다스티","Vietti Moscato d'Asti","다스티","Italy / Northern Italy / Piemonte / Moscato d'Asti",7b507b3e-24d0-4ad1-bf73-2b6bc2887767
+region,UNKNOWN,"된호프 리슬링","Dönnhoff Riesling","나헤","Germany / Nahe",b7b6ef6b-b4ee-4184-b415-3897c34017fa
+region,UNKNOWN,"리비오펠루가 피노그리지오","Livio Felluga Pinot Grigio","프리울리-베네치아 줄리아","Italy / Northern Italy / Friuli-Venezia Giulia / Colli Orientali del Friuli",c3cfd247-594f-42b6-be48-38e1f291b9a7
+region,UNKNOWN,"샤또 몬텔레나 나파 샤르도네","Château Montelena Napa Chardonnay","나파","United States / California / North Coast / Napa County / Napa Valley",c63dcead-f14d-4a28-bc01-9bdc8a960a72
+region,UNKNOWN,"실버 오크 알렉산더 밸리 까베르네 소비뇽","Silver Oak Alexander Valley Cabernet Sauvignon","알렉산더 밸리","United States / California / North Coast / Sonoma County / Alexander Valley",e4a14d61-edbb-4e13-9d93-f4183e30f540
+region,UNKNOWN,"안델루나 1300 말벡","Andeluna 1300 Malbec","튜팔란테","Argentina / Mendoza / Uco Valley",81e00231-b31d-4afc-bc75-00814cff53bb
+region,UNKNOWN,"오베르 소노마 코스트 샤르도네","Aubert Sonoma Coast Chardonnay","소노마 코스트","United States / California / North Coast / Sonoma County / Sonoma Coast",943aff0c-5c4d-41a7-83f9-05b3a828245d
+region,UNKNOWN,"펠튼 로드 콘월 포인트 피노 누아","Felton Road Cornish Point Pinot Noir","센트럴 오타고","New Zealand / South Island / Central Otago",a14f3134-cc92-4456-aa4b-a8ad87007f19
+region,UNKNOWN,"람부르스코 델 아마빌레 로제","Lambrusco dell'Amabile Rosé","에밀리아-로마냐","Italy / Northern Italy / Emilia-Romagna / Emilia",8f9d509d-f554-4465-b9ed-3b9f65d6241f
+region,UNKNOWN,"돈호프 리슬링 드라이 화이트 라벨","Donnhoff Riesling Trocken","나헤","Germany / Nahe",0a73381d-860b-4a9b-a7fa-c2d60936fba9
+region,UNKNOWN,"브라운 브라더스 모스카토 로제 스파클링","Brown Brothers Moscato Rosé Sparkling","빅토리아","Australia / Victoria / North West Victoria",ecfeb7d2-8225-4b26-a3e8-3637efd7731d
+region,UNKNOWN,"코노 수르 20배럴 피노 누아","Cono Sur 20 Barrels Pinot Noir","비오비오","Chile / Aconcagua / Casablanca Valley",c4caaeff-4c18-4347-a68f-662dcd110b88
+region,UNKNOWN,"갈란테 로마냐 산지오베제 아파시멘토","Galante Romagna Sangiovese Appassimento","로마냐","Italy / Northern Italy / Emilia-Romagna / Romagna",ed487e70-62c6-4ee0-9a06-fb5d6da12b17
+region,UNKNOWN,"도멘 서린 얌힐 뀌베 피노 누아","Domaine Serene Yamhill Cuvée Pinot Noir","윌러멧 밸리","United States / Oregon / Willamette Valley",7889bf01-7f16-42b9-9a82-533812d66697
+region,UNKNOWN,"몬테스 클래식 멜롯","Montes Classic Merlot","쿨리마우가","Chile / Central Valley",e9635149-a1c3-4ac0-bf85-a507ed94cc53
+region,UNKNOWN,"사무엘 빌로 샤블리 1er 크뤼 몬 드 밀리외 2022","Samuel Billaud Chablis 1er Cru Mont de Milieu 2022","샤블리","France / Bourgogne / Chablis / Chablis Premier Cru / Chablis 1er Cru 'Mont de Milieu'",ea17b73e-22fc-4c3b-a0b8-30cf135f88cb
+region,UNKNOWN,"멘델 말벡","Mendel Malbec","멘도사","Argentina / Mendoza",ef9a9d01-8b2f-4ceb-8a53-46009c73aee0
+region,UNKNOWN,"까델 보스코 프란치아코르타 뀌베 프레스티지 로제","Cadel Bosco Franciacorta Cuvée Prestige Rosé","롬바르디아, 프란치아코르타","Italy / Northern Italy / Lombardia / Franciacorta",f307677b-ca9b-49ef-88ff-b2173a6bedd2
+region,UNKNOWN,"그랜트 버지 5th 제네레이션 바로사 까베르네 메를로","Grant Burge 5th Generation Barossa Cabernet Merlot","바로사","Australia / South Australia / Barossa",f9fee815-17c1-4a7f-a09c-9abfa0c827d6
+region,UNKNOWN,"제이오 발도비아데네 프로세코 수페리오레 엑스트라 드라이","J.O Valdobbiadene Prosecco Superiore Extra Dry","발도비아데네","Italy / Northern Italy / Veneto / Prosecco / Conegliano-Valdobbiadene Prosecco / Conegliano-Valdobbiadene Prosecco Superiore",fccacf60-f483-45a9-868b-33030225423f
+region,UNKNOWN,"펠릭스 솔리스 그란 띠에라 레드","Felix Solis Gran Tierra","발데페냐스","Spain / Castilla / Valdepeñas",f63a474f-ea94-42b2-91cf-d98f167a095e
+region,UNKNOWN,"비냐마이포 클래식 시리즈 소비뇽 블랑","Viña Maipo Classic Series Sauvignon Blanc","마이포","Chile / Central Valley",e1c49c7b-7b7b-403d-9027-76cb48fe1f95
+region,UNKNOWN,"우니꼬 산지오베제","Unico Sangiovese","알려지지 않음","Italy / Northern Italy / Emilia-Romagna / Romagna / Sangiovese di Romagna",fd403109-eb94-444a-8456-26301b546970
+region,UNKNOWN,"퀘베도 포트 와인 드라이 화이트","Quevedo Dry White Port","도우로 밸리","Portugal / Northern Portugal / Duriense / Porto",22ebbd9f-dc1b-499e-9a1c-a9f986995f82
+region,UNKNOWN,"트리벤토 메리 말벡","Trivento Merry Malbec","멘도사","Argentina / Mendoza",8344b9a5-36d3-4c32-9e66-b303d5e5b56f
+region,UNKNOWN,"우니꼬 산지오베제 리제르바","Unico Sangiovese Riserva","알려지지 않음","Italy / Northern Italy / Emilia-Romagna / Romagna / Sangiovese di Romagna",532c1905-e98d-4cb7-9137-d50de5415649
+region,UNKNOWN,"도멘 뒤 프레 클로 로제 당주","Domaines du Pré Clos Rosé d'Anjou","앙주","France / Loire Valley / Middle Loire / Anjou / Rosé d'Anjou",cbb5e61d-0497-473f-938b-b024c7da3d91
+region,UNKNOWN,"사무엘 로버트 윌러멧 밸리 리저브 피노 누아","Samuel Robert Willamette Valley Reserve Pinot Noir","윌러멧 밸리","United States / Oregon / Willamette Valley",516604e1-d360-44d8-b475-23d2a93417f1
+region,UNKNOWN,"카사블랑카 세피로 쿨 리저브 피노 누아","Casablanca Cefiro Cool Reserve Pinot Noir","카사블랑카","Chile / Aconcagua / Casablanca Valley",0fc7049c-0b4d-4857-8f86-92b28c85284a
+region,UNKNOWN,"캐빗 컬렉션 피노 그리지오","Cavit Collection Pinot Grigio","알려지지 않음","Italy / Northern Italy / Trentino-Alto Adige / Valdadige",599a1fcd-54c7-49e3-998b-7f39b8c98c29
+region,UNKNOWN,"Coume del Mas Banyuls Quintessence","Coume del Mas Banyuls Quintessence","랑그독-루씨용","France / Languedoc-Roussillon / Banyuls",d9f5bdff-f1e3-4687-ad0e-c922a1e8143c
+region,UNKNOWN,"펠튼 로드 블록 3 피노 누아","Felton Road Block 3 Pinot Noir","센트럴 오타고","New Zealand / South Island / Central Otago",477d17de-058d-48a1-a72f-ef031b7f2747
+region,UNKNOWN,"몬테스 클래식 까베르네 소비뇽","Montes Classic Cabernet Sauvignon","쿨리코 밸리","Chile / Central Valley / Rapel Valley / Colchagua Valley",2c8524c5-1bdc-4ff6-b56d-2990edd497b3
+region,UNKNOWN,"도멘 생 뱅상 꼬뜨뒤 론 화이트","Domaine Saint Vincent Côtes du Rhône Blanc","꼬뜨뒤 론","France / Rhone Valley / Southern Rhône / Côtes-du-Rhône / Côtes-du-Rhône-Villages",755648bc-088f-47ec-8f8c-5294b55f4924
+region,UNKNOWN,"앙고브 호프 엔드 까베르네 소비뇽","Angove Hope and Cabernet Sauvignon","사우스 오스트레일리아","United States / California / Central Coast / San Luis Obispo County / Paso Robles",5b0b96b6-1848-4672-bf6d-7a1757c60c30
+region,UNKNOWN,"된호프 니더하우저 헤르만숄레 리슬링 슈페트레제","Donnhoff Niederhäuser Hermannshöhle Riesling Spätlese","나헤","Germany / Nahe",6c6c87c3-8ac1-4048-aeb4-546bb8011988
+region,UNKNOWN,"카르페니 말볼티 프로세코 트레비소","Carpene Malvolti Prosecco Treviso","트레비소","Italy / Northern Italy / Veneto / Prosecco / Prosecco di Treviso",552330d9-740f-49dc-8cb1-2771454f9663
+region,UNKNOWN,"군트럼 리슬링","Guntrum Riesling","라인헤센","Germany / Rheinhessen",fc3b6bf8-88fd-4049-a29f-4c1e5d9f5b81
+region,UNKNOWN,"텍스트북 나파 카베르네 소비뇽","Textbook Napa Cabernet Sauvignon","나파","United States / California / North Coast / Napa County / Napa Valley / Oakville",442640ed-5471-4e1d-9b84-3fbb65a7a5d3
+region,UNKNOWN,"보데가스 스타필레 581 말벡","Bodegas Staphile 581 Malbec","멘도사","Argentina / Mendoza",0e96ecb0-75e8-405d-9598-3f306811f897
+region,UNKNOWN,"드라이 리버 피노 누아","Dry River Pinot Noir","마틴보로","New Zealand / North Island / Wairarapa / Martinborough",2c450f08-f21d-4f72-bbf8-340de213b7c4
+region,UNKNOWN,"샤토 피죽 프리미에 그랑 크뤼 클라세","Château Figeac Premier Grand Cru Classé","생테밀리옹","France / Bordeaux / Libournais / Saint-Émilion / Saint-Émilion Grand Cru",0143cc44-949d-4a65-8b57-2d7dca979ab7

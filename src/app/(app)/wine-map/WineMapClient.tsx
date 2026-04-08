@@ -197,14 +197,11 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-80px)] bg-background">
-      <div className="px-5 py-4 flex items-center justify-between border-b border-white/5 bg-background/80 backdrop-blur-md z-10">
-        <div className="flex items-center gap-2">
-          <MapIcon className="w-5 h-5 text-accent" />
-          <h1 className="text-xl font-serif text-white tracking-wide">와인 지도</h1>
-        </div>
+    <div className="flex flex-col h-[calc(100dvh-80px)] bg-background min-h-screen">
+      <header className="px-5 pt-12 pb-4 flex items-center justify-between border-b border-white/5 bg-background/80 backdrop-blur-md z-10">
+        <h1 className="text-2xl font-serif tracking-wide text-white">와인맵</h1>
         <span className="text-xs text-zinc-500">{records.length}개 기록 · {groupedByLocation().length}곳</span>
-      </div>
+      </header>
 
       <div className="flex-1 relative">
         <div ref={mapRef} className="w-full h-full" />

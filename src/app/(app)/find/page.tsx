@@ -406,9 +406,9 @@ export default function FindPage() {
     <div className="flex flex-col flex-1 min-h-0">
       {showAuthPrompt && <AuthPrompt message="와인을 저장하거나 기록하려면 로그인이 필요합니다" returnUrl={authReturnUrl} />}
       <Toast message="내 와인에 추가되었어요!" visible={toast} onHide={() => setToast(false)} />
-      <header className="px-5 pt-12 pb-2 flex-shrink-0">
-        <h1 className="text-2xl font-bold">와인 검색</h1>
-        <p className="text-zinc-500 text-sm mt-1">사진 또는 이름으로 와인을 검색하세요</p>
+      <header className="px-5 pt-12 pb-4 flex-shrink-0">
+        <h1 className="text-2xl font-serif tracking-wide text-white">와인검색</h1>
+        <p className="text-zinc-500 text-xs mt-1 font-light">사진 또는 이름으로 와인을 검색하세요</p>
       </header>
 
       {/* 세그먼티드 컨트롤 - select 단계에서만 표시 */}

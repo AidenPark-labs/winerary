@@ -134,10 +134,10 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
               </div>
 
               <div className="absolute top-0 inset-x-0 h-36 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
-              <div className="absolute bottom-0 inset-x-0 h-56 bg-gradient-to-t from-black to-transparent pointer-events-none" />
+              <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
 
               {photos.length > 1 && (
-                <div className="absolute bottom-3 inset-x-0 flex justify-center gap-1.5 z-10 pointer-events-none">
+                <div className="absolute bottom-20 inset-x-0 flex justify-center gap-1.5 z-30 pointer-events-none">
                   {photos.map((_, i) => (
                     <div key={i} className={`h-1 rounded-full transition-all duration-300 ${i === currentPhoto ? "w-5 bg-white" : "w-1 bg-white/40"}`} />
                   ))}
@@ -189,7 +189,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
             const hasWineLink = !!(record.wine_id && wineData?.id);
 
             const card = (
-              <div className="rounded-[20px] bg-black/40 backdrop-blur-2xl border border-white/10 px-5 py-4 shadow-xl">
+              <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 px-5 py-4 shadow-2xl">
                 {/* 와인명 + 빈티지 */}
                 <div className="flex items-baseline gap-2 flex-wrap">
                   <h1 className="font-serif font-medium text-white text-xl tracking-wide leading-tight">{record.name}</h1>

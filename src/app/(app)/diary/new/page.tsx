@@ -879,6 +879,11 @@ export default function NewDiaryPage() {
               </div>
               <div className="flex flex-col gap-3 px-5 pb-4">
                 <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-400">와인 이름</label>
+                  <input value={query} onChange={(e) => setQuery(e.target.value)}
+                    placeholder="한글 와인명" className={iCls} />
+                </div>
+                <div className="flex flex-col gap-1.5">
                   <label className="text-xs text-zinc-400">원본 명칭</label>
                   <input value={wineNameOriginal} onChange={(e) => setWineNameOriginal(e.target.value)}
                     placeholder="영어/현지어" className={iCls} />

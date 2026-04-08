@@ -145,7 +145,7 @@ function fillWineFields(
 
   const grapeVal = notNull(ai.grape_variety);
   if (grapeVal) {
-    const match = GRAPE_OPTIONS.find((g) => grapeVal.includes(g));
+    const match = GRAPE_OPTIONS.find((g) => grapeVal.includes(g) || g.includes(grapeVal));
     if (match) setters.setGrape(match);
     else { setters.setGrape("__custom__"); setters.setGrapeCustom(grapeVal); }
   }
@@ -302,7 +302,7 @@ export default function NewDiaryPage() {
           } else if (grapeVal === "블렌드") {
             setGrape("__blend__");
           } else {
-            const match = GRAPE_OPTIONS.find((g) => grapeVal.includes(g));
+            const match = GRAPE_OPTIONS.find((g) => grapeVal.includes(g) || g.includes(grapeVal));
             if (match) setGrape(match);
             else { setGrape(grapeVal); }
           }
@@ -466,7 +466,7 @@ export default function NewDiaryPage() {
     const typeMap: Record<string, WineType> = { red: "red", white: "white", rose: "rose", sparkling: "sparkling", fortified: "fortified", other: "other" };
     setWineType(typeMap[wine.type] ?? "");
     if (wine.grapes) {
-      const match = GRAPE_OPTIONS.find((g) => wine.grapes.includes(g));
+      const match = GRAPE_OPTIONS.find((g) => wine.grapes.includes(g) || g.includes(wine.grapes));
       if (match) setGrape(match);
       else { setGrape("__custom__"); setGrapeCustom(wine.grapes); }
     }

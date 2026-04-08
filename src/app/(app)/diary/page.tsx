@@ -91,11 +91,10 @@ export default async function DiaryPage() {
         .select("experience_id, record_id")
         .in("experience_id", expIds);
 
-      // 내 기록이 아닌 연결 기록 ID 수집
+      // 내 소유 기록이 아닌 연결 기록 ID 수집
       const otherRecordIds = new Set<string>();
-      const myIdSet = new Set(allIds);
       (allExpLinks ?? []).forEach((l: { record_id: string }) => {
-        if (!myIdSet.has(l.record_id)) otherRecordIds.add(l.record_id);
+        if (!ownIds.has(l.record_id)) otherRecordIds.add(l.record_id);
       });
 
       if (otherRecordIds.size > 0) {
@@ -120,7 +119,7 @@ export default async function DiaryPage() {
         // 내 기록 → 연결 기록 매핑
         (allExpLinks ?? []).forEach((l: { experience_id: string; record_id: string }) => {
           const myRecordsInExp = expMap[l.experience_id] ?? [];
-          if (myIdSet.has(l.record_id)) return; // 내 기록은 스킵
+          if (ownIds.has(l.record_id)) return; // 내 소유 기록은 스킵
           const other = otherMap[l.record_id];
           if (!other) return;
           myRecordsInExp.forEach((myId) => {

@@ -4,11 +4,9 @@ import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import type { WineRecord, RecordEvaluation } from "@/types";
 import { resolveWineDisplay } from "@/lib/wine-display";
-import { upsertRecordEvaluation } from "@/lib/actions/diary";
 import DeleteButton from "./DeleteButton";
 import ShareButton from "./ShareButton";
 import InviteButton from "./InviteButton";
-import StarRating from "@/components/StarRating";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드", white: "화이트", rose: "로제",
@@ -359,7 +357,6 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
             evaluations={evaluations}
             myEvaluation={myEvaluation}
             currentUserId={currentUserId}
-            hasFoods={foods.length > 0}
           />
         </div>
 
@@ -405,9 +402,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
 
 // ─── Evaluation Card (한 사람의 평가) ─────────────────────────────────────────
 
-function EvalCard({ label, isAuthor, rating, valueScore, pairingScore, memo, repurchaseIntent }: {
-  label: string;
-  isAuthor?: boolean;
+function EvalCardContent({ rating, valueScore, pairingScore, memo, repurchaseIntent }: {
   rating: number | null;
   valueScore: number | null;
   pairingScore: number | null;
@@ -415,13 +410,8 @@ function EvalCard({ label, isAuthor, rating, valueScore, pairingScore, memo, rep
   repurchaseIntent?: string | null;
 }) {
   const hasScores = rating != null || valueScore != null || pairingScore != null;
-  if (!hasScores && !memo && !repurchaseIntent) return null;
-
   return (
-    <div className="px-5 py-3.5 border-b border-white/10 last:border-b-0">
-      <p className={`text-[11px] font-medium mb-2.5 ${isAuthor ? "text-amber-400" : "text-zinc-400"}`}>
-        {label}{isAuthor ? " (작성자)" : ""}
-      </p>
+    <>
       {hasScores && (
         <div className="flex flex-col gap-2">
           {rating != null && (
@@ -464,28 +454,41 @@ function EvalCard({ label, isAuthor, rating, valueScore, pairingScore, memo, rep
           </span>
         </div>
       )}
+    </>
+  );
+}
+
+function EvalCard({ label, isAuthor, rating, valueScore, pairingScore, memo, repurchaseIntent }: {
+  label: string;
+  isAuthor?: boolean;
+  rating: number | null;
+  valueScore: number | null;
+  pairingScore: number | null;
+  memo: string | null;
+  repurchaseIntent?: string | null;
+}) {
+  const hasScores = rating != null || valueScore != null || pairingScore != null;
+  if (!hasScores && !memo && !repurchaseIntent) return null;
+
+  return (
+    <div className="px-5 py-3.5 border-b border-white/10 last:border-b-0">
+      <p className={`text-[11px] font-medium mb-2.5 ${isAuthor ? "text-amber-400" : "text-zinc-400"}`}>
+        {label}{isAuthor ? " (작성자)" : ""}
+      </p>
+      <EvalCardContent rating={rating} valueScore={valueScore} pairingScore={pairingScore} memo={memo} repurchaseIntent={repurchaseIntent} />
     </div>
   );
 }
 
 // ─── Evaluation Section ──────────────────────────────────────────────────────
 
-function EvaluationSection({ record, readOnly, evaluations, myEvaluation, currentUserId, hasFoods }: {
+function EvaluationSection({ record, readOnly, evaluations, myEvaluation, currentUserId }: {
   record: WineRecord;
   readOnly: boolean;
   evaluations: RecordEvaluation[];
   myEvaluation: RecordEvaluation | null;
   currentUserId: string | null;
-  hasFoods: boolean;
 }) {
-  const [showForm, setShowForm] = useState(false);
-  const [rating, setRating] = useState(myEvaluation?.rating ?? 3);
-  const [valueScore, setValueScore] = useState(myEvaluation?.value_score ?? 3);
-  const [pairingScore, setPairingScore] = useState(myEvaluation?.pairing_score ?? 3);
-  const [memo, setMemo] = useState(myEvaluation?.memo ?? "");
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-
   const otherEvals = evaluations.filter((e) => e.user_id !== currentUserId);
   const hasMyEval = !!myEvaluation;
   const canEvaluate = readOnly && currentUserId;
@@ -494,63 +497,19 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
   const authorHasEval = record.rating != null || record.value_score != null ||
     record.pairing_score != null || record.memo != null || record.repurchase_intent != null;
 
-  async function handleSubmit() {
-    setSaving(true);
-    const result = await upsertRecordEvaluation(record.id, {
-      rating,
-      value_score: valueScore,
-      pairing_score: hasFoods ? pairingScore : null,
-      memo: memo.trim() || null,
-    });
-    setSaving(false);
-    if (result.success) {
-      setSaved(true);
-      setShowForm(false);
-      setTimeout(() => setSaved(false), 2000);
-    }
-  }
-
   return (
     <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
       <div className="px-5 pt-4 pb-2 flex items-center justify-between">
         <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Reviews</p>
-        {canEvaluate && !showForm && (
-          <button
-            onClick={() => setShowForm(true)}
+        {canEvaluate && !hasMyEval && (
+          <Link
+            href={`/diary/${record.id}/evaluate`}
             className="text-[11px] px-3 py-1 rounded-lg bg-violet-500/20 text-violet-300 border border-violet-500/30 hover:bg-violet-500/30 transition-colors"
           >
-            {hasMyEval ? "수정" : "평가하기"}
-          </button>
+            평가하기
+          </Link>
         )}
       </div>
-
-      {/* 평가 입력 폼 (공유받은 유저용) */}
-      {showForm && (
-        <div className="px-5 pb-4 flex flex-col gap-3 border-b border-white/10">
-          <StarRating label="맛 평점" emoji="⭐" value={rating} max={5} step={0.5} onChange={setRating} />
-          <StarRating label="가성비" emoji="💰" value={valueScore} max={5} step={0.5} onChange={setValueScore} />
-          {hasFoods && (
-            <StarRating label="음식 궁합" emoji="🍽️" value={pairingScore} max={5} step={1} onChange={setPairingScore} />
-          )}
-          <textarea
-            value={memo}
-            onChange={(e) => setMemo(e.target.value)}
-            rows={2}
-            placeholder="한줄 코멘트 (선택)"
-            className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-zinc-100 text-sm font-light resize-none focus:outline-none focus:border-violet-500/50 transition-all placeholder:text-zinc-500"
-          />
-          <div className="flex gap-2">
-            <button onClick={() => setShowForm(false)}
-              className="flex-1 py-2.5 rounded-xl text-sm text-zinc-400 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">취소</button>
-            <button onClick={handleSubmit} disabled={saving}
-              className="flex-1 py-2.5 rounded-xl text-sm text-white bg-violet-600 hover:bg-violet-500 disabled:opacity-50 transition-colors font-medium">
-              {saving ? "저장 중…" : hasMyEval ? "수정" : "저장"}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {saved && <p className="px-5 py-2 text-xs text-emerald-400">평가가 저장되었습니다</p>}
 
       {/* 작성자 평가 */}
       {authorHasEval && (
@@ -566,14 +525,24 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
       )}
 
       {/* 내 평가 (공유받은 유저) */}
-      {myEvaluation && !showForm && (
-        <EvalCard
-          label="내 평가"
-          rating={myEvaluation.rating}
-          valueScore={myEvaluation.value_score}
-          pairingScore={myEvaluation.pairing_score}
-          memo={myEvaluation.memo}
-        />
+      {myEvaluation && (
+        <div className="px-5 py-3.5 border-b border-white/10 last:border-b-0">
+          <div className="flex items-center justify-between mb-2.5">
+            <p className="text-[11px] font-medium text-zinc-400">내 평가</p>
+            <Link
+              href={`/diary/${record.id}/evaluate`}
+              className="text-[11px] px-2.5 py-1 rounded-lg bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10 transition-colors"
+            >
+              수정
+            </Link>
+          </div>
+          <EvalCardContent
+            rating={myEvaluation.rating}
+            valueScore={myEvaluation.value_score}
+            pairingScore={myEvaluation.pairing_score}
+            memo={myEvaluation.memo}
+          />
+        </div>
       )}
 
       {/* 다른 평가자들 */}

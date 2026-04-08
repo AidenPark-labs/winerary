@@ -28,16 +28,16 @@ const WINE_COLORS: Record<string, string> = {
 function BottomCard({ record, onClose }: { record: MapRecord; onClose: () => void }) {
   return (
     <Link href={`/diary/${record.id}`} className="block">
-      <div className="flex gap-4">
+      <div className="flex gap-3">
         {record.photos?.[0] ? (
-          <img src={record.photos[0]} alt="" className="w-24 h-24 rounded-2xl object-cover flex-shrink-0 border border-white/10" />
+          <img src={record.photos[0]} alt="" className="w-16 h-16 rounded-xl object-cover flex-shrink-0 border border-white/10" />
         ) : (
-          <div className="w-24 h-24 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
-            <Wine className="w-8 h-8 text-zinc-700" />
+          <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
+            <Wine className="w-6 h-6 text-zinc-700" />
           </div>
         )}
         <div className="flex-1 min-w-0 flex flex-col justify-center pr-6">
-          <p className="text-base font-bold text-white truncate">{record.name}</p>
+          <p className="text-sm font-bold text-white truncate">{record.name}</p>
           {record.rating != null && (
             <div className="flex items-center gap-1 mt-1">
               <span className="text-amber-400 text-sm">★</span>
@@ -73,7 +73,7 @@ function PopupCarousel({ records, onClose }: { records: MapRecord[]; onClose: ()
   }, []);
 
   return (
-    <div className="absolute bottom-28 left-3 right-3 z-[1000] bg-surface/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
+    <div className="absolute bottom-2 left-3 right-3 z-[1000] bg-surface/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
       <button
         onClick={onClose}
         className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-black/40 text-zinc-400 hover:text-white hover:bg-black/60 transition-colors text-sm z-10"
@@ -289,22 +289,22 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
         )}
 
         {/* 플로팅 버튼들 */}
-        <div className="absolute bottom-28 right-4 z-[999] flex flex-col gap-2">
+        <div className={`absolute right-4 z-[999] flex flex-col gap-2 transition-all ${selectedGroup ? "bottom-32" : "bottom-4"}`}>
           <button
             onClick={goToMyLocation}
-            className="w-11 h-11 rounded-full bg-surface/90 backdrop-blur-md border border-white/10 shadow-xl flex items-center justify-center text-zinc-300 hover:text-white transition-colors"
+            className="w-10 h-10 rounded-full bg-surface/90 backdrop-blur-md border border-white/10 shadow-xl flex items-center justify-center text-zinc-300 hover:text-white transition-colors"
           >
-            <Navigation size={18} />
+            <Navigation size={16} />
           </button>
         </div>
 
-        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-[999]">
+        <div className={`absolute left-1/2 -translate-x-1/2 z-[999] transition-all ${selectedGroup ? "bottom-32" : "bottom-4"}`}>
           <button
             onClick={() => setShowList(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-surface/90 backdrop-blur-md border border-white/10 shadow-xl text-zinc-200 hover:text-white transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface/90 backdrop-blur-md border border-white/10 shadow-xl text-zinc-200 hover:text-white transition-colors"
           >
-            <List size={16} />
-            <span className="text-sm font-medium">목록</span>
+            <List size={14} />
+            <span className="text-xs font-medium">목록</span>
           </button>
         </div>
 

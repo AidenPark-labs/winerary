@@ -79,6 +79,7 @@ export default async function EvaluatePage({ params }: { params: Promise<{ id: s
             value_score: existing.value_score,
             pairing_score: existing.pairing_score,
             memo: existing.memo,
+            repurchase_intent: existing.repurchase_intent,
           } : null}
         />
       </div>

@@ -67,6 +67,7 @@ export interface RecordEvaluation {
   value_score: number | null
   pairing_score: number | null
   memo: string | null
+  repurchase_intent: string | null
   created_at: string
   updated_at: string
   nickname?: string

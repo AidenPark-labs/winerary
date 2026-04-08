@@ -56,6 +56,7 @@ export default function EvaluateForm({
           value_score: valueScore,
           pairing_score: hasFoods ? pairingScore : null,
           memo: memo.trim() || null,
+          repurchase_intent: repurchase,
         });
 
     setSaving(false);
@@ -77,8 +78,7 @@ export default function EvaluateForm({
         )}
       </div>
 
-      {mode === "owner" && (
-        <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 p-5">
+      <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 p-5">
           <label className="text-xs text-zinc-400 font-medium mb-2 block">재구매 의향</label>
           <div className="flex gap-2">
             {REPURCHASE_OPTIONS.map((opt) => (
@@ -96,8 +96,7 @@ export default function EvaluateForm({
               </button>
             ))}
           </div>
-        </div>
-      )}
+      </div>
 
       <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 p-5">
         <label className="text-xs text-zinc-400 font-medium mb-2 block">테이스팅 노트</label>

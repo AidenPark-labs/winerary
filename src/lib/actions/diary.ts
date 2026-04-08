@@ -236,7 +236,7 @@ export async function deleteRecordEvaluation(recordId: string) {
 
 export async function upsertRecordEvaluation(
   recordId: string,
-  data: { rating: number | null; value_score: number | null; pairing_score: number | null; memo: string | null },
+  data: { rating: number | null; value_score: number | null; pairing_score: number | null; memo: string | null; repurchase_intent: string | null },
 ) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -252,6 +252,7 @@ export async function upsertRecordEvaluation(
         value_score: data.value_score,
         pairing_score: data.pairing_score,
         memo: data.memo || null,
+        repurchase_intent: data.repurchase_intent,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "record_id,user_id" },

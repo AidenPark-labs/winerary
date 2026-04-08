@@ -74,6 +74,7 @@ export default async function InvitePage({ params }: { params: Promise<{ code: s
       value_score: row.value_score as number | null,
       pairing_score: row.pairing_score as number | null,
       memo: row.memo as string | null,
+      repurchase_intent: (row.repurchase_intent as string | null) ?? null,
       created_at: row.created_at as string,
       updated_at: row.updated_at as string,
       nickname: profile?.nickname ?? (row.guest_nickname as string) ?? undefined,

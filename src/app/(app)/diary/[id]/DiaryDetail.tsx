@@ -608,6 +608,7 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
             valueScore={myEvaluation.value_score}
             pairingScore={myEvaluation.pairing_score}
             memo={myEvaluation.memo}
+            repurchaseIntent={myEvaluation.repurchase_intent}
           />
         </div>
         );
@@ -622,6 +623,7 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
           valueScore={ev.value_score}
           pairingScore={ev.pairing_score}
           memo={ev.memo}
+          repurchaseIntent={ev.repurchase_intent}
         />
       ))}
 

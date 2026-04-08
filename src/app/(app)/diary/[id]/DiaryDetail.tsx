@@ -165,6 +165,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
             )}
             {!readOnly && (
               <div className="flex items-center gap-2 pointer-events-auto">
+                {record.visibility === "link" && <ShareButton id={record.id} />}
                 <Link
                   href={`/diary/${record.id}/edit`}
                   className="text-xs font-medium px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 transition-colors shadow-lg"
@@ -208,11 +209,6 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
             }
             return card;
           })()}
-
-          {/* 링크 공유 버튼 */}
-          {!readOnly && record.visibility === "link" && (
-            <ShareButton id={record.id} />
-          )}
 
           {/* ━━━━━━━━━━ 1. Wine ━━━━━━━━━━ */}
           {(() => {

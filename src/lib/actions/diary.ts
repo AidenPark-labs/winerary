@@ -117,7 +117,7 @@ export async function createWineRecord(data: Partial<WineRecord> & { companion_e
   }
 
   await syncMentions(supabase, record.id, companionEntries ?? null);
-  redirect(`/diary/${record.id}`);
+  return { id: record.id };
 }
 
 export async function updateWineRecord(id: string, data: Partial<WineRecord> & { companion_entries?: CompanionEntry[] }) {

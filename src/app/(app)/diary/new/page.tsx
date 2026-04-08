@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { extractPhotoDate } from "@/lib/exif";
 import type { WineSuggestion, WineType, CompanionEntry } from "@/types";
-import { createWineRecord } from "@/lib/actions/diary";
+import { createWineRecord, updateWineRecord } from "@/lib/actions/diary";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import StarRating from "@/components/StarRating";
 import PlaceSearch from "@/components/PlaceSearch";
@@ -211,6 +211,7 @@ export default function NewDiaryPage() {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [savedRecordId, setSavedRecordId] = useState<string | null>(null);
 
   const iCls = "w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3.5 text-zinc-100 focus:outline-none focus:border-accent focus:bg-black/60 transition-all font-light text-sm";
   const currentYear = new Date().getFullYear();
@@ -353,9 +354,8 @@ export default function NewDiaryPage() {
     e.target.value = "";
   }
 
-  // ── Submit ──
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  // ── 정보 저장 (Step 3) ──
+  async function handleSaveRecord(goToRate: boolean) {
     const wineName = selectedWine?.name_ko || selectedWine?.name || wineNameOriginal || query.trim();
     if (!wineName) { setError("와인 이름을 입력해주세요."); return; }
     setSaving(true);
@@ -383,19 +383,38 @@ export default function NewDiaryPage() {
       companions: companionEntries.length > 0 ? companionEntries.map((e) => e.userCode ? `@${e.name}` : e.name) : null,
       companion_entries: companionEntries.length > 0 ? companionEntries : undefined,
       foods: foods.map((name) => ({ name })),
-      rating,
-      pairing_score: foods.length > 0 ? pairingScore : null,
       price: price ? parseInt(price) : null,
       price_type: price ? priceType : null,
       price_unit: price ? priceUnit : null,
-      value_score: valueScore,
-      repurchase_intent: repurchaseIntent,
-      memo: memo || null,
       tags: tags.length > 0 ? tags : null,
       visibility,
     });
     setSaving(false);
-    if (result?.error) setError(result.error);
+    if (result?.error) { setError(result.error); return; }
+    if (result && 'id' in result) {
+      const id = result.id as string;
+      setSavedRecordId(id);
+      if (goToRate) setStep("rate");
+      else router.push(`/diary/${id}`);
+    }
+  }
+
+  // ── 평가 저장 (Step 4) ──
+  async function handleSaveEvaluation(e: React.FormEvent) {
+    e.preventDefault();
+    if (!savedRecordId) return;
+    setSaving(true);
+    setError(null);
+    const result = await updateWineRecord(savedRecordId, {
+      rating,
+      value_score: valueScore,
+      pairing_score: foods.length > 0 ? pairingScore : null,
+      repurchase_intent: repurchaseIntent,
+      memo: memo || null,
+    });
+    setSaving(false);
+    if (result?.error) { setError(result.error); return; }
+    router.push(`/diary/${savedRecordId}`);
   }
 
   // ── Back navigation ──
@@ -403,7 +422,7 @@ export default function NewDiaryPage() {
     if (step === "photo") router.back();
     else if (step === "wine") { setStep("photo"); setAiResult(null); setAiNotFound(false); setShowSearch(false); }
     else if (step === "review") setStep("wine");
-    else if (step === "rate") setStep("review");
+    else if (step === "rate") { if (savedRecordId) router.push(`/diary/${savedRecordId}`); }
   }
 
   const stepIndex = step === "photo" ? 0 : step === "wine" ? 1 : step === "review" ? 2 : 3;
@@ -422,7 +441,7 @@ export default function NewDiaryPage() {
             <h1 className="text-lg font-bold">
               {step === "photo" && "와인 사진 찍기"}
               {step === "wine" && "와인 정보 확인"}
-              {step === "review" && "감상 기록"}
+              {step === "review" && "경험 기록"}
               {step === "rate" && "평가하기"}
             </h1>
           </div>
@@ -677,7 +696,7 @@ export default function NewDiaryPage() {
         {/* Step 3 — 감상 기록                             */}
         {/* ══════════════════════════════════════════════ */}
         {step === "review" && (
-          <form onSubmit={handleSubmit} className="flex flex-col px-4 pb-8 gap-6 overflow-y-auto">
+          <form onSubmit={(e) => e.preventDefault()} className="flex flex-col px-4 pb-8 gap-6 overflow-y-auto">
             {error && <p className="text-accent text-sm bg-accent/10 border border-accent/20 rounded-xl px-4 py-3 text-center">{error}</p>}
 
             {/* 사진 */}
@@ -816,10 +835,26 @@ export default function NewDiaryPage() {
               )}
             </section>
 
-            <button type="button" onClick={() => setStep("rate")}
-              className="w-full py-4 mt-4 rounded-2xl bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-medium transition-all shadow-lg shadow-accent/20 active:scale-[0.98]">
-              다음 — 평가하기 →
-            </button>
+            {/* 공개 범위 */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm text-zinc-400">공개 범위</label>
+              <select value={visibility} onChange={(e) => setVisibility(e.target.value as "private" | "link" | "public")} className={iCls}>
+                <option value="private">비공개</option>
+                <option value="link">링크 공유</option>
+                <option value="public">전체 공개</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-3 mt-4">
+              <button type="button" onClick={() => handleSaveRecord(true)} disabled={saving}
+                className="w-full py-4 rounded-2xl bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-medium transition-all shadow-lg shadow-accent/20 active:scale-[0.98]">
+                저장 후 평가하기
+              </button>
+              <button type="button" onClick={() => handleSaveRecord(false)} disabled={saving}
+                className="w-full py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-400 text-sm font-medium transition-all active:scale-[0.98]">
+                평가 없이 저장
+              </button>
+            </div>
           </form>
         )}
 
@@ -827,8 +862,10 @@ export default function NewDiaryPage() {
         {/* Step 4 — 평가하기                              */}
         {/* ══════════════════════════════════════════════ */}
         {step === "rate" && (
-          <form onSubmit={handleSubmit} className="flex flex-col px-4 pb-8 gap-6 overflow-y-auto">
+          <form onSubmit={handleSaveEvaluation} className="flex flex-col px-4 pb-8 gap-6 overflow-y-auto">
             {error && <p className="text-accent text-sm bg-accent/10 border border-accent/20 rounded-xl px-4 py-3 text-center">{error}</p>}
+
+            <p className="text-xs text-emerald-400 bg-emerald-900/20 border border-emerald-800/30 rounded-xl px-4 py-3 text-center">기록이 저장되었습니다. 이제 평가를 남겨보세요.</p>
 
             {/* 평점 */}
             <section className="flex flex-col gap-4">
@@ -871,20 +908,16 @@ export default function NewDiaryPage() {
                 className={iCls + " resize-none"} placeholder="이 와인에 대한 인상, 향, 맛, 분위기를 자유롭게 적어보세요…" />
             </section>
 
-            {/* 공개 범위 */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm text-zinc-400">공개 범위</label>
-              <select value={visibility} onChange={(e) => setVisibility(e.target.value as "private" | "link" | "public")} className={iCls}>
-                <option value="private">비공개</option>
-                <option value="link">링크 공유</option>
-                <option value="public">전체 공개</option>
-              </select>
+            <div className="flex flex-col gap-3 mt-4">
+              <button type="submit" disabled={saving}
+                className="w-full py-4 rounded-2xl bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-medium transition-all shadow-lg shadow-accent/20 active:scale-[0.98]">
+                평가 저장
+              </button>
+              <button type="button" onClick={() => router.push(`/diary/${savedRecordId}`)}
+                className="w-full py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-400 text-sm font-medium transition-all active:scale-[0.98]">
+                나중에 평가하기
+              </button>
             </div>
-
-            <button type="submit"
-              className="w-full py-4 mt-4 rounded-2xl bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-medium transition-all shadow-lg shadow-accent/20 active:scale-[0.98]">
-              기록 저장
-            </button>
           </form>
         )}
       </div>

@@ -321,6 +321,22 @@ export default function NewDiaryPage() {
       });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── AI 인식 후 DB 매칭 자동 검색 ──
+  useEffect(() => {
+    if (!aiResult || aiNotFound || showSearch || fromRecordId) return;
+    const searchName = aiResult.name_original || aiResult.name || "";
+    if (searchName.length < 2) return;
+    let cancelled = false;
+    setSuggestLoading(true);
+    setSuggestions(null);
+    fetch("/api/ai/suggest?q=" + encodeURIComponent(searchName))
+      .then((r) => r.json())
+      .then((data) => { if (!cancelled) setSuggestions(data.wines ?? []); })
+      .catch(() => { if (!cancelled) setSuggestions([]); })
+      .finally(() => { if (!cancelled) setSuggestLoading(false); });
+    return () => { cancelled = true; };
+  }, [aiResult, aiNotFound, showSearch, fromRecordId]);
+
   // ── Step 1: Photo selection ──
   async function handleFile(file: File) {
     const date = await extractPhotoDate(file);
@@ -353,17 +369,6 @@ export default function NewDiaryPage() {
         setAiResult(aiData);
         setAiNotFound(false);
         fillWineFields(aiData, { setQuery, setWineNameOriginal, setWineType, setWineVintage, setGrape, setGrapeCustom, setCountry, setCountryCustom, setSelectedWine });
-        // DB 매칭 후보 자동 검색
-        const searchName = aiData.name_original || aiData.name || "";
-        if (searchName.length >= 2) {
-          setSuggestLoading(true);
-          try {
-            const suggestRes = await fetch("/api/ai/suggest?q=" + encodeURIComponent(searchName));
-            const suggestData = await suggestRes.json();
-            setSuggestions(suggestData.wines ?? []);
-          } catch { setSuggestions([]); }
-          finally { setSuggestLoading(false); }
-        }
       } else {
         setAiResult(null);
         setAiNotFound(true);

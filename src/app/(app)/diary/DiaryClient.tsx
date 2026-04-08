@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { deleteWineRecord } from "@/lib/actions/diary";
-import { Map, CalendarDays, LayoutList, MoreVertical, Camera, Plus, MapPin, Wine as WineIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Map, CalendarDays, LayoutList, Grid3X3, MoreVertical, Camera, Plus, MapPin, Wine as WineIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { CloseIcon } from "@/components/Icons";
 import type { WineRecord } from "@/types";
 
@@ -421,6 +421,39 @@ function FeedCard({ record, linked }: { record: WineRecord; linked?: LinkedInfo[
   );
 }
 
+// ─── Grid Card (3열 미니 카드) ────────────────────────────────────────────────
+
+function GridCard({ record, linked }: { record: WineRecord; linked?: LinkedInfo[] }) {
+  const thumb = (record.photos ?? [])[0];
+  const score = calcOverallScore(record);
+
+  return (
+    <Link href={`/diary/${record.id}`} className="relative aspect-square rounded-2xl overflow-hidden bg-zinc-900 active:scale-[0.97] transition-transform">
+      {thumb ? (
+        <img src={thumb} alt={record.name} className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center bg-surface">
+          <WineIcon className="text-white/10" size={32} strokeWidth={1} />
+        </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+      {score != null && (
+        <span className="absolute top-1.5 left-1.5 text-[10px] font-bold text-amber-400 bg-black/50 backdrop-blur-sm px-1.5 py-0.5 rounded-full">
+          ★ {score.toFixed(1)}
+        </span>
+      )}
+      {linked && linked.length > 0 && (
+        <span className="absolute top-1.5 right-1.5 text-[9px] text-blue-400 bg-black/50 backdrop-blur-sm px-1.5 py-0.5 rounded-full">
+          🔗 {linked.length}
+        </span>
+      )}
+      <div className="absolute bottom-0 inset-x-0 px-2 pb-2">
+        <p className="text-[11px] text-white font-medium leading-tight line-clamp-2 drop-shadow-md">{record.name}</p>
+      </div>
+    </Link>
+  );
+}
+
 // ─── Calendar Day Record Card ─────────────────────────────────────────────────
 
 function CalendarRecordCard({ record }: { record: WineRecord }) {
@@ -533,6 +566,7 @@ export type LinkedInfo = { record_id: string; linked_record_id: string; linked_n
 
 export default function DiaryClient({ records, linkedMap = {} }: { records: WineRecord[]; linkedMap?: Record<string, LinkedInfo[]> }) {
   const [viewMode, setViewMode] = useState<ViewMode>("feed");
+  const [feedLayout, setFeedLayout] = useState<"card" | "grid">("card");
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -652,13 +686,41 @@ export default function DiaryClient({ records, linkedMap = {} }: { records: Wine
         <MapView records={filteredRecords} />
 
       ) : viewMode === "feed" ? (
-        /* ── 피드 뷰 (날짜별 그룹) ── */
-        <div className="flex flex-col gap-6 pb-28 overflow-y-auto">
-          {Object.entries(recordsByDate)
-            .sort(([a], [b]) => b.localeCompare(a))
-            .map(([date, dateRecords]) => (
-              <DateGroupCarousel key={date} date={date} records={dateRecords} linkedMap={linkedMap} />
-            ))}
+        /* ── 피드 뷰 ── */
+        <div className="flex flex-col flex-1 overflow-y-auto pb-28">
+          {/* 카드/그리드 전환 */}
+          <div className="flex justify-end px-5 mb-3">
+            <div className="flex p-1 rounded-lg bg-surface/80 border border-white/5">
+              <button
+                onClick={() => setFeedLayout("card")}
+                className={`p-1.5 rounded-md transition-all ${feedLayout === "card" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+              >
+                <LayoutList size={14} />
+              </button>
+              <button
+                onClick={() => setFeedLayout("grid")}
+                className={`p-1.5 rounded-md transition-all ${feedLayout === "grid" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+              >
+                <Grid3X3 size={14} />
+              </button>
+            </div>
+          </div>
+
+          {feedLayout === "card" ? (
+            <div className="flex flex-col gap-6">
+              {Object.entries(recordsByDate)
+                .sort(([a], [b]) => b.localeCompare(a))
+                .map(([date, dateRecords]) => (
+                  <DateGroupCarousel key={date} date={date} records={dateRecords} linkedMap={linkedMap} />
+                ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-1.5 px-4">
+              {filteredRecords.map((r) => (
+                <GridCard key={r.id} record={r} linked={linkedMap[r.id]} />
+              ))}
+            </div>
+          )}
         </div>
 
       ) : (

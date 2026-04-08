@@ -146,7 +146,7 @@ function fillWineFields(
 
   const grapeVal = notNull(ai.grape_variety);
   if (grapeVal) {
-    const grapeParts = grapeVal.split(/[,/]+/).map((g) => g.trim()).filter(Boolean);
+    const grapeParts = grapeVal.split(/,\s*/).map((g) => g.trim()).filter(Boolean);
     if (grapeParts.length > 1) {
       setters.setGrape("__blend__");
       setters.setBlendGrapes(grapeParts);
@@ -475,10 +475,13 @@ export default function NewDiaryPage() {
     setWineNameOriginal(wine.name);
     const typeMap: Record<string, WineType> = { red: "red", white: "white", rose: "rose", sparkling: "sparkling", fortified: "fortified", other: "other" };
     setWineType(typeMap[wine.type] ?? "");
+    // 품종 초기화 후 세팅
+    setGrape("");
+    setGrapeCustom("");
+    setBlendGrapes([]);
     if (wine.grapes) {
-      const grapeParts = wine.grapes.split(/[,/]+/).map((g: string) => g.trim()).filter(Boolean);
+      const grapeParts = wine.grapes.split(/,\s*/).map((g: string) => g.trim()).filter(Boolean);
       if (grapeParts.length > 1) {
-        // 복수 품종 → 블렌드
         setGrape("__blend__");
         setBlendGrapes(grapeParts);
       } else {

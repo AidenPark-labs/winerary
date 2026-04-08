@@ -77,39 +77,37 @@ export default function EvaluateForm({
         )}
       </div>
 
-      <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 p-5 flex flex-col gap-4">
-        <div>
-          <label className="text-xs text-zinc-400 font-medium mb-2 block">한줄 코멘트</label>
-          <textarea
-            value={memo}
-            onChange={(e) => setMemo(e.target.value)}
-            rows={3}
-            placeholder="이 와인에 대한 감상을 남겨보세요 (선택)"
-            className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-zinc-100 text-sm font-light resize-none focus:outline-none focus:border-violet-500/50 transition-all placeholder:text-zinc-500"
-          />
-        </div>
-
-        {mode === "owner" && (
-          <div>
-            <label className="text-xs text-zinc-400 font-medium mb-2 block">재구매 의향</label>
-            <div className="flex gap-2">
-              {REPURCHASE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setRepurchase(repurchase === opt.value ? null : opt.value)}
-                  className={`flex-1 py-2.5 rounded-xl text-sm border transition-all ${
-                    repurchase === opt.value
-                      ? "bg-violet-500/20 border-violet-500/40 text-white"
-                      : "bg-black/40 border-white/10 text-zinc-500 hover:border-white/20"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+      {mode === "owner" && (
+        <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 p-5">
+          <label className="text-xs text-zinc-400 font-medium mb-2 block">재구매 의향</label>
+          <div className="flex gap-2">
+            {REPURCHASE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setRepurchase(repurchase === opt.value ? null : opt.value)}
+                className={`flex-1 py-2.5 rounded-xl text-sm border transition-all ${
+                  repurchase === opt.value
+                    ? "bg-violet-500/20 border-violet-500/40 text-white"
+                    : "bg-black/40 border-white/10 text-zinc-500 hover:border-white/20"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
-        )}
+        </div>
+      )}
+
+      <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 p-5">
+        <label className="text-xs text-zinc-400 font-medium mb-2 block">테이스팅 노트</label>
+        <textarea
+          value={memo}
+          onChange={(e) => setMemo(e.target.value)}
+          rows={3}
+          placeholder="이 와인에 대한 감상을 남겨보세요 (선택)"
+          className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-zinc-100 text-sm font-light resize-none focus:outline-none focus:border-violet-500/50 transition-all placeholder:text-zinc-500"
+        />
       </div>
 
       {error && (

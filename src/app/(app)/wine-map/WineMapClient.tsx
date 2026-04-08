@@ -161,28 +161,41 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
       const rep = group[0];
       const pos = new kakao.maps.LatLng(rep.latitude, rep.longitude);
 
-      if (group.length > 1) {
-        const overlay = new kakao.maps.CustomOverlay({
-          position: pos,
-          content: `<div style="
-            position:relative; top:-44px; left:10px;
-            background:#7c3aed; color:white;
-            width:20px; height:20px; border-radius:50%;
-            display:flex; align-items:center; justify-content:center;
-            font-size:11px; font-weight:700;
-            border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.3);
-            pointer-events:none;
-          ">${group.length}</div>`,
-          zIndex: 2,
-        });
-        overlay.setMap(map);
-      }
+      // 다크 테마 커스텀 마커
+      const count = group.length;
+      const markerHtml = `<div style="
+        cursor:pointer;
+        display:flex; flex-direction:column; align-items:center;
+      ">
+        <div style="
+          background:#1c1c1e; color:#e4e4e7;
+          min-width:28px; height:28px; border-radius:14px;
+          display:flex; align-items:center; justify-content:center;
+          font-size:11px; font-weight:700;
+          border:2px solid #e11d48; box-shadow:0 2px 8px rgba(0,0,0,0.5);
+          padding:0 6px;
+        ">${count > 1 ? count : "🍷"}</div>
+        <div style="
+          width:2px; height:6px; background:#e11d48; border-radius:1px;
+        "></div>
+      </div>`;
 
-      const marker = new kakao.maps.Marker({ map, position: pos, title: rep.name });
-      kakao.maps.event.addListener(marker, "click", () => {
-        setSelectedGroup(group);
-        map.panTo(pos);
+      const overlay = new kakao.maps.CustomOverlay({
+        position: pos,
+        content: markerHtml,
+        yAnchor: 1,
+        zIndex: 2,
+        clickable: true,
       });
+      overlay.setMap(map);
+
+      const el = overlay.getContent() as HTMLElement;
+      if (el && el.addEventListener) {
+        el.addEventListener("click", () => {
+          setSelectedGroup(group);
+          map.panTo(pos);
+        });
+      }
     });
   }, [loaded, records, groupedByLocation]);
 

@@ -382,6 +382,65 @@ function CalendarRecordCard({ record }: { record: WineRecord }) {
   );
 }
 
+// ─── Date Group Carousel ─────────────────────────────────────────────────────
+
+function DateGroupCarousel({ date, records: groupRecords }: { date: string; records: WineRecord[] }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  const dateLabel = new Date(date + "T00:00:00").toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+  });
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      const idx = Math.round(el.scrollLeft / el.clientWidth);
+      setActiveIdx(idx);
+    };
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <div>
+      <div className="flex items-center justify-between px-5 mb-2">
+        <h3 className="text-sm font-semibold text-zinc-300 tracking-wide">{dateLabel}</h3>
+        {groupRecords.length > 1 && (
+          <span className="text-[11px] text-zinc-500 font-medium">{groupRecords.length}개</span>
+        )}
+      </div>
+      <div
+        ref={scrollRef}
+        className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-3 px-4"
+        style={{ scrollbarWidth: "none" }}
+      >
+        {groupRecords.map((r) => (
+          <div key={r.id} className="snap-center flex-shrink-0 w-full">
+            <FeedCard record={r} />
+          </div>
+        ))}
+      </div>
+      {groupRecords.length > 1 && (
+        <div className="flex justify-center gap-1.5 mt-2">
+          {groupRecords.map((_, i) => (
+            <span
+              key={i}
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                i === activeIdx ? "bg-accent w-4" : "bg-zinc-600"
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Client Component ────────────────────────────────────────────────────
 
 export default function DiaryClient({ records }: { records: WineRecord[] }) {
@@ -505,9 +564,13 @@ export default function DiaryClient({ records }: { records: WineRecord[] }) {
         <MapView records={filteredRecords} />
 
       ) : viewMode === "feed" ? (
-        /* ── 피드 뷰 ── */
-        <div className="flex flex-col gap-3 px-4 pb-28 overflow-y-auto">
-          {filteredRecords.map((r) => <FeedCard key={r.id} record={r} />)}
+        /* ── 피드 뷰 (날짜별 그룹) ── */
+        <div className="flex flex-col gap-6 pb-28 overflow-y-auto">
+          {Object.entries(recordsByDate)
+            .sort(([a], [b]) => b.localeCompare(a))
+            .map(([date, dateRecords]) => (
+              <DateGroupCarousel key={date} date={date} records={dateRecords} />
+            ))}
         </div>
 
       ) : (

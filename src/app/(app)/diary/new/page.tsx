@@ -56,6 +56,17 @@ const COUNTRY_OPTIONS = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+function similarity(a: string, b: string): number {
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  if (a.includes(b) || b.includes(a)) return 0.8;
+  const shorter = a.length < b.length ? a : b;
+  const longer = a.length < b.length ? b : a;
+  let matches = 0;
+  for (const ch of shorter) { if (longer.includes(ch)) matches++; }
+  return matches / longer.length;
+}
+
 function notNull(v: string | null | undefined): string | null {
   if (!v || v === "null" || v === "undefined") return null;
   return v;
@@ -366,6 +377,22 @@ export default function NewDiaryPage() {
           if (allWines.length >= 5) break;
         }
       }
+
+      // 유사도 정렬: AI 인식 결과와 이름이 비슷한 순
+      const normalize = (s: string) => s.toLowerCase().replace(/['\s]/g, "");
+      const koNorm = normalize(koName);
+      const enNorm = normalize(enName);
+      allWines.sort((a, b) => {
+        const scoreA = Math.max(
+          similarity(koNorm, normalize(a.name_ko || "")),
+          similarity(enNorm, normalize(a.name || "")),
+        );
+        const scoreB = Math.max(
+          similarity(koNorm, normalize(b.name_ko || "")),
+          similarity(enNorm, normalize(b.name || "")),
+        );
+        return scoreB - scoreA;
+      });
 
       if (!cancelled) setSuggestions(allWines);
       if (!cancelled) setSuggestLoading(false);

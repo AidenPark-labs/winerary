@@ -43,8 +43,8 @@ export default async function LinkPage({ params }: { params: Promise<{ id: strin
       return wr.user_id;
     });
 
-  // 교집합: 서로 멘션한 유저만 연결 가능 (양방향 확인)
-  const companionUserIds = mentionedUserIds.filter((uid: string) => mentionedByUserIds.includes(uid));
+  // 상대방이 나를 멘션한 경우만 연결 가능 (상대가 나를 인정한 경우)
+  const companionUserIds = [...new Set(mentionedByUserIds)];
 
   if (companionUserIds.length === 0) {
     return (
@@ -57,7 +57,7 @@ export default async function LinkPage({ params }: { params: Promise<{ id: strin
           </div>
         </header>
         <div className="flex flex-col items-center justify-center flex-1 px-8 text-center gap-4">
-          <p className="text-zinc-500 text-sm font-light leading-relaxed">서로 동행자(@멘션)로 등록한 유저의 기록만 연결할 수 있습니다.<br/>상대방도 나를 동행자로 등록해야 합니다.</p>
+          <p className="text-zinc-500 text-sm font-light leading-relaxed">상대방이 나를 동행자(@멘션)로 등록한 경우에만 연결할 수 있습니다.</p>
           <Link href={`/diary/${id}`} className="text-sm text-violet-400 hover:text-violet-300">돌아가기</Link>
         </div>
       </div>

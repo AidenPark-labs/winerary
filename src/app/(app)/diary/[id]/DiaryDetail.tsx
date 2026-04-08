@@ -255,7 +255,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
                   return nameRow;
                 })()}
                 {/* 와인 세부 정보 */}
-                <div className="flex flex-col">
+                <div className="flex flex-col pb-2">
                   {displayType && (
                     <div className="flex items-center justify-between px-5 py-2">
                       <span className="text-xs text-zinc-400">타입</span>
@@ -335,6 +335,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
                   <span className="text-sm text-white font-medium">{priceText}</span>
                 </div>
               )}
+              <div className="pb-2" />
             </div>
           )}
 

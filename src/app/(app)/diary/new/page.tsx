@@ -1097,7 +1097,7 @@ export default function NewDiaryPage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 mt-2 pb-20">
+            <div className="flex flex-col gap-3 mt-2 pb-14">
               <button type="button" onClick={() => handleSaveRecord(true)} disabled={saving}
                 className="w-full py-4 rounded-2xl bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-medium transition-all shadow-lg shadow-accent/20 active:scale-[0.98]">
                 저장 후 평가하기

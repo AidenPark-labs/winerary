@@ -57,12 +57,12 @@ export default function BottomNav() {
           <button
             key={href}
             onClick={() => handleTap(href)}
-            className={`flex-1 flex flex-col items-center py-4 gap-1.5 text-[10px] sm:text-xs transition-all duration-300 ${
+            className={`flex-1 flex flex-col items-center py-2 gap-0.5 text-[10px] sm:text-xs transition-all duration-300 ${
               active || loading ? "text-accent" : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
             <div className={`transition-transform duration-300 ${loading ? "scale-110" : active ? "scale-105" : "scale-100"}`}>
-              <Icon size={22} strokeWidth={active || loading ? 2.5 : 2} />
+              <Icon size={20} strokeWidth={active || loading ? 2.5 : 2} />
             </div>
             <span className="font-medium tracking-wide">{label}</span>
             <span className={`absolute bottom-0 h-0.5 w-8 rounded-t-full transition-all duration-300 ${

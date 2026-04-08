@@ -249,16 +249,6 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                   </div>
                 )}
 
-                {/* 테이스팅 노트 */}
-                {record.memo && (
-                  <div className="px-5 pb-4 relative">
-                    <div className="absolute top-0 right-3 opacity-[0.05] pointer-events-none">
-                      <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
-                    </div>
-                    <p className="text-zinc-200 text-[15px] font-light leading-relaxed whitespace-pre-wrap relative z-10">{record.memo}</p>
-                  </div>
-                )}
-
                 {/* 맛 평점 → 와인에 대한 평가 */}
                 {record.rating != null && (
                   <div className="flex items-center justify-between px-5 py-3 border-t border-white/5">
@@ -332,13 +322,28 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
             </div>
           )}
 
-          {/* ━━━━━━━━━━ 재구매 의사 (종합 결론) ━━━━━━━━━━ */}
-          {record.repurchase_intent && (
-            <div className="rounded-2xl bg-surface/50 backdrop-blur-2xl border border-white/5 px-5 py-4 flex items-center justify-between">
-              <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Verdict</span>
-              <span className="text-sm font-medium text-white">
-                {{ yes: "👍 재구매 의사 있음", maybe: "🤔 고민 중", no: "👋 다음에는 패스" }[record.repurchase_intent]}
-              </span>
+          {/* ━━━━━━━━━━ Verdict (메모 + 재구매) ━━━━━━━━━━ */}
+          {(record.memo || record.repurchase_intent) && (
+            <div className="rounded-2xl bg-surface/50 backdrop-blur-2xl border border-white/5 overflow-hidden">
+              <div className="px-5 pt-4 pb-2">
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Verdict</p>
+              </div>
+              {record.memo && (
+                <div className="px-5 pb-4 relative">
+                  <div className="absolute top-0 right-3 opacity-[0.05] pointer-events-none">
+                    <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                  </div>
+                  <p className="text-zinc-200 text-[15px] font-light leading-relaxed whitespace-pre-wrap relative z-10">{record.memo}</p>
+                </div>
+              )}
+              {record.repurchase_intent && (
+                <div className="flex items-center justify-between px-5 py-3 border-t border-white/5">
+                  <span className="text-xs text-zinc-400">재구매 의사</span>
+                  <span className="text-sm font-medium text-white">
+                    {{ yes: "👍 있음", maybe: "🤔 고민 중", no: "👋 패스" }[record.repurchase_intent]}
+                  </span>
+                </div>
+              )}
             </div>
           )}
 

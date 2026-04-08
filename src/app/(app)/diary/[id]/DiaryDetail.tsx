@@ -537,7 +537,7 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
         <div className="px-5 py-3.5 border-b border-white/10 last:border-b-0">
           <div className="flex items-center justify-between mb-2.5">
             <div className="flex items-center gap-2">
-              <p className="text-[11px] font-medium text-amber-400">작성자 (작성자)</p>
+              <p className="text-[11px] font-medium text-amber-400">{isOwner ? "내 평가" : "작성자"}</p>
               {authorAvg != null && <span className="text-sm font-bold text-amber-400">★ {authorAvg.toFixed(1)}</span>}
             </div>
             {isOwner && (

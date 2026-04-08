@@ -7,6 +7,7 @@ import { resolveWineDisplay } from "@/lib/wine-display";
 import { upsertRecordEvaluation } from "@/lib/actions/diary";
 import DeleteButton from "./DeleteButton";
 import ShareButton from "./ShareButton";
+import InviteButton from "./InviteButton";
 import StarRating from "@/components/StarRating";
 
 const TYPE_KO: Record<string, string> = {
@@ -180,6 +181,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
             )}
             {!readOnly && (
               <div className="flex items-center gap-2 pointer-events-auto">
+                <InviteButton recordId={record.id} inviteCode={(record as unknown as Record<string, unknown>).invite_code as string | null ?? null} />
                 {record.visibility === "link" && <ShareButton id={record.id} />}
                 <Link
                   href={`/diary/${record.id}/edit`}

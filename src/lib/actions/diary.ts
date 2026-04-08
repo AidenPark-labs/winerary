@@ -188,3 +188,20 @@ export async function upsertRecordEvaluation(
   revalidatePath(`/diary/${recordId}`);
   return { success: true };
 }
+
+export async function generateInviteCode(recordId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const { error } = await supabase
+    .from("wine_records")
+    .update({ invite_code: code })
+    .eq("id", recordId)
+    .eq("user_id", user.id);
+
+  if (error) return { error: error.message };
+  revalidatePath(`/diary/${recordId}`);
+  return { code };
+}

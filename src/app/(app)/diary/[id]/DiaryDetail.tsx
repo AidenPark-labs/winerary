@@ -462,6 +462,12 @@ function EvalCardContent({ rating, valueScore, pairingScore, memo, repurchaseInt
   );
 }
 
+function calcAvgScore(rating: number | null, valueScore: number | null, pairingScore: number | null) {
+  const scores = [rating, valueScore, pairingScore].filter((s): s is number => s != null);
+  if (scores.length === 0) return null;
+  return scores.reduce((a, b) => a + b, 0) / scores.length;
+}
+
 function EvalCard({ label, isAuthor, rating, valueScore, pairingScore, memo, repurchaseIntent }: {
   label: string;
   isAuthor?: boolean;
@@ -474,11 +480,20 @@ function EvalCard({ label, isAuthor, rating, valueScore, pairingScore, memo, rep
   const hasScores = rating != null || valueScore != null || pairingScore != null;
   if (!hasScores && !memo && !repurchaseIntent) return null;
 
+  const avg = calcAvgScore(rating, valueScore, pairingScore);
+
   return (
     <div className="px-5 py-3.5 border-b border-white/10 last:border-b-0">
-      <p className={`text-[11px] font-medium mb-2.5 ${isAuthor ? "text-amber-400" : "text-zinc-400"}`}>
-        {label}{isAuthor ? " (작성자)" : ""}
-      </p>
+      <div className="flex items-center justify-between mb-2.5">
+        <p className={`text-[11px] font-medium ${isAuthor ? "text-amber-400" : "text-zinc-400"}`}>
+          {label}{isAuthor ? " (작성자)" : ""}
+        </p>
+        {avg != null && (
+          <span className={`text-sm font-bold ${isAuthor ? "text-amber-400" : "text-white"}`}>
+            ★ {avg.toFixed(1)}
+          </span>
+        )}
+      </div>
       <EvalCardContent rating={rating} valueScore={valueScore} pairingScore={pairingScore} memo={memo} repurchaseIntent={repurchaseIntent} />
     </div>
   );
@@ -519,10 +534,15 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
       </div>
 
       {/* 작성자 평가 */}
-      {authorHasEval && (
+      {authorHasEval && (() => {
+        const authorAvg = calcAvgScore(record.rating, record.value_score, record.pairing_score);
+        return (
         <div className="px-5 py-3.5 border-b border-white/10 last:border-b-0">
           <div className="flex items-center justify-between mb-2.5">
-            <p className="text-[11px] font-medium text-amber-400">작성자 (작성자)</p>
+            <div className="flex items-center gap-2">
+              <p className="text-[11px] font-medium text-amber-400">작성자 (작성자)</p>
+              {authorAvg != null && <span className="text-sm font-bold text-amber-400">★ {authorAvg.toFixed(1)}</span>}
+            </div>
             {isOwner && (
               <Link
                 href={`/diary/${record.id}/evaluate`}
@@ -540,13 +560,19 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
             repurchaseIntent={record.repurchase_intent}
           />
         </div>
-      )}
+        );
+      })()}
 
       {/* 내 평가 (공유받은 유저) */}
-      {myEvaluation && (
+      {myEvaluation && (() => {
+        const myAvg = calcAvgScore(myEvaluation.rating, myEvaluation.value_score, myEvaluation.pairing_score);
+        return (
         <div className="px-5 py-3.5 border-b border-white/10 last:border-b-0">
           <div className="flex items-center justify-between mb-2.5">
-            <p className="text-[11px] font-medium text-zinc-400">내 평가</p>
+            <div className="flex items-center gap-2">
+              <p className="text-[11px] font-medium text-zinc-400">내 평가</p>
+              {myAvg != null && <span className="text-sm font-bold text-white">★ {myAvg.toFixed(1)}</span>}
+            </div>
             <Link
               href={`/diary/${record.id}/evaluate`}
               className="text-[11px] px-2.5 py-1 rounded-lg bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10 transition-colors"
@@ -561,7 +587,8 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
             memo={myEvaluation.memo}
           />
         </div>
-      )}
+        );
+      })()}
 
       {/* 다른 평가자들 */}
       {otherEvals.map((ev) => (

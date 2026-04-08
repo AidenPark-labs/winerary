@@ -93,10 +93,6 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
   const dateStr = new Date(record.drunk_at).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
   const placeStr = record.place_name || record.location;
 
-  // 평점 계산
-  const scores = [record.rating, record.value_score, record.pairing_score].filter((v): v is number => v != null);
-  const avg = scores.length ? scores.reduce((a, b) => a + Number(b), 0) / scores.length : null;
-
   // 가격 텍스트
   const priceText = record.price != null ? (() => {
     const unit = record.price_unit === "glass" ? "/잔" : record.price_type === "retail" ? " (소매)" : record.price_type === "market" ? " (매장)" : "";
@@ -263,86 +259,88 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                   </div>
                 )}
 
-                {/* Taste + Value 점수 */}
-                {hasWineScores && (
-                  <div className="grid grid-cols-2 border-t border-white/5">
-                    {record.rating != null && (
-                      <div className="flex flex-col items-center py-4 border-r border-white/5">
-                        <span className="text-[9px] font-semibold text-zinc-500 tracking-widest uppercase mb-1">Taste</span>
-                        <span className="text-lg font-bold text-white">{Number(record.rating).toFixed(1)}</span>
-                      </div>
-                    )}
-                    {record.value_score != null && (
-                      <div className="flex flex-col items-center py-4">
-                        <span className="text-[9px] font-semibold text-zinc-500 tracking-widest uppercase mb-1">Value</span>
-                        <span className="text-lg font-bold text-white">{Number(record.value_score).toFixed(1)}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             );
           })()}
 
-          {/* ━━━━━━━━━━ 2. Pairing ━━━━━━━━━━ */}
-          {(foods.length > 0 || record.pairing_score != null) && (
+          {/* ━━━━━━━━━━ My Rating (4가지 통합) ━━━━━━━━━━ */}
+          {(record.rating != null || record.value_score != null || record.pairing_score != null || record.repurchase_intent) && (
+            <div className="rounded-2xl bg-surface/60 backdrop-blur-2xl border border-white/5 overflow-hidden">
+              <div className="px-5 pt-4 pb-2">
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">My Rating</p>
+              </div>
+              <div className="grid grid-cols-2 gap-px bg-white/5">
+                {record.rating != null && (
+                  <div className="flex items-center justify-between px-4 py-3.5 bg-surface/80">
+                    <span className="text-xs text-zinc-400">맛</span>
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex">{renderStars(Number(record.rating), 5)}</div>
+                      <span className="text-sm font-bold text-white w-7 text-right">{Number(record.rating).toFixed(1)}</span>
+                    </div>
+                  </div>
+                )}
+                {record.value_score != null && (
+                  <div className="flex items-center justify-between px-4 py-3.5 bg-surface/80">
+                    <span className="text-xs text-zinc-400">가성비</span>
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex">{renderStars(Number(record.value_score), 5)}</div>
+                      <span className="text-sm font-bold text-white w-7 text-right">{Number(record.value_score).toFixed(1)}</span>
+                    </div>
+                  </div>
+                )}
+                {record.pairing_score != null && (
+                  <div className="flex items-center justify-between px-4 py-3.5 bg-surface/80">
+                    <span className="text-xs text-zinc-400">음식 궁합</span>
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex">{renderStars(record.pairing_score, 5)}</div>
+                      <span className="text-sm font-bold text-white w-7 text-right">{record.pairing_score}</span>
+                    </div>
+                  </div>
+                )}
+                {record.repurchase_intent && (
+                  <div className="flex items-center justify-between px-4 py-3.5 bg-surface/80">
+                    <span className="text-xs text-zinc-400">재구매</span>
+                    <span className="text-sm font-medium text-white">
+                      {{ yes: "👍 있음", maybe: "🤔 고민", no: "👋 패스" }[record.repurchase_intent]}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ━━━━━━━━━━ Pairing (음식만) ━━━━━━━━━━ */}
+          {foods.length > 0 && (
             <div className="rounded-2xl bg-surface/50 backdrop-blur-2xl border border-white/5 overflow-hidden">
               <div className="px-5 pt-4 pb-2">
                 <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Pairing</p>
               </div>
-              {/* 음식 */}
-              {foods.length > 0 && (
-                <div className="px-5 pb-3">
-                  <div className="flex gap-1.5 flex-wrap">
-                    {foods.map((f, i) => (
-                      <span key={i} className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 text-zinc-200 text-sm font-light">{f.name}</span>
-                    ))}
-                  </div>
+              <div className="px-5 pb-4">
+                <div className="flex gap-1.5 flex-wrap">
+                  {foods.map((f, i) => (
+                    <span key={i} className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 text-zinc-200 text-sm font-light">{f.name}</span>
+                  ))}
                 </div>
-              )}
-              {/* 궁합 점수 */}
-              {record.pairing_score != null && (
-                <div className="flex items-center justify-between px-5 py-3.5 border-t border-white/5">
-                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em]">Score</span>
-                  <div className="flex items-center gap-1">
-                    {renderStars(record.pairing_score, 5)}
-                    <span className="text-sm font-bold text-white ml-1">{record.pairing_score}</span>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           )}
 
-          {/* ━━━━━━━━━━ 3. Experience ━━━━━━━━━━ */}
-          {(priceText || record.repurchase_intent || placeStr) && (
+          {/* ━━━━━━━━━━ Experience ━━━━━━━━━━ */}
+          {(priceText || placeStr) && (
             <div className="rounded-2xl bg-surface/40 backdrop-blur-xl border border-white/5 overflow-hidden divide-y divide-white/5">
               <div className="px-5 pt-4 pb-2">
                 <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Experience</p>
               </div>
-              {/* 장소 */}
               {placeStr && (
                 <div className="px-4 py-3.5">
                   <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Place</p>
                   <p className="text-sm text-white font-medium">{placeStr}</p>
                 </div>
               )}
-              {/* 가격 + 재구매 */}
-              {(priceText || record.repurchase_intent) && (
-                <div className="flex divide-x divide-white/5">
-                  {priceText && (
-                    <div className="flex-1 px-4 py-3.5">
-                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Price</p>
-                      <p className="text-sm text-white font-medium">{priceText}</p>
-                    </div>
-                  )}
-                  {record.repurchase_intent && (
-                    <div className="flex-1 px-4 py-3.5">
-                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Repurchase</p>
-                      <p className="text-sm text-white font-medium">
-                        {{ yes: "👍 재구매 의사 있음", maybe: "🤔 고민 중", no: "👋 다음에는 패스" }[record.repurchase_intent]}
-                      </p>
-                    </div>
-                  )}
+              {priceText && (
+                <div className="px-4 py-3.5">
+                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.12em] mb-1">Price</p>
+                  <p className="text-sm text-white font-medium">{priceText}</p>
                 </div>
               )}
             </div>

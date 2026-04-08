@@ -122,99 +122,71 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
         <div className={`flex flex-col gap-4 px-4 relative z-20 ${hasImage ? "-mt-12" : "pt-4"} pb-28`}>
 
           {/* ── 이름 카드 ── */}
-          <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 px-5 py-4 shadow-2xl flex flex-col gap-2">
+          <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 px-5 py-4 shadow-2xl flex flex-col gap-1">
             <h2 className="text-xl font-bold text-white">{wine.name_ko}</h2>
             {wine.name_en && (
               <p className="text-sm text-zinc-400 italic">{wine.name_en}</p>
             )}
-            {(d.producer || d.country) && (
-              <p className="text-xs text-zinc-500 font-light">
-                {[d.producer, d.country, d.region].filter(Boolean).join(" · ")}
-              </p>
-            )}
-            <div className="flex flex-wrap gap-1.5 mt-1">
-              {d.wine_type && (
-                <span className="text-xs px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-zinc-300 font-light">
-                  {TYPE_KO[d.wine_type] ?? d.wine_type}
-                </span>
-              )}
-              {d.grapes && (
-                <span className="text-xs px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-zinc-300 font-light">
-                  🍇 {d.grapes}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* ── 가격 + Vivino ── */}
-          <div className="flex items-center gap-3">
-            {wine.price && (
-              <div className="px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-xl">
-                <span className="text-emerald-400 font-bold text-lg">{wine.price.toLocaleString()}원</span>
-                <span className="text-emerald-400/50 text-xs ml-1">750ml</span>
-              </div>
-            )}
-            <VivinoRating
-              wineId={wine.id}
-              nameEn={wine.name_en}
-              initialRating={wine.vivino_rating}
-              initialReviews={wine.vivino_reviews}
-              initialPageUrl={wine.vivino_page_url}
-            />
           </div>
 
           {/* ── Wine Details ── */}
-          {(d.style || d.alcohol || d.region || d.producer || d.country || d.grapes) && (
-            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
-              <div className="px-5 pt-4 pb-2">
-                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Wine Details</p>
-              </div>
-              <div className="flex flex-col pb-2">
-                {d.wine_type && (
-                  <div className="flex items-center justify-between px-5 py-2">
-                    <span className="text-xs text-zinc-400">타입</span>
-                    <span className="text-sm text-white font-medium">{TYPE_KO[d.wine_type] ?? d.wine_type}</span>
-                  </div>
-                )}
-                {d.grapes && (
-                  <div className="flex items-start justify-between gap-4 px-5 py-2">
-                    <span className="text-xs text-zinc-400 flex-shrink-0 pt-0.5">품종</span>
-                    <span className="text-sm text-white font-medium text-right">{d.grapes}</span>
-                  </div>
-                )}
-                {d.country && (
-                  <div className="flex items-center justify-between px-5 py-2">
-                    <span className="text-xs text-zinc-400">국가</span>
-                    <span className="text-sm text-white font-medium">{d.country}</span>
-                  </div>
-                )}
-                {d.region && (
-                  <div className="flex items-start justify-between gap-4 px-5 py-2">
-                    <span className="text-xs text-zinc-400 flex-shrink-0 pt-0.5">지역</span>
-                    <span className="text-sm text-white font-medium text-right">{d.region}</span>
-                  </div>
-                )}
-                {d.producer && (
-                  <div className="flex items-center justify-between px-5 py-2">
-                    <span className="text-xs text-zinc-400">와이너리</span>
-                    <span className="text-sm text-white font-medium">{d.producer}</span>
-                  </div>
-                )}
-                {d.style && (
-                  <div className="flex items-center justify-between px-5 py-2">
-                    <span className="text-xs text-zinc-400">스타일</span>
-                    <span className="text-sm text-white font-medium">{d.style}</span>
-                  </div>
-                )}
-                {d.alcohol && (
-                  <div className="flex items-center justify-between px-5 py-2">
-                    <span className="text-xs text-zinc-400">도수</span>
-                    <span className="text-sm text-white font-medium">{d.alcohol}</span>
-                  </div>
-                )}
-              </div>
+          <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
+            <div className="px-5 pt-4 pb-2">
+              <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Wine Details</p>
             </div>
-          )}
+            <div className="flex flex-col pb-2">
+              {d.wine_type && (
+                <div className="flex items-center justify-between px-5 py-2">
+                  <span className="text-xs text-zinc-400">타입</span>
+                  <span className="text-sm text-white font-medium">{TYPE_KO[d.wine_type] ?? d.wine_type}</span>
+                </div>
+              )}
+              {d.grapes && (
+                <div className="flex items-start justify-between gap-4 px-5 py-2">
+                  <span className="text-xs text-zinc-400 flex-shrink-0 pt-0.5">품종</span>
+                  <span className="text-sm text-white font-medium text-right">{d.grapes}</span>
+                </div>
+              )}
+              {d.country && (
+                <div className="flex items-center justify-between px-5 py-2">
+                  <span className="text-xs text-zinc-400">국가</span>
+                  <span className="text-sm text-white font-medium">{d.country}</span>
+                </div>
+              )}
+              {d.region && (
+                <div className="flex items-start justify-between gap-4 px-5 py-2">
+                  <span className="text-xs text-zinc-400 flex-shrink-0 pt-0.5">지역</span>
+                  <span className="text-sm text-white font-medium text-right">{d.region}</span>
+                </div>
+              )}
+              {d.producer && (
+                <div className="flex items-center justify-between px-5 py-2">
+                  <span className="text-xs text-zinc-400">와이너리</span>
+                  <span className="text-sm text-white font-medium">{d.producer}</span>
+                </div>
+              )}
+              {d.style && (
+                <div className="flex items-center justify-between px-5 py-2">
+                  <span className="text-xs text-zinc-400">스타일</span>
+                  <span className="text-sm text-white font-medium">{d.style}</span>
+                </div>
+              )}
+              {d.alcohol && (
+                <div className="flex items-center justify-between px-5 py-2">
+                  <span className="text-xs text-zinc-400">도수</span>
+                  <span className="text-sm text-white font-medium">{d.alcohol}</span>
+                </div>
+              )}
+              {/* Vivino 별점 */}
+              <VivinoRating
+                wineId={wine.id}
+                nameEn={wine.name_en}
+                initialRating={wine.vivino_rating}
+                initialReviews={wine.vivino_reviews}
+                initialPageUrl={wine.vivino_page_url}
+              />
+            </div>
+          </div>
 
           {/* ── 설명 ── */}
           {d.description && !/예상됩니다|추정됩니다|부족하/.test(d.description) && (

@@ -296,50 +296,29 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
                     </div>
                   )}
                 </div>
-                {/* 맛 평점 */}
-                {record.rating != null && (
-                  <div className="flex items-center justify-between px-5 py-3.5 border-t border-white/10">
-                    <span className="text-xs text-zinc-400">맛 평점</span>
-                    <div className="flex items-center gap-2">
-                      <div className="flex">{renderStars(Number(record.rating), 5)}</div>
-                      <span className="text-sm font-bold text-white">{Number(record.rating).toFixed(1)}</span>
-                    </div>
-                  </div>
-                )}
+                {/* 맛 평점은 Reviews 섹션으로 이동 */}
               </div>
             );
           })()}
 
-          {/* ━━━━━━━━━━ 2. Pairing ━━━━━━━━━━ */}
-          {(foods.length > 0 || record.pairing_score != null) && (
+          {/* ━━━━━━━━━━ 2. Pairing (음식 목록만) ━━━━━━━━━━ */}
+          {foods.length > 0 && (
             <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
               <div className="px-5 pt-4 pb-2">
                 <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Pairing</p>
               </div>
-              {foods.length > 0 && (
-                <div className="px-5 pb-3">
-                  <div className="flex gap-1.5 flex-wrap">
-                    {foods.map((f, i) => (
-                      <span key={i} className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 text-zinc-200 text-sm font-light">{f.name}</span>
-                    ))}
-                  </div>
+              <div className="px-5 pb-3">
+                <div className="flex gap-1.5 flex-wrap">
+                  {foods.map((f, i) => (
+                    <span key={i} className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 text-zinc-200 text-sm font-light">{f.name}</span>
+                  ))}
                 </div>
-              )}
-              {/* 음식 궁합 점수 → 페어링에 대한 평가 */}
-              {record.pairing_score != null && (
-                <div className="flex items-center justify-between px-5 py-3.5 border-t border-white/10">
-                  <span className="text-xs text-zinc-400">음식 궁합</span>
-                  <div className="flex items-center gap-2">
-                    <div className="flex">{renderStars(record.pairing_score, 5)}</div>
-                    <span className="text-sm font-bold text-white">{Number(record.pairing_score).toFixed(1)}</span>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           )}
 
           {/* ━━━━━━━━━━ 3. Experience ━━━━━━━━━━ */}
-          {(priceText || placeStr || record.value_score != null) && (
+          {(priceText || placeStr) && (
             <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl flex flex-col">
               <div className="px-5 pt-4 pb-2">
                 <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Experience</p>
@@ -356,40 +335,6 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
                   <span className="text-sm text-white font-medium">{priceText}</span>
                 </div>
               )}
-              {record.value_score != null && (
-                <div className="flex items-center justify-between px-5 py-3.5 border-t border-white/10 mt-1">
-                  <span className="text-xs text-zinc-400">가성비</span>
-                  <div className="flex items-center gap-2">
-                    <div className="flex">{renderStars(Number(record.value_score), 5)}</div>
-                    <span className="text-sm font-bold text-white">{Number(record.value_score).toFixed(1)}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ━━━━━━━━━━ Verdict (메모 + 재구매) ━━━━━━━━━━ */}
-          {(record.memo || record.repurchase_intent) && (
-            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
-              <div className="px-5 pt-4 pb-2">
-                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Verdict</p>
-              </div>
-              {record.memo && (
-                <div className="px-5 pb-4 relative">
-                  <div className="absolute top-0 right-3 opacity-[0.05] pointer-events-none">
-                    <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
-                  </div>
-                  <p className="text-zinc-200 text-[15px] font-light leading-relaxed whitespace-pre-wrap relative z-10">{record.memo}</p>
-                </div>
-              )}
-              {record.repurchase_intent && (
-                <div className="flex items-center justify-between px-5 py-3.5 border-t border-white/10">
-                  <span className="text-xs text-zinc-400">재구매 의사</span>
-                  <span className="text-sm font-medium text-white">
-                    {{ yes: "👍 있음", maybe: "🤔 고민 중", no: "👋 패스" }[record.repurchase_intent]}
-                  </span>
-                </div>
-              )}
             </div>
           )}
 
@@ -404,9 +349,9 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
             </div>
           )}
 
-          {/* ━━━━━━━━━━ Evaluations (공유 평가) ━━━━━━━━━━ */}
+          {/* ━━━━━━━━━━ Reviews (평가자별 통합) ━━━━━━━━━━ */}
           <EvaluationSection
-            recordId={record.id}
+            record={record}
             readOnly={readOnly}
             evaluations={evaluations}
             myEvaluation={myEvaluation}
@@ -455,10 +400,75 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
   );
 }
 
+// ─── Evaluation Card (한 사람의 평가) ─────────────────────────────────────────
+
+function EvalCard({ label, isAuthor, rating, valueScore, pairingScore, memo, repurchaseIntent }: {
+  label: string;
+  isAuthor?: boolean;
+  rating: number | null;
+  valueScore: number | null;
+  pairingScore: number | null;
+  memo: string | null;
+  repurchaseIntent?: string | null;
+}) {
+  const hasScores = rating != null || valueScore != null || pairingScore != null;
+  if (!hasScores && !memo && !repurchaseIntent) return null;
+
+  return (
+    <div className="px-5 py-3.5 border-b border-white/10 last:border-b-0">
+      <p className={`text-[11px] font-medium mb-2.5 ${isAuthor ? "text-amber-400" : "text-zinc-400"}`}>
+        {label}{isAuthor ? " (작성자)" : ""}
+      </p>
+      {hasScores && (
+        <div className="flex flex-col gap-2">
+          {rating != null && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-zinc-500">맛 평점</span>
+              <div className="flex items-center gap-2">
+                <div className="flex">{renderStars(Number(rating), 5)}</div>
+                <span className="text-xs font-bold text-white w-7 text-right">{Number(rating).toFixed(1)}</span>
+              </div>
+            </div>
+          )}
+          {valueScore != null && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-zinc-500">가성비</span>
+              <div className="flex items-center gap-2">
+                <div className="flex">{renderStars(Number(valueScore), 5)}</div>
+                <span className="text-xs font-bold text-white w-7 text-right">{Number(valueScore).toFixed(1)}</span>
+              </div>
+            </div>
+          )}
+          {pairingScore != null && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-zinc-500">음식 궁합</span>
+              <div className="flex items-center gap-2">
+                <div className="flex">{renderStars(Number(pairingScore), 5)}</div>
+                <span className="text-xs font-bold text-white w-7 text-right">{Number(pairingScore).toFixed(1)}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      {memo && (
+        <p className="text-[13px] text-zinc-300 font-light mt-2.5 leading-relaxed whitespace-pre-wrap">{memo}</p>
+      )}
+      {repurchaseIntent && (
+        <div className="flex items-center gap-1.5 mt-2">
+          <span className="text-xs text-zinc-500">재구매</span>
+          <span className="text-xs font-medium text-white">
+            {{ yes: "👍 있음", maybe: "🤔 고민 중", no: "👋 패스" }[repurchaseIntent] ?? repurchaseIntent}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Evaluation Section ──────────────────────────────────────────────────────
 
-function EvaluationSection({ recordId, readOnly, evaluations, myEvaluation, currentUserId, hasFoods }: {
-  recordId: string;
+function EvaluationSection({ record, readOnly, evaluations, myEvaluation, currentUserId, hasFoods }: {
+  record: WineRecord;
   readOnly: boolean;
   evaluations: RecordEvaluation[];
   myEvaluation: RecordEvaluation | null;
@@ -477,9 +487,13 @@ function EvaluationSection({ recordId, readOnly, evaluations, myEvaluation, curr
   const hasMyEval = !!myEvaluation;
   const canEvaluate = readOnly && currentUserId;
 
+  // 작성자 평가 데이터 (record 자체에서 추출)
+  const authorHasEval = record.rating != null || record.value_score != null ||
+    record.pairing_score != null || record.memo != null || record.repurchase_intent != null;
+
   async function handleSubmit() {
     setSaving(true);
-    const result = await upsertRecordEvaluation(recordId, {
+    const result = await upsertRecordEvaluation(record.id, {
       rating,
       value_score: valueScore,
       pairing_score: hasFoods ? pairingScore : null,
@@ -493,13 +507,10 @@ function EvaluationSection({ recordId, readOnly, evaluations, myEvaluation, curr
     }
   }
 
-  // 평가가 없고 평가 권한도 없으면 렌더링 안 함
-  if (evaluations.length === 0 && !canEvaluate) return null;
-
   return (
-    <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-violet-500/20 overflow-hidden shadow-2xl">
+    <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
       <div className="px-5 pt-4 pb-2 flex items-center justify-between">
-        <p className="text-[10px] font-semibold text-violet-400 uppercase tracking-[0.15em]">Reviews</p>
+        <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Reviews</p>
         {canEvaluate && !showForm && (
           <button
             onClick={() => setShowForm(true)}
@@ -510,7 +521,7 @@ function EvaluationSection({ recordId, readOnly, evaluations, myEvaluation, curr
         )}
       </div>
 
-      {/* 평가 입력 폼 */}
+      {/* 평가 입력 폼 (공유받은 유저용) */}
       {showForm && (
         <div className="px-5 pb-4 flex flex-col gap-3 border-b border-white/10">
           <StarRating label="맛 평점" emoji="⭐" value={rating} max={5} step={0.5} onChange={setRating} />
@@ -526,96 +537,53 @@ function EvaluationSection({ recordId, readOnly, evaluations, myEvaluation, curr
             className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-zinc-100 text-sm font-light resize-none focus:outline-none focus:border-violet-500/50 transition-all placeholder:text-zinc-500"
           />
           <div className="flex gap-2">
-            <button
-              onClick={() => setShowForm(false)}
-              className="flex-1 py-2.5 rounded-xl text-sm text-zinc-400 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
-            >
-              취소
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={saving}
-              className="flex-1 py-2.5 rounded-xl text-sm text-white bg-violet-600 hover:bg-violet-500 disabled:opacity-50 transition-colors font-medium"
-            >
+            <button onClick={() => setShowForm(false)}
+              className="flex-1 py-2.5 rounded-xl text-sm text-zinc-400 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">취소</button>
+            <button onClick={handleSubmit} disabled={saving}
+              className="flex-1 py-2.5 rounded-xl text-sm text-white bg-violet-600 hover:bg-violet-500 disabled:opacity-50 transition-colors font-medium">
               {saving ? "저장 중…" : hasMyEval ? "수정" : "저장"}
             </button>
           </div>
         </div>
       )}
 
-      {saved && (
-        <p className="px-5 py-2 text-xs text-emerald-400">평가가 저장되었습니다</p>
+      {saved && <p className="px-5 py-2 text-xs text-emerald-400">평가가 저장되었습니다</p>}
+
+      {/* 작성자 평가 */}
+      {authorHasEval && (
+        <EvalCard
+          label="작성자"
+          isAuthor
+          rating={record.rating}
+          valueScore={record.value_score}
+          pairingScore={record.pairing_score}
+          memo={record.memo}
+          repurchaseIntent={record.repurchase_intent}
+        />
       )}
 
-      {/* 내 평가 표시 */}
+      {/* 내 평가 (공유받은 유저) */}
       {myEvaluation && !showForm && (
-        <div className="px-5 py-3 border-b border-white/10">
-          <p className="text-[11px] text-violet-300 font-medium mb-2">내 평가</p>
-          <div className="flex items-center gap-4 flex-wrap">
-            {myEvaluation.rating != null && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-zinc-500">맛</span>
-                <div className="flex">{renderStars(Number(myEvaluation.rating), 5)}</div>
-                <span className="text-xs font-bold text-white">{Number(myEvaluation.rating).toFixed(1)}</span>
-              </div>
-            )}
-            {myEvaluation.value_score != null && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-zinc-500">가성비</span>
-                <div className="flex">{renderStars(Number(myEvaluation.value_score), 5)}</div>
-                <span className="text-xs font-bold text-white">{Number(myEvaluation.value_score).toFixed(1)}</span>
-              </div>
-            )}
-            {myEvaluation.pairing_score != null && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-zinc-500">궁합</span>
-                <div className="flex">{renderStars(Number(myEvaluation.pairing_score), 5)}</div>
-                <span className="text-xs font-bold text-white">{Number(myEvaluation.pairing_score).toFixed(1)}</span>
-              </div>
-            )}
-          </div>
-          {myEvaluation.memo && (
-            <p className="text-xs text-zinc-300 font-light mt-2">{myEvaluation.memo}</p>
-          )}
-        </div>
+        <EvalCard
+          label="내 평가"
+          rating={myEvaluation.rating}
+          valueScore={myEvaluation.value_score}
+          pairingScore={myEvaluation.pairing_score}
+          memo={myEvaluation.memo}
+        />
       )}
 
-      {/* 다른 사람 평가 */}
+      {/* 다른 평가자들 */}
       {otherEvals.map((ev) => (
-        <div key={ev.id} className="px-5 py-3 border-b border-white/10 last:border-b-0">
-          <p className="text-[11px] text-zinc-400 font-medium mb-2">{ev.nickname ?? "익명"}</p>
-          <div className="flex items-center gap-4 flex-wrap">
-            {ev.rating != null && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-zinc-500">맛</span>
-                <div className="flex">{renderStars(Number(ev.rating), 5)}</div>
-                <span className="text-xs font-bold text-white">{Number(ev.rating).toFixed(1)}</span>
-              </div>
-            )}
-            {ev.value_score != null && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-zinc-500">가성비</span>
-                <div className="flex">{renderStars(Number(ev.value_score), 5)}</div>
-                <span className="text-xs font-bold text-white">{Number(ev.value_score).toFixed(1)}</span>
-              </div>
-            )}
-            {ev.pairing_score != null && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-zinc-500">궁합</span>
-                <div className="flex">{renderStars(Number(ev.pairing_score), 5)}</div>
-                <span className="text-xs font-bold text-white">{Number(ev.pairing_score).toFixed(1)}</span>
-              </div>
-            )}
-          </div>
-          {ev.memo && (
-            <p className="text-xs text-zinc-300 font-light mt-2">{ev.memo}</p>
-          )}
-        </div>
+        <EvalCard
+          key={ev.id}
+          label={ev.nickname ?? "익명"}
+          rating={ev.rating}
+          valueScore={ev.value_score}
+          pairingScore={ev.pairing_score}
+          memo={ev.memo}
+        />
       ))}
-
-      {evaluations.length === 0 && !showForm && (
-        <p className="px-5 py-3 text-xs text-zinc-600 font-light">아직 평가가 없습니다</p>
-      )}
     </div>
   );
 }

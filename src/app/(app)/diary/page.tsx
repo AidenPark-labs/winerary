@@ -26,18 +26,34 @@ export default async function DiaryPage() {
     .order("created_at", { ascending: false });
 
   // 멘션되어 공유받은 기록
-  const { data: mentions } = await supabase
-    .from("record_mentions")
-    .select("record_id, wine_records(*), profiles:wine_records(user_id, profiles:user_id(nickname))")
-    .eq("mentioned_user_id", user.id);
+  let sharedRecords: (WineRecord & { _shared: boolean; _ownerNickname: string | null })[] = [];
+  try {
+    const { data: mentions } = await supabase
+      .from("record_mentions")
+      .select("record_id")
+      .eq("mentioned_user_id", user.id);
 
-  const sharedRecords = (mentions ?? [])
-    .filter((m) => m.wine_records && !(m.wine_records as unknown as WineRecord).deleted_at)
-    .map((m) => ({
-      ...(m.wine_records as unknown as WineRecord),
-      _shared: true,
-      _ownerNickname: ((m as unknown as Record<string, unknown>).profiles as { profiles: { nickname: string } } | null)?.profiles?.nickname ?? null,
-    }));
+    if (mentions && mentions.length > 0) {
+      const recordIds = mentions.map((m) => m.record_id);
+      const { data: shared } = await supabase
+        .from("wine_records")
+        .select("*, profiles:user_id(nickname)")
+        .in("id", recordIds)
+        .is("deleted_at", null);
+
+      sharedRecords = (shared ?? []).map((r) => {
+        const profile = (r as unknown as Record<string, unknown>).profiles as { nickname: string } | null;
+        const { profiles: _, ...record } = r as unknown as Record<string, unknown>;
+        return {
+          ...record,
+          _shared: true,
+          _ownerNickname: profile?.nickname ?? null,
+        } as WineRecord & { _shared: boolean; _ownerNickname: string | null };
+      });
+    }
+  } catch {
+    // record_mentions 조회 실패 시 공유 기록 없이 진행
+  }
 
   // 합쳐서 날짜순 정렬 (중복 제거)
   const ownIds = new Set((ownRecords ?? []).map((r) => r.id));

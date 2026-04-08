@@ -19,6 +19,20 @@ export default async function DiaryDetailPage({ params }: { params: Promise<{ id
 
   const isOwner = user?.id === record.user_id;
 
+  // 닉네임 조회
+  let ownerNickname = "작성자";
+  let currentNickname = "";
+  {
+    const { data: ownerProfile } = await supabase.from("profiles").select("nickname").eq("id", record.user_id).maybeSingle();
+    if (ownerProfile?.nickname) ownerNickname = ownerProfile.nickname;
+    if (user && !isOwner) {
+      const { data: myProfile } = await supabase.from("profiles").select("nickname").eq("id", user.id).maybeSingle();
+      if (myProfile?.nickname) currentNickname = myProfile.nickname;
+    } else if (user && isOwner) {
+      currentNickname = ownerNickname;
+    }
+  }
+
   // wines 테이블에서 Vivino 데이터 조회
   const wineFields = "id, description, vivino_url, vivino_rating, vivino_reviews, vivino_winery, vivino_grapes, vivino_region, vivino_style, vivino_alcohol, vivino_description, grape_variety, region, country, producer, wine_type, final_grapes, final_region, final_country, final_producer, final_wine_type, final_alcohol, final_style, final_description";
   let wineData = null;
@@ -74,6 +88,8 @@ export default async function DiaryDetailPage({ params }: { params: Promise<{ id
       evaluations={evaluations}
       myEvaluation={myEvaluation}
       currentUserId={user?.id ?? null}
+      ownerNickname={ownerNickname}
+      currentNickname={currentNickname}
     />
   );
 }

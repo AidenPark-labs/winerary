@@ -94,13 +94,15 @@ const WINE_TYPE_COLORS: Record<string, string> = {
   sparkling: "bg-[#F3E5AB]", fortified: "bg-[#4A0E4E]", other: "bg-zinc-400",
 };
 
-export default function DiaryDetail({ record, readOnly = false, wineData = null, evaluations = [], myEvaluation = null, currentUserId = null }: {
+export default function DiaryDetail({ record, readOnly = false, wineData = null, evaluations = [], myEvaluation = null, currentUserId = null, ownerNickname = "작성자", currentNickname = "" }: {
   record: WineRecord;
   readOnly?: boolean;
   wineData?: WineData | null;
   evaluations?: RecordEvaluation[];
   myEvaluation?: RecordEvaluation | null;
   currentUserId?: string | null;
+  ownerNickname?: string;
+  currentNickname?: string;
 }) {
   const photos: string[] = record.photos ?? [];
   const foods: { name: string }[] = (record.foods as { name: string }[]) ?? [];
@@ -391,6 +393,8 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
             evaluations={evaluations}
             myEvaluation={myEvaluation}
             currentUserId={currentUserId}
+            ownerNickname={ownerNickname}
+            currentNickname={currentNickname}
           />
         </div>
 
@@ -532,12 +536,14 @@ function EvalCard({ label, isAuthor, rating, valueScore, pairingScore, memo, rep
 
 // ─── Evaluation Section ──────────────────────────────────────────────────────
 
-function EvaluationSection({ record, readOnly, evaluations, myEvaluation, currentUserId }: {
+function EvaluationSection({ record, readOnly, evaluations, myEvaluation, currentUserId, ownerNickname, currentNickname }: {
   record: WineRecord;
   readOnly: boolean;
   evaluations: RecordEvaluation[];
   myEvaluation: RecordEvaluation | null;
   currentUserId: string | null;
+  ownerNickname: string;
+  currentNickname: string;
 }) {
   const isOwner = !readOnly;
   const otherEvals = evaluations.filter((e) => e.user_id !== currentUserId);
@@ -563,7 +569,7 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
         <div className="px-5 py-3.5 border-b border-white/10 last:border-b-0">
           <div className="flex items-center justify-between mb-2.5">
             <div className="flex items-center gap-2">
-              <p className="text-[11px] font-medium text-amber-400">{isOwner ? "내 평가" : "작성자"}</p>
+              <p className="text-[11px] font-medium text-amber-400">{ownerNickname}</p>
               {authorAvg != null && <span className="text-sm font-bold text-amber-400">★ {authorAvg.toFixed(1)}</span>}
             </div>
             {isOwner && (
@@ -593,7 +599,7 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
         <div className="px-5 py-3.5 border-b border-white/10 last:border-b-0">
           <div className="flex items-center justify-between mb-2.5">
             <div className="flex items-center gap-2">
-              <p className="text-[11px] font-medium text-zinc-400">내 평가</p>
+              <p className="text-[11px] font-medium text-zinc-400">{currentNickname || "내 평가"}</p>
               {myAvg != null && <span className="text-sm font-bold text-white">★ {myAvg.toFixed(1)}</span>}
             </div>
             <Link

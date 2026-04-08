@@ -143,6 +143,7 @@ function fillWineFields(
   }
 
   setters.setSelectedWine({
+    wine_id: ai.wine_id,
     name: nameOrig,
     name_ko: name,
     producer: ai.producer || "",

@@ -401,6 +401,27 @@ export async function linkRecords(myRecordId: string, targetRecordId: string) {
     if (error) return { error: error.message };
   }
 
+  // 연결 후 중복 평가 정리: 상대방 기록에 남긴 게스트 평가 삭제
+  // 내가 상대 기록에 남긴 평가
+  await adminDb
+    .from("record_evaluations")
+    .delete()
+    .eq("record_id", targetRecordId)
+    .eq("user_id", user.id);
+  // 상대가 내 기록에 남긴 평가 (상대 user_id 조회)
+  const { data: targetOwner } = await adminDb
+    .from("wine_records")
+    .select("user_id")
+    .eq("id", targetRecordId)
+    .single();
+  if (targetOwner) {
+    await adminDb
+      .from("record_evaluations")
+      .delete()
+      .eq("record_id", myRecordId)
+      .eq("user_id", targetOwner.user_id);
+  }
+
   revalidatePath(`/diary/${myRecordId}`);
   revalidatePath(`/diary/${targetRecordId}`);
   return { success: true, experienceId };

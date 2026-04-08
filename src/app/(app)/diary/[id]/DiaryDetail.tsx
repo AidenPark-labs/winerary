@@ -264,26 +264,25 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
           </div>
 
           {/* ━━━━━━━━━━ 연결된 경험 ━━━━━━━━━━ */}
-          {!readOnly && (
-            <div className="flex items-center gap-2">
-              {linkedRecords.length > 0 ? (
-                <div className="flex-1 flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-blue-500/10 border border-blue-500/20">
-                  <span className="text-blue-400 text-xs">🔗</span>
-                  <span className="text-xs text-blue-300 font-light flex-1">
-                    {linkedRecords.map((lr) => lr.owner_nickname).join(", ")}님과 연결됨
-                  </span>
-                  <Link href={`/diary/${record.id}/link`} className="text-[11px] text-blue-400 hover:text-blue-300">관리</Link>
-                </div>
-              ) : (
-                <Link
-                  href={`/diary/${record.id}/link`}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
-                >
-                  <span className="text-zinc-500 text-xs">🔗</span>
-                  <span className="text-xs text-zinc-500 font-light">함께한 경험 연결하기</span>
-                </Link>
+          {linkedRecords.length > 0 && (
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-blue-500/10 border border-blue-500/20">
+              <span className="text-blue-400 text-xs">🔗</span>
+              <span className="text-xs text-blue-300 font-light flex-1">
+                {linkedRecords.map((lr) => lr.owner_nickname).join(", ")}님과 연결됨
+              </span>
+              {!readOnly && (
+                <Link href={`/diary/${record.id}/link`} className="text-[11px] text-blue-400 hover:text-blue-300">관리</Link>
               )}
             </div>
+          )}
+          {readOnly && currentUserId && linkedRecords.length === 0 && (
+            <Link
+              href={`/diary/${record.id}/link-mine`}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/15 transition-colors"
+            >
+              <span className="text-blue-400 text-xs">🔗</span>
+              <span className="text-xs text-blue-300 font-light">나도 이 와인 기록했어요</span>
+            </Link>
           )}
 
           {/* ━━━━━━━━━━ 1. Wine ━━━━━━━━━━ */}

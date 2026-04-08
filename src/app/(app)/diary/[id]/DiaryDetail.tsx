@@ -178,9 +178,16 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
         {/* ── 컨텐츠 ── */}
         <div className={`flex flex-col gap-4 px-4 relative z-20 ${hasPhoto ? "-mt-12" : "pt-4"} ${readOnly ? "pb-36" : "pb-28"}`}>
 
-          {/* ── 글라스 카드 (날짜 + 동행) ── */}
+          {/* ── 글라스 카드 (별점 + 날짜 + 동행) ── */}
           <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 px-5 py-3.5 shadow-2xl flex items-center justify-between">
-            <span className="text-sm text-white font-medium">{dateStr}</span>
+            <div className="flex items-center gap-2.5">
+              {record.rating != null && (
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/30 border border-white/10 text-amber-400 text-xs font-bold">
+                  ★ {Number(record.rating).toFixed(1)}
+                </span>
+              )}
+              <span className="text-sm text-white font-medium">{dateStr}</span>
+            </div>
             {companions.length > 0 && (
               <span className="text-xs text-zinc-300/70 font-light">with {companions.join(", ")}</span>
             )}
@@ -197,8 +204,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
               displayCountry && { label: displayCountry },
               displayGrapes && { label: `🍇 ${displayGrapes}` },
               resolved?.alcohol && { label: resolved.alcohol },
-              wineData?.vivino_rating != null && { label: `★ ${wineData.vivino_rating}`, amber: true },
-            ].filter(Boolean) as { label: string; color?: string; amber?: boolean }[];
+            ].filter(Boolean) as { label: string; color?: string }[];
 
             const hasWineScores = record.rating != null || record.value_score != null;
 
@@ -230,7 +236,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null 
                 {wineChips.length > 0 && (
                   <div className="px-5 pb-3 flex gap-1.5 flex-wrap">
                     {wineChips.map((c, i) => (
-                      <span key={i} className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium ${c.amber ? "bg-amber-500/10 border border-amber-500/20 text-amber-400" : "bg-white/5 border border-white/5 text-zinc-300"}`}>
+                      <span key={i} className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium bg-white/5 border border-white/5 text-zinc-300">
                         {c.color && <span className={`w-1.5 h-1.5 rounded-full ${c.color}`} />}
                         {c.label}
                       </span>

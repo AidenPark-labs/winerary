@@ -28,8 +28,7 @@ export async function GET(request: Request) {
     .from("wines")
     .select("id, name_ko, name_en, wine_type, country, grape_variety, producer, price, vivino_url, vivino_rating")
     .or(orConditions.join(","))
-    .order("price", { ascending: true, nullsFirst: false })
-    .limit(10);
+    .limit(20);
 
   const wines: WineSuggestion[] = (data ?? []).map((w) => ({
     wine_id: w.id,

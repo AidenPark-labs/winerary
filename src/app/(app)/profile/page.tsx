@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import type { WineRecord } from "@/types";
 import LogoutButton from "./LogoutButton";
 import AuthPrompt from "@/components/AuthPrompt";
-import { User, Book, Star, BarChart3 } from "lucide-react";
+import { User, Book, Star, BarChart3, Pencil } from "lucide-react";
+import Link from "next/link";
 import { GRAPE_OPTIONS } from "@/lib/grapes";
 
 const TYPE_META: Record<string, { label: string; color: string }> = {
@@ -207,7 +208,16 @@ export default async function MyWinePage() {
               <p className="text-xs text-zinc-500 font-light mt-0.5">{user.email}</p>
             </div>
           </div>
-          <LogoutButton />
+          <div className="flex items-center gap-2">
+            <Link
+              href="/profile/edit"
+              className="px-3 py-1.5 rounded-lg border border-zinc-700 hover:border-accent text-zinc-400 hover:text-accent text-xs transition-colors flex items-center gap-1"
+            >
+              <Pencil className="w-3 h-3" />
+              수정
+            </Link>
+            <LogoutButton />
+          </div>
         </div>
 
         {/* 요약 카드 */}

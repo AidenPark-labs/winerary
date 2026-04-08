@@ -5,6 +5,7 @@ import { resolveWineDisplay } from "@/lib/wine-display";
 import VivinoRating from "./VivinoRating";
 import WineActions from "./WineActions";
 import BackButton from "./BackButton";
+import NaverShopping from "./NaverShopping";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드", white: "화이트", rose: "로제",
@@ -25,15 +26,52 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
 
   const d = resolveWineDisplay(wine);
 
-  // 같은 타입/국가의 유사 와인 추천
-  const { data: similar } = await supabase
+  // 유사 와인 추천: 같은 국가+품종 > 같은 국가 > 같은 타입, 비슷한 가격대
+  const similarFields = "id, name_ko, wine_type, country, price, vivino_rating, naver_image, grape_variety, final_grapes, vivino_grapes";
+  const priceMin = wine.price ? Math.round(wine.price * 0.5) : null;
+  const priceMax = wine.price ? Math.round(wine.price * 1.5) : null;
+
+  let similar: typeof tier1 = [];
+
+  // 1순위: 같은 타입 + 같은 국가 + 비슷한 가격대
+  let q1 = supabase
     .from("wines")
-    .select("id, name_ko, wine_type, country, price, vivino_rating, naver_image")
+    .select(similarFields)
     .neq("id", id)
     .eq("wine_type", wine.wine_type)
-    .not("price", "is", null)
+    .eq("country", d.country ?? "")
     .order("vivino_rating", { ascending: false, nullsFirst: false })
-    .limit(5);
+    .limit(20);
+  if (priceMin && priceMax) q1 = q1.gte("price", priceMin).lte("price", priceMax);
+  const { data: tier1 } = await q1;
+
+  if (tier1 && tier1.length > 0) {
+    // 품종이 겹치는 것을 먼저, 나머지는 Vivino 평점순
+    const wineGrapes = (d.grapes ?? "").toLowerCase();
+    similar = tier1.sort((a, b) => {
+      const aGrapes = (a.final_grapes ?? a.vivino_grapes ?? a.grape_variety ?? "").toLowerCase();
+      const bGrapes = (b.final_grapes ?? b.vivino_grapes ?? b.grape_variety ?? "").toLowerCase();
+      const aMatch = wineGrapes && aGrapes.includes(wineGrapes) ? 1 : 0;
+      const bMatch = wineGrapes && bGrapes.includes(wineGrapes) ? 1 : 0;
+      if (aMatch !== bMatch) return bMatch - aMatch;
+      return (Number(b.vivino_rating) || 0) - (Number(a.vivino_rating) || 0);
+    }).slice(0, 5);
+  }
+
+  // 부족하면 같은 타입에서 추가 충당
+  if (similar.length < 5) {
+    const existingIds = new Set(similar.map((w) => w.id));
+    existingIds.add(id);
+    const { data: fallback } = await supabase
+      .from("wines")
+      .select(similarFields)
+      .eq("wine_type", wine.wine_type)
+      .not("id", "in", `(${[...existingIds].join(",")})`)
+      .not("price", "is", null)
+      .order("vivino_rating", { ascending: false, nullsFirst: false })
+      .limit(5 - similar.length);
+    if (fallback) similar = [...similar, ...fallback];
+  }
 
   const hasImage = !!wine.naver_image;
 
@@ -126,22 +164,40 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
           </div>
 
           {/* ── Wine Details ── */}
-          {(d.style || d.alcohol || d.region || d.producer) && (
+          {(d.style || d.alcohol || d.region || d.producer || d.country || d.grapes) && (
             <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
               <div className="px-5 pt-4 pb-2">
                 <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Wine Details</p>
               </div>
               <div className="flex flex-col pb-2">
-                {d.producer && (
+                {d.wine_type && (
                   <div className="flex items-center justify-between px-5 py-2">
-                    <span className="text-xs text-zinc-400">와이너리</span>
-                    <span className="text-sm text-white font-medium">{d.producer}</span>
+                    <span className="text-xs text-zinc-400">타입</span>
+                    <span className="text-sm text-white font-medium">{TYPE_KO[d.wine_type] ?? d.wine_type}</span>
+                  </div>
+                )}
+                {d.grapes && (
+                  <div className="flex items-start justify-between gap-4 px-5 py-2">
+                    <span className="text-xs text-zinc-400 flex-shrink-0 pt-0.5">품종</span>
+                    <span className="text-sm text-white font-medium text-right">{d.grapes}</span>
+                  </div>
+                )}
+                {d.country && (
+                  <div className="flex items-center justify-between px-5 py-2">
+                    <span className="text-xs text-zinc-400">국가</span>
+                    <span className="text-sm text-white font-medium">{d.country}</span>
                   </div>
                 )}
                 {d.region && (
                   <div className="flex items-start justify-between gap-4 px-5 py-2">
                     <span className="text-xs text-zinc-400 flex-shrink-0 pt-0.5">지역</span>
                     <span className="text-sm text-white font-medium text-right">{d.region}</span>
+                  </div>
+                )}
+                {d.producer && (
+                  <div className="flex items-center justify-between px-5 py-2">
+                    <span className="text-xs text-zinc-400">와이너리</span>
+                    <span className="text-sm text-white font-medium">{d.producer}</span>
                   </div>
                 )}
                 {d.style && (
@@ -170,14 +226,6 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
                 <p className="text-sm text-zinc-300 font-light leading-relaxed">{d.description}</p>
               </div>
             </div>
-          )}
-
-          {/* ── 외부 링크 ── */}
-          {wine.naver_link && (
-            <a href={wine.naver_link} target="_blank" rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-xl text-emerald-300 text-sm hover:bg-emerald-500/15 transition-colors">
-              💰 네이버에서 구매하기
-            </a>
           )}
 
           {/* ── 액션 버튼 ── */}
@@ -212,6 +260,16 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
               </div>
             </div>
           )}
+          {/* ── 네이버 쇼핑 검색 ── */}
+          <NaverShopping query={wine.name_ko} />
+
+          {/* ── 데이터 출처 ── */}
+          <div className="flex items-center justify-center gap-1.5 pt-2 pb-4">
+            <span className="text-[10px] text-zinc-600">
+              데이터 출처: {wine.data_source === "naver_shopping" ? "네이버 쇼핑" : wine.data_source ?? "알 수 없음"}
+              {wine.vivino_rating ? " · Vivino" : ""}
+            </span>
+          </div>
         </div>
       </div>
     </div>

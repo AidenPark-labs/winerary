@@ -303,7 +303,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
                   )}
                   {priceText && (
                     <>
-                      <div className="mx-5 border-t border-white/5" />
+                      <div className="mx-5 my-2 border-t border-white/5" />
                       <div className="flex items-center justify-between px-5 py-2">
                         <span className="text-xs text-zinc-400">구매가격</span>
                         <span className="text-sm text-white font-medium">{priceText}</span>

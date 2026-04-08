@@ -74,12 +74,61 @@ function MapRecordCard({ record }: { record: WineRecord }) {
   );
 }
 
+function MapPopupCarousel({ records, onClose }: { records: WineRecord[]; onClose: () => void }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      const idx = Math.round(el.scrollLeft / el.clientWidth);
+      setActiveIdx(idx);
+    };
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <div className="absolute bottom-28 left-4 right-4 z-[1000] bg-surface/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
+      <button
+        onClick={onClose}
+        className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-black/40 text-zinc-400 hover:text-white hover:bg-black/60 transition-colors text-sm z-10"
+      >
+        ×
+      </button>
+      <div
+        ref={scrollRef}
+        className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar"
+        style={{ scrollbarWidth: "none" }}
+      >
+        {records.map((r) => (
+          <div key={r.id} className="snap-center flex-shrink-0 w-full p-4">
+            <MapRecordCard record={r} />
+          </div>
+        ))}
+      </div>
+      {records.length > 1 && (
+        <div className="flex justify-center gap-1.5 pb-3 -mt-1">
+          {records.map((_, i) => (
+            <span
+              key={i}
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                i === activeIdx ? "bg-accent w-4" : "bg-zinc-600"
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MapView({ records }: { records: WineRecord[] }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const [loaded, setLoaded] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<WineRecord[] | null>(null);
-  const [selectedIdx, setSelectedIdx] = useState(0);
 
   const geoRecords = records.filter((r) => r.latitude != null && r.longitude != null);
 
@@ -149,7 +198,6 @@ function MapView({ records }: { records: WineRecord[] }) {
       const marker = new kakao.maps.Marker({ map, position: pos, title: rep.name });
       kakao.maps.event.addListener(marker, "click", () => {
         setSelectedGroup(group);
-        setSelectedIdx(0);
         map.panTo(pos);
       });
     });
@@ -177,45 +225,11 @@ function MapView({ records }: { records: WineRecord[] }) {
           <p className="text-zinc-500 text-sm font-light">지도 로딩 중…</p>
         </div>
       )}
-      {current && selectedGroup && (
-        <div className={`absolute bottom-28 left-4 right-4 z-[1000] backdrop-blur-xl rounded-2xl p-4 shadow-2xl border ${isShared(current) ? "bg-violet-950/60 border-violet-500/30" : "bg-surface/90 border-white/10"}`}>
-          {/* 헤더: 네비게이션 + 닫기 */}
-          <div className="flex items-center justify-between mb-3">
-            {total > 1 ? (
-              <>
-                <button
-                  onClick={() => setSelectedIdx((prev) => (prev - 1 + total) % total)}
-                  className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 text-zinc-300 hover:text-white hover:bg-white/20 transition-colors"
-                >
-                  <ChevronLeft size={14} />
-                </button>
-                <span className="text-[11px] text-zinc-400 font-medium tabular-nums">
-                  {selectedIdx + 1} / {total}
-                </span>
-              </>
-            ) : (
-              <div />
-            )}
-            <div className="flex items-center gap-2">
-              {total > 1 && (
-                <button
-                  onClick={() => setSelectedIdx((prev) => (prev + 1) % total)}
-                  className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 text-zinc-300 hover:text-white hover:bg-white/20 transition-colors"
-                >
-                  <ChevronRight size={14} />
-                </button>
-              )}
-              <button
-                onClick={() => { setSelectedGroup(null); setSelectedIdx(0); }}
-                className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 text-zinc-400 hover:text-white hover:bg-white/20 transition-colors text-sm"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-
-          <MapRecordCard record={current} />
-        </div>
+      {selectedGroup && (
+        <MapPopupCarousel
+          records={selectedGroup}
+          onClose={() => setSelectedGroup(null)}
+        />
       )}
     </div>
   );

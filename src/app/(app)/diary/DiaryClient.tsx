@@ -21,6 +21,14 @@ const WINE_TYPE_COLORS: Record<string, string> = {
   sparkling: "bg-[#F3E5AB]", fortified: "bg-[#4A0E4E]", other: "bg-zinc-400",
 };
 
+function isShared(record: WineRecord): boolean {
+  return Boolean((record as unknown as Record<string, unknown>)._shared);
+}
+
+function sharedOwner(record: WineRecord): string | null {
+  return ((record as unknown as Record<string, unknown>)._ownerNickname as string) ?? null;
+}
+
 function calcOverallScore(record: WineRecord): number | null {
   const scores: number[] = [];
   if (record.rating != null) scores.push(Number(record.rating));
@@ -35,14 +43,17 @@ function MapRecordCard({ record }: { record: WineRecord }) {
     <Link href={`/diary/${record.id}`} className="block">
       <div className="flex items-start gap-4">
         {record.photos?.[0] ? (
-          <img src={record.photos[0]} alt="" className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
+          <img src={record.photos[0]} alt="" className={`w-14 h-14 rounded-xl object-cover flex-shrink-0 border ${isShared(record) ? "border-violet-500/40" : "border-transparent"}`} />
         ) : (
-          <div className="w-14 h-14 rounded-xl bg-black/40 flex items-center justify-center flex-shrink-0 border border-white/5">
+          <div className={`w-14 h-14 rounded-xl bg-black/40 flex items-center justify-center flex-shrink-0 border ${isShared(record) ? "border-violet-500/30" : "border-white/5"}`}>
             <WineIcon className="text-zinc-600" size={20} />
           </div>
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
+            {isShared(record) && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300 font-medium flex-shrink-0">{sharedOwner(record) ?? "공유"}</span>
+            )}
             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${WINE_TYPE_COLORS[record.wine_type ?? ""] ?? "bg-zinc-500"}`} />
             <p className="text-sm font-medium text-white truncate px-0">{record.name}</p>
           </div>
@@ -167,7 +178,7 @@ function MapView({ records }: { records: WineRecord[] }) {
         </div>
       )}
       {current && selectedGroup && (
-        <div className="absolute bottom-20 left-4 right-4 z-[1000] bg-surface/90 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl">
+        <div className={`absolute bottom-20 left-4 right-4 z-[1000] backdrop-blur-xl rounded-2xl p-4 shadow-2xl border ${isShared(current) ? "bg-violet-950/60 border-violet-500/30" : "bg-surface/90 border-white/10"}`}>
           <button onClick={() => { setSelectedGroup(null); setSelectedIdx(0); }} className="absolute top-3 right-3 text-zinc-500 hover:text-white transition-colors text-lg w-6 h-6 flex items-center justify-center z-10">×</button>
 
           {/* 여러 기록일 때 네비게이션 */}
@@ -255,7 +266,7 @@ function FeedCard({ record }: { record: WineRecord }) {
   return (
     <Link
       href={`/diary/${record.id}`}
-      className="group relative rounded-[24px] overflow-hidden bg-background border border-white/5 active:scale-[0.98] transition-all duration-300 shadow-xl flex flex-col"
+      className={`group relative rounded-[24px] overflow-hidden bg-background active:scale-[0.98] transition-all duration-300 shadow-xl flex flex-col border ${isShared(record) ? "border-violet-500/30" : "border-white/5"}`}
       style={{ minHeight: "400px" }}
     >
       {/* 엣지투엣지 이미지 오버레이 영역 */}
@@ -286,7 +297,11 @@ function FeedCard({ record }: { record: WineRecord }) {
               <Camera size={12} /> {photos.length}
             </span>
           )}
-          {!(record as unknown as Record<string, unknown>)._shared && (
+          {isShared(record) ? (
+            <span className="flex items-center gap-1 text-[10px] px-2.5 py-1.5 rounded-full bg-violet-500/20 backdrop-blur-md border border-violet-500/30 text-violet-300 shadow-lg pointer-events-auto">
+              공유
+            </span>
+          ) : (
             <div className="pointer-events-auto">
               <CardMenu recordId={record.id} />
             </div>
@@ -299,9 +314,9 @@ function FeedCard({ record }: { record: WineRecord }) {
 
       {/* 하단 슬림 글라스 패널 */}
       <div className="relative z-20 mt-auto px-5 py-4 bg-black/40 backdrop-blur-2xl border-t border-white/10 pointer-events-none">
-        {Boolean((record as unknown as Record<string, unknown>)._shared) && (
+        {isShared(record) && (
           <span className="inline-block px-2 py-0.5 rounded-md bg-violet-500/20 border border-violet-500/30 text-[10px] text-violet-300 font-medium mb-1">
-            {String((record as unknown as Record<string, unknown>)._ownerNickname ?? "공유")} 님의 기록
+            {sharedOwner(record) ?? "공유"} 님의 기록
           </span>
         )}
         <h2 className="font-serif font-medium text-white text-lg tracking-wide leading-tight line-clamp-1 drop-shadow-md">
@@ -356,20 +371,23 @@ function CalendarRecordCard({ record }: { record: WineRecord }) {
   return (
     <Link
       href={`/diary/${record.id}`}
-      className="flex items-center gap-4 py-3.5 px-4 rounded-[20px] bg-surface/80 border border-white/5 shadow-md active:scale-[0.98] transition-all duration-300 hover:bg-white/5"
+      className={`flex items-center gap-4 py-3.5 px-4 rounded-[20px] shadow-md active:scale-[0.98] transition-all duration-300 hover:bg-white/5 border ${isShared(record) ? "bg-violet-950/30 border-violet-500/20" : "bg-surface/80 border-white/5"}`}
     >
       {thumb ? (
-        <div className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 border border-white/10 shadow-sm relative">
+        <div className={`w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 shadow-sm relative border ${isShared(record) ? "border-violet-500/30" : "border-white/10"}`}>
           <img src={thumb} alt={record.name} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-tr from-black/40 to-transparent pointer-events-none" />
         </div>
       ) : (
-        <div className="w-16 h-16 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center flex-shrink-0 shadow-inner">
+        <div className={`w-16 h-16 rounded-2xl bg-black/40 flex items-center justify-center flex-shrink-0 shadow-inner border ${isShared(record) ? "border-violet-500/30" : "border-white/10"}`}>
           <WineIcon className="text-zinc-600" size={24} strokeWidth={1.5} />
         </div>
       )}
       <div className="flex-1 min-w-0 flex flex-col justify-center">
         <div className="flex items-baseline gap-2 flex-wrap mb-0.5">
+          {isShared(record) && (
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300 font-medium flex-shrink-0">{sharedOwner(record) ?? "공유"}</span>
+          )}
           <p className="font-serif font-medium text-white text-base tracking-wide leading-tight truncate">{record.name}</p>
         </div>
         
@@ -634,6 +652,9 @@ export default function DiaryClient({ records }: { records: WineRecord[] }) {
               const ds = toDateStr(day);
               const dayRecords = recordsByDate[ds] ?? [];
               const hasRecords = dayRecords.length > 0;
+              const hasShared = dayRecords.some(isShared);
+              const ownCount = dayRecords.filter((r) => !isShared(r)).length;
+              const sharedCount = dayRecords.filter(isShared).length;
               const isSelected = selectedDate === ds;
               const isToday = ds === todayStr;
               const dow = (firstDow + day - 1) % 7;
@@ -657,11 +678,18 @@ export default function DiaryClient({ records }: { records: WineRecord[] }) {
                     {day}
                   </span>
                   {hasRecords && (
-                    <span className={`mt-1 text-[10px] font-semibold leading-none ${
-                      isSelected ? "text-white/80" : "text-accent"
-                    }`}>
-                      {dayRecords.length > 1 ? `×${dayRecords.length}` : "●"}
-                    </span>
+                    <div className="flex items-center gap-0.5 mt-1">
+                      {ownCount > 0 && (
+                        <span className={`text-[10px] font-semibold leading-none ${isSelected ? "text-white/80" : "text-accent"}`}>
+                          {ownCount > 1 ? `×${ownCount}` : "●"}
+                        </span>
+                      )}
+                      {sharedCount > 0 && (
+                        <span className={`text-[10px] font-semibold leading-none ${isSelected ? "text-white/80" : "text-violet-400"}`}>
+                          {sharedCount > 1 ? `×${sharedCount}` : "●"}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </button>
               );

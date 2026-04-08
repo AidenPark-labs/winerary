@@ -76,7 +76,7 @@ function PopupCarousel({ records, onClose }: { records: MapRecord[]; onClose: ()
   }, []);
 
   return (
-    <div className="absolute bottom-24 left-4 right-4 z-[1000] bg-surface/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
+    <div className="absolute bottom-32 left-4 right-4 z-[1000] bg-surface/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
       <button
         onClick={onClose}
         className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-black/40 text-zinc-400 hover:text-white hover:bg-black/60 transition-colors text-sm z-10"

@@ -222,6 +222,12 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
                 </span>
               )}
             </div>
+            {placeStr && (
+              <p className="text-xs text-zinc-400 font-light flex items-center gap-1">
+                <svg className="w-3 h-3 text-zinc-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+                {placeStr}
+              </p>
+            )}
             {tags.length > 0 && (
               <div className="flex gap-1.5 flex-wrap">
                 {tags.map((tag, i) => (
@@ -306,8 +312,13 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
                       <span className="text-sm text-white font-medium">{resolved.alcohol}</span>
                     </div>
                   )}
+                  {priceText && (
+                    <div className="flex items-center justify-between px-5 py-2">
+                      <span className="text-xs text-zinc-400">가격</span>
+                      <span className="text-sm text-white font-medium">{priceText}</span>
+                    </div>
+                  )}
                 </div>
-                {/* 맛 평점은 Reviews 섹션으로 이동 */}
               </div>
             );
           })()}
@@ -325,28 +336,6 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
                   ))}
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* ━━━━━━━━━━ 3. Experience ━━━━━━━━━━ */}
-          {(priceText || placeStr) && (
-            <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl flex flex-col">
-              <div className="px-5 pt-4 pb-2">
-                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Experience</p>
-              </div>
-              {placeStr && (
-                <div className="flex items-center justify-between px-5 py-2">
-                  <span className="text-xs text-zinc-400">장소</span>
-                  <span className="text-sm text-white font-medium text-right">{placeStr}</span>
-                </div>
-              )}
-              {priceText && (
-                <div className="flex items-center justify-between px-5 py-2">
-                  <span className="text-xs text-zinc-400">가격</span>
-                  <span className="text-sm text-white font-medium">{priceText}</span>
-                </div>
-              )}
-              <div className="pb-2" />
             </div>
           )}
 

@@ -200,7 +200,8 @@ export default function RecommendPage() {
 
   // 스크롤 자동 하단
   useEffect(() => {
-    scrollEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
   // AI 인사 메시지
@@ -407,7 +408,7 @@ export default function RecommendPage() {
                 </div>
               </div>
             ))}
-            <div ref={scrollEndRef} className="-mb-3" />
+            <div ref={scrollEndRef} />
           </div>
 
           {/* 입력 영역 */}
@@ -424,7 +425,7 @@ export default function RecommendPage() {
                   ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
                 }}
                 onKeyDown={handleKeyDown}
-                onFocus={() => setTimeout(() => scrollEndRef.current?.scrollIntoView({ behavior: "smooth" }), 300)}
+                onFocus={() => setTimeout(() => { const el = scrollRef.current; if (el) el.scrollTop = el.scrollHeight; }, 300)}
                 placeholder="메시지를 입력하세요..."
                 rows={1}
                 className="flex-1 rounded-[20px] bg-surface/80 border border-white/10 px-4 py-3 text-zinc-100 text-sm resize-none focus:outline-none focus:border-accent transition-all font-light shadow-sm"

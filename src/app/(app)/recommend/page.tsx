@@ -123,10 +123,10 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded, alreadySaved }: {
           onClick={handleSave}
           disabled={saving || saved}
           className={`flex-1 inline-flex items-center justify-center h-9 rounded-xl text-xs transition-all ${
-            saved ? "text-accent" : "text-zinc-300"
+            saved ? "text-rose-400" : "text-zinc-300"
           }`}
           style={saved
-            ? { background: "rgba(var(--accent-rgb, 139,92,246),0.12)", border: "1px solid rgba(var(--accent-rgb, 139,92,246),0.25)" }
+            ? { background: "rgba(244,63,94,0.1)", border: "1px solid rgba(244,63,94,0.25)" }
             : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }
           }
         >

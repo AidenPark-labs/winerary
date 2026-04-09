@@ -125,20 +125,28 @@ export async function queryWines(filters: WineFilters): Promise<string> {
 
   // 1차: 모든 필터 적용
   let data = await runWineQuery(supabase, filters);
+  let searchNote = "";
 
   // 2차: 결과 부족 시 품종+국가 필터 완화
   if (data.length < 5 && (filters.grape || filters.country)) {
+    const dropped: string[] = [];
+    if (filters.grape) dropped.push(`품종(${filters.grape})`);
+    if (filters.country) dropped.push(`국가(${filters.country})`);
     const relaxed = { ...filters, grape: null, country: null };
     data = await runWineQuery(supabase, relaxed);
+    searchNote = `\n(참고: ${dropped.join(", ")} 조건에 맞는 와인이 DB에 부족하여 조건을 완화했습니다. 사용자에게 "요청하신 ${dropped.join(", ")} 조건에 정확히 맞는 와인이 DB에 많지 않아, 비슷한 조건의 와인도 함께 안내드립니다"라고 자연스럽게 알려주세요.)`;
   }
 
   // 3차: 그래도 부족하면 가격대만으로 조회
   if (data.length < 5 && (filters.priceMin != null || filters.priceMax != null)) {
     const priceOnly: WineFilters = { wineType: null, priceMin: filters.priceMin, priceMax: filters.priceMax, grape: null, country: null };
     data = await runWineQuery(supabase, priceOnly);
+    if (!searchNote) {
+      searchNote = `\n(참고: 요청 조건에 정확히 맞는 와인이 DB에 부족하여 가격대 기준으로 검색했습니다. 사용자에게 "요청하신 조건에 딱 맞는 와인이 DB에 많지 않아, 비슷한 가격대의 와인도 함께 안내드립니다"라고 자연스럽게 알려주세요.)`;
+    }
   }
 
-  if (data.length === 0) return "";
+  if (data.length === 0) return "\n\n[한국 유통 와인 DB - 검색 결과 없음]\n요청 조건에 맞는 와인이 DB에 없습니다. 사용자에게 이 점을 솔직하게 알려주고, 본인의 와인 지식을 기반으로 한국에서 유통되는 와인을 추천하세요.";
 
   const lines = data.map((w) => {
     const parts = [w.name_ko];
@@ -151,7 +159,7 @@ export async function queryWines(filters: WineFilters): Promise<string> {
     return `- ${parts.join(" | ")}`;
   });
 
-  return `\n\n[한국 유통 와인 DB - ${data.length}개 검색됨]\n이 목록의 와인을 우선적으로 추천하세요. 가격은 실제 한국 판매가입니다.\n${lines.join("\n")}`;
+  return `\n\n[한국 유통 와인 DB - ${data.length}개 검색됨]${searchNote}\n이 목록의 와인을 우선적으로 추천하세요. 가격은 실제 한국 판매가입니다.\n${lines.join("\n")}`;
 }
 
 async function runWineQuery(supabase: Awaited<ReturnType<typeof createClient>>, filters: WineFilters) {

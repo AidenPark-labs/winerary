@@ -73,11 +73,11 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded }: {
     <span className="block my-2 rounded-2xl overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.03) 100%)", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06)", backdropFilter: "blur(20px)" }}>
       <span className="flex items-center gap-3 px-3 pt-3">
         {wine?.naver_image ? (
-          <span className="flex-shrink-0 w-11 h-14 rounded-lg overflow-hidden flex items-center justify-center" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
-            <img src={wine.naver_image} alt={nameKo} className="w-full h-full object-contain" />
+          <span className="flex-shrink-0 w-12 h-12 rounded-xl overflow-hidden">
+            <img src={wine.naver_image} alt={nameKo} className="w-full h-full object-cover" />
           </span>
         ) : (
-          <span className="flex-shrink-0 w-11 h-14 rounded-lg flex items-center justify-center text-zinc-600 text-base" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+          <span className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-zinc-600 text-base" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
             🍷
           </span>
         )}
@@ -86,18 +86,20 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded }: {
           <span className="block text-[11px] text-zinc-500 mt-0.5 truncate">{nameEn}</span>
         </span>
       </span>
-      <span className="flex items-center gap-3 px-3 mt-1.5">
+      <span className="flex flex-col gap-0.5 px-3 mt-1.5">
         {meta && <span className="text-[11px] text-zinc-400/70">{meta}</span>}
-        {wine?.price && (
-          <span className="text-[12px] text-emerald-400/90 font-semibold">
-            {wine.price.toLocaleString()}원
-          </span>
-        )}
-        {wine?.vivino_rating && (
-          <span className="text-[11px] text-rose-400 font-medium">
-            ★ {wine.vivino_rating.toFixed(1)}
-          </span>
-        )}
+        <span className="flex items-center gap-2.5">
+          {wine?.price && (
+            <span className="text-[12px] text-emerald-400/90 font-semibold">
+              {wine.price.toLocaleString()}원
+            </span>
+          )}
+          {wine?.vivino_rating && (
+            <span className="text-[11px] text-rose-400 font-medium">
+              ★ {wine.vivino_rating.toFixed(1)}
+            </span>
+          )}
+        </span>
       </span>
       <span className="flex gap-2 px-3 pt-2.5 pb-3">
         {wine?.id && (

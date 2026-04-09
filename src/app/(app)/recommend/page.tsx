@@ -35,12 +35,13 @@ const WINE_TYPE_KO: Record<string, string> = {
   sparkling: "스파클링", fortified: "주정강화", dessert: "디저트", other: "기타",
 };
 
-function WineCard({ nameKo, nameEn, onSave, onAuthNeeded, alreadySaved }: {
+function WineCard({ nameKo, nameEn, onSave, onAuthNeeded, alreadySaved, onLoad }: {
   nameKo: string;
   nameEn: string;
   onSave: (nameKo: string, nameEn: string) => Promise<void>;
   onAuthNeeded: () => void;
   alreadySaved?: boolean;
+  onLoad?: () => void;
 }) {
   const [saved, setSaved] = useState(alreadySaved ?? false);
   const [saving, setSaving] = useState(false);
@@ -56,9 +57,10 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded, alreadySaved }: {
       .then((data) => {
         const wines = data.wines ?? [];
         if (wines.length > 0) setWine(wines[0]);
+        onLoad?.();
       })
-      .catch(() => {});
-  }, [nameEn]);
+      .catch(() => { onLoad?.(); });
+  }, [nameEn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSave() {
     if (saved || saving) return;
@@ -199,10 +201,14 @@ export default function RecommendPage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 스크롤 자동 하단
-  useEffect(() => {
+  const scrollToBottom = useCallback(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [messages]);
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
 
   // AI 인사 메시지
   async function sendGreeting(authed: boolean) {
@@ -281,7 +287,7 @@ export default function RecommendPage() {
       const cardMatch = part.match(/^\[\[([^|]+)\|([^\]]+)\]\]$/);
       if (cardMatch) {
         const [, nameKo, nameEn] = cardMatch;
-        return <WineCard key={i} nameKo={nameKo.trim()} nameEn={nameEn.trim()} onSave={saveWine} onAuthNeeded={() => setShowAuthPrompt(true)} alreadySaved={savedNames.has(nameEn.trim())} />;
+        return <WineCard key={i} nameKo={nameKo.trim()} nameEn={nameEn.trim()} onSave={saveWine} onAuthNeeded={() => setShowAuthPrompt(true)} alreadySaved={savedNames.has(nameEn.trim())} onLoad={scrollToBottom} />;
       }
       // 인라인 멘션: ((한국어|영어))
       const mentionMatch = part.match(/^\(\(([^|]+)\|([^)]+)\)\)$/);

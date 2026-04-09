@@ -407,7 +407,7 @@ export default function RecommendPage() {
                 </div>
               </div>
             ))}
-            <div ref={scrollEndRef} />
+            <div ref={scrollEndRef} className="-mb-3" />
           </div>
 
           {/* 입력 영역 */}

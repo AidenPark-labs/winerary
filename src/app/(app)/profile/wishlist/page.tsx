@@ -30,6 +30,7 @@ interface WishlistItem {
   name_ko: string;
   name_en: string;
   wine_id: string | null;
+  source: string | null;
   created_at: string;
   wine: WineDetail | null;
 }
@@ -172,7 +173,12 @@ export default function MyWinePage() {
                     {d.grapes && (
                       <p className="text-[11px] text-zinc-600 mt-1 truncate">{d.grapes}</p>
                     )}
-                    <p className="text-[10px] text-zinc-700 mt-1">{savedDate} 저장</p>
+                    <span className="flex items-center gap-1.5 mt-1">
+                      {item.source === "ai" && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-accent/10 text-accent text-[10px] font-medium">AI 추천</span>
+                      )}
+                      <span className="text-[10px] text-zinc-700">{savedDate} 저장</span>
+                    </span>
                   </div>
                 </div>
               );

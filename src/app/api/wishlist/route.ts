@@ -74,7 +74,7 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { name_ko, name_en, wine_id } = await request.json();
+  const { name_ko, name_en, wine_id, source } = await request.json();
   if (!name_ko || !name_en) return Response.json({ error: "이름이 필요합니다" }, { status: 400 });
 
   // 중복 체크
@@ -91,6 +91,7 @@ export async function POST(request: Request) {
 
   const insertData: Record<string, string> = { user_id: user.id, name_ko, name_en };
   if (wine_id) insertData.wine_id = wine_id;
+  if (source === "ai") insertData.source = "ai";
 
   const { data, error } = await supabase
     .from("wine_wishlist")

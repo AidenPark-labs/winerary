@@ -314,7 +314,7 @@ export default function RecommendPage() {
     const res = await fetch("/api/wishlist", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name_ko: nameKo, name_en: nameEn }),
+      body: JSON.stringify({ name_ko: nameKo, name_en: nameEn, source: "ai" }),
     });
     const data = await res.json();
     if (data.item) {

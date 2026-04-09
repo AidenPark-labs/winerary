@@ -308,6 +308,7 @@ export default function RecommendPage() {
     const newMessages = [...messages, userMsg];
     setMessages([...newMessages, { role: "assistant", content: "" }]);
     setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
     setStreaming(true);
 
     try {
@@ -415,18 +416,24 @@ export default function RecommendPage() {
               <textarea
                 ref={textareaRef}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  // auto-grow
+                  const ta = e.target;
+                  ta.style.height = "auto";
+                  ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
+                }}
                 onKeyDown={handleKeyDown}
                 onFocus={() => setTimeout(() => scrollEndRef.current?.scrollIntoView({ behavior: "smooth" }), 300)}
                 placeholder="메시지를 입력하세요..."
                 rows={1}
-                className="flex-1 rounded-[24px] bg-surface/80 border border-white/10 px-5 py-3.5 text-zinc-100 text-sm resize-none focus:outline-none focus:border-accent transition-all font-light shadow-sm"
-                style={{ minHeight: "44px" }}
+                className="flex-1 rounded-[20px] bg-surface/80 border border-white/10 px-4 py-3 text-zinc-100 text-sm resize-none focus:outline-none focus:border-accent transition-all font-light shadow-sm"
+                style={{ minHeight: "44px", maxHeight: "120px" }}
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || streaming}
-                className="w-12 h-12 rounded-full bg-accent hover:bg-accent/90 disabled:opacity-40 flex items-center justify-center text-white transition-all shadow-lg shadow-accent/20 flex-shrink-0 active:scale-[0.98]"
+                className="w-11 h-11 rounded-full bg-accent hover:bg-accent/90 disabled:opacity-40 flex items-center justify-center text-white transition-all shadow-lg shadow-accent/20 flex-shrink-0 active:scale-[0.98] mb-[1px]"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="22" y1="2" x2="11" y2="13" />

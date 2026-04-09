@@ -56,8 +56,8 @@ export default function AgreePage() {
               >
                 <option value="" disabled className="text-zinc-600">출생연도 선택</option>
                 {Array.from(
-                  { length: new Date().getFullYear() - 19 - (new Date().getFullYear() - 100) + 1 },
-                  (_, i) => new Date().getFullYear() - 19 - i
+                  { length: 100 },
+                  (_, i) => new Date().getFullYear() - 1 - i
                 ).map((year) => (
                   <option key={year} value={year}>{year}년</option>
                 ))}

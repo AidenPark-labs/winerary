@@ -21,7 +21,7 @@ export default function RegisterPage() {
 function BirthYearSelect() {
   const currentYear = new Date().getFullYear();
   const minYear = currentYear - 100;
-  const maxYear = currentYear - 19; // 만 19세 이상만 가입 가능
+  const maxYear = currentYear - 1;
 
   return (
     <div className="flex flex-col gap-1.5">

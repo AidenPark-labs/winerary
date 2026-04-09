@@ -14,16 +14,21 @@ export async function submitAgreement(_prevState: { error: string } | undefined,
     return { error: "출생연도를 선택해 주세요" };
   }
   const currentYear = new Date().getFullYear();
-  if (currentYear - birthYear < 19) {
-    return { error: "만 19세 이상만 이용할 수 있습니다" };
-  }
+  const isMinor = currentYear - birthYear < 19;
 
+  // 미성년자도 출생연도는 저장 (차단 판별용)
   const { error } = await supabase
     .from("profiles")
-    .update({ birth_year: birthYear, agreed_at: new Date().toISOString() })
+    .update({
+      birth_year: birthYear,
+      ...(!isMinor && { agreed_at: new Date().toISOString() }),
+    })
     .eq("id", user.id);
 
   if (error) return { error: "저장에 실패했습니다. 다시 시도해 주세요" };
 
+  if (isMinor) {
+    redirect("/blocked");
+  }
   redirect("/diary");
 }

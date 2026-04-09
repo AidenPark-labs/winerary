@@ -637,7 +637,7 @@ export default function DiaryClient({ records, linkedMap = {}, mapRecords = [] }
 
   return (
     <div className="flex flex-col flex-1">
-      <header className="sticky top-0 z-20 px-5 pt-8 pb-4 flex items-center justify-between flex-shrink-0 bg-background">
+      <header className="sticky top-0 z-30 px-5 pt-8 pb-4 flex items-center justify-between flex-shrink-0 bg-background">
         <div className="flex items-center gap-6">
           {([["notes", "와인노트"], ["map", "와인맵"]] as const).map(([tab, label]) => (
             <button

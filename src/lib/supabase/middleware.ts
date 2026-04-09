@@ -28,7 +28,7 @@ export async function updateSession(request: NextRequest) {
 
   // 로그인된 사용자: 프로필 상태 확인
   const pathname = request.nextUrl.pathname
-  const skipPaths = ['/agree', '/blocked', '/terms', '/privacy', '/login', '/register', '/api/', '/invite/', '/share/']
+  const skipPaths = ['/agree', '/terms', '/privacy', '/login', '/register', '/api/', '/invite/', '/share/']
   const shouldCheck = user && !skipPaths.some(p => pathname.startsWith(p))
   if (shouldCheck) {
     const { data: profile } = await supabase
@@ -36,15 +36,8 @@ export async function updateSession(request: NextRequest) {
       .select('birth_year, agreed_at')
       .eq('id', user.id)
       .single()
-    if (profile) {
-      // 만 19세 미만: 이용 차단
-      if (profile.birth_year && new Date().getFullYear() - profile.birth_year < 19) {
-        return NextResponse.redirect(new URL('/blocked', request.url))
-      }
-      // 약관 미동의 또는 출생연도 미입력: 동의 페이지로
-      if (!profile.birth_year || !profile.agreed_at) {
-        return NextResponse.redirect(new URL('/agree', request.url))
-      }
+    if (profile && (!profile.birth_year || !profile.agreed_at)) {
+      return NextResponse.redirect(new URL('/agree', request.url))
     }
   }
 

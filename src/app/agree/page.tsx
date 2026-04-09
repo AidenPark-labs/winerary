@@ -13,13 +13,36 @@ function CheckIcon() {
   );
 }
 
+function MinorDialog({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-6">
+      <div className="w-full max-w-xs bg-surface border border-white/10 rounded-2xl p-6 text-center shadow-2xl">
+        <span className="text-4xl">🚫</span>
+        <h3 className="text-lg font-bold text-white mt-3">이용이 제한됩니다</h3>
+        <p className="text-sm text-zinc-400 mt-2 font-light leading-relaxed">
+          본 서비스는 「청소년보호법」에 따라<br />
+          <strong className="text-zinc-200">만 19세 이상</strong>만 이용할 수 있습니다.
+        </p>
+        <button
+          onClick={onClose}
+          className="w-full mt-5 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-zinc-300 font-medium transition-all active:scale-[0.98]"
+        >
+          확인
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function AgreePage() {
   const [state, action, pending] = useActionState(submitAgreement, undefined);
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [agreedPrivacy, setAgreedPrivacy] = useState(false);
+  const [showMinorDialog, setShowMinorDialog] = useState(false);
 
   const allAgreed = agreedTerms && agreedPrivacy;
   const canSubmit = agreedTerms && agreedPrivacy;
+  const currentYear = new Date().getFullYear();
 
   function toggleAll() {
     const next = !allAgreed;
@@ -27,8 +50,17 @@ export default function AgreePage() {
     setAgreedPrivacy(next);
   }
 
+  function handleBirthYearChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const year = Number(e.target.value);
+    if (year && currentYear - year < 19) {
+      e.target.value = "";
+      setShowMinorDialog(true);
+    }
+  }
+
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 bg-background">
+      {showMinorDialog && <MinorDialog onClose={() => setShowMinorDialog(false)} />}
       <div className="w-full max-w-sm bg-surface/60 backdrop-blur-2xl border border-white/5 rounded-[32px] p-8 shadow-2xl">
         <form action={action} className="flex flex-col gap-5">
           <div className="text-center mb-2">
@@ -52,13 +84,11 @@ export default function AgreePage() {
                 name="birthYear"
                 required
                 defaultValue=""
+                onChange={handleBirthYearChange}
                 className="w-full appearance-none rounded-xl bg-black/40 border border-white/10 px-4 py-3.5 text-zinc-100 focus:outline-none focus:border-accent focus:bg-black/60 transition-all font-light"
               >
                 <option value="" disabled className="text-zinc-600">출생연도 선택</option>
-                {Array.from(
-                  { length: 100 },
-                  (_, i) => new Date().getFullYear() - 1 - i
-                ).map((year) => (
+                {Array.from({ length: 100 }, (_, i) => currentYear - 1 - i).map((year) => (
                   <option key={year} value={year}>{year}년</option>
                 ))}
               </select>

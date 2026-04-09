@@ -103,7 +103,7 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded, alreadySaved }: {
           )}
           {wine?.vivino_rating && (
             <span className="text-[11px] text-rose-400 font-medium">
-              ★ {wine.vivino_rating.toFixed(1)}
+              Vivino ★ {wine.vivino_rating.toFixed(1)}
             </span>
           )}
         </span>

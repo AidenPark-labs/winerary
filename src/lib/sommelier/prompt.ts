@@ -229,6 +229,64 @@ export async function getUserPreferences(userId: string): Promise<string> {
 ${parts.join("\n")}`;
 }
 
+// ─── 대화에서 언급된 특정 와인 이름 검색 ──────────────────────────────────────
+
+export async function searchMentionedWines(messages: { role: string; content: string }[]): Promise<string> {
+  // 최근 사용자 메시지에서 와인 이름으로 보이는 것을 추출하여 DB 검색
+  const userTexts = messages.filter((m) => m.role === "user").map((m) => m.content);
+  if (userTexts.length === 0) return "";
+
+  // 최근 3개 메시지만 (너무 오래된 것은 제외)
+  const recent = userTexts.slice(-3);
+  const supabase = await createClient();
+  const results: string[] = [];
+
+  for (const text of recent) {
+    // 3글자 이상 한글 단어 조합을 와인명 후보로 검색 (단순 키워드 제외)
+    const skipWords = /^(레드|화이트|로제|스파클링|와인|추천|페어링|안주|음식|가격|만원|이하|이상|정도|좋아|마셨|먹을|어울|비슷|같은|오늘|어제|내일|좀|더|것|수|줄|줘|해줘|할|싶|있|없)$/;
+    // 와인 이름 후보: 2어절 이상의 명사 구 또는 영문 포함 텍스트
+    const candidates: string[] = [];
+
+    // 한글 와인 이름 패턴 (2~6어절)
+    const words = text.split(/\s+/).filter((w) => !skipWords.test(w) && w.length >= 2);
+    if (words.length >= 2) {
+      // 연속 2~4 어절 조합
+      for (let len = Math.min(4, words.length); len >= 2; len--) {
+        for (let start = 0; start <= words.length - len; start++) {
+          candidates.push(words.slice(start, start + len).join(" "));
+        }
+      }
+    }
+    // 단일 고유명사 (3글자 이상, 일반 단어 제외)
+    words.filter((w) => w.length >= 3).forEach((w) => candidates.push(w));
+
+    for (const q of candidates.slice(0, 3)) {
+      const { data } = await supabase
+        .from("wines")
+        .select("name_ko, name_en, wine_type, country, grape_variety, producer, price")
+        .or(`name_ko.ilike.%${q}%,name_en.ilike.%${q}%`)
+        .limit(3);
+
+      if (data && data.length > 0) {
+        data.forEach((w) => {
+          const parts = [w.name_ko];
+          if (w.name_en) parts.push(`(${w.name_en})`);
+          if (w.price) parts.push(`${w.price.toLocaleString()}원`);
+          if (w.wine_type) parts.push(w.wine_type);
+          if (w.country) parts.push(w.country);
+          if (w.grape_variety) parts.push(w.grape_variety);
+          results.push(`- ${parts.join(" | ")}`);
+        });
+        break; // 첫 매칭되면 중단
+      }
+    }
+  }
+
+  if (results.length === 0) return "";
+  const unique = [...new Set(results)];
+  return `\n\n[대화에서 언급된 와인 - DB 검색 결과]\n${unique.join("\n")}`;
+}
+
 // ─── 위시리스트 조회 ─────────────────────────────────────────────────────────
 
 export async function getUserWishlist(userId: string): Promise<string> {
@@ -267,19 +325,23 @@ export async function buildSystemPrompt(
   }
 
   if (userId) {
-    // 와인 DB 검색 + 사용자 취향 + 위시리스트 (병렬)
+    // 와인 DB 검색 + 이름 검색 + 사용자 취향 + 위시리스트 (병렬)
     const filters = extractFilters(recentMessages);
-    const [wineList, userPrefs, wishlist] = await Promise.all([
+    const [wineList, mentionedWines, userPrefs, wishlist] = await Promise.all([
       queryWines(filters),
+      searchMentionedWines(recentMessages),
       getUserPreferences(userId),
       getUserWishlist(userId),
     ]);
-    prompt += wineList + userPrefs + wishlist;
+    prompt += wineList + mentionedWines + userPrefs + wishlist;
   } else {
-    // 비로그인: 와인 DB만 검색
+    // 비로그인: 와인 DB + 이름 검색
     const filters = extractFilters(recentMessages);
-    const wineList = await queryWines(filters);
-    prompt += wineList;
+    const [wineList, mentionedWines] = await Promise.all([
+      queryWines(filters),
+      searchMentionedWines(recentMessages),
+    ]);
+    prompt += wineList + mentionedWines;
   }
 
   return prompt;

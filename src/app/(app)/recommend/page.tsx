@@ -185,49 +185,123 @@ export default function RecommendPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [isAuthed, setIsAuthed] = useState<boolean | null>(null);
   const [showWishlist, setShowWishlist] = useState(false);
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [toast, setToast] = useState(false);
+  const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const initRef = useRef(false);
 
-  // 위시리스트 로드 + 로그인 후 대기 액션 실행
+  // 초기화: 인증 확인 + 데이터 로드
   useEffect(() => {
     async function init() {
       const authed = await checkAuth();
+      setIsAuthed(authed);
+
       if (authed) {
-        fetch("/api/wishlist").then((r) => r.json()).then((d) => setWishlist(d.items ?? [])).catch(() => {});
+        // 위시리스트 + 이전 대화 병렬 로드
+        const [wishRes, msgRes] = await Promise.all([
+          fetch("/api/wishlist").then((r) => r.json()).catch(() => ({ items: [] })),
+          fetch("/api/sommelier/messages").then((r) => r.json()).catch(() => ({ messages: [] })),
+        ]);
+        setWishlist(wishRes.items ?? []);
+        const loaded: Message[] = (msgRes.messages ?? []).map((m: { role: string; content: string }) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        }));
+        if (loaded.length > 0) {
+          setMessages(loaded);
+        } else {
+          // 첫 대화: AI 인사
+          await sendGreeting(true);
+        }
+
+        // 대기 액션 처리
+        const pending = consumePendingAction();
+        if (pending?.type === "wishlist_add") {
+          const res = await fetch("/api/wishlist", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name_ko: pending.name_ko, name_en: pending.name_en }),
+          });
+          const data = await res.json();
+          if (data.item) setWishlist((prev) => [data.item, ...prev]);
+          setToast(true);
+        }
+      } else {
+        // 비로그인: AI 인사
+        await sendGreeting(false);
       }
-      // 대기 액션 처리
-      const pending = consumePendingAction();
-      if (pending?.type === "wishlist_add" && authed) {
-        const res = await fetch("/api/wishlist", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name_ko: pending.name_ko, name_en: pending.name_en }),
-        });
-        const data = await res.json();
-        if (data.item) setWishlist((prev) => [data.item, ...prev]);
-        setToast(true);
-      }
+      setLoading(false);
     }
     init();
-  }, []);
-
-  // 첫 진입 시 AI 인사 메시지
-  useEffect(() => {
-    if (initRef.current) return;
-    initRef.current = true;
-    startChat([]);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 메시지 변경 시 항상 맨 아래로 스크롤 (스트리밍 포함)
+  // 스크롤 자동 하단
   useEffect(() => {
     scrollEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // AI 인사 메시지
+  async function sendGreeting(authed: boolean) {
+    setStreaming(true);
+    setMessages([{ role: "assistant", content: "" }]);
+
+    const greetingMessage = "안녕하세요, 와인이나 음식에 대해 상담받고 싶어요.";
+    const endpoint = authed ? "/api/sommelier/chat" : "/api/sommelier/chat-guest";
+    const body = authed
+      ? { message: greetingMessage }
+      : { messages: [{ role: "user", content: greetingMessage }] };
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error("API error");
+      await streamResponse(res);
+    } catch {
+      setMessages([{ role: "assistant", content: "안녕하세요! 와인과 음식에 대해 무엇이든 물어봐주세요." }]);
+    } finally {
+      setStreaming(false);
+    }
+  }
+
+  // SSE 스트리밍 처리 공통 함수
+  async function streamResponse(res: Response) {
+    const reader = res.body!.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        const data = line.replace(/^data: /, "");
+        if (data === "[DONE]") break;
+        try {
+          const { text } = JSON.parse(data);
+          setMessages((prev) => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            if (last?.role === "assistant") {
+              updated[updated.length - 1] = { ...last, content: last.content + text };
+            }
+            return updated;
+          });
+        } catch { /* skip malformed */ }
+      }
+    }
+  }
 
   const saveWine = useCallback(async (nameKo: string, nameEn: string) => {
     const res = await fetch("/api/wishlist", {
@@ -256,16 +330,12 @@ export default function RecommendPage() {
     const userMessages = messages.filter((m) => m.role === "user").map((m) => m.content);
     for (let i = userMessages.length - 1; i >= 0; i--) {
       const text = userMessages[i];
-      // "3만원대" → 30000~39999
       const m1 = text.match(/(\d+)\s*만\s*원\s*대/);
       if (m1) { const v = parseInt(m1[1]) * 10000; return { min: v, max: v + 9999 }; }
-      // "3~5만원" → 30000~59999
       const m2 = text.match(/(\d+)\s*~\s*(\d+)\s*만\s*원/);
       if (m2) return { min: parseInt(m2[1]) * 10000, max: parseInt(m2[2]) * 10000 + 9999 };
-      // "3만원 이하" → 0~30000
       const m3 = text.match(/(\d+)\s*만\s*원\s*이하/);
       if (m3) return { min: 0, max: parseInt(m3[1]) * 10000 };
-      // "3만원 이상" → 30000~infinity
       const m4 = text.match(/(\d+)\s*만\s*원\s*이상/);
       if (m4) return { min: parseInt(m4[1]) * 10000, max: Infinity };
     }
@@ -285,51 +355,30 @@ export default function RecommendPage() {
     });
   }
 
-  async function startChat(chatMessages: Message[]) {
+  async function handleSend() {
+    const text = input.trim();
+    if (!text || streaming) return;
+
+    const userMsg: Message = { role: "user", content: text };
+    const newMessages = [...messages, userMsg];
+    setMessages([...newMessages, { role: "assistant", content: "" }]);
+    setInput("");
     setStreaming(true);
-    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
     try {
-      const res = await fetch("/api/ai/recommend", {
+      const endpoint = isAuthed ? "/api/sommelier/chat" : "/api/sommelier/chat-guest";
+      const body = isAuthed
+        ? { message: text }
+        : { messages: newMessages.map((m) => ({ role: m.role, content: m.content })) };
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: chatMessages.length === 0
-            ? [{ role: "user", content: "안녕하세요, 와인 추천을 받고 싶어요." }]
-            : chatMessages,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) throw new Error("API error");
-
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          const data = line.replace(/^data: /, "");
-          if (data === "[DONE]") break;
-          try {
-            const { text } = JSON.parse(data);
-            setMessages((prev) => {
-              const updated = [...prev];
-              const last = updated[updated.length - 1];
-              if (last?.role === "assistant") {
-                updated[updated.length - 1] = { ...last, content: last.content + text };
-              }
-              return updated;
-            });
-          } catch {}
-        }
-      }
+      await streamResponse(res);
     } catch {
       setMessages((prev) => {
         const updated = [...prev];
@@ -344,21 +393,6 @@ export default function RecommendPage() {
     }
   }
 
-  function handleSend() {
-    const text = input.trim();
-    if (!text || streaming) return;
-
-    const userMsg: Message = { role: "user", content: text };
-    const newMessages = [...messages, userMsg];
-    const apiMessages = messages.length > 0 && messages[0].role === "assistant"
-      ? [{ role: "user" as const, content: "안녕하세요, 와인 추천을 받고 싶어요." }, ...newMessages]
-      : newMessages;
-
-    setMessages(newMessages);
-    setInput("");
-    startChat(apiMessages);
-  }
-
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -366,49 +400,43 @@ export default function RecommendPage() {
     }
   }
 
-  function handleNewChat() {
-    setMessages([]);
-    initRef.current = false;
-    setTimeout(() => {
-      initRef.current = true;
-      startChat([]);
-    }, 0);
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3" style={{ height: "calc(100dvh - 5rem)" }}>
+        <span className="inline-flex gap-1">
+          <span className="w-2 h-2 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: "0ms" }} />
+          <span className="w-2 h-2 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: "150ms" }} />
+          <span className="w-2 h-2 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: "300ms" }} />
+        </span>
+        <p className="text-zinc-500 text-sm">소믈리에를 준비하고 있어요...</p>
+      </div>
+    );
   }
 
   return (
     <div className="flex flex-col" style={{ height: "calc(100dvh - 5rem)" }}>
       {showAuthPrompt && <AuthPrompt message="와인을 저장하려면 로그인이 필요합니다" returnUrl="/recommend" />}
       <Toast message="내 와인에 추가되었어요!" visible={toast} onHide={() => setToast(false)} />
+
       {/* 헤더 */}
       <header className="px-5 pt-8 pb-2 flex items-center justify-between flex-shrink-0">
         <div>
-          <h1 className="text-2xl font-bold text-white">와인추천</h1>
-          <p className="text-zinc-500 text-sm mt-0.5">AI 소믈리에에게 추천받으세요</p>
+          <h1 className="text-2xl font-bold text-white">와인 소믈리에</h1>
+          <p className="text-zinc-500 text-sm mt-0.5">와인과 음식, 무엇이든 물어보세요</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={async () => {
-              if (!showWishlist && !(await checkAuth())) { setShowAuthPrompt(true); return; }
-              setShowWishlist(!showWishlist);
-            }}
-            className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-              showWishlist
-                ? "border-rose-700 text-rose-400 bg-rose-950/30"
-                : "border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500"
-            }`}
-          >
-            내 와인{wishlist.length > 0 ? ` ${wishlist.length}` : ""}
-          </button>
-          {!showWishlist && messages.length > 1 && (
-            <button
-              onClick={handleNewChat}
-              disabled={streaming}
-              className="text-xs px-3 py-1.5 rounded-full border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors disabled:opacity-40"
-            >
-              새 대화
-            </button>
-          )}
-        </div>
+        <button
+          onClick={async () => {
+            if (!showWishlist && !(await checkAuth())) { setShowAuthPrompt(true); return; }
+            setShowWishlist(!showWishlist);
+          }}
+          className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+            showWishlist
+              ? "border-rose-700 text-rose-400 bg-rose-950/30"
+              : "border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500"
+          }`}
+        >
+          내 와인{wishlist.length > 0 ? ` ${wishlist.length}` : ""}
+        </button>
       </header>
 
       {showWishlist ? (
@@ -417,7 +445,6 @@ export default function RecommendPage() {
         <>
           {/* 채팅 영역 */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 flex flex-col gap-3">
-            {/* 메시지가 적을 때 아래로 밀어주는 스페이서 */}
             <div className="flex-1" />
             {messages.map((msg, i) => (
               <div

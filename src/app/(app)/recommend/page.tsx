@@ -27,6 +27,7 @@ interface WineInfo {
   price: number | null;
   country: string | null;
   grape_variety: string | null;
+  vivino_rating: number | null;
 }
 
 function WineCard({ nameKo, nameEn, onSave, onAuthNeeded }: {
@@ -84,11 +85,18 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded }: {
           <strong className="text-white text-sm font-semibold leading-snug">{nameKo}</strong>
           <span className="block text-[11px] text-zinc-500 mt-0.5 truncate">{nameEn}</span>
           {meta && <span className="block text-[11px] text-zinc-400/80 mt-1.5">{meta}</span>}
-          {wine?.price && (
-            <span className="block text-xs text-emerald-400/90 font-semibold mt-0.5">
-              {wine.price.toLocaleString()}원
-            </span>
-          )}
+          <span className="flex items-center gap-2 mt-0.5 flex-wrap">
+            {wine?.price && (
+              <span className="text-xs text-emerald-400/90 font-semibold">
+                {wine.price.toLocaleString()}원
+              </span>
+            )}
+            {wine?.vivino_rating && (
+              <span className="text-[11px] text-amber-400/80">
+                ★ {wine.vivino_rating.toFixed(1)}
+              </span>
+            )}
+          </span>
         </span>
       </span>
       <span className="flex gap-2 px-3.5 pb-3 flex-wrap">

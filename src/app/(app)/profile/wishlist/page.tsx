@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Toast from "@/components/Toast";
 import AuthPrompt from "@/components/AuthPrompt";
-import { Wine, Trash2, ExternalLink } from "lucide-react";
+import { Wine, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { getWineImage } from "@/lib/wine-placeholder";
 
@@ -121,8 +121,6 @@ export default function MyWinePage() {
             {wishlistItems.map((item) => {
               const d = resolveDisplay(item);
               const hasDetail = !!item.wine_id;
-              const vivinoUrl = `https://www.vivino.com/search/wines?q=${encodeURIComponent(item.name_en)}`;
-              const naverUrl = `https://msearch.shopping.naver.com/search/all?query=${encodeURIComponent(item.name_ko)}`;
 
               const cardContent = (
                 <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
@@ -175,28 +173,10 @@ export default function MyWinePage() {
                     </div>
                   </div>
 
-                  {/* 하단 액션 바 */}
-                  <div className="flex items-center gap-2 px-4 pb-3">
-                    <a
-                      href={vivinoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-accent text-[11px] hover:bg-white/10 transition-colors tracking-wide"
-                    >
-                      Vivino <ExternalLink className="w-3 h-3" />
-                    </a>
-                    <a
-                      href={naverUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-400 text-[11px] hover:bg-white/10 transition-colors tracking-wide"
-                    >
-                      최저가 <ExternalLink className="w-3 h-3" />
-                    </a>
-                    <span className="ml-auto text-[10px] text-zinc-700 font-light">
-                      {new Date(item.created_at).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })}
+                  {/* 하단 날짜 */}
+                  <div className="flex items-center px-4 pb-3">
+                    <span className="text-[10px] text-zinc-700 font-light">
+                      {new Date(item.created_at).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })} 저장
                     </span>
                   </div>
                 </div>

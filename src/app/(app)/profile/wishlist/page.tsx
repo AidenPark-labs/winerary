@@ -22,9 +22,7 @@ interface WineDetail {
   final_grapes: string | null;
   vivino_grapes: string | null;
   final_country: string | null;
-  vivino_country: string | null;
-  final_type: string | null;
-  vivino_type: string | null;
+  final_wine_type: string | null;
 }
 
 interface WishlistItem {
@@ -81,8 +79,8 @@ export default function MyWinePage() {
     const w = item.wine;
     if (!w) return { type: null, country: null, grapes: null, image: getWineImage(null, null), rating: null, reviews: null, price: null };
     return {
-      type: w.final_type ?? w.wine_type,
-      country: w.final_country ?? w.vivino_country ?? w.country,
+      type: w.final_wine_type ?? w.wine_type,
+      country: w.final_country ?? w.country,
       grapes: w.final_grapes ?? w.vivino_grapes ?? w.grape_variety,
       image: getWineImage(w.naver_image, w.wine_type),
       rating: w.vivino_rating,

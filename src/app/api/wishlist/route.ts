@@ -13,7 +13,7 @@ export async function GET() {
 
   if (!data || data.length === 0) return Response.json({ items: [] });
 
-  const wineFields = "id, name_ko, name_en, wine_type, country, grape_variety, naver_image, vivino_rating, vivino_reviews, price, final_grapes, vivino_grapes, final_country, vivino_country, final_type, vivino_type";
+  const wineFields = "id, name_ko, name_en, wine_type, country, grape_variety, naver_image, vivino_rating, vivino_reviews, price, final_grapes, vivino_grapes, final_country, final_wine_type";
 
   // wine_id가 있는 항목들의 와인 상세정보 조회
   const withId = data.filter((d) => d.wine_id);

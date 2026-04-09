@@ -70,40 +70,41 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded }: {
   const meta = [wine?.country, wine?.grape_variety].filter(Boolean).join(" · ");
 
   return (
-    <span className="block my-2 rounded-2xl bg-white/[0.06] border border-white/[0.08] backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.25)] overflow-hidden">
-      <span className="flex items-start gap-3 p-3.5">
+    <span className="block my-2 rounded-2xl overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.03) 100%)", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06)", backdropFilter: "blur(20px)" }}>
+      <span className="flex items-center gap-3.5 p-3.5">
         {wine?.naver_image ? (
-          <span className="flex-shrink-0 w-14 h-[72px] rounded-xl overflow-hidden bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+          <span className="flex-shrink-0 w-[52px] h-[68px] rounded-xl overflow-hidden flex items-center justify-center" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
             <img src={wine.naver_image} alt={nameKo} className="w-full h-full object-contain" />
           </span>
         ) : (
-          <span className="flex-shrink-0 w-14 h-[72px] rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-zinc-600 text-lg">
+          <span className="flex-shrink-0 w-[52px] h-[68px] rounded-xl flex items-center justify-center text-zinc-600 text-lg" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
             🍷
           </span>
         )}
         <span className="flex-1 min-w-0">
-          <strong className="text-white text-sm font-semibold leading-snug">{nameKo}</strong>
+          <strong className="text-white text-[13px] font-semibold leading-snug">{nameKo}</strong>
           <span className="block text-[11px] text-zinc-500 mt-0.5 truncate">{nameEn}</span>
-          {meta && <span className="block text-[11px] text-zinc-400/80 mt-1.5">{meta}</span>}
-          <span className="flex items-center gap-2 mt-0.5 flex-wrap">
+          {meta && <span className="block text-[11px] text-zinc-400/70 mt-1">{meta}</span>}
+          <span className="flex items-center gap-2.5 mt-1">
             {wine?.price && (
-              <span className="text-xs text-emerald-400/90 font-semibold">
+              <span className="text-[12px] text-emerald-400/90 font-semibold">
                 {wine.price.toLocaleString()}원
               </span>
             )}
             {wine?.vivino_rating && (
-              <span className="text-[11px] text-amber-400/80">
+              <span className="text-[11px] text-amber-400/80 font-medium">
                 ★ {wine.vivino_rating.toFixed(1)}
               </span>
             )}
           </span>
         </span>
       </span>
-      <span className="flex gap-2 px-3.5 pb-3 flex-wrap">
+      <span className="flex gap-2 px-3.5 pb-3">
         {wine?.id && (
           <a
             href={`/wines/${wine.id}`}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/[0.08] text-zinc-300 text-xs hover:bg-white/[0.12] transition-all tracking-wide backdrop-blur-sm"
+            className="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-xl text-zinc-300 text-xs transition-all tracking-wide"
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
             onClick={(e) => e.stopPropagation()}
           >
             자세히 보기
@@ -112,11 +113,13 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded }: {
         <button
           onClick={handleSave}
           disabled={saving || saved}
-          className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs transition-all tracking-wide backdrop-blur-sm ${
-            saved
-              ? "bg-accent/15 border border-accent/30 text-accent"
-              : "bg-white/[0.06] border border-white/[0.08] text-zinc-300 hover:bg-white/[0.12]"
+          className={`flex-1 inline-flex items-center justify-center px-3 py-2 rounded-xl text-xs transition-all tracking-wide ${
+            saved ? "text-accent" : "text-zinc-300"
           }`}
+          style={saved
+            ? { background: "rgba(var(--accent-rgb, 139,92,246),0.12)", border: "1px solid rgba(var(--accent-rgb, 139,92,246),0.25)" }
+            : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }
+          }
         >
           {saved ? "♥ 추가됨" : saving ? "추가 중…" : "♡ 내 와인에 추가"}
         </button>
@@ -329,28 +332,26 @@ export default function RecommendPage() {
 
   // 메시지 렌더링: [[한국어|영어]] → WineCard, **텍스트** → 볼드 강조
   function renderMessageContent(content: string) {
-    // 1단계: [[와인카드]] 분리
-    const cardParts = content.split(/(\[\[[^\]]+\]\])/g);
-    return cardParts.map((part, i) => {
+    // ** 를 제거하면서, 감싸진 텍스트는 볼드 처리
+    // [[와인카드]]와 **볼드**를 동시에 처리
+    const parts = content.split(/(\[\[[^\]]+\]\]|\*\*[\s\S]*?\*\*)/g);
+    return parts.map((part, i) => {
+      // 와인카드
       const cardMatch = part.match(/^\[\[([^|]+)\|([^\]]+)\]\]$/);
       if (cardMatch) {
         const [, nameKo, nameEn] = cardMatch;
         return <WineCard key={i} nameKo={nameKo.trim()} nameEn={nameEn.trim()} onSave={saveWine} onAuthNeeded={() => setShowAuthPrompt(true)} />;
       }
-      // 2단계: **볼드** 처리
-      const boldParts = part.split(/(\*\*[^*]+\*\*)/g);
-      if (boldParts.length === 1) return <span key={i}>{part}</span>;
-      return (
-        <span key={i}>
-          {boldParts.map((bp, j) => {
-            const boldMatch = bp.match(/^\*\*([^*]+)\*\*$/);
-            if (boldMatch) {
-              return <strong key={j} className="text-accent font-semibold">{boldMatch[1]}</strong>;
-            }
-            return <span key={j}>{bp}</span>;
-          })}
-        </span>
-      );
+      // 볼드
+      const boldMatch = part.match(/^\*\*([\s\S]*?)\*\*$/);
+      if (boldMatch) {
+        return <strong key={i} className="text-accent font-semibold">{boldMatch[1]}</strong>;
+      }
+      // 남은 ** 제거 (짝이 안 맞는 경우)
+      if (part.includes("**")) {
+        return <span key={i}>{part.replace(/\*\*/g, "")}</span>;
+      }
+      return <span key={i}>{part}</span>;
     });
   }
 

@@ -69,29 +69,33 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded }: {
   const meta = [wine?.country, wine?.grape_variety].filter(Boolean).join(" · ");
 
   return (
-    <span className="block my-2 p-3 rounded-2xl bg-surface/80 border border-white/5 backdrop-blur-md">
-      <span className="flex items-start gap-3">
-        {wine?.naver_image && (
-          <span className="flex-shrink-0 w-12 h-16 rounded-lg overflow-hidden bg-white/5">
+    <span className="block my-2 rounded-2xl bg-white/[0.06] border border-white/[0.08] backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.25)] overflow-hidden">
+      <span className="flex items-start gap-3 p-3.5">
+        {wine?.naver_image ? (
+          <span className="flex-shrink-0 w-14 h-[72px] rounded-xl overflow-hidden bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
             <img src={wine.naver_image} alt={nameKo} className="w-full h-full object-contain" />
+          </span>
+        ) : (
+          <span className="flex-shrink-0 w-14 h-[72px] rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-zinc-600 text-lg">
+            🍷
           </span>
         )}
         <span className="flex-1 min-w-0">
-          <strong className="text-white text-sm font-semibold">{nameKo}</strong>
-          <span className="block text-xs text-zinc-500 mt-0.5">{nameEn}</span>
-          {meta && <span className="block text-xs text-zinc-400 mt-1">{meta}</span>}
+          <strong className="text-white text-sm font-semibold leading-snug">{nameKo}</strong>
+          <span className="block text-[11px] text-zinc-500 mt-0.5 truncate">{nameEn}</span>
+          {meta && <span className="block text-[11px] text-zinc-400/80 mt-1.5">{meta}</span>}
           {wine?.price && (
-            <span className="block text-xs text-emerald-400 font-semibold mt-0.5">
+            <span className="block text-xs text-emerald-400/90 font-semibold mt-0.5">
               {wine.price.toLocaleString()}원
             </span>
           )}
         </span>
       </span>
-      <span className="flex gap-2 mt-2 flex-wrap">
+      <span className="flex gap-2 px-3.5 pb-3 flex-wrap">
         {wine?.id && (
           <a
             href={`/wines/${wine.id}`}
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-300 text-xs hover:bg-white/10 transition-colors tracking-wide"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/[0.08] text-zinc-300 text-xs hover:bg-white/[0.12] transition-all tracking-wide backdrop-blur-sm"
             onClick={(e) => e.stopPropagation()}
           >
             자세히 보기
@@ -100,10 +104,10 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded }: {
         <button
           onClick={handleSave}
           disabled={saving || saved}
-          className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs transition-all tracking-wide ${
+          className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs transition-all tracking-wide backdrop-blur-sm ${
             saved
-              ? "bg-accent/20 border border-accent/40 text-accent"
-              : "bg-surface border border-white/10 text-zinc-300 hover:bg-white/5"
+              ? "bg-accent/15 border border-accent/30 text-accent"
+              : "bg-white/[0.06] border border-white/[0.08] text-zinc-300 hover:bg-white/[0.12]"
           }`}
         >
           {saved ? "♥ 추가됨" : saving ? "추가 중…" : "♡ 내 와인에 추가"}

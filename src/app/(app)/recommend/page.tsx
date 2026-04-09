@@ -371,7 +371,7 @@ export default function RecommendPage() {
           <p className="text-zinc-500 text-sm mt-0.5">와인과 음식, 무엇이든 물어보세요</p>
         </div>
         <Link
-          href="/profile/wishlist"
+          href="/wishlist"
           className="text-xs px-3 py-1.5 rounded-full border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors"
         >
           내 와인

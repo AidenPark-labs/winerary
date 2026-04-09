@@ -228,7 +228,7 @@ export default async function MyWinePage() {
 
         {/* 메뉴 */}
         <Link
-          href="/profile/wishlist"
+          href="/wishlist"
           className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-surface/80 border border-white/5 hover:bg-white/5 transition-colors"
         >
           <Heart size={18} className="text-accent" />

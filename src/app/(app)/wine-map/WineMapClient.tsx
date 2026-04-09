@@ -144,7 +144,7 @@ function ListView({ records, onClose }: { records: MapRecord[]; onClose: () => v
 
 // ─── 메인 ────────────────────────────────────────────────────────────────────
 
-export default function WineMapClient({ records }: { records: MapRecord[] }) {
+export default function WineMapClient({ records, embedded = false }: { records: MapRecord[]; embedded?: boolean }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const [loaded, setLoaded] = useState(false);
@@ -233,7 +233,7 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
 
   if (records.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] text-center px-6 gap-3">
+      <div className={`flex flex-col items-center justify-center ${embedded ? "flex-1" : "h-[60vh]"} text-center px-6 gap-3`}>
         <MapIcon className="w-16 h-16 text-zinc-800" strokeWidth={1} />
         <h2 className="text-lg font-semibold text-zinc-200 mt-2">아직 지도에 표시할 기록이 없어요</h2>
         <p className="text-sm text-zinc-500 font-light">와인 기록 시 장소를 검색해서 선택하면<br/>이곳에 표시됩니다</p>
@@ -242,11 +242,13 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-64px)] bg-background">
-      <header className="px-5 pt-8 pb-2 flex items-center justify-between bg-background z-10">
-        <h1 className="text-2xl font-bold text-white">와인맵</h1>
-        <span className="text-xs text-zinc-500">{records.length}개 기록 · {groupedByLocation().length}곳</span>
-      </header>
+    <div className={`flex flex-col ${embedded ? "flex-1" : "h-[calc(100dvh-64px)]"} bg-background`}>
+      {!embedded && (
+        <header className="px-5 pt-8 pb-2 flex items-center justify-between bg-background z-10">
+          <h1 className="text-2xl font-bold text-white">와인맵</h1>
+          <span className="text-xs text-zinc-500">{records.length}개 기록 · {groupedByLocation().length}곳</span>
+        </header>
+      )}
 
       <div className="flex-1 relative">
         <div ref={mapRef} className="w-full h-full" />

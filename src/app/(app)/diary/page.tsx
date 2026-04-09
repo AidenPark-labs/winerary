@@ -143,5 +143,15 @@ export default async function DiaryPage() {
   const linkedOtherIds = new Set(Object.values(linkedMap).flat().map((l) => l.linked_record_id));
   const filteredRecords = allRecords.filter((r) => !linkedOtherIds.has(r.id));
 
-  return <DiaryClient records={filteredRecords as WineRecord[]} linkedMap={linkedMap} />;
+  // 와인맵 데이터
+  const { data: mapRecords } = await supabase
+    .from("wine_records")
+    .select("id, name, location, place_name, latitude, longitude, drunk_at, rating, photos, wine_type")
+    .eq("user_id", user.id)
+    .is("deleted_at", null)
+    .not("latitude", "is", null)
+    .not("longitude", "is", null)
+    .order("drunk_at", { ascending: false });
+
+  return <DiaryClient records={filteredRecords as WineRecord[]} linkedMap={linkedMap} mapRecords={mapRecords ?? []} />;
 }

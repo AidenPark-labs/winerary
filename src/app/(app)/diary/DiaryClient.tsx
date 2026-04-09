@@ -4,9 +4,10 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { deleteWineRecord } from "@/lib/actions/diary";
-import { Map, CalendarDays, LayoutList, Grid3X3, MoreVertical, Camera, Plus, MapPin, Wine as WineIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, LayoutList, Grid3X3, MoreVertical, Camera, Plus, MapPin, Wine as WineIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { CloseIcon } from "@/components/Icons";
 import type { WineRecord } from "@/types";
+import WineMapClient from "@/app/(app)/wine-map/WineMapClient";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드", white: "화이트", rose: "로제",
@@ -208,7 +209,7 @@ function MapView({ records }: { records: WineRecord[] }) {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh] text-center px-6">
         <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4 border border-white/5">
-          <Map className="text-zinc-500" strokeWidth={1.5} size={32} />
+          <MapPin className="text-zinc-500" strokeWidth={1.5} size={32} />
         </div>
         <p className="text-sm text-zinc-400 font-light leading-relaxed">장소가 등록된 기록이 없어요<br/>기록 시 장소를 검색해서 선택하면 표시됩니다</p>
       </div>
@@ -566,7 +567,23 @@ function DateGroupCarousel({ date, records: groupRecords, linkedMap }: { date: s
 
 export type LinkedInfo = { record_id: string; linked_record_id: string; linked_name: string; linked_photos: string[]; linked_rating: number | null; linked_nickname: string };
 
-export default function DiaryClient({ records, linkedMap = {} }: { records: WineRecord[]; linkedMap?: Record<string, LinkedInfo[]> }) {
+interface MapRecord {
+  id: string;
+  name: string;
+  location: string | null;
+  place_name: string | null;
+  latitude: number;
+  longitude: number;
+  drunk_at: string;
+  rating: number | null;
+  photos: string[];
+  wine_type: string | null;
+}
+
+type TopTab = "notes" | "map";
+
+export default function DiaryClient({ records, linkedMap = {}, mapRecords = [] }: { records: WineRecord[]; linkedMap?: Record<string, LinkedInfo[]>; mapRecords?: MapRecord[] }) {
+  const [topTab, setTopTab] = useState<TopTab>("notes");
   const [viewMode, setViewMode] = useState<ViewMode>("feed");
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
@@ -620,17 +637,38 @@ export default function DiaryClient({ records, linkedMap = {} }: { records: Wine
 
   return (
     <div className="flex flex-col flex-1">
-      <header className="px-5 pt-8 pb-2 flex items-center justify-between flex-shrink-0">
-        <h1 className="text-2xl font-bold text-white">와인노트</h1>
-        <Link
-          href="/diary/new"
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-accent hover:bg-accent/90 text-white shadow-lg shadow-accent/20 transition-all active:scale-[0.95]"
-          aria-label="새 기록 추가"
-        >
-          <Plus strokeWidth={2.5} size={20} />
-        </Link>
+      <header className="px-5 pt-8 pb-0 flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-6">
+          {([["notes", "와인노트"], ["map", "와인맵"]] as const).map(([tab, label]) => (
+            <button
+              key={tab}
+              onClick={() => setTopTab(tab)}
+              className={`relative pb-2 text-2xl font-bold transition-colors ${
+                topTab === tab ? "text-white" : "text-zinc-600 hover:text-zinc-400"
+              }`}
+            >
+              {label}
+              {topTab === tab && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full" />
+              )}
+            </button>
+          ))}
+        </div>
+        {topTab === "notes" && (
+          <Link
+            href="/diary/new"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-accent hover:bg-accent/90 text-white shadow-lg shadow-accent/20 transition-all active:scale-[0.95]"
+            aria-label="새 기록 추가"
+          >
+            <Plus strokeWidth={2.5} size={20} />
+          </Link>
+        )}
       </header>
 
+      {topTab === "map" ? (
+        <WineMapClient records={mapRecords} embedded />
+      ) : (
+      <>
       {/* Segmented Control */}
       <div className="mx-5 mb-4 flex p-1.5 rounded-xl bg-surface/80 border border-white/5 backdrop-blur-md">
         {([["feed", "카드"], ["grid", "그리드"], ["calendar", "달력"]] as const).map(([mode, label]) => (
@@ -820,6 +858,8 @@ export default function DiaryClient({ records, linkedMap = {} }: { records: Wine
             </div>
           )}
         </div>
+      )}
+      </>
       )}
     </div>
   );

@@ -411,7 +411,7 @@ export default function RecommendPage() {
           </div>
 
           {/* 입력 영역 */}
-          <div className="flex-shrink-0 px-4 pt-2 pb-2 bg-background/80 backdrop-blur-md border-t border-white/5">
+          <div className="flex-shrink-0 px-3 pt-1.5 pb-1 bg-background/80 backdrop-blur-md border-t border-white/5">
             <div className="flex items-end gap-2">
               <textarea
                 ref={textareaRef}

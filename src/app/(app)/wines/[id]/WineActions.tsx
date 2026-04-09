@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 interface Wine {
@@ -17,6 +17,13 @@ export default function WineActions({ wine }: { wine: Wine }) {
   const router = useRouter();
   const [wishSaving, setWishSaving] = useState(false);
   const [wishSaved, setWishSaved] = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/wishlist/check?wine_id=${wine.id}`)
+      .then((r) => r.json())
+      .then((d) => { if (d.exists) setWishSaved(true); })
+      .catch(() => {});
+  }, [wine.id]);
 
   async function handleWishlistAdd() {
     if (wishSaving || wishSaved) return;
@@ -59,7 +66,7 @@ export default function WineActions({ wine }: { wine: Wine }) {
             : "bg-surface/80 border border-white/10 text-zinc-200 hover:bg-white/5"
         }`}
       >
-        {wishSaved ? "♥ 내 와인에 추가됨" : wishSaving ? "추가 중…" : "♡ 내 와인에 추가하기"}
+        {wishSaved ? "♥ 내 와인에 저장중" : wishSaving ? "추가 중…" : "♡ 내 와인에 추가하기"}
       </button>
       <button
         onClick={handleRecord}

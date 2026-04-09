@@ -190,7 +190,7 @@ export default async function MyWinePage() {
 
   return (
     <div className="flex flex-col">
-      <header className="px-5 pt-8 pb-2">
+      <header className="sticky top-0 z-20 px-5 pt-8 pb-2 bg-background">
         <h1 className="text-2xl font-bold text-white">마이페이지</h1>
       </header>
 

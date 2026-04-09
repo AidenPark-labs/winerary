@@ -119,7 +119,7 @@ export default function MyWinePage() {
         </div>
       )}
 
-      <header className="px-5 pt-12 pb-4">
+      <header className="sticky top-0 z-20 px-5 pt-12 pb-4 bg-background">
         <h1 className="text-2xl font-bold">내 와인</h1>
         {!loading && !needsAuth && wishlistItems.length > 0 && (
           <p className="text-zinc-500 text-sm font-light mt-1">{wishlistItems.length}개의 와인이 저장되어 있어요</p>

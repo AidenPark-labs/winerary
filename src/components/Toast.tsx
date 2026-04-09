@@ -16,7 +16,7 @@ export default function Toast({ message, visible, onHide }: {
   if (!visible) return null;
 
   return (
-    <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[100] animate-[slideDown_0.3s_ease-out]">
+    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] animate-[slideUp_0.3s_ease-out]">
       <div className="px-5 py-3 rounded-2xl bg-rose-700 text-white text-sm font-semibold shadow-lg shadow-rose-900/40">
         {message}
       </div>

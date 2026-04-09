@@ -21,6 +21,14 @@ interface WishlistItem {
 
 // ─── WineCard ────────────────────────────────────────────────────────────────
 
+interface WineInfo {
+  id: string;
+  naver_image: string | null;
+  price: number | null;
+  country: string | null;
+  grape_variety: string | null;
+}
+
 function WineCard({ nameKo, nameEn, onSave, onAuthNeeded }: {
   nameKo: string;
   nameEn: string;
@@ -29,18 +37,18 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded }: {
 }) {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [wineId, setWineId] = useState<string | null>(null);
+  const [wine, setWine] = useState<WineInfo | null>(null);
   const fetchedRef = useRef(false);
 
-  // wines DB에서 wine_id 매칭
+  // wines DB에서 와인 정보 매칭
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
     fetch(`/api/wines/search?q=${encodeURIComponent(nameEn)}&limit=1`)
       .then((r) => r.json())
       .then((data) => {
-        const wines = data.wines ?? data.items ?? [];
-        if (wines.length > 0) setWineId(wines[0].id);
+        const wines = data.wines ?? [];
+        if (wines.length > 0) setWine(wines[0]);
       })
       .catch(() => {});
   }, [nameEn]);
@@ -58,18 +66,31 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded }: {
     setSaving(false);
   }
 
+  const meta = [wine?.country, wine?.grape_variety].filter(Boolean).join(" · ");
+
   return (
     <span className="block my-2 p-3 rounded-2xl bg-surface/80 border border-white/5 backdrop-blur-md">
-      <span className="flex items-start justify-between gap-2">
-        <span>
+      <span className="flex items-start gap-3">
+        {wine?.naver_image && (
+          <span className="flex-shrink-0 w-12 h-16 rounded-lg overflow-hidden bg-white/5">
+            <img src={wine.naver_image} alt={nameKo} className="w-full h-full object-contain" />
+          </span>
+        )}
+        <span className="flex-1 min-w-0">
           <strong className="text-white text-sm font-semibold">{nameKo}</strong>
           <span className="block text-xs text-zinc-500 mt-0.5">{nameEn}</span>
+          {meta && <span className="block text-xs text-zinc-400 mt-1">{meta}</span>}
+          {wine?.price && (
+            <span className="block text-xs text-emerald-400 font-semibold mt-0.5">
+              {wine.price.toLocaleString()}원
+            </span>
+          )}
         </span>
       </span>
       <span className="flex gap-2 mt-2 flex-wrap">
-        {wineId && (
+        {wine?.id && (
           <a
-            href={`/wines/${wineId}`}
+            href={`/wines/${wine.id}`}
             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-300 text-xs hover:bg-white/10 transition-colors tracking-wide"
             onClick={(e) => e.stopPropagation()}
           >

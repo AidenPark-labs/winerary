@@ -232,40 +232,47 @@ ${parts.join("\n")}`;
 // ─── 대화에서 언급된 특정 와인 이름 검색 ──────────────────────────────────────
 
 export async function searchMentionedWines(messages: { role: string; content: string }[]): Promise<string> {
-  // 최근 사용자 메시지에서 와인 이름으로 보이는 것을 추출하여 DB 검색
   const userTexts = messages.filter((m) => m.role === "user").map((m) => m.content);
   if (userTexts.length === 0) return "";
 
-  // 최근 3개 메시지만 (너무 오래된 것은 제외)
-  const recent = userTexts.slice(-3);
   const supabase = await createClient();
-  const results: string[] = [];
+  const allResults: string[] = [];
 
-  for (const text of recent) {
-    // 3글자 이상 한글 단어 조합을 와인명 후보로 검색 (단순 키워드 제외)
-    const skipWords = /^(레드|화이트|로제|스파클링|와인|추천|페어링|안주|음식|가격|만원|이하|이상|정도|좋아|마셨|먹을|어울|비슷|같은|오늘|어제|내일|좀|더|것|수|줄|줘|해줘|할|싶|있|없)$/;
-    // 와인 이름 후보: 2어절 이상의 명사 구 또는 영문 포함 텍스트
-    const candidates: string[] = [];
+  // 최근 3개 사용자 메시지에서 와인명 후보 추출
+  for (const text of userTexts.slice(-3)) {
+    // 일반 단어 제거 후 남은 것들로 검색어 생성
+    const cleaned = text.replace(/[을를이가은는에서도와랑하고의로부터까지만요네죠께서한테에게보다처럼만큼라서니까지만서야말로]/g, " ")
+      .replace(/\b(와인|추천|페어링|안주|음식|가격|만원|이하|이상|좋아|마셨|먹을|어울리|비슷한|같은|오늘|찾아줘|알려줘|해줘|해주세요|있을까|줄|수|것|좀|더|나는|저는)\b/g, " ")
+      .replace(/\s+/g, " ").trim();
 
-    // 한글 와인 이름 패턴 (2~6어절)
-    const words = text.split(/\s+/).filter((w) => !skipWords.test(w) && w.length >= 2);
-    if (words.length >= 2) {
-      // 연속 2~4 어절 조합
-      for (let len = Math.min(4, words.length); len >= 2; len--) {
-        for (let start = 0; start <= words.length - len; start++) {
-          candidates.push(words.slice(start, start + len).join(" "));
-        }
+    if (cleaned.length < 2) continue;
+
+    // 전체 정제 텍스트로 검색 + 공백 제거 버전도 검색
+    const noSpace = cleaned.replace(/\s/g, "");
+    const queries = [cleaned];
+    if (noSpace !== cleaned && noSpace.length >= 2) queries.push(noSpace);
+
+    // 2어절 이상이면 각 조합도 시도
+    const words = cleaned.split(" ").filter((w) => w.length >= 2);
+    for (let len = Math.min(3, words.length); len >= 2; len--) {
+      for (let s = 0; s <= words.length - len; s++) {
+        queries.push(words.slice(s, s + len).join(" "));
       }
     }
-    // 단일 고유명사 (3글자 이상, 일반 단어 제외)
-    words.filter((w) => w.length >= 3).forEach((w) => candidates.push(w));
+    // 단일 단어 (3글자 이상)
+    words.filter((w) => w.length >= 3).forEach((w) => queries.push(w));
 
-    for (const q of candidates.slice(0, 3)) {
+    // 중복 제거 후 순서대로 시도
+    const seen = new Set<string>();
+    for (const q of queries) {
+      if (seen.has(q)) continue;
+      seen.add(q);
+
       const { data } = await supabase
         .from("wines")
         .select("name_ko, name_en, wine_type, country, grape_variety, producer, price")
         .or(`name_ko.ilike.%${q}%,name_en.ilike.%${q}%`)
-        .limit(3);
+        .limit(5);
 
       if (data && data.length > 0) {
         data.forEach((w) => {
@@ -275,15 +282,15 @@ export async function searchMentionedWines(messages: { role: string; content: st
           if (w.wine_type) parts.push(w.wine_type);
           if (w.country) parts.push(w.country);
           if (w.grape_variety) parts.push(w.grape_variety);
-          results.push(`- ${parts.join(" | ")}`);
+          allResults.push(`- ${parts.join(" | ")}`);
         });
-        break; // 첫 매칭되면 중단
+        break; // 이 메시지에서 매칭 찾으면 다음 메시지로
       }
     }
   }
 
-  if (results.length === 0) return "";
-  const unique = [...new Set(results)];
+  if (allResults.length === 0) return "";
+  const unique = [...new Set(allResults)];
   return `\n\n[대화에서 언급된 와인 - DB 검색 결과]\n${unique.join("\n")}`;
 }
 

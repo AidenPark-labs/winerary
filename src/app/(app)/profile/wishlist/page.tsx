@@ -117,68 +117,32 @@ export default function MyWinePage() {
             <Link href="/recommend" className="text-accent text-sm hover:underline font-light mt-2">와인 추천받으러 가기 →</Link>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             {wishlistItems.map((item) => {
               const d = resolveDisplay(item);
               const hasDetail = !!item.wine_id;
 
               const cardContent = (
-                <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
-                  <div className="flex gap-4 p-4">
-                    {/* 와인 이미지 */}
-                    <div className="w-16 h-20 rounded-xl overflow-hidden bg-zinc-800/50 flex-shrink-0">
-                      <img
-                        src={d.image}
-                        alt={item.name_ko}
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-
-                    {/* 와인 정보 */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-white text-[15px] leading-tight line-clamp-2">{item.name_ko}</p>
-                          <p className="text-xs text-zinc-500 mt-0.5 truncate italic">{item.name_en}</p>
-                        </div>
-                        <button
-                          onClick={(e) => handleDelete(e, item.id)}
-                          className="p-1.5 rounded-lg text-zinc-600 hover:text-accent hover:bg-accent/10 transition-colors flex-shrink-0"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      {/* 메타 정보 */}
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-2 text-xs text-zinc-500">
-                        {d.type && (
-                          <span className="px-1.5 py-0.5 rounded-md bg-white/5 text-zinc-400">
-                            {TYPE_KO[d.type] ?? d.type}
-                          </span>
-                        )}
-                        {d.country && <span>{d.country}</span>}
-                        {d.rating && (
-                          <span className="flex items-center gap-0.5 text-amber-400 font-medium">
-                            ★ {Number(d.rating).toFixed(1)}
-                          </span>
-                        )}
-                        {d.price && (
-                          <span className="text-emerald-400">{d.price.toLocaleString()}원</span>
-                        )}
-                      </div>
-
-                      {d.grapes && (
-                        <p className="text-[11px] text-zinc-600 mt-1 truncate">{d.grapes}</p>
-                      )}
+                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] transition-colors">
+                  <img
+                    src={d.image}
+                    alt={item.name_ko}
+                    className="w-10 h-14 rounded-lg object-contain flex-shrink-0 bg-zinc-800/50"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-zinc-200 truncate">{item.name_ko}</p>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-zinc-500">
+                      {d.price && <span className="text-emerald-400">{d.price.toLocaleString()}원</span>}
+                      {d.rating && <span className="text-rose-300">★ {Number(d.rating).toFixed(1)}</span>}
+                      {d.country && <span>{d.country}</span>}
                     </div>
                   </div>
-
-                  {/* 하단 날짜 */}
-                  <div className="flex items-center px-4 pb-3">
-                    <span className="text-[10px] text-zinc-700 font-light">
-                      {new Date(item.created_at).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })} 저장
-                    </span>
-                  </div>
+                  <button
+                    onClick={(e) => handleDelete(e, item.id)}
+                    className="p-1.5 rounded-lg text-zinc-700 hover:text-accent hover:bg-accent/10 transition-colors flex-shrink-0"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               );
 

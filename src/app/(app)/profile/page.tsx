@@ -502,27 +502,17 @@ function StackedBar({ segments, total }: { segments: { color: string; value: num
 
 function BusinessInfo() {
   return (
-    <section className="rounded-2xl bg-surface/80 border border-white/5 p-5 backdrop-blur-md shadow-sm">
-      <div className="flex items-center gap-2 mb-4">
-        <Building2 className="w-4 h-4 text-zinc-500" />
-        <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">사업자 정보</h2>
+    <details className="group">
+      <summary className="flex items-center justify-center gap-1.5 py-3 text-xs text-zinc-600 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+        <Building2 className="w-3 h-3" />
+        <span>사업자 정보</span>
+        <span className="group-open:rotate-180 transition-transform text-[10px]">▼</span>
+      </summary>
+      <div className="text-[11px] text-zinc-600 leading-relaxed text-center pb-2">
+        에이든마켓 · 대표 박성호 · 사업자등록번호 853-25-01987<br />
+        서울특별시 영등포구 선유로43가길 24, 101동 1604호<br />
+        sparkk87@kakao.com · 010-9099-5581 · 호스팅 Vercel Inc.
       </div>
-      <dl className="flex flex-col gap-2.5 text-sm">
-        {([
-          ["상호", "에이든마켓"],
-          ["대표자", "박성호"],
-          ["사업자등록번호", "853-25-01987"],
-          ["주소", "서울특별시 영등포구 선유로43가길 24, 101동 1604호"],
-          ["이메일", "sparkk87@kakao.com"],
-          ["전화번호", "010-9099-5581"],
-          ["호스팅서비스 제공자", "Vercel Inc."],
-        ] as const).map(([label, value]) => (
-          <div key={label} className="flex gap-3">
-            <dt className="text-zinc-500 flex-shrink-0 w-28">{label}</dt>
-            <dd className="text-zinc-300">{value}</dd>
-          </div>
-        ))}
-      </dl>
-    </section>
+    </details>
   );
 }

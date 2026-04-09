@@ -44,6 +44,7 @@ export default function MyWinePage() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(false);
   const [needsAuth, setNeedsAuth] = useState(false);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -63,17 +64,23 @@ export default function MyWinePage() {
     load();
   }, []);
 
-  const handleDelete = useCallback(async (e: React.MouseEvent, id: string) => {
+  const handleDeleteClick = useCallback((e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
+    setConfirmId(id);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!confirmId) return;
     await fetch("/api/wishlist", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ id: confirmId }),
     });
-    setWishlistItems((prev) => prev.filter((w) => w.id !== id));
+    setWishlistItems((prev) => prev.filter((w) => w.id !== confirmId));
+    setConfirmId(null);
     setToast(true);
-  }, []);
+  }, [confirmId]);
 
   function resolveDisplay(item: WishlistItem) {
     const w = item.wine;
@@ -92,6 +99,24 @@ export default function MyWinePage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Toast message="위시리스트에서 삭제되었어요" visible={toast} onHide={() => setToast(false)} />
+
+      {/* 삭제 확인 다이얼로그 */}
+      {confirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setConfirmId(null)}>
+          <div className="mx-6 w-full max-w-xs rounded-2xl bg-zinc-900 border border-white/10 p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <p className="text-white font-medium text-center">위시리스트에서 삭제할까요?</p>
+            <p className="text-zinc-500 text-sm text-center mt-1">이 와인이 내 와인 목록에서 제거됩니다.</p>
+            <div className="flex gap-2 mt-5">
+              <button onClick={() => setConfirmId(null)} className="flex-1 py-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-400 text-sm transition-colors hover:bg-white/10">
+                취소
+              </button>
+              <button onClick={handleDeleteConfirm} className="flex-1 py-2.5 rounded-xl bg-accent/90 text-white text-sm font-medium transition-colors hover:bg-accent">
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <header className="px-5 pt-12 pb-4">
         <h1 className="text-2xl font-bold">내 와인</h1>
@@ -119,20 +144,35 @@ export default function MyWinePage() {
             {wishlistItems.map((item) => {
               const d = resolveDisplay(item);
               const hasDetail = !!item.wine_id;
+              const savedDate = new Date(item.created_at).toLocaleDateString("ko-KR", { year: "numeric", month: "short", day: "numeric" });
 
               const cardContent = (
-                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] transition-colors">
+                <div className="flex gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] transition-colors">
                   {/* 와인 이미지 */}
-                  <img src={d.image} alt={item.name_ko} className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-zinc-700" />
+                  <img src={d.image} alt={item.name_ko} className="w-12 h-16 rounded-lg object-cover flex-shrink-0 bg-zinc-700" />
 
                   {/* 와인 정보 */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-zinc-200 truncate">{item.name_ko}</p>
-                    <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-500">
-                      {d.price && <span className="text-emerald-400">{d.price.toLocaleString()}원</span>}
-                      {d.rating && <span className="text-rose-300">★ {Number(d.rating).toFixed(1)}</span>}
-                      {d.country && <span>{d.country}</span>}
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-[15px] text-zinc-200 font-medium leading-snug line-clamp-2">{item.name_ko}</p>
+                      <button
+                        onClick={(e) => handleDeleteClick(e, item.id)}
+                        className="p-1 rounded-md text-zinc-700 hover:text-accent hover:bg-accent/10 transition-colors flex-shrink-0"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
+                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-1 text-xs text-zinc-500">
+                      {d.type && <span className="text-zinc-400">{TYPE_KO[d.type] ?? d.type}</span>}
+                      {d.type && d.country && <span className="text-zinc-700">·</span>}
+                      {d.country && <span>{d.country}</span>}
+                      {d.price && <><span className="text-zinc-700">·</span><span className="text-emerald-400">{d.price.toLocaleString()}원</span></>}
+                      {d.rating && <><span className="text-zinc-700">·</span><span className="text-rose-300">★ {Number(d.rating).toFixed(1)}</span></>}
+                    </div>
+                    {d.grapes && (
+                      <p className="text-[11px] text-zinc-600 mt-1 truncate">{d.grapes}</p>
+                    )}
+                    <p className="text-[10px] text-zinc-700 mt-1">{savedDate} 저장</p>
                   </div>
                 </div>
               );

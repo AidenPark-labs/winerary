@@ -24,10 +24,16 @@ interface WineInfo {
   id: string;
   naver_image: string | null;
   price: number | null;
+  wine_type: string | null;
   country: string | null;
   grape_variety: string | null;
   vivino_rating: number | null;
 }
+
+const WINE_TYPE_KO: Record<string, string> = {
+  red: "레드", white: "화이트", rose: "로제",
+  sparkling: "스파클링", fortified: "주정강화", dessert: "디저트", other: "기타",
+};
 
 function WineCard({ nameKo, nameEn, onSave, onAuthNeeded, alreadySaved }: {
   nameKo: string;
@@ -67,7 +73,8 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded, alreadySaved }: {
     setSaving(false);
   }
 
-  const meta = [wine?.country, wine?.grape_variety].filter(Boolean).join(" · ");
+  const wineType = wine?.wine_type ? WINE_TYPE_KO[wine.wine_type] ?? wine.wine_type : null;
+  const meta = [wineType, wine?.country, wine?.grape_variety].filter(Boolean).join(" · ");
 
   return (
     <span className="block my-2 rounded-2xl overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.03) 100%)", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06)", backdropFilter: "blur(20px)" }}>

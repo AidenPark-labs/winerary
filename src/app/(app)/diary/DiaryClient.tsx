@@ -669,27 +669,25 @@ export default function DiaryClient({ records, linkedMap = {}, mapRecords = [] }
         <WineMapClient records={mapRecords} embedded />
       ) : (
       <>
-      {/* Segmented Control */}
-      <div className="mx-5 mb-4 flex p-1.5 rounded-xl bg-surface/80 border border-white/5 backdrop-blur-md">
-        {([["feed", "카드"], ["grid", "그리드"], ["calendar", "달력"]] as const).map(([mode, label]) => (
-          <button
-            key={mode}
-            onClick={() => switchView(mode)}
-            className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all flex items-center justify-center gap-2 ${
-              viewMode === mode ? "bg-white/10 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"
-            }`}
-          >
-            {mode === "feed" && <LayoutList size={14} />}
-            {mode === "grid" && <Grid3X3 size={14} />}
-            {mode === "calendar" && <CalendarDays size={14} />}
-            {label}
-          </button>
-        ))}
-      </div>
+      {/* 뷰 모드 + 태그 필터 */}
+      <div className="flex items-center gap-2 px-5 mb-3 overflow-x-auto no-scrollbar" style={{ scrollbarWidth: "none" }}>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {([["feed", LayoutList], ["grid", Grid3X3], ["calendar", CalendarDays]] as const).map(([mode, Icon]) => (
+            <button
+              key={mode}
+              onClick={() => switchView(mode)}
+              className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${
+                viewMode === mode ? "bg-white/10 text-white" : "text-zinc-600 hover:text-zinc-400"
+              }`}
+            >
+              <Icon size={16} />
+            </button>
+          ))}
+        </div>
 
-      {/* 태그 필터 */}
-      {allTags.length > 0 && (
-        <div className="flex gap-2 px-5 mb-3 overflow-x-auto no-scrollbar" style={{ scrollbarWidth: "none" }}>
+        {allTags.length > 0 && (
+          <>
+          <span className="w-px h-4 bg-white/10 flex-shrink-0" />
           <button
             onClick={() => setSelectedTag(null)}
             className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${!selectedTag ? "bg-white/10 text-white border-white/20" : "bg-transparent text-zinc-500 border-white/5 hover:text-zinc-300"}`}
@@ -706,8 +704,9 @@ export default function DiaryClient({ records, linkedMap = {}, mapRecords = [] }
               <span className="ml-1 text-[10px] opacity-60">{tagCounts[tag]}</span>
             </button>
           ))}
-        </div>
-      )}
+          </>
+        )}
+      </div>
 
       {records.length === 0 ? (
         <div className="flex flex-col flex-1 items-center justify-center gap-5 text-center px-8 z-10 relative">

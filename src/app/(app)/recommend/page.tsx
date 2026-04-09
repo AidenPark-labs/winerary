@@ -12,10 +12,6 @@ interface Message {
   content: string;
 }
 
-interface ShopItem {
-  lprice: number | null;
-}
-
 interface WishlistItem {
   id: string;
   name_ko: string;
@@ -25,36 +21,29 @@ interface WishlistItem {
 
 // ─── WineCard ────────────────────────────────────────────────────────────────
 
-function WineCard({ nameKo, nameEn, onSave, onAuthNeeded, priceRange }: {
+function WineCard({ nameKo, nameEn, onSave, onAuthNeeded }: {
   nameKo: string;
   nameEn: string;
   onSave: (nameKo: string, nameEn: string) => Promise<void>;
   onAuthNeeded: () => void;
-  priceRange?: { min: number; max: number } | null;
 }) {
-  const [price, setPrice] = useState<number | null>(null);
-  const [status, setStatus] = useState<"loading" | "found" | "notfound">("loading");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [wineId, setWineId] = useState<string | null>(null);
   const fetchedRef = useRef(false);
 
+  // wines DB에서 wine_id 매칭
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
-    fetch(`/api/naver/shopping?q=${encodeURIComponent(nameKo)}`)
+    fetch(`/api/wines/search?q=${encodeURIComponent(nameEn)}&limit=1`)
       .then((r) => r.json())
       .then((data) => {
-        const items: ShopItem[] = data.items ?? [];
-        const priced = items.filter((i) => i.lprice != null).map((i) => i.lprice as number);
-        if (priced.length > 0) {
-          setPrice(Math.min(...priced));
-          setStatus("found");
-        } else {
-          setStatus("notfound");
-        }
+        const wines = data.wines ?? data.items ?? [];
+        if (wines.length > 0) setWineId(wines[0].id);
       })
-      .catch(() => setStatus("notfound"));
-  }, [nameKo]);
+      .catch(() => {});
+  }, [nameEn]);
 
   async function handleSave() {
     if (saved || saving) return;
@@ -69,44 +58,24 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded, priceRange }: {
     setSaving(false);
   }
 
-  const vivinoUrl = `https://www.vivino.com/search/wines?q=${encodeURIComponent(nameEn)}`;
-  const naverUrl = `https://msearch.shopping.naver.com/search/all?query=${encodeURIComponent(nameKo)}`;
-
   return (
-    <span className="block my-2 p-4 rounded-2xl bg-surface/80 border border-white/5 backdrop-blur-md shadow-lg">
-      <strong className="text-white text-sm">{nameKo}</strong>
-      <span className="block text-xs text-zinc-500 mt-0.5">{nameEn}</span>
-      <span className="block mt-1.5 text-xs">
-        {status === "loading" && <span className="text-zinc-500">가격 확인 중…</span>}
-        {status === "found" && price && (
-          <>
-            <span className="text-emerald-400 font-semibold">네이버 최저가 {price.toLocaleString()}원</span>
-            {priceRange && (price < priceRange.min || price > priceRange.max) && (
-              <span className="block mt-1 text-amber-400">⚠ 요청하신 가격대({(priceRange.min / 10000).toFixed(0)}~{(priceRange.max / 10000).toFixed(0)}만원)와 다를 수 있어요</span>
-            )}
-          </>
-        )}
-        {status === "notfound" && <span className="text-zinc-500">네이버 쇼핑 검색결과 없음</span>}
+    <span className="block my-2 p-3 rounded-2xl bg-surface/80 border border-white/5 backdrop-blur-md">
+      <span className="flex items-start justify-between gap-2">
+        <span>
+          <strong className="text-white text-sm font-semibold">{nameKo}</strong>
+          <span className="block text-xs text-zinc-500 mt-0.5">{nameEn}</span>
+        </span>
       </span>
       <span className="flex gap-2 mt-2 flex-wrap">
-        <a
-          href={vivinoUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-accent text-xs hover:bg-white/10 transition-colors tracking-wide"
-          onClick={(e) => e.stopPropagation()}
-        >
-          Vivino
-        </a>
-        <a
-          href={naverUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-300 text-xs hover:bg-white/10 transition-colors tracking-wide"
-          onClick={(e) => e.stopPropagation()}
-        >
-          네이버 최저가
-        </a>
+        {wineId && (
+          <a
+            href={`/wines/${wineId}`}
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-300 text-xs hover:bg-white/10 transition-colors tracking-wide"
+            onClick={(e) => e.stopPropagation()}
+          >
+            자세히 보기
+          </a>
+        )}
         <button
           onClick={handleSave}
           disabled={saving || saved}
@@ -325,33 +294,30 @@ export default function RecommendPage() {
     setWishlist((prev) => prev.filter((w) => w.id !== id));
   }
 
-  // 대화에서 사용자가 언급한 가격대 추출
-  function extractPriceRange(): { min: number; max: number } | null {
-    const userMessages = messages.filter((m) => m.role === "user").map((m) => m.content);
-    for (let i = userMessages.length - 1; i >= 0; i--) {
-      const text = userMessages[i];
-      const m1 = text.match(/(\d+)\s*만\s*원\s*대/);
-      if (m1) { const v = parseInt(m1[1]) * 10000; return { min: v, max: v + 9999 }; }
-      const m2 = text.match(/(\d+)\s*~\s*(\d+)\s*만\s*원/);
-      if (m2) return { min: parseInt(m2[1]) * 10000, max: parseInt(m2[2]) * 10000 + 9999 };
-      const m3 = text.match(/(\d+)\s*만\s*원\s*이하/);
-      if (m3) return { min: 0, max: parseInt(m3[1]) * 10000 };
-      const m4 = text.match(/(\d+)\s*만\s*원\s*이상/);
-      if (m4) return { min: parseInt(m4[1]) * 10000, max: Infinity };
-    }
-    return null;
-  }
-
-  // 메시지 렌더링: [[한국어|영어]] → WineCard
+  // 메시지 렌더링: [[한국어|영어]] → WineCard, **텍스트** → 볼드 강조
   function renderMessageContent(content: string) {
-    const range = extractPriceRange();
-    const parts = content.split(/(\[\[[^\]]+\]\])/g);
-    if (parts.length === 1) return content;
-    return parts.map((part, i) => {
-      const match = part.match(/^\[\[([^|]+)\|([^\]]+)\]\]$/);
-      if (!match) return <span key={i}>{part}</span>;
-      const [, nameKo, nameEn] = match;
-      return <WineCard key={i} nameKo={nameKo.trim()} nameEn={nameEn.trim()} onSave={saveWine} onAuthNeeded={() => setShowAuthPrompt(true)} priceRange={range} />;
+    // 1단계: [[와인카드]] 분리
+    const cardParts = content.split(/(\[\[[^\]]+\]\])/g);
+    return cardParts.map((part, i) => {
+      const cardMatch = part.match(/^\[\[([^|]+)\|([^\]]+)\]\]$/);
+      if (cardMatch) {
+        const [, nameKo, nameEn] = cardMatch;
+        return <WineCard key={i} nameKo={nameKo.trim()} nameEn={nameEn.trim()} onSave={saveWine} onAuthNeeded={() => setShowAuthPrompt(true)} />;
+      }
+      // 2단계: **볼드** 처리
+      const boldParts = part.split(/(\*\*[^*]+\*\*)/g);
+      if (boldParts.length === 1) return <span key={i}>{part}</span>;
+      return (
+        <span key={i}>
+          {boldParts.map((bp, j) => {
+            const boldMatch = bp.match(/^\*\*([^*]+)\*\*$/);
+            if (boldMatch) {
+              return <strong key={j} className="text-accent font-semibold">{boldMatch[1]}</strong>;
+            }
+            return <span key={j}>{bp}</span>;
+          })}
+        </span>
+      );
     });
   }
 

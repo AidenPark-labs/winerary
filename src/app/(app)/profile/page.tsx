@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { WineRecord } from "@/types";
 import LogoutButton from "./LogoutButton";
 import AuthPrompt from "@/components/AuthPrompt";
-import { User, Book, Star, BarChart3, Pencil, Heart } from "lucide-react";
+import { User, Book, Star, BarChart3, Pencil, Heart, Building2 } from "lucide-react";
 import Link from "next/link";
 import { GRAPE_OPTIONS } from "@/lib/grapes";
 
@@ -60,6 +60,7 @@ export default async function MyWinePage() {
           </div>
         </div>
         <AuthPrompt message="나의 와인 통계와 프로필을 확인하려면 로그인이 필요합니다" />
+        <BusinessInfo />
       </>
     );
   }
@@ -406,6 +407,8 @@ export default async function MyWinePage() {
             )}
           </>
         )}
+
+        <BusinessInfo />
       </div>
     </div>
   );
@@ -494,5 +497,32 @@ function StackedBar({ segments, total }: { segments: { color: string; value: num
         />
       ))}
     </div>
+  );
+}
+
+function BusinessInfo() {
+  return (
+    <section className="rounded-2xl bg-surface/80 border border-white/5 p-5 backdrop-blur-md shadow-sm">
+      <div className="flex items-center gap-2 mb-4">
+        <Building2 className="w-4 h-4 text-zinc-500" />
+        <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">사업자 정보</h2>
+      </div>
+      <dl className="flex flex-col gap-2.5 text-sm">
+        {([
+          ["상호", "에이든마켓"],
+          ["대표자", "박성호"],
+          ["사업자등록번호", "853-25-01987"],
+          ["주소", "서울특별시 영등포구 선유로43가길 24, 101동 1604호"],
+          ["이메일", "sparkk87@kakao.com"],
+          ["전화번호", "010-9099-5581"],
+          ["호스팅서비스 제공자", "Vercel Inc."],
+        ] as const).map(([label, value]) => (
+          <div key={label} className="flex gap-3">
+            <dt className="text-zinc-500 flex-shrink-0 w-28">{label}</dt>
+            <dd className="text-zinc-300">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }

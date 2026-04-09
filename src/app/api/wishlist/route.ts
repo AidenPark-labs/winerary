@@ -11,7 +11,28 @@ export async function GET() {
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  return Response.json({ items: data ?? [] });
+  if (!data || data.length === 0) return Response.json({ items: [] });
+
+  // wine_id가 있는 항목들의 와인 상세정보 조회
+  const wineIds = data.filter((d) => d.wine_id).map((d) => d.wine_id);
+  let winesMap: Record<string, any> = {};
+
+  if (wineIds.length > 0) {
+    const { data: wines } = await supabase
+      .from("wines")
+      .select("id, name_ko, name_en, wine_type, country, grape_variety, naver_image, vivino_rating, vivino_reviews, price, final_grapes, vivino_grapes, final_country, vivino_country, final_type, vivino_type")
+      .in("id", wineIds);
+    if (wines) {
+      wines.forEach((w) => { winesMap[w.id] = w; });
+    }
+  }
+
+  const items = data.map((item) => ({
+    ...item,
+    wine: item.wine_id ? winesMap[item.wine_id] ?? null : null,
+  }));
+
+  return Response.json({ items });
 }
 
 export async function POST(request: Request) {
@@ -19,7 +40,7 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { name_ko, name_en } = await request.json();
+  const { name_ko, name_en, wine_id } = await request.json();
   if (!name_ko || !name_en) return Response.json({ error: "이름이 필요합니다" }, { status: 400 });
 
   // 중복 체크
@@ -34,9 +55,12 @@ export async function POST(request: Request) {
     return Response.json({ already: true, id: existing.id });
   }
 
+  const insertData: Record<string, string> = { user_id: user.id, name_ko, name_en };
+  if (wine_id) insertData.wine_id = wine_id;
+
   const { data, error } = await supabase
     .from("wine_wishlist")
-    .insert({ user_id: user.id, name_ko, name_en })
+    .insert(insertData)
     .select()
     .single();
 

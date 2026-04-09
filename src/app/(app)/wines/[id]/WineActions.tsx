@@ -28,6 +28,7 @@ export default function WineActions({ wine }: { wine: Wine }) {
         body: JSON.stringify({
           name_ko: wine.name_ko,
           name_en: wine.name_en || wine.name_ko,
+          wine_id: wine.id,
         }),
       });
       setWishSaved(true);

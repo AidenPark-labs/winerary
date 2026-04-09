@@ -149,7 +149,7 @@ export default function MyWinePage() {
               const cardContent = (
                 <div className="flex gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] transition-colors">
                   {/* 와인 이미지 */}
-                  <img src={d.image} alt={item.name_ko} className="w-12 h-16 rounded-lg object-cover flex-shrink-0 bg-zinc-700" />
+                  <img src={d.image} alt={item.name_ko} className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-zinc-700" />
 
                   {/* 와인 정보 */}
                   <div className="flex-1 min-w-0">

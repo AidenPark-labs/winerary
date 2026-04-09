@@ -241,20 +241,22 @@ export async function searchMentionedWines(messages: { role: string; content: st
 
   // 최근 3개 사용자 메시지에서 와인명 후보 추출
   for (const text of userTexts.slice(-3)) {
-    // 일반 단어 제거 후 남은 것들로 검색어 생성
-    const cleaned = text.replace(/[을를이가은는에서도와랑하고의로부터까지만요네죠께서한테에게보다처럼만큼라서니까지만서야말로]/g, " ")
-      .replace(/\b(와인|추천|페어링|안주|음식|가격|만원|이하|이상|좋아|마셨|먹을|어울리|비슷한|같은|오늘|찾아줘|알려줘|해줘|해주세요|있을까|줄|수|것|좀|더|나는|저는)\b/g, " ")
+    // 조사 + 일반 동사/형용사/부사 제거하여 와인 이름 후보만 남기기
+    const stopWords = "와인|추천|추천해줘|추천해주세요|페어링|안주|음식|가격|만원|이하|이상|좋아|좋아해|마셨|먹을|어울리|어울리는|비슷한|비슷|같은|오늘|어제|찾아줘|찾아|알려줘|알려|해줘|해주세요|있을까|있어|없어|줄|수|것|좀|더|나는|나|저는|저|인|대|쯤|한|잔|병|두|세|개|몇|정도|약|그|어떤|무슨|뭐|마실|먹을|살|사|볼|봐";
+    const cleaned = text
+      .replace(/[을를이가은는에서도와랑하고의로부터까지만요네죠께서한테에게보다처럼만큼라서니까지만서야말로]/g, " ")
+      .split(/\s+/)
+      .filter((w) => !new RegExp(`^(${stopWords})$`).test(w))
+      .join(" ")
       .replace(/\s+/g, " ").trim();
 
     if (cleaned.length < 2) continue;
 
-    // 전체 정제 텍스트로 검색 + 공백 제거 버전도 검색
-    const noSpace = cleaned.replace(/\s/g, "");
-    const queries = [cleaned];
-    if (noSpace !== cleaned && noSpace.length >= 2) queries.push(noSpace);
-
-    // 2어절 이상이면 각 조합도 시도
+    // 검색 쿼리 후보: 긴 것부터 시도 (더 정확한 매칭 우선)
     const words = cleaned.split(" ").filter((w) => w.length >= 2);
+    const queries: string[] = [];
+
+    // 2어절 이상 조합 (긴 것 우선)
     for (let len = Math.min(3, words.length); len >= 2; len--) {
       for (let s = 0; s <= words.length - len; s++) {
         queries.push(words.slice(s, s + len).join(" "));
@@ -269,10 +271,20 @@ export async function searchMentionedWines(messages: { role: string; content: st
       if (seen.has(q)) continue;
       seen.add(q);
 
+      // 일반 ILIKE + 한글 fuzzy (글자 사이 공백 무시) 동시 검색
+      const isKorean = /[가-힣]/.test(q);
+      const stripped = q.replace(/\s/g, "");
+      const fuzzy = isKorean && stripped.length >= 2
+        ? "%" + stripped.split("").join("%") + "%"
+        : null;
+
+      const orFilters = [`name_ko.ilike.%${q}%`, `name_en.ilike.%${q}%`];
+      if (fuzzy) orFilters.push(`name_ko.ilike.${fuzzy}`);
+
       const { data } = await supabase
         .from("wines")
         .select("name_ko, name_en, wine_type, country, grape_variety, producer, price")
-        .or(`name_ko.ilike.%${q}%,name_en.ilike.%${q}%`)
+        .or(orFilters.join(","))
         .limit(5);
 
       if (data && data.length > 0) {

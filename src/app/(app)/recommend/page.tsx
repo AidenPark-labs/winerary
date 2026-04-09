@@ -2,8 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { checkAuth, setPendingAction, consumePendingAction } from "@/lib/auth-guard";
-import { Heart } from "lucide-react";
-import { CloseIcon } from "@/components/Icons";
+import Link from "next/link";
 import Toast from "@/components/Toast";
 import AuthPrompt from "@/components/AuthPrompt";
 
@@ -30,13 +29,14 @@ interface WineInfo {
   vivino_rating: number | null;
 }
 
-function WineCard({ nameKo, nameEn, onSave, onAuthNeeded }: {
+function WineCard({ nameKo, nameEn, onSave, onAuthNeeded, alreadySaved }: {
   nameKo: string;
   nameEn: string;
   onSave: (nameKo: string, nameEn: string) => Promise<void>;
   onAuthNeeded: () => void;
+  alreadySaved?: boolean;
 }) {
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(alreadySaved ?? false);
   const [saving, setSaving] = useState(false);
   const [wine, setWine] = useState<WineInfo | null>(null);
   const fetchedRef = useRef(false);
@@ -130,62 +130,6 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded }: {
   );
 }
 
-// ─── 저장된 와인 목록 ─────────────────────────────────────────────────────────
-
-function WishlistPanel({ items, onDelete, onClose }: {
-  items: WishlistItem[];
-  onDelete: (id: string) => void;
-  onClose: () => void;
-}) {
-  return (
-    <div className="flex flex-col flex-1 overflow-y-auto px-4 pb-4">
-      <div className="flex items-center justify-between py-3">
-        <h2 className="font-semibold text-zinc-200">저장된 와인 ({items.length})</h2>
-        <button onClick={onClose} className="text-xs text-zinc-500 hover:text-zinc-300">닫기</button>
-      </div>
-      {items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16">
-          <Heart className="w-12 h-12 text-zinc-700" strokeWidth={1} />
-          <p className="text-zinc-500 text-sm font-light mt-1">추천받은 와인을 저장해보세요</p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {items.map((item) => {
-            const vivinoUrl = `https://www.vivino.com/search/wines?q=${encodeURIComponent(item.name_en)}`;
-            const naverUrl = `https://msearch.shopping.naver.com/search/all?query=${encodeURIComponent(item.name_ko)}`;
-            return (
-              <div key={item.id} className="p-3 rounded-2xl bg-surface/80 border border-white/5 backdrop-blur-md">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-sm font-semibold text-white">{item.name_ko}</p>
-                    <p className="text-xs text-zinc-500">{item.name_en}</p>
-                  </div>
-                  <button
-                    onClick={() => onDelete(item.id)}
-                    className="text-zinc-500 hover:text-accent flex-shrink-0 transition-colors w-8 h-8 flex items-center justify-center -mt-1 -mr-1 rounded-full hover:bg-white/5"
-                  >
-                    <CloseIcon size={14} />
-                  </button>
-                </div>
-                <div className="flex gap-2 mt-2">
-                  <a href={vivinoUrl} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-accent text-xs tracking-wide">
-                    Vivino
-                  </a>
-                  <a href={naverUrl} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-300 text-xs tracking-wide">
-                    네이버 최저가
-                  </a>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Main ────────────────────────────────────────────────────────────────────
 
 export default function RecommendPage() {
@@ -193,8 +137,7 @@ export default function RecommendPage() {
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [isAuthed, setIsAuthed] = useState<boolean | null>(null);
-  const [showWishlist, setShowWishlist] = useState(false);
-  const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
+  const [savedNames, setSavedNames] = useState<Set<string>>(new Set());
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [toast, setToast] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -214,7 +157,8 @@ export default function RecommendPage() {
           fetch("/api/wishlist").then((r) => r.json()).catch(() => ({ items: [] })),
           fetch("/api/sommelier/messages").then((r) => r.json()).catch(() => ({ messages: [] })),
         ]);
-        setWishlist(wishRes.items ?? []);
+        const wishItems = wishRes.items ?? [];
+        setSavedNames(new Set(wishItems.map((w: WishlistItem) => w.name_en)));
         const loaded: Message[] = (msgRes.messages ?? []).map((m: { role: string; content: string }) => ({
           role: m.role as "user" | "assistant",
           content: m.content,
@@ -232,10 +176,10 @@ export default function RecommendPage() {
           const res = await fetch("/api/wishlist", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name_ko: pending.name_ko, name_en: pending.name_en }),
+            body: JSON.stringify({ name_ko: pending.name_ko, name_en: pending.name_en, source: "ai" }),
           });
           const data = await res.json();
-          if (data.item) setWishlist((prev) => [data.item, ...prev]);
+          if (data.item) setSavedNames((prev) => new Set(prev).add(pending.name_en));
           setToast(true);
         }
       } else {
@@ -316,21 +260,10 @@ export default function RecommendPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name_ko: nameKo, name_en: nameEn, source: "ai" }),
     });
-    const data = await res.json();
-    if (data.item) {
-      setWishlist((prev) => [data.item, ...prev]);
-    }
+    await res.json();
+    setSavedNames((prev) => new Set(prev).add(nameEn));
     setToast(true);
   }, []);
-
-  async function deleteWine(id: string) {
-    await fetch("/api/wishlist", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
-    setWishlist((prev) => prev.filter((w) => w.id !== id));
-  }
 
   // 메시지 렌더링: [[추천카드]], ((인라인멘션)), **볼드**
   function renderMessageContent(content: string) {
@@ -340,7 +273,7 @@ export default function RecommendPage() {
       const cardMatch = part.match(/^\[\[([^|]+)\|([^\]]+)\]\]$/);
       if (cardMatch) {
         const [, nameKo, nameEn] = cardMatch;
-        return <WineCard key={i} nameKo={nameKo.trim()} nameEn={nameEn.trim()} onSave={saveWine} onAuthNeeded={() => setShowAuthPrompt(true)} />;
+        return <WineCard key={i} nameKo={nameKo.trim()} nameEn={nameEn.trim()} onSave={saveWine} onAuthNeeded={() => setShowAuthPrompt(true)} alreadySaved={savedNames.has(nameEn.trim())} />;
       }
       // 인라인 멘션: ((한국어|영어))
       const mentionMatch = part.match(/^\(\(([^|]+)\|([^)]+)\)\)$/);
@@ -429,25 +362,15 @@ export default function RecommendPage() {
           <h1 className="text-2xl font-bold text-white">와인 소믈리에</h1>
           <p className="text-zinc-500 text-sm mt-0.5">와인과 음식, 무엇이든 물어보세요</p>
         </div>
-        <button
-          onClick={async () => {
-            if (!showWishlist && !(await checkAuth())) { setShowAuthPrompt(true); return; }
-            setShowWishlist(!showWishlist);
-          }}
-          className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-            showWishlist
-              ? "border-rose-700 text-rose-400 bg-rose-950/30"
-              : "border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500"
-          }`}
+        <Link
+          href="/profile/wishlist"
+          className="text-xs px-3 py-1.5 rounded-full border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors"
         >
-          내 와인{wishlist.length > 0 ? ` ${wishlist.length}` : ""}
-        </button>
+          내 와인
+        </Link>
       </header>
 
-      {showWishlist ? (
-        <WishlistPanel items={wishlist} onDelete={deleteWine} onClose={() => setShowWishlist(false)} />
-      ) : (
-        <>
+      <>
           {/* 채팅 영역 */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 flex flex-col gap-3">
             <div className="flex-1" />
@@ -506,7 +429,6 @@ export default function RecommendPage() {
             </div>
           </div>
         </>
-      )}
     </div>
   );
 }

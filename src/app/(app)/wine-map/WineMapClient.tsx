@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
-import { MapPin, Map as MapIcon, Wine, Navigation, List } from "lucide-react";
+import { MapPin, Map as MapIcon, Wine, List } from "lucide-react";
 import { CloseIcon } from "@/components/Icons";
 
 interface MapRecord {
@@ -162,16 +162,6 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
     return Array.from(groups.values());
   }, [records]);
 
-  function goToMyLocation() {
-    if (!mapInstanceRef.current || !navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition((pos) => {
-      const kakao = (window as any).kakao;
-      const loc = new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-      mapInstanceRef.current.setCenter(loc);
-      mapInstanceRef.current.setLevel(5);
-    });
-  }
-
   useEffect(() => {
     if (typeof window === "undefined" || records.length === 0) return;
     if ((window as any).kakao?.maps) { setLoaded(true); return; }
@@ -190,76 +180,55 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
     if (mapInstanceRef.current) return;
     const kakao = (window as any).kakao;
 
-    // 현재 위치 기반으로 센터링 시도, 실패 시 기록 bounds
-    const initMap = (center: any, level: number) => {
-      const map = new kakao.maps.Map(mapRef.current, { center, level });
-      mapInstanceRef.current = map;
+    // 와인 기록 좌표 기반으로 센터링
+    const bounds = new kakao.maps.LatLngBounds();
+    records.forEach((r) => bounds.extend(new kakao.maps.LatLng(r.latitude, r.longitude)));
+    const center = bounds.getCenter?.() ?? new kakao.maps.LatLng(37.5665, 126.978);
 
-      const groups = groupedByLocation();
-      groups.forEach((group) => {
-        const rep = group[0];
-        const pos = new kakao.maps.LatLng(rep.latitude, rep.longitude);
-        const count = group.length;
+    const map = new kakao.maps.Map(mapRef.current, { center, level: 8 });
+    mapInstanceRef.current = map;
+    map.setBounds(bounds, 80);
 
-        const wrapper = document.createElement("div");
-        wrapper.style.cssText = "cursor:pointer; display:flex; flex-direction:column; align-items:center;";
+    const groups = groupedByLocation();
+    groups.forEach((group) => {
+      const rep = group[0];
+      const pos = new kakao.maps.LatLng(rep.latitude, rep.longitude);
+      const count = group.length;
 
-        const circle = document.createElement("div");
-        circle.style.cssText = `
-          background:#1c1c1e; color:#e4e4e7;
-          min-width:28px; height:28px; border-radius:14px;
-          display:flex; align-items:center; justify-content:center;
-          font-size:${count > 1 ? "11px" : "13px"}; font-weight:700;
-          border:2px solid #e11d48; box-shadow:0 2px 8px rgba(0,0,0,0.5);
-          padding:0 6px;
-        `;
-        circle.textContent = count > 1 ? String(count) : "";
-        if (count <= 1) circle.innerHTML = "🍷";
+      const wrapper = document.createElement("div");
+      wrapper.style.cssText = "cursor:pointer; display:flex; flex-direction:column; align-items:center;";
 
-        const tail = document.createElement("div");
-        tail.style.cssText = "width:2px; height:6px; background:#e11d48; border-radius:1px;";
+      const circle = document.createElement("div");
+      circle.style.cssText = `
+        background:#1c1c1e; color:#e4e4e7;
+        min-width:28px; height:28px; border-radius:14px;
+        display:flex; align-items:center; justify-content:center;
+        font-size:${count > 1 ? "11px" : "13px"}; font-weight:700;
+        border:2px solid #e11d48; box-shadow:0 2px 8px rgba(0,0,0,0.5);
+        padding:0 6px;
+      `;
+      circle.textContent = count > 1 ? String(count) : "";
+      if (count <= 1) circle.innerHTML = "🍷";
 
-        wrapper.appendChild(circle);
-        wrapper.appendChild(tail);
-        wrapper.addEventListener("click", () => {
-          setSelectedGroup(group);
-          map.panTo(pos);
-        });
+      const tail = document.createElement("div");
+      tail.style.cssText = "width:2px; height:6px; background:#e11d48; border-radius:1px;";
 
-        const overlay = new kakao.maps.CustomOverlay({
-          position: pos,
-          content: wrapper,
-          yAnchor: 1,
-          zIndex: 2,
-          clickable: true,
-        });
-        overlay.setMap(map);
+      wrapper.appendChild(circle);
+      wrapper.appendChild(tail);
+      wrapper.addEventListener("click", () => {
+        setSelectedGroup(group);
+        map.panTo(pos);
       });
-    };
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const center = new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-          initMap(center, 5);
-        },
-        () => {
-          // 위치 권한 거부 시 기록 bounds로
-          const bounds = new kakao.maps.LatLngBounds();
-          records.forEach((r) => bounds.extend(new kakao.maps.LatLng(r.latitude, r.longitude)));
-          const center = bounds.getCenter?.() ?? new kakao.maps.LatLng(37.5665, 126.978);
-          initMap(center, 8);
-          mapInstanceRef.current.setBounds(bounds, 80);
-        },
-        { timeout: 3000 }
-      );
-    } else {
-      const bounds = new kakao.maps.LatLngBounds();
-      records.forEach((r) => bounds.extend(new kakao.maps.LatLng(r.latitude, r.longitude)));
-      const center = bounds.getCenter?.() ?? new kakao.maps.LatLng(37.5665, 126.978);
-      initMap(center, 8);
-      mapInstanceRef.current.setBounds(bounds, 80);
-    }
+      const overlay = new kakao.maps.CustomOverlay({
+        position: pos,
+        content: wrapper,
+        yAnchor: 1,
+        zIndex: 2,
+        clickable: true,
+      });
+      overlay.setMap(map);
+    });
   }, [loaded, records, groupedByLocation]);
 
   if (records.length === 0) {
@@ -291,19 +260,13 @@ export default function WineMapClient({ records }: { records: MapRecord[] }) {
         {/* 하단 영역: 버튼 + 카드 */}
         <div className="absolute bottom-4 left-0 right-0 z-[999] flex flex-col items-center gap-3 pointer-events-none">
           {/* 플로팅 버튼들 */}
-          <div className="w-full px-4 flex items-center justify-center relative pointer-events-none">
+          <div className="w-full px-4 flex items-center justify-center pointer-events-none">
             <button
               onClick={() => setShowList(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface/90 backdrop-blur-md border border-white/10 shadow-xl text-zinc-200 hover:text-white transition-colors pointer-events-auto"
             >
               <List size={14} />
               <span className="text-xs font-medium">목록</span>
-            </button>
-            <button
-              onClick={goToMyLocation}
-              className="absolute right-4 w-10 h-10 rounded-full bg-surface/90 backdrop-blur-md border border-white/10 shadow-xl flex items-center justify-center text-zinc-300 hover:text-white transition-colors pointer-events-auto"
-            >
-              <Navigation size={16} />
             </button>
           </div>
 

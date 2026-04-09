@@ -25,5 +25,21 @@ export async function updateSession(request: NextRequest) {
   if (!user && isProtected) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
+
+  // 로그인된 사용자: 약관 동의 또는 출생연도 미입력 시 /agree로 리다이렉트
+  const pathname = request.nextUrl.pathname
+  const skipPaths = ['/agree', '/terms', '/privacy', '/login', '/register', '/api/', '/invite/', '/share/']
+  const shouldCheck = user && !skipPaths.some(p => pathname.startsWith(p))
+  if (shouldCheck) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('birth_year, agreed_at')
+      .eq('id', user.id)
+      .single()
+    if (profile && (!profile.birth_year || !profile.agreed_at)) {
+      return NextResponse.redirect(new URL('/agree', request.url))
+    }
+  }
+
   return supabaseResponse
 }

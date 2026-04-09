@@ -3,6 +3,8 @@ create table profiles (
   id uuid references auth.users primary key,
   nickname text not null,
   avatar_url text,
+  birth_year integer,
+  agreed_at timestamptz,
   created_at timestamptz default now()
 );
 alter table profiles enable row level security;

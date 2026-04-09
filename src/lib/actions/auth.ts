@@ -40,6 +40,18 @@ export async function register(_prevState: { error: string } | undefined, formDa
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const nickname = formData.get("nickname") as string;
+  const birthYearRaw = formData.get("birthYear") as string;
+
+  // 출생연도 검증
+  const birthYear = Number(birthYearRaw);
+  if (!birthYear || isNaN(birthYear)) {
+    return { error: "출생연도를 선택해 주세요" };
+  }
+  const currentYear = new Date().getFullYear();
+  const age = currentYear - birthYear;
+  if (age < 19) {
+    return { error: "만 19세 이상만 가입할 수 있습니다" };
+  }
 
   const { data, error } = await supabase.auth.signUp({ email, password });
   if (error) return { error: toKorean(error.message) };
@@ -47,7 +59,7 @@ export async function register(_prevState: { error: string } | undefined, formDa
   if (data.user) {
     const { error: profileError } = await supabase
       .from("profiles")
-      .insert({ id: data.user.id, nickname });
+      .insert({ id: data.user.id, nickname, birth_year: birthYear, agreed_at: new Date().toISOString() });
     if (profileError) return { error: "프로필 생성에 실패했습니다. 다시 시도해 주세요" };
   }
   const returnUrl = formData.get("returnUrl") as string;

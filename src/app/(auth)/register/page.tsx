@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, Suspense } from "react";
+import { useActionState, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { register } from "@/lib/actions/auth";
+import { ChevronDown } from "lucide-react";
 
 export default function RegisterPage() {
   return (
@@ -17,10 +18,108 @@ export default function RegisterPage() {
   );
 }
 
+function BirthYearSelect() {
+  const currentYear = new Date().getFullYear();
+  const minYear = currentYear - 100;
+  const maxYear = currentYear - 19; // 만 19세 이상만 가입 가능
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor="birthYear" className="text-xs font-medium text-zinc-400 ml-1">출생연도</label>
+      <div className="relative">
+        <select
+          id="birthYear"
+          name="birthYear"
+          required
+          defaultValue=""
+          className="w-full appearance-none rounded-xl bg-black/40 border border-white/10 px-4 py-3.5 text-zinc-100 focus:outline-none focus:border-accent focus:bg-black/60 transition-all font-light"
+        >
+          <option value="" disabled className="text-zinc-600">출생연도 선택</option>
+          {Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i).map((year) => (
+            <option key={year} value={year}>{year}년</option>
+          ))}
+        </select>
+        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+      </div>
+    </div>
+  );
+}
+
+function AgreementSection({
+  agreedTerms,
+  agreedPrivacy,
+  onTermsChange,
+  onPrivacyChange,
+}: {
+  agreedTerms: boolean;
+  agreedPrivacy: boolean;
+  onTermsChange: (v: boolean) => void;
+  onPrivacyChange: (v: boolean) => void;
+}) {
+  const allAgreed = agreedTerms && agreedPrivacy;
+
+  function toggleAll() {
+    const next = !allAgreed;
+    onTermsChange(next);
+    onPrivacyChange(next);
+  }
+
+  return (
+    <div className="flex flex-col gap-3 mt-2">
+      {/* 전체 동의 */}
+      <label className="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" checked={allAgreed} onChange={toggleAll} className="sr-only peer" />
+        <div className="w-5 h-5 rounded-md border border-white/20 bg-black/40 flex items-center justify-center peer-checked:bg-accent peer-checked:border-accent transition-all flex-shrink-0">
+          {allAgreed && <CheckIcon />}
+        </div>
+        <span className="text-sm font-medium text-zinc-200">전체 동의</span>
+      </label>
+
+      <div className="h-px bg-white/5" />
+
+      {/* 이용약관 동의 */}
+      <div className="flex items-center justify-between">
+        <label className="flex items-center gap-3 cursor-pointer flex-1">
+          <input type="checkbox" checked={agreedTerms} onChange={(e) => onTermsChange(e.target.checked)} className="sr-only peer" />
+          <div className="w-5 h-5 rounded-md border border-white/20 bg-black/40 flex items-center justify-center peer-checked:bg-accent peer-checked:border-accent transition-all flex-shrink-0">
+            {agreedTerms && <CheckIcon />}
+          </div>
+          <span className="text-xs text-zinc-400">[필수] 서비스 이용약관 동의</span>
+        </label>
+        <Link href="/terms" target="_blank" className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors flex-shrink-0">보기</Link>
+      </div>
+
+      {/* 개인정보처리방침 동의 */}
+      <div className="flex items-center justify-between">
+        <label className="flex items-center gap-3 cursor-pointer flex-1">
+          <input type="checkbox" checked={agreedPrivacy} onChange={(e) => onPrivacyChange(e.target.checked)} className="sr-only peer" />
+          <div className="w-5 h-5 rounded-md border border-white/20 bg-black/40 flex items-center justify-center peer-checked:bg-accent peer-checked:border-accent transition-all flex-shrink-0">
+            {agreedPrivacy && <CheckIcon />}
+          </div>
+          <span className="text-xs text-zinc-400">[필수] 개인정보처리방침 동의</span>
+        </label>
+        <Link href="/privacy" target="_blank" className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors flex-shrink-0">보기</Link>
+      </div>
+    </div>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <path d="M2.5 6L5 8.5L9.5 3.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function RegisterForm() {
   const [state, action, pending] = useActionState(register, undefined);
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get("returnUrl") ?? "";
+  const [agreedTerms, setAgreedTerms] = useState(false);
+  const [agreedPrivacy, setAgreedPrivacy] = useState(false);
+
+  const canSubmit = agreedTerms && agreedPrivacy;
 
   return (
     <form action={action} className="flex flex-col gap-5">
@@ -74,10 +173,19 @@ function RegisterForm() {
         />
       </div>
 
+      <BirthYearSelect />
+
+      <AgreementSection
+        agreedTerms={agreedTerms}
+        agreedPrivacy={agreedPrivacy}
+        onTermsChange={setAgreedTerms}
+        onPrivacyChange={setAgreedPrivacy}
+      />
+
       <button
         type="submit"
-        disabled={pending}
-        className="w-full py-4 mt-4 rounded-2xl bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-medium transition-all shadow-lg shadow-accent/20 active:scale-[0.98]"
+        disabled={pending || !canSubmit}
+        className="w-full py-4 mt-2 rounded-2xl bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-medium transition-all shadow-lg shadow-accent/20 active:scale-[0.98]"
       >
         {pending ? "가입 중…" : "가입하기"}
       </button>

@@ -330,24 +330,27 @@ export default function RecommendPage() {
     setWishlist((prev) => prev.filter((w) => w.id !== id));
   }
 
-  // 메시지 렌더링: [[한국어|영어]] → WineCard, **텍스트** → 볼드 강조
+  // 메시지 렌더링: [[추천카드]], ((인라인멘션)), **볼드**
   function renderMessageContent(content: string) {
-    // ** 를 제거하면서, 감싸진 텍스트는 볼드 처리
-    // [[와인카드]]와 **볼드**를 동시에 처리
-    const parts = content.split(/(\[\[[^\]]+\]\]|\*\*[\s\S]*?\*\*)/g);
+    const parts = content.split(/(\[\[[^\]]+\]\]|\(\([^)]+\)\)|\*\*[\s\S]*?\*\*)/g);
     return parts.map((part, i) => {
-      // 와인카드
+      // 추천 카드: [[한국어|영어]]
       const cardMatch = part.match(/^\[\[([^|]+)\|([^\]]+)\]\]$/);
       if (cardMatch) {
         const [, nameKo, nameEn] = cardMatch;
         return <WineCard key={i} nameKo={nameKo.trim()} nameEn={nameEn.trim()} onSave={saveWine} onAuthNeeded={() => setShowAuthPrompt(true)} />;
       }
-      // 볼드
+      // 인라인 멘션: ((한국어|영어))
+      const mentionMatch = part.match(/^\(\(([^|]+)\|([^)]+)\)\)$/);
+      if (mentionMatch) {
+        return <span key={i} className="text-accent font-medium">{mentionMatch[1].trim()}</span>;
+      }
+      // 볼드: **텍스트**
       const boldMatch = part.match(/^\*\*([\s\S]*?)\*\*$/);
       if (boldMatch) {
         return <strong key={i} className="text-accent font-semibold">{boldMatch[1]}</strong>;
       }
-      // 남은 ** 제거 (짝이 안 맞는 경우)
+      // 남은 ** 제거
       if (part.includes("**")) {
         return <span key={i}>{part.replace(/\*\*/g, "")}</span>;
       }

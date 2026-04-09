@@ -123,21 +123,22 @@ export function extractFilters(messages: { role: string; content: string }[]): W
 export async function queryWines(filters: WineFilters): Promise<string> {
   const supabase = await createClient();
 
-  let query = supabase
-    .from("wines")
-    .select("name_ko, name_en, wine_type, country, grape_variety, producer, price")
-    .not("price", "is", null);
+  // 1차: 모든 필터 적용
+  let data = await runWineQuery(supabase, filters);
 
-  if (filters.wineType) query = query.eq("wine_type", filters.wineType);
-  if (filters.priceMin != null) query = query.gte("price", filters.priceMin);
-  if (filters.priceMax != null) query = query.lte("price", filters.priceMax);
-  if (filters.grape) query = query.ilike("grape_variety", `%${filters.grape}%`);
-  if (filters.country) query = query.eq("country", filters.country);
+  // 2차: 결과 부족 시 품종+국가 필터 완화
+  if (data.length < 5 && (filters.grape || filters.country)) {
+    const relaxed = { ...filters, grape: null, country: null };
+    data = await runWineQuery(supabase, relaxed);
+  }
 
-  query = query.order("price", { ascending: true }).limit(30);
+  // 3차: 그래도 부족하면 가격대만으로 조회
+  if (data.length < 5 && (filters.priceMin != null || filters.priceMax != null)) {
+    const priceOnly: WineFilters = { wineType: null, priceMin: filters.priceMin, priceMax: filters.priceMax, grape: null, country: null };
+    data = await runWineQuery(supabase, priceOnly);
+  }
 
-  const { data } = await query;
-  if (!data || data.length === 0) return "";
+  if (data.length === 0) return "";
 
   const lines = data.map((w) => {
     const parts = [w.name_ko];
@@ -151,6 +152,23 @@ export async function queryWines(filters: WineFilters): Promise<string> {
   });
 
   return `\n\n[한국 유통 와인 DB - ${data.length}개 검색됨]\n이 목록의 와인을 우선적으로 추천하세요. 가격은 실제 한국 판매가입니다.\n${lines.join("\n")}`;
+}
+
+async function runWineQuery(supabase: Awaited<ReturnType<typeof createClient>>, filters: WineFilters) {
+  let query = supabase
+    .from("wines")
+    .select("name_ko, name_en, wine_type, country, grape_variety, producer, price")
+    .not("price", "is", null);
+
+  if (filters.wineType) query = query.eq("wine_type", filters.wineType);
+  if (filters.priceMin != null) query = query.gte("price", filters.priceMin);
+  if (filters.priceMax != null) query = query.lte("price", filters.priceMax);
+  if (filters.grape) query = query.ilike("grape_variety", `%${filters.grape}%`);
+  if (filters.country) query = query.eq("country", filters.country);
+
+  query = query.order("price", { ascending: true }).limit(30);
+  const { data } = await query;
+  return data ?? [];
 }
 
 // ─── 사용자 취향 프로필 (wine_records 기반) ──────────────────────────────────

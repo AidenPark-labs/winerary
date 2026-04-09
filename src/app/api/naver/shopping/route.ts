@@ -17,9 +17,12 @@ interface NaverShoppingItem {
 // 750ml가 아닌 용량 패턴 (187ml, 375ml, 1L, 1.5L, 3L, 미니, 하프, 매그넘, 세트 등)
 const NON_STANDARD_VOLUME = /187\s*ml|375\s*ml|200\s*ml|250\s*ml|500\s*ml|1[.,]5\s*[lL]|1000\s*ml|3\s*[lL]|5\s*[lL]|미니|하프|매그넘|세트|묶음|박스|[2-9]\s*병/i;
 
+import { createClient } from "@/lib/supabase/server";
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
+  const wineId = searchParams.get("wine_id");
   if (!query) return Response.json({ error: "검색어가 필요합니다" }, { status: 400 });
 
   const clientId = process.env.NAVER_CLIENT_ID;
@@ -80,6 +83,16 @@ export async function GET(request: Request) {
     const priceRange = prices.length > 0
       ? { min: Math.min(...prices), max: Math.max(...prices) }
       : null;
+
+    // wine_id가 있으면 최저가로 DB 가격 갱신
+    if (wineId && priceRange) {
+      const supabase = await createClient();
+      supabase
+        .from("wines")
+        .update({ price: priceRange.min, updated_at: new Date().toISOString() })
+        .eq("id", wineId)
+        .then(() => {});
+    }
 
     return Response.json({ items: items.slice(0, 10), priceRange });
   } catch (e) {

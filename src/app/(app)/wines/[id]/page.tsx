@@ -186,7 +186,7 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
           )}
 
           {/* ── 네이버 쇼핑 검색 ── */}
-          <NaverShopping query={wine.name_ko} />
+          <NaverShopping query={wine.name_ko} wineId={wine.id} />
 
           {/* ── 유사 와인 ── */}
           {similar && similar.length > 0 && (

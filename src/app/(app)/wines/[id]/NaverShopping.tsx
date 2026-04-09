@@ -10,7 +10,7 @@ interface ShoppingItem {
   mallName: string;
 }
 
-export default function NaverShopping({ query }: { query: string }) {
+export default function NaverShopping({ query, wineId }: { query: string; wineId?: string }) {
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const fetchedRef = useRef(false);
@@ -19,7 +19,7 @@ export default function NaverShopping({ query }: { query: string }) {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
 
-    fetch(`/api/naver/shopping?q=${encodeURIComponent(query)}`)
+    fetch(`/api/naver/shopping?q=${encodeURIComponent(query)}${wineId ? `&wine_id=${wineId}` : ""}`)
       .then((r) => r.json())
       .then((d) => {
         if (d.items) setItems(d.items);

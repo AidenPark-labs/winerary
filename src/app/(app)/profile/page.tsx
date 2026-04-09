@@ -508,11 +508,9 @@ function BusinessInfo() {
         <span>사업자 정보</span>
         <span className="group-open:rotate-180 transition-transform text-[10px]">▼</span>
       </summary>
-      <div className="text-[11px] text-zinc-600 leading-relaxed text-center pb-2">
-        에이든마켓 · 대표 박성호 · 사업자등록번호 853-25-01987<br />
-        서울특별시 영등포구 선유로43가길 24, 101동 1604호<br />
-        sparkk87@kakao.com · 010-9099-5581 · 호스팅 Vercel Inc.
-      </div>
+      <p className="text-[11px] text-zinc-600 text-center pb-2">
+        에이든마켓 · 대표 박성호 · 사업자등록번호 853-25-01987
+      </p>
     </details>
   );
 }

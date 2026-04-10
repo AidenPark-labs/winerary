@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 
 export async function updateWine(id: string, data: Record<string, string | number | null | undefined>) {
@@ -11,6 +12,7 @@ export async function updateWine(id: string, data: Record<string, string | numbe
     .eq("id", id);
 
   if (error) return { error: error.message };
+  revalidatePath("/admin/wines");
   return { success: true };
 }
 

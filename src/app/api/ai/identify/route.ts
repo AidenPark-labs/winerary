@@ -3,34 +3,42 @@ import { createClient } from "@/lib/supabase/server";
 
 const client = new Anthropic();
 
-// DB에서 와인 매칭 시도
+// DB에서 와인 매칭 시도 — 정확 매칭 1건 또는 후보 리스트를 반환
 async function matchFromDB(name: string, nameOriginal: string | null) {
   const supabase = await createClient();
+  const seen = new Set<string>();
+  const collected: any[] = [];
+  const collect = (rows: any[] | null) => {
+    if (!rows) return;
+    for (const r of rows) {
+      if (seen.has(r.id)) continue;
+      seen.add(r.id);
+      collected.push(r);
+    }
+  };
 
-  // 1차: 영어 원본명으로 정확 매칭
+  // 1차: 영어 원본명 유사 매칭
   if (nameOriginal) {
     const { data } = await supabase
       .from("wines")
       .select("*")
       .ilike("name_en", `%${nameOriginal}%`)
-      .limit(1)
-      .single();
-    if (data) return data;
+      .limit(10);
+    collect(data);
   }
 
-  // 2차: 한국어명으로 매칭
+  // 2차: 한국어명 유사 매칭
   if (name) {
     const { data } = await supabase
       .from("wines")
       .select("*")
       .ilike("name_ko", `%${name}%`)
-      .limit(1)
-      .single();
-    if (data) return data;
+      .limit(10);
+    collect(data);
   }
 
-  // 3차: 원본명의 주요 키워드로 유사 검색
-  if (nameOriginal) {
+  // 3차: 주요 키워드로 유사 검색 (앞 단계에서 결과가 부족할 때만)
+  if (collected.length === 0 && nameOriginal) {
     const keywords = nameOriginal.split(/[\s\-]+/).filter((w) => w.length > 3).slice(0, 3);
     for (const keyword of keywords) {
       const { data } = await supabase
@@ -38,11 +46,13 @@ async function matchFromDB(name: string, nameOriginal: string | null) {
         .select("*")
         .or(`name_en.ilike.%${keyword}%,name_ko.ilike.%${keyword}%`)
         .limit(5);
-      if (data && data.length === 1) return data[0];
+      collect(data);
     }
   }
 
-  return null;
+  if (collected.length === 0) return { exact: null, candidates: [] as any[] };
+  if (collected.length === 1) return { exact: collected[0], candidates: [] as any[] };
+  return { exact: null, candidates: collected.slice(0, 10) };
 }
 
 export async function POST(request: Request) {
@@ -113,18 +123,24 @@ description과 food_pairing은 사진이 아닌, 해당 와인 자체의 알려�
 
     const result = JSON.parse(jsonMatch[1] ?? jsonMatch[0]);
 
-    // DB 매칭 시도 — 성공하면 정확한 가격/정보로 보강
+    // DB 매칭 시도 — 정확 1건 or 후보 리스트
     if (!result.error) {
-      const dbWine = await matchFromDB(result.name, result.name_original);
-      if (dbWine) {
+      const { exact, candidates } = await matchFromDB(result.name, result.name_original);
+      if (exact) {
+        result.match_type = "exact";
         result.db_match = true;
-        result.db_price = dbWine.price;
-        result.wine_id = dbWine.id;
-        if (dbWine.wine_type) result.wine_type = dbWine.wine_type;
-        if (dbWine.country) result.country = dbWine.country;
-        if (dbWine.grape_variety) result.grape_variety = dbWine.grape_variety;
-        if (dbWine.producer) result.producer = dbWine.producer;
-        if (dbWine.name_en && !result.name_original) result.name_original = dbWine.name_en;
+        result.db_price = exact.price;
+        result.wine_id = exact.id;
+        if (exact.wine_type) result.wine_type = exact.wine_type;
+        if (exact.country) result.country = exact.country;
+        if (exact.grape_variety) result.grape_variety = exact.grape_variety;
+        if (exact.producer) result.producer = exact.producer;
+        if (exact.name_en && !result.name_original) result.name_original = exact.name_en;
+      } else if (candidates.length > 0) {
+        result.match_type = "candidates";
+        result.candidates = candidates;
+      } else {
+        result.match_type = "none";
       }
     }
 

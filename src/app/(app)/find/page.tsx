@@ -33,6 +33,9 @@ interface WineResult {
   db_image?: string;
   vivino_rating?: number;
   vivino_reviews?: number;
+  match_type?: "exact" | "candidates" | "none";
+  wine_id?: string;
+  candidates?: DbWine[];
 }
 
 interface ShoppingItem {
@@ -47,7 +50,7 @@ interface ShoppingItem {
   category: string;
 }
 
-type Step = "select" | "preview" | "analyzing" | "result";
+type Step = "select" | "preview" | "analyzing" | "candidates" | "result";
 type SearchMode = "photo" | "text";
 
 interface DbWine {
@@ -112,6 +115,7 @@ export default function FindPage() {
   const [searchResults, setSearchResults] = useState<DbWine[]>([]);
   const [searching, setSearching] = useState(false);
   const [aiSearchResult, setAiSearchResult] = useState<WineResult | null>(null);
+  const [photoCandidates, setPhotoCandidates] = useState<DbWine[]>([]);
   // 줌/패닝 상태
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -311,10 +315,25 @@ export default function FindPage() {
     try {
       const res = await fetch("/api/ai/identify", { method: "POST", body: fd });
       const data: WineResult = await res.json();
+
+      // 정확 매칭: 상세 페이지로 바로 이동
+      if (!data.error && data.match_type === "exact" && data.wine_id) {
+        router.push(`/wines/${data.wine_id}`);
+        return;
+      }
+
+      // 후보 여러 건: 후보 리스트 표시
+      if (!data.error && data.match_type === "candidates" && data.candidates && data.candidates.length > 0) {
+        setResult(data);
+        setPhotoCandidates(data.candidates);
+        setStep("candidates");
+        return;
+      }
+
+      // DB에 없음(또는 에러): 기존 AI 결과 카드
       setResult(data);
       setStep("result");
 
-      // AI 결과 성공 시 네이버 쇼핑 검색 (한국어 이름 우선)
       if (!data.error && (data.name || data.name_original)) {
         searchShopping(data.name || data.name_original!);
       }
@@ -351,6 +370,7 @@ export default function FindPage() {
     setWishSaving(false);
     setSearchResults([]);
     setAiSearchResult(null);
+    setPhotoCandidates([]);
     setZoom(1);
     setPan({ x: 0, y: 0 });
     fileBlob.current = null;
@@ -642,6 +662,61 @@ export default function FindPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── 후보 리스트 ── */}
+      {step === "candidates" && (
+        <div className="flex flex-col flex-1 px-4 pb-28 gap-4 overflow-y-auto">
+          {previewUrl && (
+            <div className="rounded-2xl overflow-hidden bg-zinc-900 flex-shrink-0" style={{ height: "160px" }}>
+              <img src={previewUrl} alt="분석한 사진" className="w-full h-full object-contain" />
+            </div>
+          )}
+          <div>
+            <p className="text-zinc-200 font-semibold tracking-wide">일치할 수 있는 와인을 {photoCandidates.length}개 찾았어요</p>
+            <p className="text-zinc-500 text-sm mt-1 font-light">정확한 와인을 선택해주세요</p>
+          </div>
+          <div className="flex flex-col gap-2.5">
+            {photoCandidates.map((wine) => (
+              <Link
+                key={wine.id}
+                href={`/wines/${wine.id}`}
+                className="flex items-center gap-3 p-3 rounded-2xl bg-surface/80 border border-white/5 text-left hover:border-white/20 transition-all backdrop-blur-sm"
+              >
+                <img src={getWineImage(wine.naver_image, wine.wine_type)} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-white/5" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-white text-sm truncate">{wine.name_ko}</p>
+                  {wine.name_en && <p className="text-xs text-zinc-500 mt-0.5 truncate">{wine.name_en}</p>}
+                  <div className="flex items-center gap-2.5 mt-1.5 text-xs text-zinc-400">
+                    {wine.price && <span className="text-emerald-400 font-semibold">{wine.price.toLocaleString()}원</span>}
+                    {wine.vivino_rating && <span className="text-purple-300">★ {wine.vivino_rating}</span>}
+                    {wine.wine_type && <span>{TYPE_KO[wine.wine_type] ?? wine.wine_type}</span>}
+                    {wine.country && <span>{wine.country}</span>}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <button
+            onClick={() => {
+              if (!result) { reset(); return; }
+              // DB에서 일치 항목이 없다고 판단되면 AI 결과로 폴백
+              setStep("result");
+              if (result.name || result.name_original) {
+                searchShopping(result.name || result.name_original!);
+              }
+            }}
+            className="py-3 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 text-zinc-300 text-sm font-light transition-all"
+          >
+            일치하는 와인이 없어요 — AI 분석 결과 보기
+          </button>
+          <button
+            onClick={reset}
+            className="py-3 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 text-zinc-400 text-sm font-light transition-all"
+          >
+            다시 검색
+          </button>
         </div>
       )}
 

@@ -373,7 +373,17 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
                 })()}
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                  <InfoCell label="한국어명">{w.name_ko}</InfoCell>
+                  <EditableInfoCell
+                    label="한국어명"
+                    value={w.name_ko}
+                    placeholder="한국어명 입력"
+                    onSave={async (v) => {
+                      if (!v.trim()) return { error: "한국어명은 비워둘 수 없습니다" };
+                      const res = await updateWine(w.id, { name_ko: v.trim() });
+                      if (!res.error) router.refresh();
+                      return res;
+                    }}
+                  />
                   <EditableInfoCell
                     label="영문명"
                     value={w.name_en ?? ""}

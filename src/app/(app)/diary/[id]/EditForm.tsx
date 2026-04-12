@@ -326,7 +326,7 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
         </div>
 
         {/* ── 경험 ── */}
-        <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
+        <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 shadow-2xl">
           <div className="px-5 pt-4 pb-2">
             <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Experience</p>
           </div>

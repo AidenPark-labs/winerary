@@ -94,7 +94,7 @@ const WINE_TYPE_COLORS: Record<string, string> = {
   sparkling: "bg-[#F3E5AB]", fortified: "bg-[#4A0E4E]", other: "bg-zinc-400",
 };
 
-export default function DiaryDetail({ record, readOnly = false, wineData = null, evaluations = [], myEvaluation = null, currentUserId = null, ownerNickname = "작성자", currentNickname = "", linkedRecords = [], hasMatchingRecord = false }: {
+export default function DiaryDetail({ record, readOnly = false, wineData = null, evaluations = [], myEvaluation = null, currentUserId = null, ownerNickname = "작성자", currentNickname = "", linkedRecords = [], hasMatchingRecord = false, resolvedCompanions }: {
   record: WineRecord;
   readOnly?: boolean;
   wineData?: WineData | null;
@@ -105,10 +105,11 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
   currentNickname?: string;
   linkedRecords?: LinkedRecord[];
   hasMatchingRecord?: boolean;
+  resolvedCompanions?: string[];
 }) {
   const myPhotos: string[] = record.photos ?? [];
   const foods: { name: string }[] = (record.foods as { name: string }[]) ?? [];
-  const companions: string[] = record.companions ?? [];
+  const companions: string[] = resolvedCompanions ?? record.companions ?? [];
   const tags: string[] = record.tags ?? [];
 
   // 내 사진 + 연결 기록 사진 통합

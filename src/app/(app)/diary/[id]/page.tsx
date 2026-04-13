@@ -81,6 +81,29 @@ export default async function DiaryDetailPage({ params }: { params: Promise<{ id
     // 평가 테이블 조회 실패 시 무시
   }
 
+  // 멘션된 유저의 현재 닉네임 조회
+  let resolvedCompanions: string[] = record.companions ?? [];
+  if (resolvedCompanions.some((c: string) => c.startsWith("@"))) {
+    const { data: mentions } = await supabase
+      .from("record_mentions")
+      .select("mentioned_user_id, profiles:mentioned_user_id(nickname)")
+      .eq("record_id", id);
+
+    if (mentions && mentions.length > 0) {
+      const nicknameMap = new Map<string, string>();
+      for (const m of mentions) {
+        const row = m as { mentioned_user_id: string; profiles: { nickname: string } | { nickname: string }[] | null };
+        const p = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+        if (p) nicknameMap.set(row.mentioned_user_id, p.nickname);
+      }
+      // 멘션 항목을 현재 닉네임으로 교체
+      const currentNicknames = new Set(nicknameMap.values());
+      const plainCompanions = resolvedCompanions.filter((c: string) => !c.startsWith("@"));
+      const mentionCompanions = [...currentNicknames].map((n) => `@${n}`);
+      resolvedCompanions = [...mentionCompanions, ...plainCompanions];
+    }
+  }
+
   // 연결된 경험 기록 조회 (RLS 우회)
   const adminDb = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -173,6 +196,7 @@ export default async function DiaryDetailPage({ params }: { params: Promise<{ id
       currentNickname={currentNickname}
       linkedRecords={linkedRecords}
       hasMatchingRecord={hasMatchingRecord}
+      resolvedCompanions={resolvedCompanions}
     />
   );
 }

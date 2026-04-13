@@ -69,10 +69,11 @@ async function compressImage(file: File): Promise<Blob> {
   });
 }
 
-export default function EditForm({ record, onClose, redirectAfterSave }: {
+export default function EditForm({ record, onClose, redirectAfterSave, initialCompanionEntries }: {
   record: WineRecord;
   onClose?: () => void;
   redirectAfterSave?: string;
+  initialCompanionEntries?: CompanionEntry[];
 }) {
   const router = useRouter();
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -123,16 +124,9 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
   const [placeLocation, setPlaceLocation] = useState(record.location ?? "");
   const [placeLat, setPlaceLat] = useState<number | null>(record.latitude ?? null);
   const [placeLng, setPlaceLng] = useState<number | null>(record.longitude ?? null);
-  const [companionEntries, setCompanionEntries] = useState<CompanionEntry[]>(() => {
-    const mentionCodes = ((record as unknown as Record<string, unknown>)._mentionCodes ?? {}) as Record<string, string>;
-    return (record.companions ?? []).map((c) => {
-      if (c.startsWith("@")) {
-        const name = c.slice(1);
-        return { name, userCode: mentionCodes[name] ?? null };
-      }
-      return { name: c, userCode: null };
-    });
-  });
+  const [companionEntries, setCompanionEntries] = useState<CompanionEntry[]>(
+    initialCompanionEntries ?? (record.companions ?? []).map((c) => ({ name: c.replace(/^@/, ""), userCode: null }))
+  );
 
   // 음식
   const [foods, setFoods] = useState<string[]>((record.foods ?? []).map((f) => f.name));

@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import EditForm from "../EditForm";
-import type { WineRecord } from "@/types";
+import type { WineRecord, CompanionEntry } from "@/types";
 
 export default async function EditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -16,20 +16,27 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
 
   if (!record) notFound();
 
-  // 멘션된 유저 코드 조회 (편집 시 복원용)
+  // 멘션된 유저 정보 조회 → CompanionEntry[] 직접 구성
   const { data: mentions } = await supabase
     .from("record_mentions")
     .select("mentioned_user_id, profiles:mentioned_user_id(nickname, user_code)")
     .eq("record_id", id);
 
-  const mentionCodes: Record<string, string> = {};
+  const mentionMap = new Map<string, string>();
   (mentions ?? []).forEach((m: unknown) => {
     const row = m as { profiles: { nickname: string; user_code: string } | { nickname: string; user_code: string }[] | null };
     const p = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
-    if (p) mentionCodes[p.nickname] = p.user_code;
+    if (p) mentionMap.set(p.nickname, p.user_code);
   });
 
-  const recordWithMentions = { ...record, _mentionCodes: mentionCodes };
+  // companions 배열로부터 CompanionEntry[] 구성
+  const companionEntries: CompanionEntry[] = (record.companions ?? []).map((c: string) => {
+    if (c.startsWith("@")) {
+      const name = c.slice(1);
+      return { name, userCode: mentionMap.get(name) ?? null };
+    }
+    return { name: c, userCode: null };
+  });
 
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950">
@@ -38,7 +45,7 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
         <h1 className="text-xl font-bold text-white">기록 수정</h1>
       </header>
       <div className="px-4 py-6 pb-28">
-        <EditForm record={recordWithMentions as WineRecord} redirectAfterSave={`/diary/${id}`} />
+        <EditForm record={record as WineRecord} initialCompanionEntries={companionEntries} redirectAfterSave={`/diary/${id}`} />
       </div>
     </div>
   );

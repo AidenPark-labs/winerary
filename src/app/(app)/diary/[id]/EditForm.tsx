@@ -78,7 +78,6 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   // wine_id 매핑
   const [wineId, setWineId] = useState<string | null>(record.wine_id ?? null);
@@ -200,13 +199,13 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
       visibility,
     });
 
-    setSaving(false);
-    if (result?.error) { setError(result.error); return; }
-    setSuccess(true);
-    setTimeout(() => {
-      if (redirectAfterSave) router.push(redirectAfterSave);
-      else { setSuccess(false); onClose?.(); }
-    }, 800);
+    if (result?.error) { setSaving(false); setError(result.error); return; }
+    if (redirectAfterSave) {
+      router.push(redirectAfterSave);
+    } else {
+      setSaving(false);
+      onClose?.();
+    }
   }
 
   return (
@@ -220,7 +219,6 @@ export default function EditForm({ record, onClose, redirectAfterSave }: {
         )}
 
         {error && <p className="text-accent text-sm bg-accent/10 border border-accent/20 rounded-xl px-4 py-3 text-center">{error}</p>}
-        {success && <p className="text-emerald-400 text-sm bg-emerald-900/20 border border-emerald-800/30 rounded-xl px-4 py-3 text-center">✓ 저장되었습니다</p>}
 
         {/* ── 사진 ── */}
         <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 p-5 shadow-2xl">

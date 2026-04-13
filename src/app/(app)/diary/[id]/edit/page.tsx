@@ -22,21 +22,24 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
     .select("mentioned_user_id, profiles:mentioned_user_id(nickname, user_code)")
     .eq("record_id", id);
 
-  const mentionMap = new Map<string, string>();
+  // record_mentions를 소스 오브 트루스로: 멘션된 유저는 현재 닉네임 + userCode로 복원
+  const mentionEntries: CompanionEntry[] = [];
+  const mentionNicknames = new Set<string>();
   (mentions ?? []).forEach((m: unknown) => {
     const row = m as { profiles: { nickname: string; user_code: string } | { nickname: string; user_code: string }[] | null };
     const p = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
-    if (p) mentionMap.set(p.nickname, p.user_code);
+    if (p) {
+      mentionEntries.push({ name: p.nickname, userCode: p.user_code });
+      mentionNicknames.add(p.nickname);
+    }
   });
 
-  // companions 배열로부터 CompanionEntry[] 구성
-  const companionEntries: CompanionEntry[] = (record.companions ?? []).map((c: string) => {
-    if (c.startsWith("@")) {
-      const name = c.slice(1);
-      return { name, userCode: mentionMap.get(name) ?? null };
-    }
-    return { name: c, userCode: null };
-  });
+  // 일반 텍스트 동행자 (멘션이 아닌 것)만 companions에서 가져옴
+  const plainEntries: CompanionEntry[] = (record.companions ?? [])
+    .filter((c: string) => !c.startsWith("@"))
+    .map((c: string) => ({ name: c, userCode: null }));
+
+  const companionEntries: CompanionEntry[] = [...mentionEntries, ...plainEntries];
 
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950">

@@ -652,30 +652,30 @@ export default function NewDiaryPage() {
               </div>
             ) : (
               /* 두 가지 선택지 — 동일 위계 */
-              <div className="flex flex-col flex-1 justify-center gap-4">
+              <div className="flex flex-col flex-1 justify-center gap-4 py-4">
                 <button
                   onClick={() => setShowPhotoSheet(true)}
-                  className="flex-1 flex flex-col items-center justify-center gap-3 rounded-3xl border border-white/10 bg-surface/50 active:bg-surface/80 transition-all"
+                  className="flex-1 flex flex-col items-center justify-center gap-4 rounded-3xl bg-accent/10 border border-accent/20 active:bg-accent/20 transition-all min-h-[160px]"
                 >
-                  <div className="w-14 h-14 rounded-full bg-white/5 border border-white/5 flex items-center justify-center">
-                    <svg className="w-7 h-7 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"/></svg>
+                  <div className="w-16 h-16 rounded-full bg-accent/15 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"/></svg>
                   </div>
                   <div className="text-center px-6">
-                    <p className="text-zinc-200 font-semibold tracking-wide">사진으로 찾기</p>
-                    <p className="text-zinc-500 text-xs mt-1 font-light">라벨을 촬영하거나 사진을 선택하면<br />AI가 자동으로 찾아드려요</p>
+                    <p className="text-white font-semibold text-[15px]">사진으로 찾기</p>
+                    <p className="text-zinc-400 text-xs mt-1 font-light">라벨을 촬영하거나 사진을 선택하면<br />AI가 자동으로 찾아드려요</p>
                   </div>
                 </button>
 
                 <button
                   onClick={() => setStep("search")}
-                  className="flex-1 flex flex-col items-center justify-center gap-3 rounded-3xl border border-white/10 bg-surface/50 active:bg-surface/80 transition-all"
+                  className="flex-1 flex flex-col items-center justify-center gap-4 rounded-3xl bg-violet-500/10 border border-violet-500/20 active:bg-violet-500/20 transition-all min-h-[160px]"
                 >
-                  <div className="w-14 h-14 rounded-full bg-white/5 border border-white/5 flex items-center justify-center">
-                    <svg className="w-7 h-7 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+                  <div className="w-16 h-16 rounded-full bg-violet-500/15 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
                   </div>
                   <div className="text-center px-6">
-                    <p className="text-zinc-200 font-semibold tracking-wide">검색해서 찾기</p>
-                    <p className="text-zinc-500 text-xs mt-1 font-light">와인 이름을 직접 검색해서<br />찾을 수 있어요</p>
+                    <p className="text-white font-semibold text-[15px]">검색해서 찾기</p>
+                    <p className="text-zinc-400 text-xs mt-1 font-light">와인 이름을 직접 검색해서<br />찾을 수 있어요</p>
                   </div>
                 </button>
               </div>

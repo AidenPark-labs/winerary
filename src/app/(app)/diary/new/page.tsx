@@ -684,7 +684,7 @@ export default function NewDiaryPage() {
             {/* 사진 액션시트 */}
             {showPhotoSheet && (
               <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setShowPhotoSheet(false)}>
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" />
                 <div className="relative w-full max-w-lg px-4 pb-8 animate-slide-up" onClick={(e) => e.stopPropagation()}>
                   <div className="rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 shadow-2xl">
                     <button

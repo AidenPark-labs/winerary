@@ -143,6 +143,39 @@ export default async function DiaryPage() {
   const linkedOtherIds = new Set(Object.values(linkedMap).flat().map((l) => l.linked_record_id));
   const filteredRecords = allRecords.filter((r) => !linkedOtherIds.has(r.id));
 
+  // 멘션 닉네임을 현재 닉네임으로 일괄 해결
+  const recordsWithMentions = filteredRecords.filter((r) =>
+    (r.companions ?? []).some((c: string) => c.startsWith("@"))
+  );
+  if (recordsWithMentions.length > 0) {
+    const mentionRecordIds = recordsWithMentions.map((r) => r.id);
+    const { data: allMentions } = await adminDb
+      .from("record_mentions")
+      .select("record_id, mentioned_user_id, profiles:mentioned_user_id(nickname)")
+      .in("record_id", mentionRecordIds);
+
+    if (allMentions && allMentions.length > 0) {
+      // record_id → Set<현재닉네임> 맵
+      const mentionMap = new Map<string, Set<string>>();
+      for (const m of allMentions) {
+        const row = m as { record_id: string; profiles: { nickname: string } | { nickname: string }[] | null };
+        const p = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+        if (p) {
+          if (!mentionMap.has(row.record_id)) mentionMap.set(row.record_id, new Set());
+          mentionMap.get(row.record_id)!.add(p.nickname);
+        }
+      }
+      // companions 배열의 @ 항목을 현재 닉네임으로 교체
+      for (const r of filteredRecords) {
+        const nicknames = mentionMap.get(r.id);
+        if (!nicknames) continue;
+        const plainCompanions = (r.companions ?? []).filter((c: string) => !c.startsWith("@"));
+        const mentionCompanions = [...nicknames].map((n) => `@${n}`);
+        r.companions = [...mentionCompanions, ...plainCompanions];
+      }
+    }
+  }
+
   // 와인맵 데이터
   const { data: mapRecords } = await supabase
     .from("wine_records")

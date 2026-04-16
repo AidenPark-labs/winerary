@@ -17,6 +17,29 @@ interface NaverShoppingItem {
 // 750ml가 아닌 용량 패턴 (187ml, 375ml, 1L, 1.5L, 3L, 미니, 하프, 매그넘, 세트 등)
 const NON_STANDARD_VOLUME = /187\s*ml|375\s*ml|200\s*ml|250\s*ml|500\s*ml|1[.,]5\s*[lL]|1000\s*ml|3\s*[lL]|5\s*[lL]|미니|하프|매그넘|세트|묶음|박스|[2-9]\s*병/i;
 
+// 상품명에서 의미 있는 단어 추출 (노이즈 제거)
+const NOISE_WORDS = new Set(["와인", "wine", "레드", "화이트", "로제", "스파클링", "red", "white", "rose", "sparkling", "750ml", "ml", "병"]);
+function extractWords(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/<\/?b>/g, "")
+    .replace(/[()[\]{}'"""''·\-_,./\\]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length >= 2 && !NOISE_WORDS.has(w));
+}
+
+// 쿼리 단어가 상품명에 얼마나 포함되는지 비율 계산
+function titleMatchScore(query: string, title: string): number {
+  const qWords = extractWords(query);
+  if (qWords.length === 0) return 1;
+  const titleLower = title.toLowerCase().replace(/<\/?b>/g, "");
+  let matched = 0;
+  for (const w of qWords) {
+    if (titleLower.includes(w)) matched++;
+  }
+  return matched / qWords.length;
+}
+
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
@@ -67,13 +90,19 @@ export async function GET(request: Request) {
           .join(" > "),
       }));
 
+    // 유사 상품 제외: 쿼리 단어의 50% 이상이 상품명에 포함된 것만 유지
+    const exactItems = allItems.filter(
+      (item: { title: string }) => titleMatchScore(query, item.title) >= 0.5
+    );
+    const relevantItems = exactItems.length > 0 ? exactItems : allItems;
+
     // 750ml 기준 필터링 (비표준 용량 제외)
-    const standardItems = allItems.filter(
+    const standardItems = relevantItems.filter(
       (item: { title: string }) => !NON_STANDARD_VOLUME.test(item.title)
     );
 
     // 750ml 기준 상품이 있으면 그것만, 없으면 전체
-    const items = standardItems.length > 0 ? standardItems : allItems;
+    const items = standardItems.length > 0 ? standardItems : relevantItems;
 
     // 가격 범위 계산
     const prices = items

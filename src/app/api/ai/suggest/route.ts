@@ -140,8 +140,10 @@ export async function GET(request: Request) {
   });
   scored.sort((a, b) => b.score - a.score);
 
-  // 유사도 0.3 미만 제외
-  const filtered = scored.filter(({ score }) => score >= 0.3);
+  // 유사도 필터: 최고 점수의 60% 미만이거나 0.3 미만인 결과 제외
+  const topScore = scored.length > 0 ? scored[0].score : 0;
+  const minScore = Math.max(0.3, topScore * 0.6);
+  const filtered = scored.filter(({ score }) => score >= minScore);
 
   const wines: WineSuggestion[] = filtered.slice(0, 10).map(({ w }) => ({
     wine_id: w.id,

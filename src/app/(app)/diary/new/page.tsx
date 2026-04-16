@@ -241,6 +241,7 @@ export default function NewDiaryPage() {
   const [linkingId, setLinkingId] = useState<string | null>(null);
 
   const iCls = "w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3.5 text-zinc-100 focus:outline-none focus:border-accent focus:bg-black/60 transition-all font-light text-sm";
+  const roCls = "w-full rounded-xl bg-black/20 border border-white/5 px-4 py-3.5 text-zinc-500 font-light text-sm";
   const currentYear = new Date().getFullYear();
   const vintageYears = Array.from({ length: currentYear - 1949 }, (_, i) => currentYear - i);
 
@@ -846,24 +847,24 @@ export default function NewDiaryPage() {
                   /* DB 매칭 — 읽기 전용 */
                   <>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs text-zinc-400">와인 이름</label>
-                      <p className={iCls + " text-zinc-300"}>{query || "정보 없음"}</p>
+                      <label className="text-xs text-zinc-500 flex items-center gap-1"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>와인 이름</label>
+                      <p className={roCls}>{query || "정보 없음"}</p>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs text-zinc-400">원본 명칭</label>
-                      <p className={iCls + " text-zinc-300"}>{wineNameOriginal || "정보 없음"}</p>
+                      <label className="text-xs text-zinc-500 flex items-center gap-1"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>원본 명칭</label>
+                      <p className={roCls}>{wineNameOriginal || "정보 없음"}</p>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs text-zinc-400">종류</label>
-                      <p className={iCls + " text-zinc-300"}>{wineType ? (TYPE_KO[wineType] ?? wineType) : "정보 없음"}</p>
+                      <label className="text-xs text-zinc-500 flex items-center gap-1"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>종류</label>
+                      <p className={roCls}>{wineType ? (TYPE_KO[wineType] ?? wineType) : "정보 없음"}</p>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs text-zinc-400">품종</label>
-                      <p className={iCls + " text-zinc-300"}>{grape === "__blend__" ? `블렌드 (${blendGrapes.join(", ")})` : grape || "정보 없음"}</p>
+                      <label className="text-xs text-zinc-500 flex items-center gap-1"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>품종</label>
+                      <p className={roCls}>{grape === "__blend__" ? `블렌드 (${blendGrapes.join(", ")})` : grape || "정보 없음"}</p>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs text-zinc-400">생산국</label>
-                      <p className={iCls + " text-zinc-300"}>{country === "__custom__" ? countryCustom : country || "정보 없음"}</p>
+                      <label className="text-xs text-zinc-500 flex items-center gap-1"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>생산국</label>
+                      <p className={roCls}>{country === "__custom__" ? countryCustom : country || "정보 없음"}</p>
                     </div>
                   </>
                 ) : (

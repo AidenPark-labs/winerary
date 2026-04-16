@@ -27,9 +27,15 @@
 
 import { config } from "dotenv";
 import { existsSync, readFileSync, writeFileSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 import puppeteer, { type Browser, type Page } from "puppeteer-core";
 
 config({ path: ".env.local" });
+
+const CHROME_PATH = process.platform === "win32"
+  ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+  : "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -38,7 +44,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   process.exit(1);
 }
 
-const CHECKPOINT_PATH = "/tmp/vivino_scrape_checkpoint.json";
+const CHECKPOINT_PATH = join(tmpdir(), "vivino_scrape_checkpoint.json");
 const BATCH_SIZE = 100;
 
 // ─── CLI ───────────────────────────────────────────────────────────────────
@@ -57,8 +63,19 @@ const DRY_RUN = argFlag("dry-run");
 const NUM_WORKERS = parseInt(argValue("workers") || "2", 10);
 const MAX_ITEMS = argValue("limit") ? parseInt(argValue("limit")!, 10) : Infinity;
 const MATCH_THRESHOLD = 0.7;
+const RETRY_MODE = (argValue("retry") || "browser") as "browser" | "all";
+
+// Ban 감지 백오프
+const BACKOFF_WINDOW = 20;        // 최근 N건 평가
+const BACKOFF_FAIL_THRESHOLD = 10; // 최근 N건 중 X건 이상 search/browser 실패 시 pause
+const BACKOFF_PAUSE_MS = 5 * 60 * 1000; // 5분 pause
+const recentResults: Array<"ok" | "fail_susp" | "fail_other"> = [];
+let bannedSignal = false;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+// 지터: base ± jitter 범위로 랜덤
+const jitterSleep = (base: number, jitter: number) =>
+  sleep(base + Math.floor(Math.random() * jitter * 2) - jitter);
 
 // ─── 타입 ──────────────────────────────────────────────────────────────────
 
@@ -118,7 +135,7 @@ function matchScore(query: string, candidate: string): number {
 
 async function launchWorker(): Promise<{ browser: Browser; page: Page }> {
   const browser = await puppeteer.launch({
-    executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    executablePath: CHROME_PATH,
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
   });
@@ -346,11 +363,22 @@ async function crawlWine(_page: Page, wineName: string, sourceId: string): Promi
 // ─── DB ────────────────────────────────────────────────────────────────────
 
 async function fetchBatch(afterId: string | null): Promise<RawWine[]> {
+  // retry 모드별 대상 필터
+  //   browser (default): 미처리 + browser 실패만
+  //   all: 미처리 + 모든 실패 (browser/search/match/cross_validation)
+  const failSteps = RETRY_MODE === "all"
+    ? "browser,search,match,cross_validation"
+    : "browser";
+  const orFilter =
+    `(raw_payload->>vivino_scraped_at.is.null,` +
+    `raw_payload.is.null,` +
+    `raw_payload->>vivino_fail_step.in.(${failSteps}))`;
+
   let url =
     `${SUPABASE_URL}/rest/v1/raw_wines` +
     `?source=eq.wine21` +
     `&name_en=not.is.null` +
-    `&or=(raw_payload->>vivino_scraped_at.is.null,raw_payload.is.null,raw_payload->>vivino_fail_step.eq.browser)` +
+    `&or=${orFilter}` +
     `&select=id,source_id,name_ko,name_en,producer_ko,producer_en,raw_payload` +
     `&order=id.asc` +
     `&limit=${BATCH_SIZE}`;
@@ -439,7 +467,7 @@ async function restartWorker(worker: WorkerState): Promise<void> {
 
 async function main() {
   console.log("🍇 Vivino 크롤 시작 (Track B)");
-  console.log(`   WORKERS=${NUM_WORKERS}, DRY=${DRY_RUN}, RESUME=${RESUME}`);
+  console.log(`   WORKERS=${NUM_WORKERS}, DRY=${DRY_RUN}, RESUME=${RESUME}, RETRY=${RETRY_MODE}`);
   if (MAX_ITEMS !== Infinity) console.log(`   LIMIT=${MAX_ITEMS}`);
 
   const cp = loadCheckpoint();
@@ -457,7 +485,7 @@ async function main() {
   let done = false;
 
   try {
-    while (!done && processed < MAX_ITEMS) {
+    while (!done && processed < MAX_ITEMS && !bannedSignal) {
       const batch = await fetchBatch(cp.lastProcessedId);
       if (batch.length === 0) {
         console.log(`\n📭 더 이상 처리할 행 없음`);
@@ -484,8 +512,16 @@ async function main() {
               worker.processed++;
 
               if (result.success && result.data) {
-                await updatePayload(wine.id, wine.raw_payload, result.data);
+                // 재시도 성공 시 실패 플래그 명시적 제거
+                const successPatch = {
+                  ...result.data,
+                  vivino_match_failed: null,
+                  vivino_fail_step: null,
+                  vivino_fail_error: null,
+                };
+                await updatePayload(wine.id, wine.raw_payload, successPatch);
                 cp.matched++;
+                recentResults.push("ok");
               } else {
                 const failPatch: Record<string, unknown> = {
                   vivino_scraped_at: new Date().toISOString(),
@@ -499,6 +535,18 @@ async function main() {
                 else if (result.step === "match" || result.step === "cross_validation") cp.matchFailed++;
                 else cp.errors++;
 
+                // Ban 의심 신호: search/browser 실패
+                if (result.step === "search" || result.step === "browser") {
+                  recentResults.push("fail_susp");
+                  // 429/403 명시적 신호 감지 시 즉시 중단
+                  if (result.error && /\b(429|403|rate.?limit|blocked)\b/i.test(result.error)) {
+                    console.error(`\n   🚨 Ban 신호 감지: ${result.error}`);
+                    bannedSignal = true;
+                  }
+                } else {
+                  recentResults.push("fail_other");
+                }
+
                 // 브라우저 크래시 시 재시작
                 if (result.step === "browser") {
                   console.error(`\n   ⚠ 워커${worker.id} 브라우저 오류, 재시작...`);
@@ -506,12 +554,31 @@ async function main() {
                 }
               }
 
+              // 최근 window 유지
+              if (recentResults.length > BACKOFF_WINDOW) {
+                recentResults.splice(0, recentResults.length - BACKOFF_WINDOW);
+              }
+              // Ban 의심: 최근 window 중 search/browser 실패가 임계치 초과 시 5분 pause
+              if (recentResults.length >= BACKOFF_WINDOW) {
+                const suspFails = recentResults.filter((r) => r === "fail_susp").length;
+                if (suspFails >= BACKOFF_FAIL_THRESHOLD) {
+                  console.error(
+                    `\n   🛑 최근 ${BACKOFF_WINDOW}건 중 ${suspFails}건 search/browser 실패 → ${BACKOFF_PAUSE_MS / 60000}분 pause`
+                  );
+                  await sleep(BACKOFF_PAUSE_MS);
+                  recentResults.length = 0; // 윈도우 초기화
+                }
+              }
+
               cp.lastProcessedId = wine.id;
               cp.total++;
               processed++;
 
-              // 간격
-              await sleep(1000);
+              // 명시적 ban 신호 시 즉시 루프 탈출
+              if (bannedSignal) return;
+
+              // 간격 (지터 500~1500ms)
+              await jitterSleep(1000, 500);
             }
           })()
         );
@@ -521,7 +588,6 @@ async function main() {
 
       // 이미지 큐 처리 (배치 사이에 비동기로)
       if (imageQueue.length > 0) {
-        const queueSize = imageQueue.length;
         await processImageQueue();
       }
 

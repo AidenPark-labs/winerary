@@ -1,3 +1,4 @@
+import { createClient } from "@/lib/supabase/server";
 import { GRAPE_OPTIONS } from "@/lib/grapes";
 
 // ── 단어 분류용 사전 ──
@@ -80,35 +81,73 @@ function weightedSimilarity(query: string, target: string): number {
   return totalWeight > 0 ? matchedWeight / totalWeight : 0;
 }
 
-/** Supabase OR 조건 문자열 생성 */
-export function buildSearchFilter(q: string): string {
-  const exact = `%${q}%`;
-  const noSpace = q.replace(/\s+/g, "");
-  const fuzzy = "%" + noSpace.split("").join("%") + "%";
-  const words = q.split(/[\s']+/).filter((w) => w.length >= 3);
-  const wordPatterns = words.slice(0, 4).map((w) => `%${w}%`);
-
-  return [
-    `name_ko.ilike.${exact}`,
-    `name_en.ilike.${exact}`,
-    `name_ko.ilike.${fuzzy}`,
-    `name_en.ilike.${fuzzy}`,
-    ...wordPatterns.flatMap((p) => [
-      `name_ko.ilike.${p}`,
-      `name_en.ilike.${p}`,
-      `producer.ilike.${p}`,
-      `producer_ko.ilike.${p}`,
-      `producer_en.ilike.${p}`,
-    ]),
-  ].join(",");
-}
-
 interface Scorable {
   name_ko?: string | null;
   name_en?: string | null;
   producer?: string | null;
   producer_ko?: string | null;
   producer_en?: string | null;
+}
+
+/**
+ * 2단계 병렬 검색: 정확한 패턴 + 넓은 단어 패턴을 동시에 실행 후 합산.
+ * 정확한 매칭이 limit에 밀려 누락되는 문제를 원천 차단.
+ */
+export async function searchWines<T extends Scorable & { id: string }>(
+  select: string,
+  query: string,
+  limit: number,
+): Promise<T[]> {
+  const supabase = await createClient();
+
+  const exact = `%${query}%`;
+  const noSpace = query.replace(/\s+/g, "");
+  const fuzzy = "%" + noSpace.split("").join("%") + "%";
+  const words = query.split(/[\s']+/).filter((w) => w.length >= 3);
+  const wordPatterns = words.slice(0, 4).map((w) => `%${w}%`);
+
+  // 1단계: 정확한 매칭 (이름에 전체 쿼리가 포함되거나, 공백무시 fuzzy)
+  const narrowFilter = [
+    `name_ko.ilike.${exact}`,
+    `name_en.ilike.${exact}`,
+    `name_ko.ilike.${fuzzy}`,
+    `name_en.ilike.${fuzzy}`,
+  ].join(",");
+
+  // 2단계: 넓은 단어 매칭 (개별 단어 3자 이상)
+  const broadFilter = wordPatterns.length > 0
+    ? wordPatterns.flatMap((p) => [
+        `name_ko.ilike.${p}`,
+        `name_en.ilike.${p}`,
+        `producer.ilike.${p}`,
+        `producer_ko.ilike.${p}`,
+        `producer_en.ilike.${p}`,
+      ]).join(",")
+    : null;
+
+  // 병렬 실행
+  const narrowQuery = supabase.from("wines").select(select).or(narrowFilter).limit(50);
+  const broadQuery = broadFilter
+    ? supabase.from("wines").select(select).or(broadFilter).limit(150)
+    : null;
+
+  const [narrowResult, broadResult] = await Promise.all([
+    narrowQuery,
+    broadQuery ?? Promise.resolve({ data: [] as T[] }),
+  ]);
+
+  // 합산 + 중복 제거 (narrow 우선)
+  const seen = new Set<string>();
+  const merged: T[] = [];
+  for (const row of [...(narrowResult.data ?? []), ...((broadResult as { data: T[] }).data ?? [])]) {
+    const r = row as T;
+    if (!seen.has(r.id)) {
+      seen.add(r.id);
+      merged.push(r);
+    }
+  }
+
+  return scoreAndFilter(query, merged, limit);
 }
 
 /** 가중치 기반 유사도 점수 계산 → 정렬 → 컷오프 필터 적용 */

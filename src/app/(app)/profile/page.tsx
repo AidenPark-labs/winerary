@@ -147,7 +147,33 @@ export default async function MyWinePage() {
     .filter((w) => w.count >= 2)
     .slice(0, 8);
 
-  // 3. 같이 마신 사람
+  // 3. 같이 마신 사람 (멘션 닉네임을 현재 닉네임으로 해결)
+  const mentionRecordIds = all.filter((r) => (r.companions ?? []).some((c: string) => c.startsWith("@"))).map((r) => r.id);
+  const mentionNicknameMap = new Map<string, Map<string, string>>(); // record_id → old@ → @현재닉네임
+  if (mentionRecordIds.length > 0) {
+    const { data: allMentions } = await supabase
+      .from("record_mentions")
+      .select("record_id, mentioned_user_id, profiles:mentioned_user_id(nickname)")
+      .in("record_id", mentionRecordIds);
+    if (allMentions) {
+      const perRecord = new Map<string, Set<string>>();
+      for (const m of allMentions) {
+        const row = m as { record_id: string; profiles: { nickname: string } | { nickname: string }[] | null };
+        const p = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+        if (p) {
+          if (!perRecord.has(row.record_id)) perRecord.set(row.record_id, new Set());
+          perRecord.get(row.record_id)!.add(p.nickname);
+        }
+      }
+      // companions의 @ 항목을 현재 닉네임으로 교체
+      for (const r of all) {
+        const nicknames = perRecord.get(r.id);
+        if (!nicknames) continue;
+        const plain = (r.companions ?? []).filter((c: string) => !c.startsWith("@"));
+        r.companions = [...[...nicknames].map((n) => `@${n}`), ...plain];
+      }
+    }
+  }
   const companionCounts: Record<string, number> = {};
   all.forEach((r) => { (r.companions ?? []).forEach((c) => { companionCounts[c] = (companionCounts[c] ?? 0) + 1; }); });
   const topCompanions = Object.entries(companionCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);

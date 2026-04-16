@@ -336,7 +336,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
                     <div className="flex items-center justify-between px-5 py-3">
                       <span className="text-xs text-zinc-400">와인명</span>
                       <div className="text-right min-w-0 flex-1 ml-4">
-                        <p className="text-sm text-white font-medium truncate">{record.name}{record.wine_vintage ? ` ${record.wine_vintage}` : ""}</p>
+                        <p className="text-sm text-white font-medium truncate">{record.name}</p>
                         {record.wine_name_original && (
                           <p className="text-[11px] text-zinc-400 italic truncate">{record.wine_name_original}</p>
                         )}
@@ -380,6 +380,12 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
                     <div className="flex items-center justify-between px-5 py-2">
                       <span className="text-xs text-zinc-400">국가</span>
                       <span className="text-sm text-white font-medium">{displayCountry}</span>
+                    </div>
+                  )}
+                  {record.wine_vintage && (
+                    <div className="flex items-center justify-between px-5 py-2">
+                      <span className="text-xs text-zinc-400">빈티지</span>
+                      <span className="text-sm text-white font-medium">{record.wine_vintage}</span>
                     </div>
                   )}
                   {resolved?.alcohol && (

@@ -90,9 +90,12 @@ export async function GET(request: Request) {
           .join(" > "),
       }));
 
-    // 유사 상품 제외: 쿼리 단어의 50% 이상이 상품명에 포함된 것만 유지
+    // 유사 상품 제외: 쿼리 단어의 대부분이 상품명에 포함된 것만 유지
+    // 3단어 이하 → 전부 일치 필요, 4단어 이상 → 1개까지 누락 허용
+    const qWordCount = extractWords(query).length;
+    const threshold = qWordCount <= 3 ? 0.99 : (qWordCount - 1) / qWordCount;
     const exactItems = allItems.filter(
-      (item: { title: string }) => titleMatchScore(query, item.title) >= 0.5
+      (item: { title: string }) => titleMatchScore(query, item.title) >= threshold
     );
     const relevantItems = exactItems.length > 0 ? exactItems : allItems;
 

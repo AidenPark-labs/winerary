@@ -592,7 +592,7 @@ export default function NewDiaryPage() {
     else if (step === "rate") { if (savedRecordId) router.push(`/diary/${savedRecordId}`); }
   }
 
-  const stepIndex = step === "photo" ? 0 : step === "search" || step === "wine-detail" ? 1 : step === "review" ? 2 : 3;
+  const stepIndex = step === "photo" ? 0 : step === "search" ? 1 : step === "wine-detail" ? 2 : step === "review" ? 3 : 4;
 
   return (
     <>
@@ -606,7 +606,7 @@ export default function NewDiaryPage() {
           <button onClick={handleBack} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/20 transition-colors text-lg">←</button>
           <div className="flex-1">
             <h1 className="text-xl font-bold text-white">
-              {step === "photo" && "와인 사진 찍기"}
+              {step === "photo" && "와인 찾기"}
               {step === "search" && "와인 검색"}
               {step === "wine-detail" && (selectedWine ? "와인 정보 확인" : "와인 직접 입력")}
               {step === "review" && "경험 기록"}
@@ -615,7 +615,7 @@ export default function NewDiaryPage() {
           </div>
           {/* Step dots */}
           <div className="flex items-center gap-1.5">
-            {[0, 1, 2, 3].map((i) => (
+            {[0, 1, 2, 3, 4].map((i) => (
               <div key={i} className={`rounded-full transition-all ${
                 i === stepIndex ? "w-5 h-2 bg-accent shadow-sm shadow-accent/50" :
                 i < stepIndex ? "w-2 h-2 bg-white/20" : "w-2 h-2 bg-white/5"

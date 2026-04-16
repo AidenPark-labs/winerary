@@ -78,7 +78,18 @@ function weightedSimilarity(query: string, target: string): number {
       matchedWeight += weight;
     }
   }
-  return totalWeight > 0 ? matchedWeight / totalWeight : 0;
+  if (totalWeight === 0) return 0;
+  const queryCoverage = matchedWeight / totalWeight;
+
+  // 타겟에 쿼리에 없는 단어가 있으면 감점 (다른 와인일 가능성)
+  let extraCount = 0;
+  for (const tw of tWords) {
+    if (classifyWord(tw) === 0) continue;
+    if (!qWords.some((qw) => tw.includes(qw) || qw.includes(tw))) {
+      extraCount++;
+    }
+  }
+  return Math.max(0, queryCoverage - extraCount * 0.1);
 }
 
 interface Scorable {

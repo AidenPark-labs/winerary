@@ -274,46 +274,73 @@ export default function EditForm({ record, onClose, redirectAfterSave, initialCo
             </div>
           )}
           <div className="flex flex-col gap-3 px-5 pb-4">
+            {wineId ? (
+              /* DB 매칭 — 읽기 전용 */
+              <>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-400">와인 이름</label>
+                  <p className={iCls + " text-zinc-300"}>{name || "정보 없음"}</p>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-400">원본 명칭</label>
+                  <p className={iCls + " text-zinc-300"}>{wineNameOriginal || "정보 없음"}</p>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-400">종류</label>
+                  <p className={iCls + " text-zinc-300"}>{wineType ? (WINE_TYPES.find((t) => t.value === wineType)?.label ?? wineType) : "정보 없음"}</p>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-400">품종</label>
+                  <p className={iCls + " text-zinc-300"}>{grape === "__blend__" ? `블렌드 (${blendGrapes.join(", ")})` : grape || "정보 없음"}</p>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-400">생산국</label>
+                  <p className={iCls + " text-zinc-300"}>{country === "__custom__" ? countryCustom : country || "정보 없음"}</p>
+                </div>
+              </>
+            ) : (
+              /* 직접 입력 — 편집 가능 */
+              <>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-400">와인 이름</label>
+                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder="와인 이름" className={iCls} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-400">원본 명칭</label>
+                  <input value={wineNameOriginal} onChange={(e) => setWineNameOriginal(e.target.value)} placeholder="영어/현지어" className={iCls} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-400">종류</label>
+                  <select value={wineType} onChange={(e) => setWineType(e.target.value as WineType | "")} className={iCls}>
+                    <option value="">선택 안 함</option>
+                    {WINE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-400">품종</label>
+                  <GrapeCombobox value={grape} onChange={(v) => { setGrape(v); if (v !== "__blend__") setBlendGrapes([]); }} wineType={wineType} className={iCls} />
+                  {grape === "__blend__" && <BlendGrapeSelector grapes={blendGrapes} onChange={setBlendGrapes} wineType={wineType} />}
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-400">생산국</label>
+                  <select value={country} onChange={(e) => setCountry(e.target.value)} className={iCls}>
+                    <option value="">선택 안 함</option>
+                    {COUNTRY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                    <option value="__custom__">직접입력</option>
+                  </select>
+                </div>
+                {country === "__custom__" && (
+                  <input value={countryCustom} onChange={(e) => setCountryCustom(e.target.value)} placeholder="생산국" className={iCls} />
+                )}
+              </>
+            )}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-zinc-400">와인 이름</label>
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="와인 이름" className={iCls} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-zinc-400">원본 명칭</label>
-              <input value={wineNameOriginal} onChange={(e) => setWineNameOriginal(e.target.value)} placeholder="영어/현지어" className={iCls} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-zinc-400">종류</label>
-              <select value={wineType} onChange={(e) => setWineType(e.target.value as WineType | "")} className={iCls}>
+              <label className="text-xs text-zinc-400">빈티지</label>
+              <select value={wineVintage} onChange={(e) => setWineVintage(e.target.value)} className={iCls}>
                 <option value="">선택 안 함</option>
-                {WINE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                {Array.from({ length: new Date().getFullYear() - 1949 }, (_, i) => new Date().getFullYear() - i).map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-zinc-400">품종</label>
-              <GrapeCombobox value={grape} onChange={(v) => { setGrape(v); if (v !== "__blend__") setBlendGrapes([]); }} wineType={wineType} className={iCls} />
-              {grape === "__blend__" && <BlendGrapeSelector grapes={blendGrapes} onChange={setBlendGrapes} wineType={wineType} />}
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-zinc-400">빈티지</label>
-                <select value={wineVintage} onChange={(e) => setWineVintage(e.target.value)} className={iCls}>
-                  <option value="">선택 안 함</option>
-                  {Array.from({ length: new Date().getFullYear() - 1949 }, (_, i) => new Date().getFullYear() - i).map((y) => <option key={y} value={y}>{y}</option>)}
-                </select>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-zinc-400">생산국</label>
-                <select value={country} onChange={(e) => setCountry(e.target.value)} className={iCls}>
-                  <option value="">선택 안 함</option>
-                  {COUNTRY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
-                  <option value="__custom__">직접입력</option>
-                </select>
-              </div>
-            </div>
-            {country === "__custom__" && (
-              <input value={countryCustom} onChange={(e) => setCountryCustom(e.target.value)} placeholder="생산국" className={iCls} />
-            )}
           </div>
         </div>
 

@@ -527,7 +527,7 @@ export default function NewDiaryPage() {
 
   // ── 정보 저장 (Step 3) ──
   async function handleSaveRecord(goToRate: boolean) {
-    const wineName = selectedWine?.name_ko || selectedWine?.name || wineNameOriginal || query.trim();
+    const wineName = query.trim() || selectedWine?.name_ko || selectedWine?.name || wineNameOriginal;
     if (!wineName) { setError("와인 이름을 입력해주세요."); return; }
     setSaving(true);
     setError(null);

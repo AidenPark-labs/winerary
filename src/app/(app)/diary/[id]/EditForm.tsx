@@ -341,6 +341,34 @@ export default function EditForm({ record, onClose, redirectAfterSave, initialCo
                 {Array.from({ length: new Date().getFullYear() - 1949 }, (_, i) => new Date().getFullYear() - i).map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
+            {/* 구분선 + 구매가격 */}
+            <div className="border-t border-white/5 my-1" />
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs text-zinc-400">구매가격</label>
+              <div className="relative">
+                <input type="number" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)}
+                  placeholder="선택" className={iCls + " pr-8"} />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">원</span>
+              </div>
+            </div>
+            {price && (
+              <div className="flex flex-col gap-2">
+                <div className="flex rounded-xl overflow-hidden border border-white/10">
+                  {([["retail", "소매가"], ["market", "매장가"]] as const).map(([v, l]) => (
+                    <button key={v} type="button" onClick={() => { setPriceType(v); if (v === "retail") setPriceUnit("bottle"); }}
+                      className={`flex-1 py-2.5 text-xs font-medium transition-colors ${priceType === v ? "bg-accent text-white" : "bg-black/40 text-zinc-500"}`}>{l}</button>
+                  ))}
+                </div>
+                {priceType === "market" && (
+                  <div className="flex rounded-xl overflow-hidden border border-white/10">
+                    {([["bottle", "바틀"], ["glass", "글라스"]] as const).map(([v, l]) => (
+                      <button key={v} type="button" onClick={() => setPriceUnit(v)}
+                        className={`flex-1 py-2.5 text-xs font-medium transition-colors ${priceUnit === v ? "bg-accent text-white" : "bg-black/40 text-zinc-500"}`}>{l}</button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -364,38 +392,6 @@ export default function EditForm({ record, onClose, redirectAfterSave, initialCo
               <label className="text-xs text-zinc-400">함께한 사람</label>
               <CompanionInput value={companionEntries} onChange={setCompanionEntries} className={iCls} />
             </div>
-          </div>
-        </div>
-
-        {/* ── 구매가격 ── */}
-        <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
-          <div className="px-5 pt-4 pb-2">
-            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Price</p>
-          </div>
-          <div className="flex flex-col gap-3 px-5 pb-4">
-            <div className="relative">
-              <input type="number" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)}
-                placeholder="구매가격 (선택)" className={iCls + " pr-8"} />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">원</span>
-            </div>
-            {price && (
-              <div className="flex flex-col gap-2">
-                <div className="flex rounded-xl overflow-hidden border border-white/10">
-                  {([["retail", "소매가"], ["market", "매장가"]] as const).map(([v, l]) => (
-                    <button key={v} type="button" onClick={() => { setPriceType(v); if (v === "retail") setPriceUnit("bottle"); }}
-                      className={`flex-1 py-2.5 text-xs font-medium transition-colors ${priceType === v ? "bg-accent text-white" : "bg-black/40 text-zinc-500"}`}>{l}</button>
-                  ))}
-                </div>
-                {priceType === "market" && (
-                  <div className="flex rounded-xl overflow-hidden border border-white/10">
-                    {([["bottle", "바틀"], ["glass", "글라스"]] as const).map(([v, l]) => (
-                      <button key={v} type="button" onClick={() => setPriceUnit(v)}
-                        className={`flex-1 py-2.5 text-xs font-medium transition-colors ${priceUnit === v ? "bg-accent text-white" : "bg-black/40 text-zinc-500"}`}>{l}</button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
 

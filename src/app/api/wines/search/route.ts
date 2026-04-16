@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     .from("wines")
     .select("id, name_ko, name_en, wine_type, country, region, grape_variety, producer, producer_ko, producer_en, description, price, naver_link, naver_image, vivino_url, vivino_page_url, vivino_rating, vivino_reviews")
     .or(buildSearchFilter(query))
-    .limit(30);
+    .limit(200);
 
   const wines = scoreAndFilter(query, data ?? [], 20);
 

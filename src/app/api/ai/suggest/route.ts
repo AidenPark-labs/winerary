@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     .from("wines")
     .select("id, name_ko, name_en, wine_type, country, grape_variety, producer, producer_ko, producer_en, price, vivino_url, vivino_rating")
     .or(buildSearchFilter(q))
-    .limit(30);
+    .limit(200);
 
   const filtered = scoreAndFilter(q, data ?? [], 10);
 

@@ -192,6 +192,7 @@ export default function NewDiaryPage() {
   const cameraRef = useRef<HTMLInputElement>(null);
   const [localPreview, setLocalPreview] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [showPhotoSheet, setShowPhotoSheet] = useState(false);
 
   // ── Wine step state ──
   const [aiResult, setAiResult] = useState<AiResult | null>(null);
@@ -650,35 +651,67 @@ export default function NewDiaryPage() {
                 )}
               </div>
             ) : (
-              /* 사진 선택 UI */
-              <>
+              /* 두 가지 선택지 */
+              <div className="flex flex-col flex-1 justify-center gap-4">
                 <button
-                  onClick={() => fileRef.current?.click()}
-                  className="flex-1 flex flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-white/20 bg-surface/50 active:bg-surface/80 transition-all min-h-[240px]"
+                  onClick={() => setShowPhotoSheet(true)}
+                  className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-white/20 bg-surface/50 active:bg-surface/80 transition-all py-14"
                 >
                   <div className="w-20 h-20 rounded-full bg-white/5 border border-white/5 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <svg className="w-8 h-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"/></svg>
                   </div>
                   <div className="text-center px-6">
-                    <p className="text-zinc-200 font-semibold tracking-wide">갤러리에서 사진 선택</p>
-                    <p className="text-zinc-500 text-sm mt-1 font-light">와인 라벨이 잘 보이는 사진을 선택하면<br />AI가 자동으로 와인 정보를 찾아드려요</p>
+                    <p className="text-zinc-200 font-semibold tracking-wide">사진으로 찾기</p>
+                    <p className="text-zinc-500 text-sm mt-1 font-light">와인 라벨 사진을 촬영하거나 선택하면<br />AI가 자동으로 와인 정보를 찾아드려요</p>
                   </div>
-                </button>
-
-                <button
-                  onClick={() => cameraRef.current?.click()}
-                  className="flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-accent hover:bg-accent/90 active:scale-[0.98] transition-all text-white font-medium shadow-lg shadow-accent/20"
-                >
-                  지금 사진 찍기
                 </button>
 
                 <button
                   onClick={() => setStep("search")}
-                  className="text-zinc-500 text-sm text-center py-2 hover:text-zinc-300 transition-colors"
+                  className="flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 active:scale-[0.98] transition-all text-zinc-200 font-medium"
                 >
-                  사진 없이 텍스트로 검색하기 →
+                  <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+                  검색해서 찾기
                 </button>
-              </>
+              </div>
+            )}
+
+            {/* 사진 액션시트 */}
+            {showPhotoSheet && (
+              <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setShowPhotoSheet(false)}>
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                <div className="relative w-full max-w-lg px-4 pb-8 animate-slide-up" onClick={(e) => e.stopPropagation()}>
+                  <div className="rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 shadow-2xl">
+                    <button
+                      onClick={() => { setShowPhotoSheet(false); cameraRef.current?.click(); }}
+                      className="w-full flex items-center gap-4 px-5 py-4 hover:bg-white/5 active:bg-white/10 transition-colors text-left"
+                    >
+                      <svg className="w-6 h-6 text-zinc-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"/></svg>
+                      <div>
+                        <p className="text-zinc-100 font-medium">카메라로 촬영</p>
+                        <p className="text-zinc-500 text-xs font-light">지금 와인 라벨을 촬영해요</p>
+                      </div>
+                    </button>
+                    <div className="border-t border-white/5" />
+                    <button
+                      onClick={() => { setShowPhotoSheet(false); fileRef.current?.click(); }}
+                      className="w-full flex items-center gap-4 px-5 py-4 hover:bg-white/5 active:bg-white/10 transition-colors text-left"
+                    >
+                      <svg className="w-6 h-6 text-zinc-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>
+                      <div>
+                        <p className="text-zinc-100 font-medium">갤러리에서 선택</p>
+                        <p className="text-zinc-500 text-xs font-light">저장된 와인 사진을 불러와요</p>
+                      </div>
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => setShowPhotoSheet(false)}
+                    className="w-full mt-2 py-3.5 rounded-2xl bg-zinc-900 border border-white/10 text-zinc-300 font-medium text-sm hover:bg-zinc-800 transition-colors"
+                  >
+                    취소
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         )}

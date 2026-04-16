@@ -19,6 +19,25 @@ const NON_STANDARD_VOLUME = /187\s*ml|375\s*ml|200\s*ml|250\s*ml|500\s*ml|1[.,]5
 
 // 상품명에서 의미 있는 단어 추출 (노이즈 제거)
 const NOISE_WORDS = new Set(["와인", "wine", "레드", "화이트", "로제", "스파클링", "red", "white", "rose", "sparkling", "750ml", "ml", "병"]);
+
+// 품종명 단어: 매칭에서 가중치를 낮춤 (0.3) — 생산자/브랜드명이 핵심 식별자
+import { GRAPE_OPTIONS } from "@/lib/grapes";
+const GRAPE_WORDS = new Set<string>();
+for (const g of GRAPE_OPTIONS) {
+  for (const w of g.toLowerCase().split(/[\s/]+/)) {
+    if (w.length >= 2) GRAPE_WORDS.add(w);
+  }
+}
+// 영문 품종명 추가
+for (const w of [
+  "cabernet", "sauvignon", "merlot", "merleau", "pinot", "noir", "syrah", "shiraz",
+  "chardonnay", "riesling", "blanc", "grigio", "gris", "grenache", "tempranillo",
+  "sangiovese", "nebbiolo", "zinfandel", "malbec", "viognier", "verdejo",
+  "moscato", "muscat", "prosecco", "cava", "brut",
+]) GRAPE_WORDS.add(w);
+
+const GRAPE_WEIGHT = 0.3;
+
 function extractWords(text: string): string[] {
   return text
     .toLowerCase()
@@ -28,16 +47,19 @@ function extractWords(text: string): string[] {
     .filter((w) => w.length >= 2 && !NOISE_WORDS.has(w));
 }
 
-// 쿼리 단어가 상품명에 얼마나 포함되는지 비율 계산
+// 쿼리 단어가 상품명에 얼마나 포함되는지 가중치 기반 비율 계산
 function titleMatchScore(query: string, title: string): number {
   const qWords = extractWords(query);
   if (qWords.length === 0) return 1;
   const titleLower = title.toLowerCase().replace(/<\/?b>/g, "");
-  let matched = 0;
+  let totalWeight = 0;
+  let matchedWeight = 0;
   for (const w of qWords) {
-    if (titleLower.includes(w)) matched++;
+    const weight = GRAPE_WORDS.has(w) ? GRAPE_WEIGHT : 1;
+    totalWeight += weight;
+    if (titleLower.includes(w)) matchedWeight += weight;
   }
-  return matched / qWords.length;
+  return totalWeight > 0 ? matchedWeight / totalWeight : 1;
 }
 
 import { createClient } from "@/lib/supabase/server";

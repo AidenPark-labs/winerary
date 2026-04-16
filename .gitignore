@@ -39,3 +39,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# capacitor
+/www
+/android/app/build
+/android/.gradle
+/android/local.properties
+
+# test data / temp
+/wine-test-images
+vivino-failed.csv
+
+# claude code local
+.claude/

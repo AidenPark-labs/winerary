@@ -1,0 +1,18 @@
+{
+  "name": "Winerary",
+  "short_name": "Winerary",
+  "description": "나만의 와인 다이어리 — 기록하고, 공유하고, 발견하세요",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#881337",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

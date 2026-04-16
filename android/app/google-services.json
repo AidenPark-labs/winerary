@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "678977420753",
+    "project_id": "winerary-625c3",
+    "storage_bucket": "winerary-625c3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:678977420753:android:5a0f99c2d5858a35b034f0",
+        "android_client_info": {
+          "package_name": "com.winerary.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEga6tfKKKO9GruCk8sh3LgazB4Ijn52U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -8,6 +8,13 @@ const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfa
 export const metadata: Metadata = {
   title: "Winerary",
   description: "나만의 와인 다이어리 — 기록하고, 공유하고, 발견하세요",
+  manifest: "/manifest.json",
+  themeColor: "#881337",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Winerary",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

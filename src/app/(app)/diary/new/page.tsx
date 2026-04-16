@@ -260,6 +260,7 @@ export default function NewDiaryPage() {
       grape_variety: searchParams.get("grape"),
       vintage: searchParams.get("vintage") ? parseInt(searchParams.get("vintage")!) : null,
       vivino_url: vivinoUrl,
+      wine_id: searchParams.get("wine_id") ?? undefined,
     };
     setAiResult(synth);
     fillWineFields(synth, { setQuery, setWineNameOriginal, setWineType, setWineVintage, setGrape, setGrapeCustom, setBlendGrapes, setCountry, setCountryCustom, setSelectedWine });

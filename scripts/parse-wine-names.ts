@@ -361,6 +361,16 @@ async function callLLM(batch: Wine[]): Promise<LLMResult> {
     } catch (e) {
       lastErr = e as Error;
       const msg = lastErr.message;
+      // 치명적 에러 — 재시도 무의미, 즉시 프로세스 중단 (남은 큐가 에러로 소진되는 것 방지)
+      if (
+        msg.includes("credit balance") ||
+        msg.includes("insufficient") ||
+        msg.includes("authentication_error") ||
+        msg.includes("invalid x-api-key")
+      ) {
+        console.error(`\n💀 치명적 에러 — 즉시 중단: ${msg}`);
+        process.exit(1);
+      }
       const retriable =
         msg.includes("429") ||
         msg.includes("529") ||

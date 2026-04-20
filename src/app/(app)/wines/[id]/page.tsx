@@ -27,6 +27,19 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
 
   const d = resolveWineDisplay(wine);
 
+  // 본인이 이 와인을 기록한 횟수
+  const { data: { user } } = await supabase.auth.getUser();
+  let myRecordCount = 0;
+  if (user) {
+    const { count } = await supabase
+      .from("wine_records")
+      .select("id", { count: "exact", head: true })
+      .eq("wine_id", id)
+      .eq("user_id", user.id)
+      .is("deleted_at", null);
+    myRecordCount = count ?? 0;
+  }
+
   // 유사 와인 추천: 같은 국가+품종 > 같은 국가 > 같은 타입, 비슷한 가격대
   const similarFields = "id, name_ko, wine_type, country, country_ko, price, vivino_rating, naver_image, image_url, grape_variety, grape_varieties, grape_varieties_ko, final_grapes, vivino_grapes";
   const priceMin = wine.price ? Math.round(wine.price * 0.5) : null;
@@ -111,6 +124,11 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
             <h2 className="text-xl font-bold text-white">{wine.name_ko}</h2>
             {wine.name_en && (
               <p className="text-sm text-zinc-400 italic">{wine.name_en}</p>
+            )}
+            {myRecordCount > 0 && (
+              <p className="text-xs text-accent/90 mt-1">
+                이 와인을 {myRecordCount}번 기록했어요
+              </p>
             )}
           </div>
 

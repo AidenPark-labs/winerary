@@ -112,11 +112,39 @@
 - 현재 `wines` 정책 `service insert`/`service update`의 `roles`가 **`{public}`** (이름이 오해 소지)
 - `to_tsvector`, `array_to_string`이 STABLE로 분류되어 generated column에서 직접 사용 불가 → `simple_tsv(text)`, `simple_tsv_array(text[])` IMMUTABLE wrapper 함수 정의해 우회
 
-### Phase 5 진입 준비 사항
-- `src/app/api/vivino/rating/route.ts` 수정 필요 (검색 URL 저장 로직 제거) + anon key로 wines.update 하는 유일한 경로
-- UI를 view 기반으로 전환 (`wines/[id]`, `diary/[id]`)
-- 검색/사전 페이지 구현 시 RPC 호출
-- 전수 동작 확인 후 **Phase 2 잔여-5 (구 컬럼 DROP)** 실행: `wines.final_*`, `wines.naver_image`, `wines.data_source`, `wines.region`, `wines.grape_variety`, `wines.producer`, `wine_records.name/wine_type/wine_country/...` 등
+### Phase 5: 코드 적응 ✅ (2026-04-20 main merge + push)
+
+**5a 커밋** (`9a6ca2c`):
+- `types/index.ts` — WineRecordEnriched/WineDisplay/Evaluation 타입 추가, 세션 타입 제거
+- `wine-display.ts` — 한글(`*_ko`) 필드 우선 COALESCE 체인
+- `wines/[id]/page.tsx` — 헤더 "Wine Details" → "와인 상세", `image_url`/`source` fallback 추가
+- `diary/[id]/page.tsx` + `DiaryDetail.tsx` — 헤더 "Wine" → "와인", `wineFields`에 v3 한글·정규화 필드 확장, TYPE_KO에 dessert 추가
+- `api/wines/search` + `lib/wine-search.ts` — `search_wines` RPC 기반 래핑 (랭킹 RPC + id IN 보강 SELECT)
+- 세션 관련 코드 3개 파일 제거 (`app/session/**`, `app/(app)/session/**`, `lib/actions/session.ts`)
+
+**5b 커밋** (`f2b7a2f`):
+- `record_evaluations` 테이블 참조 12곳을 `evaluations`(`role='guest'`)로 교체
+  - `actions/diary.ts`의 `deleteRecordEvaluation`/`upsertRecordEvaluation`/`linkRecords` 내부 4곳
+  - `api/invite/evaluate/route.ts` INSERT/UPDATE (wine_id/pending_wine_id denormalize 추가)
+  - `diary/[id]/page.tsx`, `diary/[id]/evaluate/page.tsx`, `invite/[code]/page.tsx` 읽기
+- `api/vivino/rating/route.ts` — 검색 URL(`/search/wines?q=`) 저장 로직 제거, 이후 `vivino_url` = `vivino_page_url`로 통일
+- DB trigger 추가: `wine_records_sync_owner_eval` — `wine_records` 평가 필드 수정 시 `evaluations(role='owner')` 자동 upsert → 기존 owner 평가 저장 경로(`wine_records.rating` 컬럼)를 그대로 둔 채 view의 COALESCE가 항상 최신 데이터 보도록 브릿지
+
+**검증**:
+- `npx next build` 타입체크 통과
+- main merge 후 origin push 완료 (커밋 `c3ab9d1`)
+- Vercel 자동 배포
+
+**의도적으로 남겨둔 것 (안정화 기간 브릿지)**:
+- `wines.final_*` 8개 컬럼, `naver_image`, `data_source`, `grape_variety`, `region`, `producer`
+- `wine_records.name/wine_type/wine_country/grape_variety/wine_name_original/wine_vivino_url/rating/value_score/pairing_score/memo/repurchase_intent/location`
+- `record_evaluations` 테이블 (데이터는 1건만, 아직 DROP 안 함)
+- Phase 5 핵심 코드는 모두 view/RPC/신규 필드로 이관됨. 위 구 컬럼은 1~2주 안정화 확인 후 `Phase 2 잔여-5`에서 일괄 DROP.
+
+### 다음 (연기됨)
+- **Phase 6 (와인 사전 `/dictionary`)**: 후순위
+- **Phase 2 잔여-5 (구 컬럼 DROP + trigger 제거)**: 안정화 이후
+- **Phase 7~8 (pgvector + 검증)**: 후행
 
 ---
 

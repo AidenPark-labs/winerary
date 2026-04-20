@@ -50,5 +50,8 @@ next-env.d.ts
 /wine-test-images
 vivino-failed.csv
 
+# DB backups (v3 재설계)
+/backup/
+
 # claude code local
 .claude/

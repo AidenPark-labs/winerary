@@ -1,6 +1,6 @@
-import { searchWines } from "@/lib/wine-search";
+import { createClient } from "@/lib/supabase/server";
 
-const SELECT = "id, name_ko, name_en, wine_type, country, region, grape_variety, producer, producer_ko, producer_en, description, price, naver_link, naver_image, vivino_url, vivino_page_url, vivino_rating, vivino_reviews";
+const SELECT = "id, name_ko, name_en, wine_type, country, country_ko, region, region_path, region_ko, grape_variety, grape_varieties, grape_varieties_ko, producer, producer_ko, producer_en, description, price, naver_link, naver_image, image_url, vivino_url, vivino_page_url, vivino_rating, vivino_reviews, source";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -9,7 +9,36 @@ export async function GET(request: Request) {
     return Response.json({ wines: [], source: "db" });
   }
 
-  const wines = await searchWines(SELECT, query, 20);
+  const supabase = await createClient();
+
+  const { data: ranked, error } = await supabase.rpc("search_wines", {
+    q: query,
+    k: 20,
+  });
+
+  if (error || !ranked || ranked.length === 0) {
+    return Response.json({ wines: [], source: "db", error: error?.message });
+  }
+
+  const ids = (ranked as Array<{ id: string }>).map((r) => r.id);
+  const { data: full } = await supabase
+    .from("wines")
+    .select(SELECT)
+    .in("id", ids);
+
+  const byId = new Map<string, Record<string, unknown>>();
+  for (const w of full ?? []) byId.set((w as { id: string }).id, w as Record<string, unknown>);
+
+  const wines = (ranked as Array<Record<string, unknown>>)
+    .map((r) => {
+      const row = byId.get(r.id as string);
+      if (!row) return null;
+      return {
+        ...row,
+        score: r.score,
+      };
+    })
+    .filter(Boolean);
 
   return Response.json({ wines, source: "db" });
 }

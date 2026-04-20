@@ -273,10 +273,11 @@ export async function deleteRecordEvaluation(recordId: string) {
   if (!user) return { error: "Unauthorized" };
 
   const { error } = await supabase
-    .from("record_evaluations")
+    .from("evaluations")
     .delete()
     .eq("record_id", recordId)
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .eq("role", "guest");
 
   if (error) return { error: error.message };
   revalidatePath(`/diary/${recordId}`);
@@ -291,12 +292,22 @@ export async function upsertRecordEvaluation(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
+  const { data: record } = await supabase
+    .from("wine_records")
+    .select("wine_id, pending_wine_id")
+    .eq("id", recordId)
+    .single();
+  if (!record) return { error: "기록을 찾을 수 없습니다" };
+
   const { error } = await supabase
-    .from("record_evaluations")
+    .from("evaluations")
     .upsert(
       {
         record_id: recordId,
+        wine_id: record.wine_id,
+        pending_wine_id: record.pending_wine_id,
         user_id: user.id,
+        role: "guest",
         rating: data.rating,
         value_score: data.value_score,
         pairing_score: data.pairing_score,
@@ -405,13 +416,13 @@ export async function linkRecords(myRecordId: string, targetRecordId: string) {
     if (error) return { error: error.message };
   }
 
-  // 연결 후 중복 평가 정리 + 미평가 시 게스트 평가 복사
-  // 1) 내가 상대 기록에 남긴 게스트 평가 → 내 기록에 평가 없으면 복사 후 삭제
+  // 연결 후 중복 평가 정리 + 미평가 시 게스트 평가 복사 (v3: evaluations role='guest')
   const { data: myGuestEval } = await adminDb
-    .from("record_evaluations")
+    .from("evaluations")
     .select("rating, value_score, pairing_score, memo, repurchase_intent")
     .eq("record_id", targetRecordId)
     .eq("user_id", user.id)
+    .eq("role", "guest")
     .maybeSingle();
 
   if (myGuestEval) {
@@ -420,7 +431,6 @@ export async function linkRecords(myRecordId: string, targetRecordId: string) {
       .select("rating")
       .eq("id", myRecordId)
       .single();
-    // 내 기록에 아직 평가가 없으면 게스트 평가를 복사
     if (myRecordData && myRecordData.rating == null) {
       await adminDb
         .from("wine_records")
@@ -435,13 +445,13 @@ export async function linkRecords(myRecordId: string, targetRecordId: string) {
         .eq("id", myRecordId);
     }
     await adminDb
-      .from("record_evaluations")
+      .from("evaluations")
       .delete()
       .eq("record_id", targetRecordId)
-      .eq("user_id", user.id);
+      .eq("user_id", user.id)
+      .eq("role", "guest");
   }
 
-  // 2) 상대가 내 기록에 남긴 게스트 평가 → 상대 기록에 평가 없으면 복사 후 삭제
   const { data: targetOwner } = await adminDb
     .from("wine_records")
     .select("user_id, rating")
@@ -449,10 +459,11 @@ export async function linkRecords(myRecordId: string, targetRecordId: string) {
     .single();
   if (targetOwner) {
     const { data: theirGuestEval } = await adminDb
-      .from("record_evaluations")
+      .from("evaluations")
       .select("rating, value_score, pairing_score, memo, repurchase_intent")
       .eq("record_id", myRecordId)
       .eq("user_id", targetOwner.user_id)
+      .eq("role", "guest")
       .maybeSingle();
 
     if (theirGuestEval) {
@@ -470,10 +481,11 @@ export async function linkRecords(myRecordId: string, targetRecordId: string) {
           .eq("id", targetRecordId);
       }
       await adminDb
-        .from("record_evaluations")
+        .from("evaluations")
         .delete()
         .eq("record_id", myRecordId)
-        .eq("user_id", targetOwner.user_id);
+        .eq("user_id", targetOwner.user_id)
+        .eq("role", "guest");
     }
   }
 

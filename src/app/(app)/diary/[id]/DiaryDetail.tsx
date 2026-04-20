@@ -42,7 +42,7 @@ function getFoodColor(name: string) {
 
 const TYPE_KO: Record<string, string> = {
   red: "레드", white: "화이트", rose: "로제",
-  sparkling: "스파클링", fortified: "주정강화", other: "기타",
+  sparkling: "스파클링", fortified: "주정강화", dessert: "디저트", other: "기타",
 };
 
 function renderStars(score: number, max = 5) {
@@ -66,6 +66,7 @@ interface WineData {
   id?: string;
   description?: string | null;
   vivino_url?: string | null;
+  vivino_page_url?: string | null;
   vivino_rating?: number | null;
   vivino_reviews?: number | null;
   vivino_winery?: string | null;
@@ -78,7 +79,18 @@ interface WineData {
   region?: string | null;
   country?: string | null;
   producer?: string | null;
+  producer_ko?: string | null;
+  producer_en?: string | null;
   wine_type?: string | null;
+  // v3 정규화/한글 필드
+  country_ko?: string | null;
+  region_ko?: string | null;
+  region_path?: string | null;
+  grape_varieties?: string[] | null;
+  grape_varieties_ko?: string[] | null;
+  wine_style?: string | null;
+  wine_style_ko?: string | null;
+  // legacy final_*
   final_grapes?: string | null;
   final_region?: string | null;
   final_country?: string | null;
@@ -87,6 +99,7 @@ interface WineData {
   final_alcohol?: string | null;
   final_style?: string | null;
   final_description?: string | null;
+  gangnam_alcohol?: string | null;
 }
 
 const WINE_TYPE_COLORS: Record<string, string> = {
@@ -328,7 +341,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
             return (
               <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
                 <div className="px-5 pt-4 pb-2">
-                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Wine</p>
+                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">와인</p>
                 </div>
                 {/* 와인명 */}
                 {(() => {
@@ -681,7 +694,7 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
         );
       })()}
 
-      {/* 다른 평가자들 (record_evaluations) */}
+      {/* 다른 평가자들 (evaluations role='guest') */}
       {otherEvals.map((ev) => (
         <EvalCard
           key={ev.id}

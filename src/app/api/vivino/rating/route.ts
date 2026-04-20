@@ -119,15 +119,14 @@ async function extractRatingFromJsonLd(url: string): Promise<{ rating: number; r
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function cacheRating(supabase: any, wineId: string, rating: number, reviews: number, pageUrl?: string, vivinoWineId?: number, vivinoName?: string) {
+async function cacheRating(supabase: any, wineId: string, rating: number, reviews: number, pageUrl?: string, vivinoWineId?: number, _vivinoName?: string) {
   try {
     const update: Record<string, unknown> = { vivino_rating: rating, vivino_reviews: reviews };
-    if (pageUrl) update.vivino_page_url = pageUrl;
-    if (vivinoWineId) update.vivino_wine_id = vivinoWineId;
-    // Vivino 원본명이 있으면 vivino_url도 갱신 (정확한 이름 기반)
-    if (vivinoName) {
-      update.vivino_url = `https://www.vivino.com/search/wines?q=${encodeURIComponent(vivinoName)}`;
+    if (pageUrl) {
+      update.vivino_page_url = pageUrl;
+      update.vivino_url = pageUrl;
     }
+    if (vivinoWineId) update.vivino_wine_id = vivinoWineId;
     await supabase.from("wines").update(update).eq("id", wineId);
   } catch {}
 }

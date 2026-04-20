@@ -28,7 +28,7 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
   const d = resolveWineDisplay(wine);
 
   // 유사 와인 추천: 같은 국가+품종 > 같은 국가 > 같은 타입, 비슷한 가격대
-  const similarFields = "id, name_ko, wine_type, country, price, vivino_rating, naver_image, grape_variety, final_grapes, vivino_grapes";
+  const similarFields = "id, name_ko, wine_type, country, country_ko, price, vivino_rating, naver_image, image_url, grape_variety, grape_varieties, grape_varieties_ko, final_grapes, vivino_grapes";
   const priceMin = wine.price ? Math.round(wine.price * 0.5) : null;
   const priceMax = wine.price ? Math.round(wine.price * 1.5) : null;
 
@@ -50,8 +50,8 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
     // 품종이 겹치는 것을 먼저, 나머지는 Vivino 평점순
     const wineGrapes = (d.grapes ?? "").toLowerCase();
     similar = tier1.sort((a, b) => {
-      const aGrapes = (a.final_grapes ?? a.vivino_grapes ?? a.grape_variety ?? "").toLowerCase();
-      const bGrapes = (b.final_grapes ?? b.vivino_grapes ?? b.grape_variety ?? "").toLowerCase();
+      const aGrapes = ((a.grape_varieties_ko ?? []).join(" ") || (a.grape_varieties ?? []).join(" ") || a.final_grapes || a.vivino_grapes || a.grape_variety || "").toLowerCase();
+      const bGrapes = ((b.grape_varieties_ko ?? []).join(" ") || (b.grape_varieties ?? []).join(" ") || b.final_grapes || b.vivino_grapes || b.grape_variety || "").toLowerCase();
       const aMatch = wineGrapes && aGrapes.includes(wineGrapes) ? 1 : 0;
       const bMatch = wineGrapes && bGrapes.includes(wineGrapes) ? 1 : 0;
       if (aMatch !== bMatch) return bMatch - aMatch;
@@ -74,7 +74,7 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
     if (fallback) similar = [...similar, ...fallback];
   }
 
-  const heroImage = getWineImage(wine.naver_image, wine.wine_type);
+  const heroImage = getWineImage(wine.image_url ?? wine.naver_image, wine.wine_type);
 
   return (
     <div className="relative min-h-screen bg-black">
@@ -117,7 +117,7 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
           {/* ── Wine Details ── */}
           <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
             <div className="px-5 pt-4 pb-2">
-              <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Wine Details</p>
+              <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">와인 상세</p>
             </div>
             <div className="flex flex-col pb-2">
               {d.wine_type && (
@@ -201,13 +201,13 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
                     href={`/wines/${w.id}`}
                     className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] transition-colors"
                   >
-                    <img src={getWineImage(w.naver_image, w.wine_type)} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-zinc-700" />
+                    <img src={getWineImage(w.image_url ?? w.naver_image, w.wine_type)} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-zinc-700" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-zinc-200 truncate">{w.name_ko}</p>
                       <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-500">
                         {w.price && <span className="text-emerald-400">{w.price.toLocaleString()}원</span>}
                         {w.vivino_rating && <span className="text-rose-300">★ {Number(w.vivino_rating).toFixed(1)}</span>}
-                        {w.country && <span>{w.country}</span>}
+                        {(w.country_ko ?? w.country) && <span>{w.country_ko ?? w.country}</span>}
                       </div>
                     </div>
                   </Link>
@@ -222,7 +222,7 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
           {/* ── 데이터 출처 ── */}
           <div className="flex items-center justify-center gap-1.5 pt-2 pb-4">
             <span className="text-[10px] text-zinc-600">
-              데이터 출처: {wine.data_source === "naver_shopping" ? "네이버 쇼핑" : wine.data_source ?? "알 수 없음"}
+              데이터 출처: {(wine.source ?? wine.data_source) === "naver_shopping" ? "네이버 쇼핑" : (wine.source ?? wine.data_source) ?? "알 수 없음"}
               {wine.vivino_rating ? " · Vivino" : ""}
             </span>
           </div>

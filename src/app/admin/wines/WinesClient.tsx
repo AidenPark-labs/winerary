@@ -78,13 +78,19 @@ function EditableInfoCell({ label, value, placeholder, onSave }: {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const [saving, setSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSave = async () => {
-    if (draft === value) { setEditing(false); return; }
+    if (draft === value) { setEditing(false); setErrorMsg(null); return; }
     setSaving(true);
+    setErrorMsg(null);
     const res = await onSave(draft);
     setSaving(false);
-    if (!res.error) setEditing(false);
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else {
+      setEditing(false);
+    }
   };
 
   if (editing) {
@@ -95,18 +101,19 @@ function EditableInfoCell({ label, value, placeholder, onSave }: {
           <input
             className="bg-zinc-800 border border-zinc-600 rounded px-2 py-0.5 text-sm text-zinc-200 flex-1 min-w-0"
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => { setDraft(e.target.value); if (errorMsg) setErrorMsg(null); }}
             placeholder={placeholder}
             autoFocus
-            onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") { setDraft(value); setEditing(false); } }}
+            onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") { setDraft(value); setEditing(false); setErrorMsg(null); } }}
           />
           <button onClick={handleSave} disabled={saving} className="text-xs text-emerald-400 hover:text-emerald-300 px-1">
             {saving ? "..." : "저장"}
           </button>
-          <button onClick={() => { setDraft(value); setEditing(false); }} className="text-xs text-zinc-500 hover:text-zinc-300 px-1">
+          <button onClick={() => { setDraft(value); setEditing(false); setErrorMsg(null); }} className="text-xs text-zinc-500 hover:text-zinc-300 px-1">
             취소
           </button>
         </div>
+        {errorMsg && <p className="text-[11px] text-rose-400 mt-1">{errorMsg}</p>}
       </div>
     );
   }

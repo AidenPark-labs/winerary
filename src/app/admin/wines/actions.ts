@@ -12,7 +12,15 @@ export async function updateWine(id: string, data: Record<string, string | numbe
     .update({ ...data, updated_at: new Date().toISOString() })
     .eq("id", id);
 
-  if (error) return { error: error.message };
+  if (error) {
+    if (error.code === "23505" && error.message.includes("wines_name_ko_unique")) {
+      return { error: "이미 사용 중인 한국어명입니다" };
+    }
+    if (error.code === "23505") {
+      return { error: "중복된 값이 있어 저장할 수 없습니다" };
+    }
+    return { error: error.message };
+  }
   revalidatePath("/admin/wines");
   return { success: true };
 }

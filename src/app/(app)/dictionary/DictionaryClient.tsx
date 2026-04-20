@@ -3,9 +3,9 @@
 import { useState, useTransition, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Filter, BookOpen } from "lucide-react";
+import { Search, Filter, BookOpen, Flame } from "lucide-react";
 import { getWineImage } from "@/lib/wine-placeholder";
-import type { DictionaryOptions, DictionaryWine } from "./page";
+import type { DictionaryOptions, DictionaryWine, PopularWine } from "./page";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드",
@@ -31,9 +31,10 @@ interface Props {
   initial: { q: string; type: string; country: string; grape: string; k: number };
   options: DictionaryOptions;
   results: DictionaryWine[];
+  popular: PopularWine[];
 }
 
-export default function DictionaryClient({ initial, options, results }: Props) {
+export default function DictionaryClient({ initial, options, results, popular }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [q, setQ] = useState(initial.q);
@@ -120,6 +121,46 @@ export default function DictionaryClient({ initial, options, results }: Props) {
       </header>
 
       <div className="px-4 flex flex-col gap-4">
+        {/* 인기 와인 (최근 30일) */}
+        {popular.length > 0 && (
+          <section className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] text-zinc-500 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+                <Flame className="w-3.5 h-3.5 text-orange-400" />
+                인기 와인
+                <span className="text-[10px] text-zinc-600 normal-case font-normal">최근 30일</span>
+              </p>
+            </div>
+            <div className="-mx-4 px-4 flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
+              {popular.map((w, i) => (
+                <Link
+                  key={w.id}
+                  href={`/wines/${w.id}?from=search`}
+                  className="relative flex-shrink-0 w-32 rounded-2xl bg-surface/80 border border-white/5 hover:border-white/20 transition-all backdrop-blur-sm overflow-hidden"
+                >
+                  <div className="absolute top-1.5 left-1.5 z-10 w-6 h-6 rounded-full bg-black/70 text-accent text-xs font-bold flex items-center justify-center">
+                    {i + 1}
+                  </div>
+                  <img
+                    src={getWineImage(w.image_url ?? w.naver_image, w.wine_type)}
+                    alt=""
+                    className="w-full h-32 object-cover bg-white/5"
+                  />
+                  <div className="p-2">
+                    <p className="text-xs text-white font-medium line-clamp-2 leading-snug min-h-[2.2rem]">
+                      {w.name_ko}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-1 text-[10px] text-zinc-400">
+                      {w.vivino_rating != null && <span className="text-purple-300">★ {w.vivino_rating.toFixed(1)}</span>}
+                      {(w.country_ko ?? w.country) && <span className="truncate">{w.country_ko ?? w.country}</span>}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* 검색 입력 */}
         <div className="flex gap-2">
           <div className="flex-1 relative">
@@ -248,7 +289,7 @@ export default function DictionaryClient({ initial, options, results }: Props) {
               {results.map((w) => (
                 <Link
                   key={w.id}
-                  href={`/wines/${w.id}`}
+                  href={`/wines/${w.id}?from=search`}
                   className="flex items-center gap-3 p-3 rounded-2xl bg-surface/80 border border-white/5 hover:border-white/20 transition-all backdrop-blur-sm"
                 >
                   <img

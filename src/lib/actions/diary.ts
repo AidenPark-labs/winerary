@@ -130,6 +130,12 @@ export async function createWineRecord(data: Partial<WineRecord> & { companion_e
 
   await syncMentions(supabase, record.id, companionEntries ?? null);
 
+  // 인기도 집계 (record 이벤트, 가중치 5)
+  if (data.wine_id) {
+    const { logWineEvent } = await import("@/lib/wine-events");
+    logWineEvent({ wineId: data.wine_id, eventType: "record", userId: user.id }).catch(() => {});
+  }
+
   // 연결 가능 기록 검색: 상대방이 나를 멘션 + 같은 날짜
   let linkable: { recordId: string; wineName: string; ownerNickname: string }[] = [];
   try {

@@ -523,7 +523,7 @@ export default function FindPage() {
               {searchResults.map((wine) => (
                 <Link
                   key={wine.id}
-                  href={`/wines/${wine.id}`}
+                  href={`/wines/${wine.id}?from=search`}
                   className="flex items-center gap-3 p-3 rounded-2xl bg-surface/80 border border-white/5 text-left hover:border-white/20 transition-all backdrop-blur-sm"
                 >
                   <img src={getWineImage(wine.naver_image, wine.wine_type)} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-white/5" />

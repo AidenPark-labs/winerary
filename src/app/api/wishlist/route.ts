@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { logWineEvent } from "@/lib/wine-events";
 
 export async function GET() {
   const supabase = await createClient();
@@ -100,6 +101,12 @@ export async function POST(request: Request) {
     .single();
 
   if (error) return Response.json({ error: error.message }, { status: 500 });
+
+  // 인기도 집계 (wishlist 이벤트, 가중치 3)
+  if (wine_id) {
+    logWineEvent({ wineId: wine_id, eventType: "wishlist", userId: user.id }).catch(() => {});
+  }
+
   return Response.json({ item: data });
 }
 

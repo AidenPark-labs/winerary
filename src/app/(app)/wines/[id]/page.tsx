@@ -7,14 +7,22 @@ import WineActions from "./WineActions";
 import BackButton from "./BackButton";
 import NaverShopping from "./NaverShopping";
 import { getWineImage } from "@/lib/wine-placeholder";
+import { logWineEvent } from "@/lib/wine-events";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드", white: "화이트", rose: "로제",
   sparkling: "스파클링", fortified: "주정강화", dessert: "디저트", other: "기타",
 };
 
-export default async function WineDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function WineDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<Record<string, string | undefined>>;
+}) {
   const { id } = await params;
+  const sp = (await searchParams) ?? {};
   const supabase = await createClient();
 
   const { data: wine } = await supabase
@@ -24,6 +32,12 @@ export default async function WineDetailPage({ params }: { params: Promise<{ id:
     .single();
 
   if (!wine) notFound();
+
+  // 검색 결과에서 진입한 경우에만 인기도 집계 (view 이벤트)
+  if (sp.from === "search") {
+    const { data: { user: viewer } } = await supabase.auth.getUser();
+    logWineEvent({ wineId: id, eventType: "view", userId: viewer?.id ?? null }).catch(() => {});
+  }
 
   const d = resolveWineDisplay(wine);
 

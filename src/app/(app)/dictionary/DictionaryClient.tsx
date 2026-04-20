@@ -88,15 +88,17 @@ export default function DictionaryClient({ initial, options, results }: Props) {
 
   const hasAnyFilter = type !== "all" || country || grape || q.trim();
 
-  // 상위 N개 + "더 보기" 토글
+  // 0건 제외 + 상위 N개 "더 보기" 토글
   const topN = 6;
+  const grapes = useMemo(() => options.grapes.filter((g) => g.count > 0), [options.grapes]);
+  const countries = useMemo(() => options.countries.filter((c) => c.count > 0), [options.countries]);
   const grapesToShow = useMemo(
-    () => (showAllGrapes ? options.grapes : options.grapes.slice(0, topN)),
-    [options.grapes, showAllGrapes]
+    () => (showAllGrapes ? grapes : grapes.slice(0, topN)),
+    [grapes, showAllGrapes]
   );
   const countriesToShow = useMemo(
-    () => (showAllCountries ? options.countries : options.countries.slice(0, topN)),
-    [options.countries, showAllCountries]
+    () => (showAllCountries ? countries : countries.slice(0, topN)),
+    [countries, showAllCountries]
   );
 
   return (
@@ -161,7 +163,7 @@ export default function DictionaryClient({ initial, options, results }: Props) {
         </section>
 
         {/* 국가 필터 */}
-        {options.countries.length > 0 && (
+        {countries.length > 0 && (
           <section className="flex flex-col gap-1.5">
             <p className="text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">국가</p>
             <div className="flex flex-wrap gap-1.5">
@@ -176,15 +178,14 @@ export default function DictionaryClient({ initial, options, results }: Props) {
                   }`}
                 >
                   {c.value}
-                  <span className="ml-1 text-[10px] text-zinc-500">{c.count}</span>
                 </button>
               ))}
-              {options.countries.length > topN && (
+              {countries.length > topN && (
                 <button
                   onClick={() => setShowAllCountries((v) => !v)}
                   className="text-xs px-3 py-1.5 rounded-full border border-white/10 text-zinc-400 hover:bg-white/10"
                 >
-                  {showAllCountries ? "접기" : `+${options.countries.length - topN}`}
+                  {showAllCountries ? "접기" : `+${countries.length - topN}`}
                 </button>
               )}
             </div>
@@ -192,7 +193,7 @@ export default function DictionaryClient({ initial, options, results }: Props) {
         )}
 
         {/* 품종 필터 (타입 의존) */}
-        {options.grapes.length > 0 && (
+        {grapes.length > 0 && (
           <section className="flex flex-col gap-1.5">
             <p className="text-[11px] text-zinc-500 uppercase tracking-wider font-semibold">
               품종 {type !== "all" && <span className="text-zinc-600 normal-case">({TYPE_KO[type] ?? type} 기준)</span>}
@@ -209,15 +210,14 @@ export default function DictionaryClient({ initial, options, results }: Props) {
                   }`}
                 >
                   {g.value}
-                  <span className="ml-1 text-[10px] text-zinc-500">{g.count}</span>
                 </button>
               ))}
-              {options.grapes.length > topN && (
+              {grapes.length > topN && (
                 <button
                   onClick={() => setShowAllGrapes((v) => !v)}
                   className="text-xs px-3 py-1.5 rounded-full border border-white/10 text-zinc-400 hover:bg-white/10"
                 >
-                  {showAllGrapes ? "접기" : `+${options.grapes.length - topN}`}
+                  {showAllGrapes ? "접기" : `+${grapes.length - topN}`}
                 </button>
               )}
             </div>

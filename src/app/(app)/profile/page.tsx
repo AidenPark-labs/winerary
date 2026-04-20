@@ -76,6 +76,20 @@ export default async function MyWinePage() {
   const all = (records ?? []) as WineRecord[];
   const total = all.length;
 
+  // wine_id → grape_varieties_ko 맵 (품종 카운트 canonical 소스)
+  const wineIds = [...new Set(all.map((r) => r.wine_id).filter((v): v is string => !!v))];
+  const wineGrapeMap = new Map<string, string[]>();
+  if (wineIds.length > 0) {
+    const { data: wineRows } = await supabase
+      .from("wines")
+      .select("id, grape_varieties_ko")
+      .in("id", wineIds);
+    for (const w of wineRows ?? []) {
+      const gv = (w.grape_varieties_ko ?? []) as string[];
+      if (gv.length > 0) wineGrapeMap.set(w.id as string, gv);
+    }
+  }
+
   // 종합 평점
   const overallScores = all.map((r) => {
     const scores = [r.rating, r.value_score, r.pairing_score].filter((v): v is number => v != null).map(Number);
@@ -104,6 +118,17 @@ export default async function MyWinePage() {
 
   const grapeCounts: Record<string, number> = {};
   all.forEach((r) => {
+    // canonical wine과 연결된 경우 wines.grape_varieties_ko를 우선 사용 (철자 변형 통합)
+    const canonicalGrapes = r.wine_id ? wineGrapeMap.get(r.wine_id) : undefined;
+    if (canonicalGrapes && canonicalGrapes.length > 0) {
+      if (canonicalGrapes.length >= 2) {
+        grapeCounts["블렌드"] = (grapeCounts["블렌드"] ?? 0) + 1;
+      } else {
+        const key = normalizeGrape(canonicalGrapes[0]);
+        grapeCounts[key] = (grapeCounts[key] ?? 0) + 1;
+      }
+      return;
+    }
     if (!r.grape_variety) return;
     // 블렌드인 경우 개별 품종 대신 "블렌드"로 카운트
     if (r.grape_variety.startsWith("블렌드")) {

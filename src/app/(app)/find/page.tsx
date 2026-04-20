@@ -428,8 +428,18 @@ export default function FindPage() {
       {showAuthPrompt && <AuthPrompt message="와인을 저장하거나 기록하려면 로그인이 필요합니다" returnUrl={authReturnUrl} />}
       <Toast message="내 와인에 추가되었어요!" visible={toast} onHide={() => setToast(false)} />
       <header className="sticky top-0 z-30 px-5 pt-8 pb-2 flex-shrink-0 bg-background">
-        <h1 className="text-2xl font-bold text-white">와인검색</h1>
-        <p className="text-zinc-500 text-sm mt-1">사진 또는 이름으로 와인을 검색하세요</p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-white">와인검색</h1>
+            <p className="text-zinc-500 text-sm mt-1">사진 또는 이름으로 와인을 검색하세요</p>
+          </div>
+          <Link
+            href="/dictionary"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-300 text-xs hover:bg-white/10 transition-colors mt-1"
+          >
+            와인 사전 →
+          </Link>
+        </div>
       </header>
 
       {/* 세그먼티드 컨트롤 - select 단계에서만 표시 */}

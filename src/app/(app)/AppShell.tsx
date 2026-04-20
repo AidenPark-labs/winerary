@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import BottomNav from "./BottomNav";
 
-const TAB_ROOTS = new Set(["/diary", "/find", "/recommend", "/wishlist", "/profile"]);
+const TAB_ROOTS = new Set(["/diary", "/find", "/recommend", "/wishlist", "/profile", "/dictionary"]);
 const PROFILE_SUB = ["/profile/edit"];
 
 function isTabRoot(path: string) {

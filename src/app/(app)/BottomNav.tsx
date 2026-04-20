@@ -12,8 +12,8 @@ const tabs = [
   { href: "/profile", label: "마이페이지", Icon: User },
 ];
 
-// 탭 루트 경로 + 마이페이지 하위 허용 경로
-const TAB_ROOTS = new Set(["/diary", "/find", "/recommend", "/wishlist", "/profile"]);
+// 탭 루트 경로 + 마이페이지 하위 허용 경로 + 사전(탭은 아니지만 네비 유지)
+const TAB_ROOTS = new Set(["/diary", "/find", "/recommend", "/wishlist", "/profile", "/dictionary"]);
 const PROFILE_SUB = ["/profile/edit"];
 
 function isTabRoot(path: string) {

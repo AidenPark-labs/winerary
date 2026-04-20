@@ -114,6 +114,10 @@ export default function FindPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<DbWine[]>([]);
   const [searching, setSearching] = useState(false);
+  const [searchLimit, setSearchLimit] = useState(50);
+  const [searchHasMore, setSearchHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [lastQuery, setLastQuery] = useState("");
   const [aiSearchResult, setAiSearchResult] = useState<WineResult | null>(null);
   const [photoCandidates, setPhotoCandidates] = useState<DbWine[]>([]);
   // 줌/패닝 상태
@@ -245,12 +249,16 @@ export default function FindPage() {
     setSearching(true);
     setSearchResults([]);
     setAiSearchResult(null);
+    setSearchHasMore(false);
+    setSearchLimit(50);
+    setLastQuery(q);
     try {
       // 1차: DB 검색
-      const res = await fetch(`/api/wines/search?q=${encodeURIComponent(q)}`);
+      const res = await fetch(`/api/wines/search?q=${encodeURIComponent(q)}&limit=50`);
       const data = await res.json();
       if (data.wines?.length > 0) {
         setSearchResults(data.wines);
+        setSearchHasMore(!!data.hasMore);
       } else {
         // 2차: AI 검색 폴백
         const aiRes = await fetch(`/api/ai/identify-by-name`, {
@@ -267,6 +275,27 @@ export default function FindPage() {
       setSearchResults([]);
     } finally {
       setSearching(false);
+    }
+  }
+
+  async function loadMoreSearchResults() {
+    if (!lastQuery || loadingMore) return;
+    const nextLimit = Math.min(searchLimit + 50, 500);
+    setLoadingMore(true);
+    try {
+      const res = await fetch(`/api/wines/search?q=${encodeURIComponent(lastQuery)}&limit=${nextLimit}`);
+      const data = await res.json();
+      if (data.wines?.length > 0) {
+        setSearchResults(data.wines);
+        setSearchHasMore(!!data.hasMore && nextLimit < 500);
+        setSearchLimit(nextLimit);
+      } else {
+        setSearchHasMore(false);
+      }
+    } catch {
+      // swallow
+    } finally {
+      setLoadingMore(false);
     }
   }
 
@@ -488,7 +517,9 @@ export default function FindPage() {
 
           {!searching && searchResults.length > 0 && (
             <div className="flex flex-col gap-2.5 overflow-y-auto">
-              <p className="text-zinc-500 text-sm">{searchResults.length}개의 와인을 찾았어요</p>
+              <p className="text-zinc-500 text-sm">
+                {searchResults.length}개{searchHasMore ? "+" : ""}의 와인을 찾았어요
+              </p>
               {searchResults.map((wine) => (
                 <Link
                   key={wine.id}
@@ -508,6 +539,15 @@ export default function FindPage() {
                   </div>
                 </Link>
               ))}
+              {searchHasMore && (
+                <button
+                  onClick={loadMoreSearchResults}
+                  disabled={loadingMore || searchLimit >= 500}
+                  className="py-3 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 text-zinc-300 text-sm font-light transition-all disabled:opacity-40"
+                >
+                  {loadingMore ? "불러오는 중…" : searchLimit >= 500 ? "최대 500개까지 표시됩니다 — 검색어를 구체화해 주세요" : "더 보기"}
+                </button>
+              )}
             </div>
           )}
 

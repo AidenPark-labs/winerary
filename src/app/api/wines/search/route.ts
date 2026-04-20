@@ -9,15 +9,18 @@ export async function GET(request: Request) {
     return Response.json({ wines: [], source: "db" });
   }
 
+  const rawLimit = parseInt(searchParams.get("limit") ?? "", 10);
+  const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 500) : 50;
+
   const supabase = await createClient();
 
   const { data: ranked, error } = await supabase.rpc("search_wines", {
     q: query,
-    k: 20,
+    k: limit,
   });
 
   if (error || !ranked || ranked.length === 0) {
-    return Response.json({ wines: [], source: "db", error: error?.message });
+    return Response.json({ wines: [], source: "db", hasMore: false, error: error?.message });
   }
 
   const ids = (ranked as Array<{ id: string }>).map((r) => r.id);
@@ -40,5 +43,5 @@ export async function GET(request: Request) {
     })
     .filter(Boolean);
 
-  return Response.json({ wines, source: "db" });
+  return Response.json({ wines, source: "db", hasMore: ranked.length >= limit });
 }

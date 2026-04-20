@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { updateWine, updateWineVivino, deleteWine } from "./actions";
+import { updateWine, updateWineVivino, deleteWine, clearWineVivino } from "./actions";
 import { resolveWineDisplay } from "@/lib/wine-display";
 import type { VivinoCrawlResult, VivinoCrawlError } from "@/lib/vivino-crawler";
 import { ChevronIcon } from "@/components/Icons";
@@ -441,6 +441,19 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
                         <button onClick={() => startEdit(w)} className="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition-colors">
                           오버라이드
                         </button>
+                        {(w.vivino_url || w.vivino_page_url || w.vivino_rating != null) && (
+                          <button
+                            onClick={async () => {
+                              if (!confirm(`"${w.name_ko}"의 Vivino 수집 정보를 모두 지우시겠습니까?\n(한글 지역·스타일·품종 등 파생 필드는 유지됩니다)`)) return;
+                              const res = await clearWineVivino(w.id);
+                              if (res.error) alert(`삭제 실패: ${res.error}`);
+                              else router.refresh();
+                            }}
+                            className="text-[11px] px-2.5 py-1 rounded-lg bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/25 transition-colors"
+                          >
+                            매칭 해제
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">

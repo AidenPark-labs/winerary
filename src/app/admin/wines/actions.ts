@@ -187,6 +187,33 @@ export async function updateWineVivino(
   return { success: true };
 }
 
+export async function clearWineVivino(id: string) {
+  const { supabase } = await requireAdmin();
+
+  const { error } = await supabase
+    .from("wines")
+    .update({
+      vivino_url: null,
+      vivino_page_url: null,
+      vivino_wine_id: null,
+      vivino_rating: null,
+      vivino_reviews: null,
+      vivino_winery: null,
+      vivino_grapes: null,
+      vivino_region: null,
+      vivino_style: null,
+      vivino_alcohol: null,
+      vivino_allergens: null,
+      vivino_description: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+  revalidatePath("/admin/wines");
+  return { success: true };
+}
+
 export async function deleteWine(id: string) {
   const { supabase } = await requireAdmin();
 

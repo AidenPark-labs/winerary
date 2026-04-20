@@ -249,7 +249,7 @@ export default async function WineDetailPage({
           )}
 
           {/* ── 액션 버튼 ── */}
-          <WineActions wine={wine} />
+          <WineActions wine={wine} isLoggedIn={!!user} />
 
           {/* ── 데이터 출처 ── */}
           <div className="flex items-center justify-center gap-1.5 pt-2 pb-4">

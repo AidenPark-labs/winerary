@@ -15,6 +15,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/admin/records" className="text-zinc-400 hover:text-zinc-200 transition-colors">기록</Link>
             <Link href="/admin/wines" className="text-zinc-400 hover:text-zinc-200 transition-colors">와인 DB</Link>
             <Link href="/admin/pending-wines" className="text-zinc-400 hover:text-zinc-200 transition-colors">편입 대기</Link>
+            <Link href="/admin/reports" className="text-zinc-400 hover:text-zinc-200 transition-colors">신고</Link>
           </div>
         </div>
         <Link href="/diary" className="text-xs text-zinc-500 hover:text-zinc-300">← 서비스로 돌아가기</Link>

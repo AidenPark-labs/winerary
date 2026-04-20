@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import AuthPrompt from "@/components/AuthPrompt";
+import ReportWineModal from "./ReportWineModal";
 
 interface Wine {
   id: string;
@@ -13,10 +15,12 @@ interface Wine {
   vivino_url: string | null;
 }
 
-export default function WineActions({ wine }: { wine: Wine }) {
+export default function WineActions({ wine, isLoggedIn }: { wine: Wine; isLoggedIn: boolean }) {
   const router = useRouter();
   const [wishSaving, setWishSaving] = useState(false);
   const [wishSaved, setWishSaved] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
   useEffect(() => {
     fetch(`/api/wishlist/check?wine_id=${wine.id}`)
@@ -55,6 +59,14 @@ export default function WineActions({ wine }: { wine: Wine }) {
     router.push(`/diary/new?${p.toString()}`);
   }
 
+  function handleReportClick() {
+    if (!isLoggedIn) {
+      setShowAuthPrompt(true);
+      return;
+    }
+    setShowReport(true);
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <button
@@ -74,6 +86,23 @@ export default function WineActions({ wine }: { wine: Wine }) {
       >
         이 와인 기록하기
       </button>
+
+      <button
+        onClick={handleReportClick}
+        className="w-full py-2 text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors underline-offset-2 hover:underline"
+      >
+        🚩 와인 정보가 잘못됐어요
+      </button>
+
+      {showReport && (
+        <ReportWineModal wineId={wine.id} onClose={() => setShowReport(false)} />
+      )}
+      {showAuthPrompt && (
+        <AuthPrompt
+          message="오류 신고는 로그인 후 이용할 수 있어요"
+          returnUrl={`/wines/${wine.id}`}
+        />
+      )}
     </div>
   );
 }

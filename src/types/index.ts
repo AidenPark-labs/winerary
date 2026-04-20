@@ -188,6 +188,22 @@ export interface LinkedRecord {
   owner_nickname: string
 }
 
+export type WineReportType = 'vivino_link' | 'wine_name' | 'other_info' | 'custom'
+export type WineReportStatus = 'open' | 'resolved' | 'dismissed'
+
+export interface WineReport {
+  id: string
+  wine_id: string
+  user_id: string | null
+  report_type: WineReportType
+  description: string | null
+  status: WineReportStatus
+  created_at: string
+  resolved_at: string | null
+  resolved_by: string | null
+  resolved_note: string | null
+}
+
 export interface WineSuggestion {
   wine_id?: string
   name: string

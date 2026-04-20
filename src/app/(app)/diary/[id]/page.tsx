@@ -52,9 +52,10 @@ export default async function DiaryDetailPage({ params }: { params: Promise<{ id
   let myEvaluation: RecordEvaluation | null = null;
   try {
     const { data: evals } = await supabase
-      .from("record_evaluations")
+      .from("evaluations")
       .select("*, profiles:user_id(nickname)")
-      .eq("record_id", id);
+      .eq("record_id", id)
+      .eq("role", "guest");
 
     evaluations = (evals ?? []).map((e: unknown) => {
       const row = e as Record<string, unknown>;

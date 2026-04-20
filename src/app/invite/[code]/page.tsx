@@ -57,11 +57,12 @@ export default async function InvitePage({ params }: { params: Promise<{ code: s
     wineData = data;
   }
 
-  // 기존 평가 조회
+  // 기존 평가 조회 (v3: evaluations role='guest')
   const { data: evals } = await admin
-    .from("record_evaluations")
+    .from("evaluations")
     .select("*, profiles:user_id(nickname)")
-    .eq("record_id", record.id);
+    .eq("record_id", record.id)
+    .eq("role", "guest");
 
   const evaluations: RecordEvaluation[] = (evals ?? []).map((e: unknown) => {
     const row = e as Record<string, unknown>;

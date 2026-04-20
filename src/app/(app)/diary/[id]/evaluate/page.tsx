@@ -52,12 +52,13 @@ export default async function EvaluatePage({ params }: { params: Promise<{ id: s
     );
   }
 
-  // 공유받은 유저: record_evaluations 테이블 사용
+  // 공유받은 유저: evaluations 테이블 (role='guest') 사용
   const { data: existing } = await supabase
-    .from("record_evaluations")
+    .from("evaluations")
     .select("*")
     .eq("record_id", id)
     .eq("user_id", user.id)
+    .eq("role", "guest")
     .maybeSingle();
 
   return (

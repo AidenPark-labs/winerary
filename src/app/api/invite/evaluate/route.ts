@@ -18,10 +18,9 @@ export async function POST(request: Request) {
 
   const admin = createAdminClient();
 
-  // 초대 코드로 레코드 조회
   const { data: record } = await admin
     .from("wine_records")
-    .select("id")
+    .select("id, wine_id, pending_wine_id")
     .eq("invite_code", invite_code)
     .is("deleted_at", null)
     .single();
@@ -30,19 +29,18 @@ export async function POST(request: Request) {
     return Response.json({ error: "유효하지 않은 초대 코드입니다" }, { status: 404 });
   }
 
-  // 같은 닉네임으로 이미 평가했는지 확인
   const { data: existing } = await admin
-    .from("record_evaluations")
+    .from("evaluations")
     .select("id")
     .eq("record_id", record.id)
     .is("user_id", null)
-    .eq("guest_nickname", guest_nickname.trim())
+    .eq("nickname", guest_nickname.trim())
+    .eq("role", "guest")
     .maybeSingle();
 
   if (existing) {
-    // 수정
     const { error } = await admin
-      .from("record_evaluations")
+      .from("evaluations")
       .update({
         rating: rating ?? null,
         value_score: value_score ?? null,
@@ -56,13 +54,15 @@ export async function POST(request: Request) {
     return Response.json({ success: true, updated: true });
   }
 
-  // 신규
   const { error } = await admin
-    .from("record_evaluations")
+    .from("evaluations")
     .insert({
       record_id: record.id,
+      wine_id: record.wine_id,
+      pending_wine_id: record.pending_wine_id,
       user_id: null,
-      guest_nickname: guest_nickname.trim(),
+      nickname: guest_nickname.trim(),
+      role: "guest",
       rating: rating ?? null,
       value_score: value_score ?? null,
       pairing_score: pairing_score ?? null,

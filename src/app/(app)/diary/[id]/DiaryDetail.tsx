@@ -694,7 +694,7 @@ function EvaluationSection({ record, readOnly, evaluations, myEvaluation, curren
         );
       })()}
 
-      {/* 다른 평가자들 (record_evaluations) */}
+      {/* 다른 평가자들 (evaluations role='guest') */}
       {otherEvals.map((ev) => (
         <EvalCard
           key={ev.id}

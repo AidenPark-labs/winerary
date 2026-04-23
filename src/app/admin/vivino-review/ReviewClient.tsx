@@ -13,9 +13,15 @@ export interface ReviewWine {
   name_en: string | null;
   wine_type: string | null;
   country: string | null;
+  country_ko: string | null;
   region: string | null;
+  region_ko: string | null;
   grape_variety: string | null;
+  grape_varieties: string[] | null;
   producer: string | null;
+  producer_ko: string | null;
+  producer_en: string | null;
+  winery_en_clean: string | null;
   image_url: string | null;
   vivino_url: string | null;
   vivino_page_url: string | null;
@@ -30,6 +36,25 @@ export interface ReviewWine {
   vivino_description: string | null;
   vivino_needs_review: boolean | null;
   vivino_reviewed_at: string | null;
+}
+
+function displayProducer(w: ReviewWine): string | null {
+  return w.producer_ko || w.producer_en || w.winery_en_clean || w.producer || null;
+}
+
+function displayGrapes(w: ReviewWine): string | null {
+  if (Array.isArray(w.grape_varieties) && w.grape_varieties.length > 0) {
+    return w.grape_varieties.join(", ");
+  }
+  return w.grape_variety || null;
+}
+
+function displayCountry(w: ReviewWine): string | null {
+  return w.country_ko || w.country || null;
+}
+
+function displayRegion(w: ReviewWine): string | null {
+  return w.region_ko || w.region || null;
 }
 
 interface Props {
@@ -243,10 +268,10 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
               <div className="text-sm text-zinc-400 mb-4">{current.name_en ?? "-"}</div>
               <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm">
                 <Row label="타입" value={current.wine_type} />
-                <Row label="생산자" value={current.producer} />
-                <Row label="국가" value={current.country} />
-                <Row label="지역" value={current.region} />
-                <Row label="품종" value={current.grape_variety} />
+                <Row label="생산자" value={displayProducer(current)} />
+                <Row label="국가" value={displayCountry(current)} />
+                <Row label="지역" value={displayRegion(current)} />
+                <Row label="품종" value={displayGrapes(current)} />
               </dl>
             </div>
 

@@ -364,10 +364,11 @@ export default function ReviewClient({ candidates, pendingCount }: Props) {
         )}
       </div>
 
-      <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 transition-opacity ${isPending ? "opacity-50" : ""}`}>
-        {/* 좌: RAW_WINES */}
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
-          <div className="flex items-center justify-between mb-2">
+      {/* Row-aligned 3열 Grid: 같은 필드는 세 컬럼에서 동일 높이 자동 정렬 */}
+      <div className={`grid grid-cols-3 border border-zinc-800 rounded-lg overflow-hidden transition-opacity ${isPending ? "opacity-50" : ""}`}>
+        {/* === Header Row === */}
+        <HeaderCell bg="zinc" border="zinc">
+          <div className="flex items-center justify-between gap-2">
             <div className="text-xs font-bold text-zinc-500 tracking-wider flex items-center gap-2">
               <span>RAW_WINES</span>
               {raw && <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 font-normal text-[11px]">{raw.source}</span>}
@@ -376,65 +377,182 @@ export default function ReviewClient({ candidates, pendingCount }: Props) {
               전체 →
             </button>
           </div>
-          {raw?.image_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={raw.image_url} alt={raw.name_ko ?? ""} className="w-20 h-28 object-contain bg-zinc-950 rounded mb-2" />
-          )}
-          <SourceField label="name_ko" value={raw?.name_ko} onSend={() => fromRaw("name_ko")} disabled={mergeDone} />
-          <SourceField label="name_en" value={raw?.name_en} onSend={() => fromRaw("name_en")} disabled={mergeDone} />
-          <SourceField label="타입" value={raw?.wine_type} onSend={() => fromRaw("wine_type")} disabled={mergeDone} />
-          <SourceField label="producer_ko" value={raw?.producer_ko} onSend={() => fromRaw("producer_ko")} disabled={mergeDone} />
-          <SourceField label="producer_en" value={raw?.producer_en} onSend={() => fromRaw("producer_en")} disabled={mergeDone} />
-          <SourceField label="country" value={raw?.country} onSend={() => fromRaw("country")} disabled={mergeDone} />
-          <SourceField label="region" value={raw?.region} onSend={() => fromRaw("region")} disabled={mergeDone} />
-          <SourceField label="grape" value={rawGrapeText(raw) || "-"} onSend={() => fromRaw("grape_varieties")} disabled={mergeDone} />
-          <SourceField label="alcohol" value={raw?.alcohol} onSend={() => fromRaw("alcohol")} disabled={mergeDone} />
-          <div className="text-[10px] text-zinc-600 mt-2 font-mono truncate">id: {raw?.id}</div>
-        </div>
-
-        {/* 중: WINES target */}
-        <div className="rounded-lg border border-emerald-900/50 bg-emerald-950/20 p-4">
-          <div className="flex items-center justify-between mb-2">
+        </HeaderCell>
+        <HeaderCell bg="emerald" border="emerald">
+          <div className="flex items-center justify-between gap-2">
             <div className="text-xs font-bold text-emerald-400 tracking-wider">WINES (기존)</div>
             <button onClick={loadAllFromTarget} disabled={isPending || mergeDone} className="text-[11px] px-2 py-0.5 rounded bg-emerald-900 hover:bg-emerald-800 text-emerald-200 border border-emerald-800 disabled:opacity-40">
               전체 →
             </button>
           </div>
-          {tgt?.image_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={tgt.image_url} alt={tgt.name_ko ?? ""} className="w-20 h-28 object-contain bg-zinc-950 rounded mb-2" />
-          )}
-          <SourceField label="name_ko" value={tgt?.name_ko} onSend={() => fromTarget("name_ko")} disabled={mergeDone} accent="emerald" />
-          <SourceField label="name_en" value={tgt?.name_en} onSend={() => fromTarget("name_en")} disabled={mergeDone} accent="emerald" />
-          <SourceField label="타입" value={tgt?.wine_type} onSend={() => fromTarget("wine_type")} disabled={mergeDone} accent="emerald" />
-          <SourceField label="producer_ko" value={tgt?.producer_ko} onSend={() => fromTarget("producer_ko")} disabled={mergeDone} accent="emerald" />
-          <SourceField label="producer_en" value={tgt?.producer_en} onSend={() => fromTarget("producer_en")} disabled={mergeDone} accent="emerald" />
-          <SourceField label="country_ko" value={tgt?.country_ko} onSend={() => fromTarget("country_ko")} disabled={mergeDone} accent="emerald" />
-          <SourceField label="region_ko" value={tgt?.region_ko} onSend={() => fromTarget("region_ko")} disabled={mergeDone} accent="emerald" />
-          <SourceField label="grape" value={targetGrapeText(tgt) || "-"} onSend={() => fromTarget("grape_varieties")} disabled={mergeDone} accent="emerald" />
-          <SourceField label="alcohol" value={tgt?.alcohol} onSend={() => fromTarget("alcohol")} disabled={mergeDone} accent="emerald" />
-          <div className="text-[10px] text-zinc-600 mt-2 font-mono truncate">id: {tgt?.id}</div>
-        </div>
-
-        {/* 우: 최종 예정 (편집 가능) */}
-        <div className={`rounded-lg border ${mergeDone ? "border-emerald-700 bg-emerald-950/40" : "border-rose-900/60 bg-rose-950/10"} p-4`}>
-          <div className="text-xs font-bold tracking-wider mb-3 flex items-center gap-2">
+        </HeaderCell>
+        <HeaderCell bg={mergeDone ? "emerald-dark" : "rose"} border="rose" last>
+          <div className="text-xs font-bold tracking-wider flex items-center gap-2">
             <span className={mergeDone ? "text-emerald-400" : "text-rose-400"}>{mergeDone ? "반영됨" : "최종 예정"}</span>
-            {!mergeDone && <span className="text-[10px] text-zinc-500 font-normal">← 선택·편집 후 Merge</span>}
+            {!mergeDone && <span className="text-[10px] text-zinc-500 font-normal">← 편집 후 Merge</span>}
           </div>
-          <EditRow label="name_ko" value={draft.name_ko} onChange={(v) => setField("name_ko", v)} disabled={mergeDone} />
-          <EditRow label="name_en" value={draft.name_en} onChange={(v) => setField("name_en", v)} disabled={mergeDone} />
-          <EditSelectRow label="타입" value={draft.wine_type} options={["", ...WINE_TYPES]} onChange={(v) => setField("wine_type", v)} disabled={mergeDone} />
-          <EditRow label="producer_ko" value={draft.producer_ko} onChange={(v) => setField("producer_ko", v)} disabled={mergeDone} />
-          <EditRow label="producer_en" value={draft.producer_en} onChange={(v) => setField("producer_en", v)} disabled={mergeDone} />
-          <EditRow label="country" value={draft.country} onChange={(v) => setField("country", v)} disabled={mergeDone} />
-          <EditRow label="country_ko" value={draft.country_ko} onChange={(v) => setField("country_ko", v)} disabled={mergeDone} />
-          <EditRow label="region" value={draft.region} onChange={(v) => setField("region", v)} disabled={mergeDone} />
-          <EditRow label="region_ko" value={draft.region_ko} onChange={(v) => setField("region_ko", v)} disabled={mergeDone} />
-          <EditRow label="grape (,)" value={draft.grape_varieties} onChange={(v) => setField("grape_varieties", v)} disabled={mergeDone} />
-          <EditRow label="alcohol" value={draft.alcohol} onChange={(v) => setField("alcohol", v)} disabled={mergeDone} />
-          <EditRow label="image_url" value={draft.image_url} onChange={(v) => setField("image_url", v)} disabled={mergeDone} />
-        </div>
+        </HeaderCell>
+
+        {/* === Image Row === */}
+        <ImageCell bg="zinc" border="zinc" src={raw?.image_url} alt={raw?.name_ko ?? ""} />
+        <ImageCell bg="emerald" border="emerald" src={tgt?.image_url} alt={tgt?.name_ko ?? ""} />
+        <ImageCell bg={mergeDone ? "emerald-dark" : "rose"} border="rose" src={draft.image_url || null} alt="최종" last />
+
+        {/* === Field Rows === */}
+        <FieldRow>
+          <SrcCell bg="zinc" border="zinc">
+            <SourceField label="name_ko" value={raw?.name_ko} onSend={() => fromRaw("name_ko")} disabled={mergeDone} />
+          </SrcCell>
+          <SrcCell bg="emerald" border="emerald">
+            <SourceField label="name_ko" value={tgt?.name_ko} onSend={() => fromTarget("name_ko")} disabled={mergeDone} accent="emerald" />
+          </SrcCell>
+          <SrcCell bg={mergeDone ? "emerald-dark" : "rose"} border="rose" last>
+            <EditRow label="name_ko" value={draft.name_ko} onChange={(v) => setField("name_ko", v)} disabled={mergeDone} />
+          </SrcCell>
+        </FieldRow>
+
+        <FieldRow>
+          <SrcCell bg="zinc" border="zinc">
+            <SourceField label="name_en" value={raw?.name_en} onSend={() => fromRaw("name_en")} disabled={mergeDone} />
+          </SrcCell>
+          <SrcCell bg="emerald" border="emerald">
+            <SourceField label="name_en" value={tgt?.name_en} onSend={() => fromTarget("name_en")} disabled={mergeDone} accent="emerald" />
+          </SrcCell>
+          <SrcCell bg={mergeDone ? "emerald-dark" : "rose"} border="rose" last>
+            <EditRow label="name_en" value={draft.name_en} onChange={(v) => setField("name_en", v)} disabled={mergeDone} />
+          </SrcCell>
+        </FieldRow>
+
+        <FieldRow>
+          <SrcCell bg="zinc" border="zinc">
+            <SourceField label="타입" value={raw?.wine_type} onSend={() => fromRaw("wine_type")} disabled={mergeDone} />
+          </SrcCell>
+          <SrcCell bg="emerald" border="emerald">
+            <SourceField label="타입" value={tgt?.wine_type} onSend={() => fromTarget("wine_type")} disabled={mergeDone} accent="emerald" />
+          </SrcCell>
+          <SrcCell bg={mergeDone ? "emerald-dark" : "rose"} border="rose" last>
+            <EditSelectRow label="타입" value={draft.wine_type} options={["", ...WINE_TYPES]} onChange={(v) => setField("wine_type", v)} disabled={mergeDone} />
+          </SrcCell>
+        </FieldRow>
+
+        <FieldRow>
+          <SrcCell bg="zinc" border="zinc">
+            <SourceField label="producer_ko" value={raw?.producer_ko} onSend={() => fromRaw("producer_ko")} disabled={mergeDone} />
+          </SrcCell>
+          <SrcCell bg="emerald" border="emerald">
+            <SourceField label="producer_ko" value={tgt?.producer_ko} onSend={() => fromTarget("producer_ko")} disabled={mergeDone} accent="emerald" />
+          </SrcCell>
+          <SrcCell bg={mergeDone ? "emerald-dark" : "rose"} border="rose" last>
+            <EditRow label="producer_ko" value={draft.producer_ko} onChange={(v) => setField("producer_ko", v)} disabled={mergeDone} />
+          </SrcCell>
+        </FieldRow>
+
+        <FieldRow>
+          <SrcCell bg="zinc" border="zinc">
+            <SourceField label="producer_en" value={raw?.producer_en} onSend={() => fromRaw("producer_en")} disabled={mergeDone} />
+          </SrcCell>
+          <SrcCell bg="emerald" border="emerald">
+            <SourceField label="producer_en" value={tgt?.producer_en} onSend={() => fromTarget("producer_en")} disabled={mergeDone} accent="emerald" />
+          </SrcCell>
+          <SrcCell bg={mergeDone ? "emerald-dark" : "rose"} border="rose" last>
+            <EditRow label="producer_en" value={draft.producer_en} onChange={(v) => setField("producer_en", v)} disabled={mergeDone} />
+          </SrcCell>
+        </FieldRow>
+
+        <FieldRow>
+          <SrcCell bg="zinc" border="zinc">
+            <SourceField label="country" value={raw?.country} onSend={() => fromRaw("country")} disabled={mergeDone} />
+          </SrcCell>
+          <SrcCell bg="emerald" border="emerald">
+            <SourceField label="country" value={tgt?.country} onSend={() => fromTarget("country")} disabled={mergeDone} accent="emerald" />
+          </SrcCell>
+          <SrcCell bg={mergeDone ? "emerald-dark" : "rose"} border="rose" last>
+            <EditRow label="country" value={draft.country} onChange={(v) => setField("country", v)} disabled={mergeDone} />
+          </SrcCell>
+        </FieldRow>
+
+        <FieldRow>
+          <SrcCell bg="zinc" border="zinc">
+            <SourceField label="country_ko" value={raw?.country} onSend={() => fromRaw("country_ko")} disabled={mergeDone} />
+          </SrcCell>
+          <SrcCell bg="emerald" border="emerald">
+            <SourceField label="country_ko" value={tgt?.country_ko} onSend={() => fromTarget("country_ko")} disabled={mergeDone} accent="emerald" />
+          </SrcCell>
+          <SrcCell bg={mergeDone ? "emerald-dark" : "rose"} border="rose" last>
+            <EditRow label="country_ko" value={draft.country_ko} onChange={(v) => setField("country_ko", v)} disabled={mergeDone} />
+          </SrcCell>
+        </FieldRow>
+
+        <FieldRow>
+          <SrcCell bg="zinc" border="zinc">
+            <SourceField label="region" value={raw?.region} onSend={() => fromRaw("region")} disabled={mergeDone} />
+          </SrcCell>
+          <SrcCell bg="emerald" border="emerald">
+            <SourceField label="region" value={tgt?.region} onSend={() => fromTarget("region")} disabled={mergeDone} accent="emerald" />
+          </SrcCell>
+          <SrcCell bg={mergeDone ? "emerald-dark" : "rose"} border="rose" last>
+            <EditRow label="region" value={draft.region} onChange={(v) => setField("region", v)} disabled={mergeDone} />
+          </SrcCell>
+        </FieldRow>
+
+        <FieldRow>
+          <SrcCell bg="zinc" border="zinc">
+            <SourceField label="region_ko" value={raw?.region} onSend={() => fromRaw("region_ko")} disabled={mergeDone} />
+          </SrcCell>
+          <SrcCell bg="emerald" border="emerald">
+            <SourceField label="region_ko" value={tgt?.region_ko} onSend={() => fromTarget("region_ko")} disabled={mergeDone} accent="emerald" />
+          </SrcCell>
+          <SrcCell bg={mergeDone ? "emerald-dark" : "rose"} border="rose" last>
+            <EditRow label="region_ko" value={draft.region_ko} onChange={(v) => setField("region_ko", v)} disabled={mergeDone} />
+          </SrcCell>
+        </FieldRow>
+
+        <FieldRow>
+          <SrcCell bg="zinc" border="zinc">
+            <SourceField label="grape" value={rawGrapeText(raw) || null} onSend={() => fromRaw("grape_varieties")} disabled={mergeDone} />
+          </SrcCell>
+          <SrcCell bg="emerald" border="emerald">
+            <SourceField label="grape" value={targetGrapeText(tgt) || null} onSend={() => fromTarget("grape_varieties")} disabled={mergeDone} accent="emerald" />
+          </SrcCell>
+          <SrcCell bg={mergeDone ? "emerald-dark" : "rose"} border="rose" last>
+            <EditRow label="grape (,)" value={draft.grape_varieties} onChange={(v) => setField("grape_varieties", v)} disabled={mergeDone} />
+          </SrcCell>
+        </FieldRow>
+
+        <FieldRow>
+          <SrcCell bg="zinc" border="zinc">
+            <SourceField label="alcohol" value={raw?.alcohol} onSend={() => fromRaw("alcohol")} disabled={mergeDone} />
+          </SrcCell>
+          <SrcCell bg="emerald" border="emerald">
+            <SourceField label="alcohol" value={tgt?.alcohol} onSend={() => fromTarget("alcohol")} disabled={mergeDone} accent="emerald" />
+          </SrcCell>
+          <SrcCell bg={mergeDone ? "emerald-dark" : "rose"} border="rose" last>
+            <EditRow label="alcohol" value={draft.alcohol} onChange={(v) => setField("alcohol", v)} disabled={mergeDone} />
+          </SrcCell>
+        </FieldRow>
+
+        <FieldRow>
+          <SrcCell bg="zinc" border="zinc">
+            <SourceField label="image_url" value={raw?.image_url} onSend={() => fromRaw("image_url")} disabled={mergeDone} />
+          </SrcCell>
+          <SrcCell bg="emerald" border="emerald">
+            <SourceField label="image_url" value={tgt?.image_url} onSend={() => fromTarget("image_url")} disabled={mergeDone} accent="emerald" />
+          </SrcCell>
+          <SrcCell bg={mergeDone ? "emerald-dark" : "rose"} border="rose" last>
+            <EditRow label="image_url" value={draft.image_url} onChange={(v) => setField("image_url", v)} disabled={mergeDone} />
+          </SrcCell>
+        </FieldRow>
+
+        {/* === ID Row === */}
+        <SrcCell bg="zinc" border="zinc" tight>
+          <div className="text-[10px] text-zinc-600 font-mono truncate">id: {raw?.id}</div>
+        </SrcCell>
+        <SrcCell bg="emerald" border="emerald" tight>
+          <div className="text-[10px] text-zinc-600 font-mono truncate">id: {tgt?.id}</div>
+        </SrcCell>
+        <SrcCell bg={mergeDone ? "emerald-dark" : "rose"} border="rose" last tight>
+          <div className="text-[10px] text-zinc-600 font-mono truncate">draft</div>
+        </SrcCell>
       </div>
 
       <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -459,12 +577,68 @@ export default function ReviewClient({ candidates, pendingCount }: Props) {
   );
 }
 
+// ─── Row / Cell 프리미티브 ─────────────────────────────────────
+// 같은 row의 세 셀은 grid row 기본 동작으로 동일 높이.
+
+type CellBg = "zinc" | "emerald" | "emerald-dark" | "rose";
+type CellBorder = "zinc" | "emerald" | "rose";
+
+const BG_CLS: Record<CellBg, string> = {
+  zinc: "bg-zinc-900/50",
+  emerald: "bg-emerald-950/20",
+  "emerald-dark": "bg-emerald-950/40",
+  rose: "bg-rose-950/10",
+};
+
+const BORDER_R_CLS: Record<CellBorder, string> = {
+  zinc: "border-zinc-800",
+  emerald: "border-emerald-900/50",
+  rose: "border-rose-900/60",
+};
+
+function HeaderCell({ children, bg, border, last }: { children: React.ReactNode; bg: CellBg; border: CellBorder; last?: boolean }) {
+  return (
+    <div className={`${BG_CLS[bg]} p-3 border-b ${BORDER_R_CLS[border]} ${last ? "" : "border-r " + BORDER_R_CLS[border]}`}>
+      {children}
+    </div>
+  );
+}
+
+function ImageCell({ bg, border, src, alt, last }: { bg: CellBg; border: CellBorder; src: string | null | undefined; alt: string; last?: boolean }) {
+  return (
+    <div className={`${BG_CLS[bg]} p-3 border-b ${BORDER_R_CLS[border]} ${last ? "" : "border-r " + BORDER_R_CLS[border]} flex items-center justify-center min-h-[120px]`}>
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={alt} className="w-20 h-28 object-contain bg-zinc-950 rounded" />
+      ) : (
+        <div className="w-20 h-28 rounded border border-dashed border-zinc-800 flex items-center justify-center text-[10px] text-zinc-600">
+          no image
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FieldRow({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
+}
+
+function SrcCell({ children, bg, border, last, tight }: { children: React.ReactNode; bg: CellBg; border: CellBorder; last?: boolean; tight?: boolean }) {
+  return (
+    <div
+      className={`${BG_CLS[bg]} ${tight ? "p-2" : "p-3"} border-b ${BORDER_R_CLS[border]} ${last ? "" : "border-r " + BORDER_R_CLS[border]}`}
+    >
+      {children}
+    </div>
+  );
+}
+
 function SourceField({ label, value, onSend, disabled, accent }: { label: string; value: string | null | undefined; onSend: () => void; disabled?: boolean; accent?: "emerald" }) {
   const btnCls = accent === "emerald"
     ? "bg-emerald-900/50 hover:bg-emerald-800 text-emerald-200 border-emerald-800"
     : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700";
   return (
-    <div className="py-1.5 border-b border-zinc-800/50 last:border-b-0">
+    <div>
       <div className="flex items-center justify-between gap-2 mb-0.5">
         <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">{label}</span>
         <button
@@ -485,7 +659,7 @@ function SourceField({ label, value, onSend, disabled, accent }: { label: string
 
 function EditRow({ label, value, onChange, disabled }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean }) {
   return (
-    <div className="py-1.5 border-b border-zinc-800/50 last:border-b-0">
+    <div>
       <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-wide block mb-0.5">{label}</span>
       <input
         type="text"
@@ -500,7 +674,7 @@ function EditRow({ label, value, onChange, disabled }: { label: string; value: s
 
 function EditSelectRow({ label, value, options, onChange, disabled }: { label: string; value: string; options: string[]; onChange: (v: string) => void; disabled?: boolean }) {
   return (
-    <div className="py-1.5 border-b border-zinc-800/50 last:border-b-0">
+    <div>
       <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-wide block mb-0.5">{label}</span>
       <select
         value={value}

@@ -53,8 +53,24 @@ export default function RawWinesClient({ rows, total, page, pageSize, source, pr
   const [editing, setEditing] = useState<Record<string, Partial<RawWineRow>>>({});
   const [flash, setFlash] = useState<{ id: string; msg: string; ok: boolean } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState(q);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  const submitSearch = useCallback(
+    (value: string) => {
+      const trimmed = value.trim();
+      const params = new URLSearchParams();
+      const merged: Record<string, string | number | undefined> = { source, promote, missing, q: trimmed };
+      for (const [k, v] of Object.entries(merged)) {
+        if (v == null || v === "" || v === "all") continue;
+        params.set(k, String(v));
+      }
+      const qs = params.toString();
+      router.push(`/admin/raw-wines${qs ? `?${qs}` : ""}`);
+    },
+    [source, promote, missing, router],
+  );
 
   const buildUrl = useCallback(
     (patch: Record<string, string | number | undefined>) => {
@@ -188,6 +204,44 @@ export default function RawWinesClient({ rows, total, page, pageSize, source, pr
         >
           + 어드민 추가
         </button>
+      </div>
+
+      {/* 이름 검색 */}
+      <div className="mb-4 flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1 max-w-xl">
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                submitSearch(searchInput);
+              }
+            }}
+            placeholder="와인명 검색 (name_ko 또는 name_en)"
+            className="flex-1 px-3 py-1.5 rounded bg-zinc-950 border border-zinc-800 text-zinc-200 text-sm focus:border-zinc-600 focus:outline-none"
+          />
+          <button
+            onClick={() => submitSearch(searchInput)}
+            className="px-3 py-1.5 rounded bg-zinc-700 hover:bg-zinc-600 text-zinc-100 text-sm font-medium"
+          >
+            검색
+          </button>
+          {q && (
+            <button
+              onClick={() => { setSearchInput(""); submitSearch(""); }}
+              className="px-3 py-1.5 rounded border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 text-sm"
+            >
+              초기화
+            </button>
+          )}
+        </div>
+        {q && (
+          <span className="text-xs text-zinc-500">
+            검색어: <span className="text-zinc-300 font-mono">{q}</span>
+          </span>
+        )}
       </div>
 
       <div className="mb-4 text-xs text-zinc-500">

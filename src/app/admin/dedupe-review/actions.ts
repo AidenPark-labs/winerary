@@ -3,16 +3,28 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 
+export type MergeDirection = "keep_target" | "use_raw";
+
 /**
  * 같은 와인 확정 — raw_wine을 target wine으로 merge.
- * 동작:
- *   1) raw_wines.promoted_wine_id = target_wine_id (+ promoted_at)
- *   2) target wines의 빈 필드를 raw_wines 값으로 채움 (기존 값 덮어쓰지 않음)
- *   3) grape_varieties 합집합
- *   4) source_refs[] 에 raw_wine.id 추가 (없으면 신규)
- *   5) candidate.status = 'confirmed'
+ *
+ * direction:
+ *   - "keep_target" (기본): target의 빈 필드만 raw로 채움. 기존 값 유지.
+ *   - "use_raw": raw의 non-null 필드로 target 덮어쓰기. raw 쪽 정보가 더 정확할 때.
+ *
+ * 공통 동작:
+ *   - raw_wines.promoted_wine_id = target_wine_id (+ promoted_at)
+ *   - grape_varieties 합집합 (direction 무관)
+ *   - source_refs에 raw_wine.id 추가
+ *   - candidate.status = 'confirmed'
+ *
+ * Vivino 필드는 어느 방향이든 건드리지 않음 (vivino-review 전용 경로).
  */
-export async function confirmDedupe(candidateId: string, note?: string) {
+export async function confirmDedupe(
+  candidateId: string,
+  direction: MergeDirection = "keep_target",
+  note?: string,
+) {
   const { supabase, user } = await requireAdmin();
   const now = new Date().toISOString();
 
@@ -36,24 +48,34 @@ export async function confirmDedupe(candidateId: string, note?: string) {
   const raw = rawRes.data as Record<string, unknown>;
   const wine = winesRes.data as Record<string, unknown>;
 
-  // 3) 병합 업데이트 값 구성 (target의 빈 필드만 채움)
+  // 3) 병합 업데이트 값 구성
   const updates: Record<string, unknown> = { updated_at: now };
+
+  // direction=keep_target: 빈 필드만 채움
   const fillIfEmpty = (key: string, value: unknown) => {
     if (value == null || value === "") return;
     if (wine[key] == null || wine[key] === "") updates[key] = value;
   };
+  // direction=use_raw: raw 값이 있으면 덮어쓰기
+  const overwriteIfRaw = (key: string, value: unknown) => {
+    if (value == null || value === "") return;
+    // 기존 값과 같으면 skip (UPDATE 최소화)
+    if (wine[key] === value) return;
+    updates[key] = value;
+  };
+  const apply = direction === "use_raw" ? overwriteIfRaw : fillIfEmpty;
 
-  fillIfEmpty("name_ko", raw.name_ko);
-  fillIfEmpty("name_en", raw.name_en);
-  fillIfEmpty("producer_ko", raw.producer_ko);
-  fillIfEmpty("producer_en", raw.producer_en);
-  fillIfEmpty("country", raw.country);
-  fillIfEmpty("region", raw.region);
-  fillIfEmpty("wine_type", raw.wine_type);
-  fillIfEmpty("image_url", raw.image_url);
-  fillIfEmpty("alcohol", raw.alcohol);
+  apply("name_ko", raw.name_ko);
+  apply("name_en", raw.name_en);
+  apply("producer_ko", raw.producer_ko);
+  apply("producer_en", raw.producer_en);
+  apply("country", raw.country);
+  apply("region", raw.region);
+  apply("wine_type", raw.wine_type);
+  apply("image_url", raw.image_url);
+  apply("alcohol", raw.alcohol);
 
-  // grape_varieties 합집합 (raw.grape_variety가 단수 문자열이면 배열로 변환)
+  // grape_varieties: 방향 무관하게 union (다양한 표기 모으기가 대개 유익)
   const existingGrapes = Array.isArray(wine.grape_varieties) ? (wine.grape_varieties as string[]) : [];
   const rawGrapes: string[] = [];
   if (Array.isArray(raw.grape_varieties)) rawGrapes.push(...(raw.grape_varieties as string[]));
@@ -79,7 +101,12 @@ export async function confirmDedupe(candidateId: string, note?: string) {
       .from("wines")
       .update(updates)
       .eq("id", candidate.target_wine_id);
-    if (uErr) return { error: `wines 병합 실패: ${uErr.message}` };
+    if (uErr) {
+      if (uErr.code === "23505" && uErr.message.includes("wines_name_ko_unique")) {
+        return { error: "이미 사용 중인 한국어명입니다 — raw 쪽 name_ko가 다른 wines와 충돌" };
+      }
+      return { error: `wines 병합 실패: ${uErr.message}` };
+    }
   }
 
   // 5) raw_wines.promoted_wine_id 연결
@@ -90,19 +117,22 @@ export async function confirmDedupe(candidateId: string, note?: string) {
   if (rawErr) return { error: `raw_wines 연결 실패: ${rawErr.message}` };
 
   // 6) 후보 상태 업데이트
+  const noteWithDir = direction === "use_raw"
+    ? `[raw 반영] ${note?.trim() ?? ""}`.trim()
+    : (note?.trim() || null);
   const { error: statErr } = await supabase
     .from("wine_dedupe_candidates")
     .update({
       status: "confirmed",
       reviewed_at: now,
       reviewed_by: user.id,
-      reviewed_note: note?.trim() || null,
+      reviewed_note: noteWithDir || null,
     })
     .eq("id", candidateId);
   if (statErr) return { error: `상태 업데이트 실패: ${statErr.message}` };
 
   revalidatePath("/admin/dedupe-review");
-  return { success: true };
+  return { success: true, direction };
 }
 
 /**

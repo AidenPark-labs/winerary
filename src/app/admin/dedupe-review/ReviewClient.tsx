@@ -89,11 +89,25 @@ export default function ReviewClient({ candidates, pendingCount }: Props) {
 
   const advance = useCallback(() => setCursor((c) => c + 1), []);
 
-  const handleConfirm = useCallback(() => {
+  const handleConfirmKeepTarget = useCallback(() => {
     if (!current || isPending) return;
     setError(null);
     startTransition(async () => {
-      const result = await confirmDedupe(current.id);
+      const result = await confirmDedupe(current.id, "keep_target");
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setSessionConfirmed((n) => n + 1);
+      advance();
+    });
+  }, [current, isPending, advance]);
+
+  const handleConfirmUseRaw = useCallback(() => {
+    if (!current || isPending) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await confirmDedupe(current.id, "use_raw");
       if (result.error) {
         setError(result.error);
         return;
@@ -130,13 +144,14 @@ export default function ReviewClient({ candidates, pendingCount }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.key === "m" || e.key === "M") handleConfirm();
+      if (e.key === "m" || e.key === "M") handleConfirmKeepTarget();
+      else if (e.key === "r" || e.key === "R") handleConfirmUseRaw();
       else if (e.key === "d" || e.key === "D") handleReject();
       else if (e.key === "s" || e.key === "S") handleSkip();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [handleConfirm, handleReject, handleSkip]);
+  }, [handleConfirmKeepTarget, handleConfirmUseRaw, handleReject, handleSkip]);
 
   if (!current) {
     return (
@@ -201,8 +216,9 @@ export default function ReviewClient({ candidates, pendingCount }: Props) {
             세션: merge {sessionConfirmed} / 반려 {sessionRejected}
           </span>
         </div>
-        <div className="text-xs text-zinc-500 flex gap-3">
-          <span><kbd className="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300">M</kbd> Merge</span>
+        <div className="text-xs text-zinc-500 flex gap-3 flex-wrap">
+          <span><kbd className="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300">M</kbd> Merge (기존 유지)</span>
+          <span><kbd className="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300">R</kbd> Merge (raw 반영)</span>
           <span><kbd className="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300">D</kbd> 다른 와인</span>
           <span><kbd className="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300">S</kbd> 건너뜀</span>
         </div>
@@ -277,7 +293,7 @@ export default function ReviewClient({ candidates, pendingCount }: Props) {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-3 gap-3">
+      <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
         <button
           onClick={handleReject}
           disabled={isPending}
@@ -295,13 +311,29 @@ export default function ReviewClient({ candidates, pendingCount }: Props) {
           <div className="text-xs font-normal opacity-80 mt-0.5">세션에서만 건너뜀 · S</div>
         </button>
         <button
-          onClick={handleConfirm}
+          onClick={handleConfirmKeepTarget}
           disabled={isPending}
-          className="px-4 py-4 rounded-md bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-bold transition-colors"
+          className="px-4 py-4 rounded-md bg-emerald-700 hover:bg-emerald-800 disabled:opacity-40 text-white font-bold transition-colors"
+          title="기존 wines(우측) 값 유지. raw의 non-null 필드로 빈 곳만 채움"
         >
-          <div className="text-base">같은 와인 (Merge)</div>
-          <div className="text-xs font-normal opacity-80 mt-0.5">raw를 target에 병합 · M</div>
+          <div className="text-base">Merge</div>
+          <div className="text-xs font-normal opacity-80 mt-0.5">기존 유지 · M</div>
         </button>
+        <button
+          onClick={handleConfirmUseRaw}
+          disabled={isPending}
+          className="px-4 py-4 rounded-md bg-rose-600 hover:bg-rose-700 disabled:opacity-40 text-white font-bold transition-colors"
+          title="raw(좌측) 값으로 target 덮어쓰기. raw 쪽 정보가 더 정확할 때."
+        >
+          <div className="text-base">Merge</div>
+          <div className="text-xs font-normal opacity-80 mt-0.5">raw 반영 · R</div>
+        </button>
+      </div>
+      <div className="mt-2 text-[11px] text-zinc-500">
+        <span className="text-emerald-400">M (기존 유지)</span>: target의 빈 필드만 raw로 채움. 기존 값 그대로.
+        <span className="mx-2">·</span>
+        <span className="text-rose-400">R (raw 반영)</span>: raw의 non-null 값으로 target 덮어쓰기.
+        품종 배열은 두 경우 모두 합집합.
       </div>
     </div>
   );

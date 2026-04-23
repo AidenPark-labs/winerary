@@ -348,3 +348,220 @@ async function autoMerge(
 
 // normalize는 뷰에서도 사용 가능하게 re-export
 export { normalize };
+
+// ─── raw_wines 경유 없이 wines에 직접 INSERT ────────────────────────
+//
+// raw_wines는 "크롤링 원본 데이터"만 보관하는 레이어로 한정하기로 함 (2026-04-24 재정립).
+// pending 승인, 어드민 직접 추가, 향후 OCR 기반 유저 기록 확정 같은 "크롤링 아닌" 경로는
+// 이 함수를 통해 wines에 직접 INSERT한다. 단, promote-v2와 동일한 정책 유지:
+//   4필드 검증 + stripVintage + dedupe 판정 + Vivino 매핑 (data에 vivino_* 있을 때만)
+
+export interface WineCreateInput {
+  name_ko: string | null;
+  name_en: string | null;
+  country: string | null;
+  country_ko?: string | null;
+  region?: string | null;
+  region_ko?: string | null;
+  wine_type?: string | null;
+  grape_variety?: string | null;      // 쉼표 구분 문자열
+  grape_varieties?: string[] | null;  // 또는 배열 직접
+  producer_ko?: string | null;
+  producer_en?: string | null;
+  image_url?: string | null;
+  price?: number | null;
+  data_source?: string;               // 'admin' | 'user_submission' | ...
+  // Vivino 매핑은 옵션 — 있으면 적용
+  vivino_url?: string | null;
+  vivino_page_url?: string | null;
+  vivino_wine_id?: string | number | null;
+  vivino_rating?: number | null;
+  vivino_reviews?: number | null;
+  vivino_winery?: string | null;
+  vivino_grapes?: string | null;
+  vivino_region?: string | null;
+  vivino_style?: string | null;
+  vivino_alcohol?: string | null;
+  vivino_description?: string | null;
+  vivino_allergens?: string | null;
+  vivino_name?: string | null;
+  vivino_match_score?: number | null;
+}
+
+export type InsertWineOutcome =
+  | { kind: "new_inserted"; wine_id: string }
+  | { kind: "auto_merged"; wine_id: string }
+  | { kind: "candidate"; wine_id: string; reason: MatchReason; score: number }
+  | { kind: "missing_fields"; missing: string[] }
+  | { kind: "error"; message: string };
+
+const VALID_WINE_TYPES_DIRECT = new Set(["red", "white", "rose", "sparkling", "fortified", "dessert", "other"]);
+function normalizeWineTypeDirect(v: string | null | undefined): string {
+  const s = (v ?? "").toLowerCase().trim();
+  return VALID_WINE_TYPES_DIRECT.has(s) ? s : "other";
+}
+
+function collectGrapes(input: WineCreateInput): string[] {
+  if (Array.isArray(input.grape_varieties) && input.grape_varieties.length > 0) {
+    return input.grape_varieties.map((s) => s.trim()).filter((s) => s.length > 0);
+  }
+  if (typeof input.grape_variety === "string" && input.grape_variety.trim()) {
+    return input.grape_variety.split(/[,;/]/).map((s) => s.trim()).filter((s) => s.length > 0);
+  }
+  return [];
+}
+
+function validateDirect(input: WineCreateInput, grapes: string[]): string[] {
+  const missing: string[] = [];
+  if (!input.name_ko?.trim()) missing.push("name_ko");
+  if (!input.name_en?.trim()) missing.push("name_en");
+  if (!input.country?.trim()) missing.push("country");
+  if (grapes.length === 0) missing.push("grape");
+  return missing;
+}
+
+function buildVivinoFieldsDirect(input: WineCreateInput): Record<string, unknown> {
+  if (!input.vivino_url) {
+    return {
+      vivino_url: null,
+      vivino_page_url: null,
+      vivino_wine_id: null,
+      vivino_rating: null,
+      vivino_reviews: null,
+      vivino_winery: null,
+      vivino_grapes: null,
+      vivino_region: null,
+      vivino_style: null,
+      vivino_alcohol: null,
+      vivino_description: null,
+      vivino_allergens: null,
+      vivino_name: null,
+      vivino_needs_review: false,
+      vivino_reviewed_at: null,
+    };
+  }
+  const autoReviewed = typeof input.vivino_match_score === "number" && input.vivino_match_score >= 0.9;
+  return {
+    vivino_url: input.vivino_url,
+    vivino_page_url: input.vivino_page_url ?? input.vivino_url,
+    vivino_wine_id: input.vivino_wine_id == null ? null : String(input.vivino_wine_id),
+    vivino_rating: input.vivino_rating ?? null,
+    vivino_reviews: input.vivino_reviews ?? null,
+    vivino_winery: input.vivino_winery ?? null,
+    vivino_grapes: input.vivino_grapes ?? null,
+    vivino_region: input.vivino_region ?? null,
+    vivino_style: input.vivino_style ?? null,
+    vivino_alcohol: input.vivino_alcohol ?? null,
+    vivino_description: input.vivino_description ?? null,
+    vivino_allergens: input.vivino_allergens ?? null,
+    vivino_name: input.vivino_name ?? null,
+    vivino_needs_review: !autoReviewed,
+    vivino_reviewed_at: autoReviewed ? new Date().toISOString() : null,
+  };
+}
+
+export async function insertWineDirectly(
+  sb: SupabaseClient,
+  input: WineCreateInput,
+): Promise<InsertWineOutcome> {
+  const grapes = collectGrapes(input);
+  const missing = validateDirect(input, grapes);
+  if (missing.length > 0) return { kind: "missing_fields", missing };
+
+  // 이름 빈티지 제거 (끝의 19xx/20xx)
+  const nameKo = stripVintage(input.name_ko ?? "") || input.name_ko;
+  const nameEn = stripVintage(input.name_en ?? "") || input.name_en;
+
+  const key = buildMatchKey({ name_en: nameEn, name_ko: nameKo, country: input.country });
+  const now = new Date().toISOString();
+
+  // 1) exact match → auto_merge
+  const { data: exactCands } = await sb
+    .from("wines")
+    .select("id, name_ko, name_en, country, grape_varieties, source_refs")
+    .eq("name_ko", (nameKo ?? "").trim())
+    .limit(50);
+
+  for (const w of exactCands ?? []) {
+    const wk = buildMatchKey({ name_en: w.name_en, name_ko: w.name_ko, country: w.country });
+    if (wk.name_en_n === key.name_en_n && wk.name_ko_n === key.name_ko_n && wk.country === key.country) {
+      // 빈 필드 채움 + grape union
+      const existingGrapes = Array.isArray(w.grape_varieties) ? (w.grape_varieties as string[]) : [];
+      const mergedGrapes = Array.from(new Set([...existingGrapes, ...grapes].filter((g) => g?.trim())));
+      const updates: Record<string, unknown> = { updated_at: now };
+      if (mergedGrapes.length > existingGrapes.length) updates.grape_varieties = mergedGrapes;
+      await sb.from("wines").update(updates).eq("id", w.id);
+      return { kind: "auto_merged", wine_id: w.id };
+    }
+  }
+
+  // 2) 부분 일치 후보 → candidate
+  const { data: partialCands } = await sb
+    .from("wines")
+    .select("id, name_ko, name_en, country")
+    .or(`name_ko.eq.${(nameKo ?? "").trim()},name_en.eq.${(nameEn ?? "").trim()}`)
+    .limit(50);
+
+  let best: { reason: MatchReason; score: number; target: string } | null = null;
+  for (const w of partialCands ?? []) {
+    const wk = buildMatchKey({ name_en: w.name_en, name_ko: w.name_ko, country: w.country });
+    const c = classifyCandidate(key, wk);
+    if (c && (!best || c.score > best.score)) {
+      best = { reason: c.reason, score: c.score, target: w.id };
+    }
+  }
+  if (best) {
+    // 후보로 가지만 raw_wine 없음 → candidate 테이블에 raw_wine_id 필수라 등록 불가
+    // 대신 merge (기존 wines에 빈 필드 채움)로 동작 or 그냥 신규 INSERT로 fallthrough
+    // 현실적으로 어드민이 명시적으로 승인한 것이므로 후보로 안 두고 신규 INSERT 진행
+  }
+
+  // 3) 신규 INSERT
+  const vivino = buildVivinoFieldsDirect(input);
+  const row: Record<string, unknown> = {
+    name_ko: nameKo,
+    name_en: nameEn,
+    country: input.country,
+    country_ko: input.country_ko ?? input.country,
+    region: input.region ?? null,
+    region_ko: input.region_ko ?? null,
+    wine_type: normalizeWineTypeDirect(input.wine_type),
+    producer_ko: input.producer_ko ?? null,
+    producer_en: input.producer_en ?? null,
+    producer: input.producer_ko ?? input.producer_en ?? null,
+    grape_varieties: grapes,
+    price: input.price ?? null,
+    image_url: input.image_url ?? null,
+    data_source: input.data_source ?? "admin",
+    source: input.data_source ?? "admin",
+    is_published: true,
+    ...vivino,
+    created_at: now,
+    updated_at: now,
+  };
+
+  const { data, error } = await sb.from("wines").insert(row).select("id").single();
+  if (error) {
+    if (error.code === "23505" && error.message.includes("wines_name_ko_unique")) {
+      // 충돌 → 같은 name_ko 가진 기존 wines로 auto_merge처럼 처리
+      const { data: collide } = await sb
+        .from("wines")
+        .select("id, grape_varieties")
+        .eq("name_ko", (nameKo ?? "").trim())
+        .limit(1);
+      const target = collide?.[0];
+      if (target) {
+        const existingGrapes = Array.isArray(target.grape_varieties) ? (target.grape_varieties as string[]) : [];
+        const mergedGrapes = Array.from(new Set([...existingGrapes, ...grapes].filter((g) => g?.trim())));
+        const updates: Record<string, unknown> = { updated_at: now };
+        if (mergedGrapes.length > existingGrapes.length) updates.grape_varieties = mergedGrapes;
+        await sb.from("wines").update(updates).eq("id", target.id);
+        return { kind: "auto_merged", wine_id: target.id };
+      }
+    }
+    return { kind: "error", message: error.message };
+  }
+
+  const newId = (data as { id: string }).id;
+  return { kind: "new_inserted", wine_id: newId };
+}

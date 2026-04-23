@@ -3,7 +3,7 @@
 import { useState, useTransition, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { updateRawWine, promoteRawWine, createAdminRawWine } from "./actions";
+import { updateRawWine, promoteRawWine, createAdminWine } from "./actions";
 
 export interface RawWineRow {
   id: string;
@@ -201,8 +201,9 @@ export default function RawWinesClient({ rows, total, page, pageSize, source, pr
         <button
           onClick={() => setAddOpen(true)}
           className="ml-auto px-3 py-1.5 rounded bg-rose-500 hover:bg-rose-600 text-white font-medium text-sm"
+          title="raw_wines 거치지 않고 wines에 직접 추가"
         >
-          + 어드민 추가
+          + wines에 직접 추가
         </button>
       </div>
 
@@ -437,31 +438,22 @@ function AddDialog({ onClose, onDone }: { onClose: () => void; onDone: () => voi
     }
     setMsg(null);
     startTransition(async () => {
-      const result = await createAdminRawWine(form);
+      const result = await createAdminWine(form);
       if ("error" in result) {
         setMsg({ text: result.error, ok: false });
         return;
       }
       const oc = result.outcome;
-      let text = `생성됨 (raw id: ${result.raw_id.slice(0, 8)}…) — `;
+      let text = "";
       switch (oc.kind) {
-        case "new_promoted":
-          text += `신규 wines 생성 완료`;
+        case "new_inserted":
+          text = `신규 wines 생성 완료 (${oc.wine_id.slice(0, 8)}…)`;
           break;
         case "auto_merged":
-          text += `기존 wines에 merge`;
+          text = `기존 wines에 merge (${oc.wine_id.slice(0, 8)}…)`;
           break;
         case "candidate":
-          text += `검수 큐로 등록 (${oc.reason})`;
-          break;
-        case "missing_fields":
-          text += `raw만 저장, 승격 보류 (부족: ${oc.missing.join(", ")})`;
-          break;
-        case "already_promoted":
-          text += `이미 승격됨`;
-          break;
-        case "error":
-          text += `승격 시 에러: ${oc.message}`;
+          text = `검수 큐로 등록 (${oc.reason}, ${oc.wine_id.slice(0, 8)}…)`;
           break;
       }
       setMsg({ text, ok: true });
@@ -472,7 +464,8 @@ function AddDialog({ onClose, onDone }: { onClose: () => void; onDone: () => voi
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} className="bg-zinc-900 border border-zinc-700 rounded-lg p-6 max-w-xl w-full">
-        <h2 className="text-lg font-bold mb-4">어드민 신규 raw_wine 추가</h2>
+        <h2 className="text-lg font-bold mb-1">wines에 직접 추가</h2>
+        <p className="text-xs text-zinc-500 mb-4">raw_wines 거치지 않고 wines 카탈로그에 바로 INSERT</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
           <EditField label="name_ko *" value={form.name_ko} onChange={(v) => setForm({ ...form, name_ko: v })} />
           <EditField label="name_en *" value={form.name_en} onChange={(v) => setForm({ ...form, name_en: v })} />
@@ -503,7 +496,7 @@ function AddDialog({ onClose, onDone }: { onClose: () => void; onDone: () => voi
             disabled={isPending}
             className="px-3 py-1.5 rounded bg-rose-500 hover:bg-rose-600 disabled:opacity-40 text-white text-sm"
           >
-            {isPending ? "처리 중…" : "저장 + 승격 시도"}
+            {isPending ? "처리 중…" : "wines에 추가"}
           </button>
         </div>
       </div>

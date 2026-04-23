@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { confirmVivinoMatch, unlinkVivinoMatch } from "./actions";
+import { confirmVivinoMatch, unlinkVivinoMatch, replaceVivinoUrl } from "./actions";
 
 export type ReviewMode = "all" | "salvaged";
 
@@ -46,16 +46,25 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
   const [cursor, setCursor] = useState(0);
   const [sessionKept, setSessionKept] = useState(0);
   const [sessionUnlinked, setSessionUnlinked] = useState(0);
+  const [sessionReplaced, setSessionReplaced] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [justActioned, setJustActioned] = useState<"keep" | "unlink" | "skip" | null>(null);
+  const [urlInput, setUrlInput] = useState("");
+  const [replacing, setReplacing] = useState(false);
 
   // 모드 전환 시 커서 리셋
   useEffect(() => {
     setCursor(0);
     setSessionKept(0);
     setSessionUnlinked(0);
+    setSessionReplaced(0);
     setError(null);
   }, [mode]);
+
+  // 후보가 바뀌면 URL 입력란 초기화
+  useEffect(() => {
+    setUrlInput("");
+  }, [cursor]);
 
   const current = wines[cursor];
   const hasMoreBeyondBatch = pendingInMode > wines.length;
@@ -99,6 +108,28 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
     advance("skip");
   }, [current, isPending, advance]);
 
+  const handleReplaceUrl = useCallback(async () => {
+    if (!current || replacing) return;
+    const url = urlInput.trim();
+    if (!url) {
+      setError("교체할 Vivino URL을 입력하세요");
+      return;
+    }
+    setError(null);
+    setReplacing(true);
+    try {
+      const result = await replaceVivinoUrl(current.id, url);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setSessionReplaced((n) => n + 1);
+        router.refresh();
+      }
+    } finally {
+      setReplacing(false);
+    }
+  }, [current, urlInput, replacing, router]);
+
   const handleLoadNext = useCallback(() => {
     router.refresh();
     setCursor(0);
@@ -114,6 +145,8 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [handleKeep, handleUnlink, handleSkip]);
+
+  const anyBusy = isPending || replacing;
 
   return (
     <div>
@@ -149,7 +182,7 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
               </span>
               <span className="text-zinc-600">·</span>
               <span className="text-xs text-zinc-500">
-                세션: 확정 {sessionKept} / 해제 {sessionUnlinked}
+                세션: 확정 {sessionKept} / 해제 {sessionUnlinked} / URL교체 {sessionReplaced}
               </span>
             </div>
             <div className="text-xs text-zinc-500 flex gap-3">
@@ -193,7 +226,7 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
           {/* 좌우 비교 카드 */}
           <div
             className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-150 ${
-              isPending ? "opacity-50" : ""
+              anyBusy ? "opacity-50" : ""
             } ${justActioned ? "scale-[0.99]" : ""}`}
           >
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-5">
@@ -256,13 +289,44 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
                   {current.vivino_description}
                 </div>
               )}
+
+              {/* URL 교체 섹션 */}
+              <div className="mt-4 pt-3 border-t border-violet-900/50">
+                <div className="text-[11px] font-bold text-violet-400 tracking-wider mb-2">URL 교체 (올바른 Vivino 페이지를 찾았을 때)</div>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={urlInput}
+                    onChange={(e) => setUrlInput(e.target.value)}
+                    placeholder="https://www.vivino.com/en/..."
+                    disabled={replacing}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleReplaceUrl();
+                      }
+                    }}
+                    className="flex-1 px-2 py-1.5 rounded bg-zinc-950 border border-violet-900/50 text-zinc-200 text-xs focus:border-violet-700 focus:outline-none disabled:opacity-40"
+                  />
+                  <button
+                    onClick={handleReplaceUrl}
+                    disabled={replacing || !urlInput.trim()}
+                    className="px-3 py-1.5 rounded bg-violet-600 hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-medium whitespace-nowrap"
+                  >
+                    {replacing ? "크롤링 중…" : "URL 교체"}
+                  </button>
+                </div>
+                <div className="text-[10px] text-zinc-600 mt-1">
+                  * 새 URL로 크롤링 후 카드가 갱신됩니다. 이후 K(유지)/U(해제)로 최종 확정.
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="mt-6 grid grid-cols-3 gap-3">
             <button
               onClick={handleUnlink}
-              disabled={isPending}
+              disabled={anyBusy}
               className="px-4 py-4 rounded-md bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold transition-colors"
             >
               <div className="text-base">매칭 해제</div>
@@ -270,7 +334,7 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
             </button>
             <button
               onClick={handleSkip}
-              disabled={isPending}
+              disabled={anyBusy}
               className="px-4 py-4 rounded-md bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-200 font-medium transition-colors"
             >
               <div className="text-base">나중에</div>
@@ -278,7 +342,7 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
             </button>
             <button
               onClick={handleKeep}
-              disabled={isPending}
+              disabled={anyBusy}
               className="px-4 py-4 rounded-md bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold transition-colors"
             >
               <div className="text-base">매칭 유지</div>

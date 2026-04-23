@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { confirmVivinoMatch, unlinkVivinoMatch, replaceVivinoUrl } from "./actions";
+import { confirmVivinoMatch, unlinkVivinoMatch, replaceVivinoUrl, updateWineFields, type WineFieldUpdate } from "./actions";
 
 export type ReviewMode = "all" | "salvaged";
 
@@ -76,6 +76,9 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
   const [justActioned, setJustActioned] = useState<"keep" | "unlink" | "skip" | null>(null);
   const [urlInput, setUrlInput] = useState("");
   const [replacing, setReplacing] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editDraft, setEditDraft] = useState<WineFieldUpdate>({});
+  const [saving, setSaving] = useState(false);
 
   // 모드 전환 시 커서 리셋
   useEffect(() => {
@@ -86,9 +89,11 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
     setError(null);
   }, [mode]);
 
-  // 후보가 바뀌면 URL 입력란 초기화
+  // 후보가 바뀌면 URL 입력란 + 편집 모드 초기화
   useEffect(() => {
     setUrlInput("");
+    setEditMode(false);
+    setEditDraft({});
   }, [cursor]);
 
   const current = wines[cursor];
@@ -133,6 +138,33 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
     advance("skip");
   }, [current, isPending, advance]);
 
+  const handleEditSave = useCallback(async () => {
+    if (!current || saving) return;
+    if (Object.keys(editDraft).length === 0) {
+      setEditMode(false);
+      return;
+    }
+    setError(null);
+    setSaving(true);
+    try {
+      const result = await updateWineFields(current.id, editDraft);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setEditDraft({});
+        setEditMode(false);
+        router.refresh();
+      }
+    } finally {
+      setSaving(false);
+    }
+  }, [current, editDraft, saving, router]);
+
+  const handleEditCancel = useCallback(() => {
+    setEditDraft({});
+    setEditMode(false);
+  }, []);
+
   const handleReplaceUrl = useCallback(async () => {
     if (!current || replacing) return;
     const url = urlInput.trim();
@@ -171,7 +203,7 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
     return () => window.removeEventListener("keydown", onKey);
   }, [handleKeep, handleUnlink, handleSkip]);
 
-  const anyBusy = isPending || replacing;
+  const anyBusy = isPending || replacing || saving;
 
   return (
     <div>
@@ -255,7 +287,48 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
             } ${justActioned ? "scale-[0.99]" : ""}`}
           >
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-5">
-              <div className="text-xs font-bold text-zinc-500 mb-3 tracking-wider">와이너리 DB</div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-xs font-bold text-zinc-500 tracking-wider">와이너리 DB</div>
+                {!editMode ? (
+                  <button
+                    onClick={() => {
+                      setEditMode(true);
+                      setEditDraft({
+                        name_ko: current.name_ko ?? "",
+                        name_en: current.name_en ?? "",
+                        producer_ko: current.producer_ko ?? "",
+                        producer_en: current.producer_en ?? "",
+                        country: current.country ?? "",
+                        country_ko: current.country_ko ?? "",
+                        region: current.region ?? "",
+                        region_ko: current.region_ko ?? "",
+                        wine_type: current.wine_type ?? "",
+                        grape_varieties: current.grape_varieties ?? [],
+                      });
+                    }}
+                    className="px-2 py-0.5 rounded text-[11px] border border-zinc-700 text-zinc-300 hover:border-zinc-500"
+                  >
+                    편집
+                  </button>
+                ) : (
+                  <div className="flex gap-1">
+                    <button
+                      onClick={handleEditSave}
+                      disabled={saving}
+                      className="px-2 py-0.5 rounded text-[11px] bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-medium"
+                    >
+                      {saving ? "저장 중…" : "저장"}
+                    </button>
+                    <button
+                      onClick={handleEditCancel}
+                      disabled={saving}
+                      className="px-2 py-0.5 rounded text-[11px] border border-zinc-700 text-zinc-300 hover:border-zinc-500"
+                    >
+                      취소
+                    </button>
+                  </div>
+                )}
+              </div>
               {current.image_url && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -264,15 +337,78 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
                   className="w-24 h-32 object-contain bg-zinc-950 rounded mb-3"
                 />
               )}
-              <div className="text-lg font-bold text-zinc-100 mb-1">{current.name_ko}</div>
-              <div className="text-sm text-zinc-400 mb-4">{current.name_en ?? "-"}</div>
-              <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm">
-                <Row label="타입" value={current.wine_type} />
-                <Row label="생산자" value={displayProducer(current)} />
-                <Row label="국가" value={displayCountry(current)} />
-                <Row label="지역" value={displayRegion(current)} />
-                <Row label="품종" value={displayGrapes(current)} />
-              </dl>
+              {editMode ? (
+                <div className="space-y-1.5 text-sm">
+                  <EditRow
+                    label="name_ko"
+                    value={editDraft.name_ko ?? ""}
+                    onChange={(v) => setEditDraft((d) => ({ ...d, name_ko: v }))}
+                  />
+                  <EditRow
+                    label="name_en"
+                    value={editDraft.name_en ?? ""}
+                    onChange={(v) => setEditDraft((d) => ({ ...d, name_en: v }))}
+                  />
+                  <EditSelectRow
+                    label="타입"
+                    value={editDraft.wine_type ?? ""}
+                    onChange={(v) => setEditDraft((d) => ({ ...d, wine_type: v }))}
+                    options={["", "red", "white", "rose", "sparkling", "fortified", "dessert", "other"]}
+                  />
+                  <EditRow
+                    label="생산자(ko)"
+                    value={editDraft.producer_ko ?? ""}
+                    onChange={(v) => setEditDraft((d) => ({ ...d, producer_ko: v }))}
+                  />
+                  <EditRow
+                    label="생산자(en)"
+                    value={editDraft.producer_en ?? ""}
+                    onChange={(v) => setEditDraft((d) => ({ ...d, producer_en: v }))}
+                  />
+                  <EditRow
+                    label="국가(en)"
+                    value={editDraft.country ?? ""}
+                    onChange={(v) => setEditDraft((d) => ({ ...d, country: v }))}
+                  />
+                  <EditRow
+                    label="국가(ko)"
+                    value={editDraft.country_ko ?? ""}
+                    onChange={(v) => setEditDraft((d) => ({ ...d, country_ko: v }))}
+                  />
+                  <EditRow
+                    label="지역(en)"
+                    value={editDraft.region ?? ""}
+                    onChange={(v) => setEditDraft((d) => ({ ...d, region: v }))}
+                  />
+                  <EditRow
+                    label="지역(ko)"
+                    value={editDraft.region_ko ?? ""}
+                    onChange={(v) => setEditDraft((d) => ({ ...d, region_ko: v }))}
+                  />
+                  <EditRow
+                    label="품종(쉼표)"
+                    value={(editDraft.grape_varieties ?? []).join(", ")}
+                    onChange={(v) =>
+                      setEditDraft((d) => ({
+                        ...d,
+                        grape_varieties: v.split(",").map((s) => s.trim()).filter((s) => s.length > 0),
+                      }))
+                    }
+                  />
+                </div>
+              ) : (
+                <>
+                  <div className="text-lg font-bold text-zinc-100 mb-1">{current.name_ko}</div>
+                  <div className="text-sm text-zinc-400 mb-4">{current.name_en ?? "-"}</div>
+                  <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm">
+                    <Row label="타입" value={current.wine_type} />
+                    <Row label="생산자" value={displayProducer(current)} />
+                    <Row label="국가" value={displayCountry(current)} />
+                    <Row label="지역" value={displayRegion(current)} />
+                    <Row label="품종" value={displayGrapes(current)} />
+                  </dl>
+                </>
+              )}
             </div>
 
             <div className="rounded-lg border border-violet-900/50 bg-violet-950/20 p-5">
@@ -470,6 +606,37 @@ function EmptyState({
           </button>
         </>
       )}
+    </div>
+  );
+}
+
+function EditRow({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="grid grid-cols-[auto_1fr] gap-x-3 items-center">
+      <span className="text-xs text-zinc-500">{label}</span>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="px-2 py-1 rounded bg-zinc-950 border border-zinc-800 text-zinc-200 text-sm focus:border-zinc-600 focus:outline-none"
+      />
+    </div>
+  );
+}
+
+function EditSelectRow({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: string[] }) {
+  return (
+    <div className="grid grid-cols-[auto_1fr] gap-x-3 items-center">
+      <span className="text-xs text-zinc-500">{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="px-2 py-1 rounded bg-zinc-950 border border-zinc-800 text-zinc-200 text-sm focus:border-zinc-600 focus:outline-none"
+      >
+        {options.map((o) => (
+          <option key={o} value={o}>{o || "(미지정)"}</option>
+        ))}
+      </select>
     </div>
   );
 }

@@ -29,6 +29,7 @@ import { config } from "dotenv";
 import { resolve } from "node:path";
 import {
   normalize,
+  stripVintage,
   buildMatchKey,
   classifyCandidate,
   type MatchKey,
@@ -362,8 +363,8 @@ function buildVivinoFields(raw: RawWine, v: ReturnType<typeof evalVivino>): Reco
 function buildInsertRow(raw: RawWine, grapes: string[], v: ReturnType<typeof evalVivino>): Record<string, unknown> {
   const vivino = buildVivinoFields(raw, v);
   return {
-    name_ko: raw.name_ko,
-    name_en: raw.name_en,
+    name_ko: stripVintage(raw.name_ko ?? "") || raw.name_ko,
+    name_en: stripVintage(raw.name_en ?? "") || raw.name_en,
     country: raw.country,
     country_ko: raw.country, // raw.country는 한글이 주. 영문이면 추후 term_dict 보강
     region: raw.region,
@@ -424,8 +425,8 @@ async function executeAutoMerge(raw: RawWine, targetWineId: string, grapes: stri
     if (value == null || value === "") return;
     if (t[key] == null || t[key] === "") updates[key] = value;
   };
-  fillEmpty("name_ko", raw.name_ko);
-  fillEmpty("name_en", raw.name_en);
+  fillEmpty("name_ko", stripVintage(raw.name_ko ?? "") || raw.name_ko);
+  fillEmpty("name_en", stripVintage(raw.name_en ?? "") || raw.name_en);
   fillEmpty("country", raw.country);
   fillEmpty("country_ko", raw.country);
   fillEmpty("region", raw.region);

@@ -10,6 +10,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   normalize,
+  stripVintage,
   buildMatchKey,
   classifyCandidate,
   type MatchReason,
@@ -238,8 +239,8 @@ export async function promoteSingleRawWine(
   const v = evalVivino(raw);
   const vivino = buildVivinoFields(raw, v);
   const row: Record<string, unknown> = {
-    name_ko: raw.name_ko,
-    name_en: raw.name_en,
+    name_ko: stripVintage(raw.name_ko ?? "") || raw.name_ko,
+    name_en: stripVintage(raw.name_en ?? "") || raw.name_en,
     country: raw.country,
     country_ko: raw.country,
     region: raw.region,
@@ -309,8 +310,8 @@ async function autoMerge(
     if (value == null || value === "") return;
     if (t[key] == null || t[key] === "") updates[key] = value;
   };
-  fillEmpty("name_ko", raw.name_ko);
-  fillEmpty("name_en", raw.name_en);
+  fillEmpty("name_ko", stripVintage(raw.name_ko ?? "") || raw.name_ko);
+  fillEmpty("name_en", stripVintage(raw.name_en ?? "") || raw.name_en);
   fillEmpty("country", raw.country);
   fillEmpty("country_ko", raw.country);
   fillEmpty("region", raw.region);

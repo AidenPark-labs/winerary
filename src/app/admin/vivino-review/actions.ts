@@ -4,6 +4,47 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 import { crawlByUrl } from "@/lib/vivino-crawler";
 
+export interface WineFieldUpdate {
+  name_ko?: string;
+  name_en?: string;
+  producer_ko?: string;
+  producer_en?: string;
+  country?: string;
+  country_ko?: string;
+  region?: string;
+  region_ko?: string;
+  wine_type?: string;
+  grape_varieties?: string[]; // 배열 전체 교체
+}
+
+/**
+ * wines 필드 일괄 UPDATE. 빈 문자열은 null로 변환, undefined는 무시.
+ * 빈티지 제거 검수에서 어드민이 직접 교정할 때 사용.
+ */
+export async function updateWineFields(id: string, patch: WineFieldUpdate) {
+  const { supabase } = await requireAdmin();
+  const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  for (const [k, v] of Object.entries(patch)) {
+    if (v === undefined) continue;
+    if (Array.isArray(v)) {
+      payload[k] = v.filter((s) => typeof s === "string" && s.trim().length > 0).map((s) => s.trim());
+    } else if (typeof v === "string") {
+      payload[k] = v.trim() === "" ? null : v.trim();
+    } else {
+      payload[k] = v;
+    }
+  }
+  const { error } = await supabase.from("wines").update(payload).eq("id", id);
+  if (error) {
+    if (error.code === "23505" && error.message.includes("wines_name_ko_unique")) {
+      return { error: "이미 사용 중인 한국어명입니다" };
+    }
+    return { error: error.message };
+  }
+  revalidatePath("/admin/vivino-review");
+  return { success: true };
+}
+
 export async function confirmVivinoMatch(id: string) {
   const { supabase } = await requireAdmin();
 

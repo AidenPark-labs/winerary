@@ -18,7 +18,9 @@ interface RawWine {
   region: string | null;
   wine_type: string | null;
   grape_variety: string | null;
-  grape_varieties: string[] | null;
+  // raw_wines 테이블엔 grape_varieties 배열 컬럼이 없음 (wines에만).
+  // grape_variety(쉼표 구분 문자열)만 존재. 표시에선 grape_variety 사용.
+  grape_varieties?: string[] | null;
   image_url: string | null;
 }
 

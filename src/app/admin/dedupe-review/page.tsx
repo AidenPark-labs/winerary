@@ -28,7 +28,7 @@ export default async function DedupeReviewPage() {
     rawIds.length > 0
       ? supabase
           .from("raw_wines")
-          .select("id, source, source_id, name_ko, name_en, producer_ko, producer_en, country, region, wine_type, grape_variety, grape_varieties, image_url")
+          .select("id, source, source_id, name_ko, name_en, producer_ko, producer_en, country, region, wine_type, grape_variety, image_url")
           .in("id", rawIds)
       : Promise.resolve({ data: [] as unknown[] }),
     targetIds.length > 0

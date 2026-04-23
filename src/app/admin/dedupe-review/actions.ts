@@ -51,7 +51,7 @@ export async function confirmDedupe(candidateId: string, note?: string) {
   fillIfEmpty("region", raw.region);
   fillIfEmpty("wine_type", raw.wine_type);
   fillIfEmpty("image_url", raw.image_url);
-  // wines에 일반 alcohol 컬럼 없음 (vivino_alcohol / final_alcohol / gangnam_alcohol만). 저장 skip.
+  fillIfEmpty("alcohol", raw.alcohol);
 
   // grape_varieties 합집합 (raw.grape_variety가 단수 문자열이면 배열로 변환)
   const existingGrapes = Array.isArray(wine.grape_varieties) ? (wine.grape_varieties as string[]) : [];

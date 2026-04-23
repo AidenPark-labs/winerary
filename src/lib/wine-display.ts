@@ -41,6 +41,9 @@ type WineDisplayInput = {
   final_alcohol?: string | null;
   final_style?: string | null;
   final_description?: string | null;
+
+  // 일반 alcohol (raw 소스에서 채움)
+  alcohol?: string | null;
   gangnam_alcohol?: string | null;
 };
 
@@ -83,6 +86,7 @@ export function resolveWineDisplay(wine: WineDisplayInput) {
       null,
     alcohol:
       wine.final_alcohol ??
+      wine.alcohol ??
       wine.vivino_alcohol ??
       wine.gangnam_alcohol ??
       null,

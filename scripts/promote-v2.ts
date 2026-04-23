@@ -374,7 +374,7 @@ function buildInsertRow(raw: RawWine, grapes: string[], v: ReturnType<typeof eva
     producer: raw.producer_ko ?? raw.producer_en, // legacy
     grape_varieties: grapes,
     price: raw.price,
-    // alcohol: wines 스키마에 일반 alcohol 컬럼 없음 (vivino_alcohol, final_alcohol, gangnam_alcohol만). 저장 생략.
+    alcohol: raw.alcohol,
     image_url: raw.image_url,
     data_source: raw.source,
     source: raw.source,
@@ -434,6 +434,7 @@ async function executeAutoMerge(raw: RawWine, targetWineId: string, grapes: stri
   fillEmpty("producer_ko", raw.producer_ko);
   fillEmpty("producer_en", raw.producer_en);
   fillEmpty("image_url", raw.image_url);
+  fillEmpty("alcohol", raw.alcohol);
   fillEmpty("price", raw.price);
 
   // grape union

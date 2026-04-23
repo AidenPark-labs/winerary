@@ -78,6 +78,7 @@ export interface RawWineInput {
   producer_ko: string | null;
   producer_en: string | null;
   image_url: string | null;
+  alcohol: string | null;
   price: number | null;
   raw_payload: Record<string, unknown> | null;
   promoted_wine_id: string | null;
@@ -250,6 +251,7 @@ export async function promoteSingleRawWine(
     producer: raw.producer_ko ?? raw.producer_en,
     grape_varieties: grapes,
     price: raw.price,
+    alcohol: raw.alcohol,
     image_url: raw.image_url,
     data_source: raw.source,
     source: raw.source,

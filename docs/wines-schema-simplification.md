@@ -224,36 +224,42 @@ migration 파일로 남기되 한 달 유지 후 삭제. **이건 반드시 첫 
 
 #### Phase 2.9 — Vivino 분리 (별도 테이블)
 
-다른 사이클과 성격 다름. 컬럼 통합이 아니라 **테이블 분리**.
+다른 사이클과 성격 다름. 컬럼 통합이 아니라 **테이블 분리** + **전체 Vivino 흐름 재배선**.
 
-1. `vivino_wines` 테이블 생성 migration
-2. 백필 스크립트 `scripts/migrate-vivino-to-table.ts`:
-   ```
-   FOR each wine WHERE vivino_url IS NOT NULL:
-     INSERT INTO vivino_wines (wine_id, vivino_url, vivino_page_url, ...)
-     VALUES (wine.id, wine.vivino_url, wine.vivino_page_url, ...)
-   ```
-   - UNIQUE 제약으로 중복 자동 방어
-3. 어드민 UI 전면 수정 (vivino_wines 참조로 교체):
-   - `/admin/vivino-review` page.tsx / ReviewClient.tsx / actions.ts
-   - `replaceVivinoUrl`, `confirmVivinoMatch`, `unlinkVivinoMatch` → vivino_wines UPSERT/UPDATE/DELETE
-   - `updateWineVivino` (admin/wines/actions.ts) → vivino_wines 경로로 재라우트
-   - `clearWineVivino` 동일
-4. 유저 서빙 경로:
-   - `/wines/[id]/VivinoRating.tsx` 및 해당 페이지 조회 쿼리에 JOIN 추가
-   - 또는 서버 측에서 wines 읽은 후 별도로 vivino_wines 쿼리해 합치기
-   - wine-display.ts 수정 (vivino_* 입력을 vivino_wines에서 받도록)
-5. promote 경로:
-   - `scripts/promote-v2.ts`, `src/lib/promote-raw-wine.ts`의 `buildVivinoFields` / `buildVivinoFieldsDirect`가 **wines 대신 vivino_wines에 INSERT**
-   - `vivino_reviewed_at` 자동 로직 그대로 유지
-6. 검수 UI 2종 확인 (`vivino-review`, `dedupe-review`): 모든 vivino_* 참조 교체
-7. 배포 + ≥ 1주 관찰
-8. wines의 vivino_* 15개 컬럼 DROP migration
+### 영향 범위 (실측)
+코드베이스 전수 스캔 결과:
+- `src/` 에서 vivino_* 컬럼 참조: **31 파일** (유저 서빙 + 어드민 + API + 타입)
+- `scripts/` 에서 참조: 68 파일 (대부분 일회성 분석 스크립트, 활성 경로 ~10개)
+- 단순 DB 분리가 아니라 **크롤링·수집·검수·표시의 전체 경로 재작성**
 
-**Vivino 분리 사이클 위험 요소:**
-- 가장 위험한 개념. wines의 15개 컬럼이 프론트·어드민 전반에서 참조됨
-- 사이클 분리 가능성: migration + 백필 + JOIN만 먼저 (wines 컬럼 유지 상태). 그 후 점진적으로 코드 교체 후 DROP.
-- 즉 Phase 2.9를 2단계로: **2.9a) 테이블 생성 + 백필 + 읽기 경로만 JOIN 전환**, **2.9b) 쓰기 경로 교체 + DROP**
+### 분할 실행
+
+**2.9a — 테이블 생성 + 읽기 경로만 JOIN 전환** (wines 컬럼 유지, 롤백 가능)
+
+**2.9b — 쓰기 경로 교체 + 검증 + DROP**
+
+### 상세 체크리스트
+➡ **`docs/phase-29-vivino-separation-checklist.md`** 참조.
+- 영향받는 파일 전수 목록 (~40 활성 경로)
+- sub-phase 별 체크박스
+- 롤백 가이드
+- 세션 로그 템플릿
+
+### 주요 영향 그룹
+1. **수집 계층**: `scripts/scrape-vivino-raw.ts`(raw_wines 대상이라 영향 없음), `crawl-vivino-*.ts`, `update-wine-from-vivino.ts`, `rematch-vivino-v4.ts`, `restore-vivino-from-raw.ts`
+2. **어드민 수집/편집**: `/admin/wines/actions.ts` (updateWineVivino / clearWineVivino), `/admin/wines/WinesClient.tsx` 버튼들
+3. **Vivino 검수 UI**: `/admin/vivino-review/*` (page / ReviewClient / actions — confirm / unlink / replaceVivinoUrl)
+4. **중복 검수 merge**: `/admin/dedupe-review/actions.ts` (confirmDedupe 내 vivino 병합)
+5. **Promote 경로**: `scripts/promote-v2.ts`, `src/lib/promote-raw-wine.ts` (buildVivinoFields 계열)
+6. **편입 승인**: `/api/admin/pending-wines/route.ts` (insertWineDirectly 호출하므로 5번 반영 시 자동 따라옴)
+7. **유저 서빙**: `/wines/[id]`, `/dictionary`, `/find`, `/diary`, `/wishlist`, `/recommend`, `/invite` + API 9개 + `wine-display.ts`, `wine-search.ts`
+8. **신고**: `/admin/reports/*` (와인 정보 표시 영역)
+9. **타입**: `src/types/index.ts`
+
+### 작업량 추정
+- 2.9a: 1~2 세션
+- 2.9b: 2~3 세션
+- 총 **3~5 세션**. 한 세션당 최소 하나의 완전한 sub-phase.
 
 각 개념마다:
 1. 정규 컬럼 1개 결정 (이미 있으면 사용, 없으면 추가)

@@ -34,7 +34,7 @@ export default async function DedupeReviewPage() {
     targetIds.length > 0
       ? supabase
           .from("wines")
-          .select("id, name_ko, name_en, producer_ko, producer_en, country, region, wine_type, grape_varieties, image_url")
+          .select("id, name_ko, name_en, producer_ko, producer_en, country, country_ko, region, region_ko, wine_type, grape_varieties, image_url, alcohol")
           .in("id", targetIds)
       : Promise.resolve({ data: [] as unknown[] }),
   ]);

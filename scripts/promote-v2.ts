@@ -35,6 +35,7 @@ import {
   type MatchKey,
   type MatchReason,
 } from "../src/lib/wine-dedupe";
+import { loadGrapeDict, normalizeGrapes, type GrapeDictEntry } from "../src/lib/grape-normalize";
 
 config({ path: resolve(process.cwd(), ".env.local") });
 

@@ -15,6 +15,7 @@ import {
   classifyCandidate,
   type MatchReason,
 } from "./wine-dedupe";
+import { loadGrapeDict, normalizeGrapes } from "./grape-normalize";
 
 const VALID_WINE_TYPES = new Set(["red", "white", "rose", "sparkling", "fortified", "dessert", "other"]);
 
@@ -239,6 +240,11 @@ export async function promoteSingleRawWine(
   // 3) 신규 INSERT
   const v = evalVivino(raw);
   const vivino = buildVivinoFields(raw, v);
+
+  // 품종 정규화 (term_dict)
+  const dict = await loadGrapeDict(sb);
+  const normGrape = normalizeGrapes(grapes, dict);
+
   const row: Record<string, unknown> = {
     name_ko: stripVintage(raw.name_ko ?? "") || raw.name_ko,
     name_en: stripVintage(raw.name_en ?? "") || raw.name_en,
@@ -249,7 +255,8 @@ export async function promoteSingleRawWine(
     producer_ko: raw.producer_ko,
     producer_en: raw.producer_en,
     producer: raw.producer_ko ?? raw.producer_en,
-    grape_varieties: grapes,
+    grape_varieties: normGrape.normalized_en.length > 0 ? normGrape.normalized_en : grapes,
+    grape_varieties_ko: normGrape.normalized_ko,
     price: raw.price,
     alcohol: raw.alcohol,
     image_url: raw.image_url,
@@ -323,9 +330,14 @@ async function autoMerge(
   fillEmpty("image_url", raw.image_url);
   fillEmpty("price", raw.price);
 
+  // grape 정규화 후 union
   const existingGrapes = Array.isArray(t.grape_varieties) ? (t.grape_varieties as string[]) : [];
-  const merged = Array.from(new Set([...existingGrapes, ...grapes].map((g) => g.trim()).filter(Boolean)));
-  if (merged.length > existingGrapes.length) updates.grape_varieties = merged;
+  const dict = await loadGrapeDict(sb);
+  const unionRes = normalizeGrapes([...existingGrapes, ...grapes], dict);
+  if (unionRes.normalized_en.length > existingGrapes.length) {
+    updates.grape_varieties = unionRes.normalized_en;
+    updates.grape_varieties_ko = unionRes.normalized_ko;
+  }
 
   const existingRefs = Array.isArray(t.source_refs) ? (t.source_refs as string[]) : [];
   if (!existingRefs.includes(raw.id)) updates.source_refs = [...existingRefs, raw.id];
@@ -470,6 +482,11 @@ export async function insertWineDirectly(
   const missing = validateDirect(input, grapes);
   if (missing.length > 0) return { kind: "missing_fields", missing };
 
+  // 품종 정규화
+  const dict = await loadGrapeDict(sb);
+  const normGrape = normalizeGrapes(grapes, dict);
+  const finalGrapes = normGrape.normalized_en.length > 0 ? normGrape.normalized_en : grapes;
+
   // 이름 빈티지 제거 (끝의 19xx/20xx)
   const nameKo = stripVintage(input.name_ko ?? "") || input.name_ko;
   const nameEn = stripVintage(input.name_en ?? "") || input.name_en;
@@ -487,11 +504,16 @@ export async function insertWineDirectly(
   for (const w of exactCands ?? []) {
     const wk = buildMatchKey({ name_en: w.name_en, name_ko: w.name_ko, country: w.country });
     if (wk.name_en_n === key.name_en_n && wk.name_ko_n === key.name_ko_n && wk.country === key.country) {
-      // 빈 필드 채움 + grape union
+      // 빈 필드 채움 + grape 정규화 + union
       const existingGrapes = Array.isArray(w.grape_varieties) ? (w.grape_varieties as string[]) : [];
-      const mergedGrapes = Array.from(new Set([...existingGrapes, ...grapes].filter((g) => g?.trim())));
+      const existingNormalized = normalizeGrapes(existingGrapes, dict).normalized_en;
+      const mergedGrapes = Array.from(new Set([...existingNormalized, ...finalGrapes]));
       const updates: Record<string, unknown> = { updated_at: now };
-      if (mergedGrapes.length > existingGrapes.length) updates.grape_varieties = mergedGrapes;
+      if (mergedGrapes.length > existingGrapes.length) {
+        const mergedResult = normalizeGrapes(mergedGrapes, dict);
+        updates.grape_varieties = mergedResult.normalized_en;
+        updates.grape_varieties_ko = mergedResult.normalized_ko;
+      }
       await sb.from("wines").update(updates).eq("id", w.id);
       return { kind: "auto_merged", wine_id: w.id };
     }
@@ -531,7 +553,8 @@ export async function insertWineDirectly(
     producer_ko: input.producer_ko ?? null,
     producer_en: input.producer_en ?? null,
     producer: input.producer_ko ?? input.producer_en ?? null,
-    grape_varieties: grapes,
+    grape_varieties: finalGrapes,
+    grape_varieties_ko: normGrape.normalized_ko,
     price: input.price ?? null,
     image_url: input.image_url ?? null,
     data_source: input.data_source ?? "admin",
@@ -554,9 +577,12 @@ export async function insertWineDirectly(
       const target = collide?.[0];
       if (target) {
         const existingGrapes = Array.isArray(target.grape_varieties) ? (target.grape_varieties as string[]) : [];
-        const mergedGrapes = Array.from(new Set([...existingGrapes, ...grapes].filter((g) => g?.trim())));
+        const unionRes = normalizeGrapes([...existingGrapes, ...finalGrapes], dict);
         const updates: Record<string, unknown> = { updated_at: now };
-        if (mergedGrapes.length > existingGrapes.length) updates.grape_varieties = mergedGrapes;
+        if (unionRes.normalized_en.length > existingGrapes.length) {
+          updates.grape_varieties = unionRes.normalized_en;
+          updates.grape_varieties_ko = unionRes.normalized_ko;
+        }
         await sb.from("wines").update(updates).eq("id", target.id);
         return { kind: "auto_merged", wine_id: target.id };
       }

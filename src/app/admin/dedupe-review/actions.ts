@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
+import { loadGrapeDict, normalizeGrapes } from "@/lib/grape-normalize";
 
 export interface FinalMergeData {
   name_ko?: string | null;
@@ -72,12 +73,19 @@ export async function confirmDedupe(
       }
     }
   }
+  // grape_varieties 정규화: term_dict 기반 매칭 → 표준 en + ko 배열
+  let grapeUnknowns: string[] = [];
   if ("grape_varieties" in finalData) {
     const gv = finalData.grape_varieties;
     if (Array.isArray(gv)) {
-      updates.grape_varieties = gv.map((s) => (s ?? "").trim()).filter((s) => s.length > 0);
+      const dict = await loadGrapeDict(supabase);
+      const result = normalizeGrapes(gv, dict);
+      updates.grape_varieties = result.normalized_en;
+      updates.grape_varieties_ko = result.normalized_ko;
+      grapeUnknowns = result.unknowns;
     } else if (gv == null) {
       updates.grape_varieties = [];
+      updates.grape_varieties_ko = [];
     }
   }
 
@@ -126,7 +134,13 @@ export async function confirmDedupe(
   if (statErr) return { error: `상태 업데이트 실패: ${statErr.message}` };
 
   revalidatePath("/admin/dedupe-review");
-  return { success: true, wine_id: candidate.target_wine_id };
+  return {
+    success: true,
+    wine_id: candidate.target_wine_id,
+    normalized_grapes_en: updates.grape_varieties as string[] | undefined,
+    normalized_grapes_ko: updates.grape_varieties_ko as string[] | undefined,
+    grape_unknowns: grapeUnknowns,
+  };
 }
 
 /**

@@ -122,6 +122,7 @@ export default function ReviewClient({ candidates, pendingCount }: Props) {
   const [sessionRejected, setSessionRejected] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [mergeDone, setMergeDone] = useState(false);
+  const [grapeUnknowns, setGrapeUnknowns] = useState<string[]>([]);
 
   const current = candidates[cursor];
   const hasMoreBeyondBatch = pendingCount > candidates.length;
@@ -134,6 +135,7 @@ export default function ReviewClient({ candidates, pendingCount }: Props) {
   useEffect(() => {
     if (current) setDraft(initialDraftFromTarget(raw, tgt));
     setMergeDone(false);
+    setGrapeUnknowns([]);
     setError(null);
   }, [current?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -242,6 +244,11 @@ export default function ReviewClient({ candidates, pendingCount }: Props) {
       }
       setSessionConfirmed((n) => n + 1);
       setMergeDone(true);
+      // 정규화 결과를 draft에 반영해 사용자가 결과를 확인 가능
+      if (result.normalized_grapes_en) {
+        setDraft((d) => ({ ...d, grape_varieties: result.normalized_grapes_en!.join(", ") }));
+      }
+      setGrapeUnknowns(result.grape_unknowns ?? []);
       router.refresh();
     });
   }, [current, isPending, draft, router]);
@@ -348,11 +355,22 @@ export default function ReviewClient({ candidates, pendingCount }: Props) {
       )}
 
       {mergeDone && (
-        <div className="mb-4 p-3 rounded bg-emerald-950/50 border border-emerald-800 text-emerald-300 text-sm flex items-center justify-between">
+        <div className="mb-2 p-3 rounded bg-emerald-950/50 border border-emerald-800 text-emerald-300 text-sm flex items-center justify-between">
           <span>✓ 병합 완료. 추가 편집하려면 Merge 재실행, 이대로 넘어가려면 다음 버튼.</span>
           <button onClick={advance} className="px-3 py-1 rounded bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-medium">
             다음 후보 →
           </button>
+        </div>
+      )}
+
+      {grapeUnknowns.length > 0 && (
+        <div className="mb-4 p-3 rounded bg-amber-950/50 border border-amber-800 text-amber-300 text-xs">
+          <div className="font-medium mb-1">⚠ 품종 사전에 없어 저장 안 된 항목 {grapeUnknowns.length}건</div>
+          <div className="text-amber-400/90 break-all">{grapeUnknowns.join(" · ")}</div>
+          <div className="text-amber-500/80 mt-1">
+            term_dict(category=&apos;grape&apos;)에 등록되지 않아 최종 wines.grape_varieties에는 반영되지 않았습니다.
+            올바른 품종이면 사전에 추가하거나 표기를 수정하세요.
+          </div>
         </div>
       )}
 

@@ -12,23 +12,45 @@ export default async function DedupeReviewPage() {
     .select("id", { count: "exact", head: true })
     .eq("status", "pending");
 
-  // pending 후보 + 양쪽 와인 상세 조인
-  const { data } = await supabase
+  // pending 후보 먼저 로드
+  const { data: candidates } = await supabase
     .from("wine_dedupe_candidates")
-    .select(`
-      id, match_reason, match_score, match_details, status, created_at,
-      raw_wine:raw_wines!wine_dedupe_candidates_raw_wine_id_fkey (
-        id, source, source_id, name_ko, name_en, producer_ko, producer_en,
-        country, region, wine_type, grape_variety, grape_varieties, image_url
-      ),
-      target_wine:wines!wine_dedupe_candidates_target_wine_id_fkey (
-        id, name_ko, name_en, producer_ko, producer_en,
-        country, region, wine_type, grape_varieties, image_url
-      )
-    `)
+    .select("id, match_reason, match_score, match_details, status, created_at, raw_wine_id, target_wine_id")
     .eq("status", "pending")
     .order("created_at", { ascending: true })
     .limit(BATCH_SIZE);
+
+  // 양쪽 와인은 별도 IN 쿼리로 수집 (JOIN FK hint 의존도 제거)
+  const rawIds = Array.from(new Set((candidates ?? []).map((c) => c.raw_wine_id)));
+  const targetIds = Array.from(new Set((candidates ?? []).map((c) => c.target_wine_id)));
+
+  const [rawsRes, targetsRes] = await Promise.all([
+    rawIds.length > 0
+      ? supabase
+          .from("raw_wines")
+          .select("id, source, source_id, name_ko, name_en, producer_ko, producer_en, country, region, wine_type, grape_variety, grape_varieties, image_url")
+          .in("id", rawIds)
+      : Promise.resolve({ data: [] as unknown[] }),
+    targetIds.length > 0
+      ? supabase
+          .from("wines")
+          .select("id, name_ko, name_en, producer_ko, producer_en, country, region, wine_type, grape_varieties, image_url")
+          .in("id", targetIds)
+      : Promise.resolve({ data: [] as unknown[] }),
+  ]);
+
+  type RawMap = Record<string, unknown>;
+  type WineMap = Record<string, unknown>;
+  const rawMap: RawMap = {};
+  for (const r of (rawsRes.data ?? []) as Array<{ id: string }>) rawMap[r.id] = r;
+  const winesMap: WineMap = {};
+  for (const w of (targetsRes.data ?? []) as Array<{ id: string }>) winesMap[w.id] = w;
+
+  const data = (candidates ?? []).map((c) => ({
+    ...c,
+    raw_wine: rawMap[c.raw_wine_id] ?? null,
+    target_wine: winesMap[c.target_wine_id] ?? null,
+  }));
 
   return (
     <div className="max-w-6xl mx-auto">

@@ -464,26 +464,35 @@ function SourceField({ label, value, onSend, disabled, accent }: { label: string
     ? "bg-emerald-900/50 hover:bg-emerald-800 text-emerald-200 border-emerald-800"
     : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700";
   return (
-    <div className="flex items-center gap-2 text-sm py-0.5">
-      <span className="text-xs text-zinc-500 w-[90px] shrink-0">{label}</span>
-      <span className={`flex-1 truncate ${value ? "text-zinc-200" : "text-zinc-600"}`}>{value || "-"}</span>
-      <button onClick={onSend} disabled={disabled || !value} className={`text-[10px] px-1.5 py-0.5 rounded border ${btnCls} disabled:opacity-30 shrink-0`} title="최종 예정으로 복사">
-        →
-      </button>
+    <div className="py-1.5 border-b border-zinc-800/50 last:border-b-0">
+      <div className="flex items-center justify-between gap-2 mb-0.5">
+        <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-wide">{label}</span>
+        <button
+          onClick={onSend}
+          disabled={disabled || !value}
+          className={`text-[10px] px-1.5 py-0.5 rounded border ${btnCls} disabled:opacity-30 shrink-0 whitespace-nowrap`}
+          title="최종 예정으로 복사"
+        >
+          → 복사
+        </button>
+      </div>
+      <div className={`text-sm break-words whitespace-pre-wrap leading-snug ${value ? "text-zinc-100" : "text-zinc-600"}`}>
+        {value || "-"}
+      </div>
     </div>
   );
 }
 
 function EditRow({ label, value, onChange, disabled }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean }) {
   return (
-    <div className="flex items-center gap-2 py-0.5">
-      <span className="text-xs text-zinc-500 w-[90px] shrink-0">{label}</span>
+    <div className="py-1.5 border-b border-zinc-800/50 last:border-b-0">
+      <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-wide block mb-0.5">{label}</span>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="flex-1 px-2 py-1 rounded bg-zinc-950 border border-zinc-800 text-zinc-200 text-sm focus:border-zinc-600 focus:outline-none disabled:opacity-50"
+        className="w-full px-2 py-1.5 rounded bg-zinc-950 border border-zinc-800 text-zinc-100 text-sm focus:border-zinc-500 focus:outline-none disabled:opacity-50"
       />
     </div>
   );
@@ -491,13 +500,13 @@ function EditRow({ label, value, onChange, disabled }: { label: string; value: s
 
 function EditSelectRow({ label, value, options, onChange, disabled }: { label: string; value: string; options: string[]; onChange: (v: string) => void; disabled?: boolean }) {
   return (
-    <div className="flex items-center gap-2 py-0.5">
-      <span className="text-xs text-zinc-500 w-[90px] shrink-0">{label}</span>
+    <div className="py-1.5 border-b border-zinc-800/50 last:border-b-0">
+      <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-wide block mb-0.5">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="flex-1 px-2 py-1 rounded bg-zinc-950 border border-zinc-800 text-zinc-200 text-sm focus:border-zinc-600 focus:outline-none disabled:opacity-50"
+        className="w-full px-2 py-1.5 rounded bg-zinc-950 border border-zinc-800 text-zinc-100 text-sm focus:border-zinc-500 focus:outline-none disabled:opacity-50"
       >
         {options.map((o) => <option key={o} value={o}>{o || "(미지정)"}</option>)}
       </select>

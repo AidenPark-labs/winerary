@@ -53,5 +53,17 @@ vivino-failed.csv
 # DB backups (v3 재설계)
 /backup/
 
+# 일회성 분석/검증 산출물 (루트)
+/keep-*.json
+/not-salvaged-*.json
+/salvaged-*.json
+/vivino-*.json
+/pilot-*.json
+/wines-dup-rescan.json
+
+# 임시 조사 스크립트
+/scripts/_*.ts
+/scripts/_*.js
+
 # claude code local
 .claude/

@@ -20,7 +20,7 @@ create table if not exists public.wine_reports (
   status text not null default 'open' check (status in ('open', 'resolved', 'dismissed')),
   created_at timestamptz not null default now(),
   resolved_at timestamptz,
-  resolved_by uuid references public.profiles(id) on delete set null,
+  resolved_by uuid references auth.users(id) on delete set null,
   resolved_note text
 );
 

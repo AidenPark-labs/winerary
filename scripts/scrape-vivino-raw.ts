@@ -63,14 +63,21 @@ const DRY_RUN = argFlag("dry-run");
 const NUM_WORKERS = parseInt(argValue("workers") || "2", 10);
 const MAX_ITEMS = argValue("limit") ? parseInt(argValue("limit")!, 10) : Infinity;
 const MATCH_THRESHOLD = 0.7;
-const RETRY_MODE = (argValue("retry") || "browser") as "browser" | "all";
+const RETRY_MODE = (argValue("retry") || "browser") as "browser" | "all" | "match";
 
 // Ban 감지 백오프
 const BACKOFF_WINDOW = 20;        // 최근 N건 평가
 const BACKOFF_FAIL_THRESHOLD = 10; // 최근 N건 중 X건 이상 search/browser 실패 시 pause
 const BACKOFF_PAUSE_MS = 5 * 60 * 1000; // 5분 pause
+const MAX_CONSECUTIVE_PAUSES = 2; // pause 연속 N회 발생하면 IP ban 확정 → rest 사이클 진입
+// Ban 휴식은 exponential: 10m → 20m → 40m → 60m → 60m → 60m (누적 ~4.5h)
+const BAN_REST_MS_SERIES = [10, 20, 40, 60, 60, 60].map((m) => m * 60 * 1000);
+const MAX_BAN_CYCLES = BAN_REST_MS_SERIES.length;
 const recentResults: Array<"ok" | "fail_susp" | "fail_other"> = [];
 let bannedSignal = false;
+let consecutivePauses = 0;
+let banCycles = 0;
+let bannedGaveUp = false; // true면 probe 다 실패로 정말 종료
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 // 지터: base ± jitter 범위로 랜덤
@@ -129,6 +136,62 @@ function matchScore(query: string, candidate: string): number {
     if (coreC.some((cw) => cw === w)) found++;
   }
   return found / coreQ.length;
+}
+
+// ─── v4 Precision 가드 (rematch-vivino-v4.ts 로직 복사) ────────────────────
+
+const GRAPE_LIST = [
+  "cabernet sauvignon","cabernet franc","cabernet","merlot","syrah","shiraz","pinot noir","pinot grigio","pinot gris","pinot blanc",
+  "chardonnay","sauvignon blanc","riesling","nebbiolo","sangiovese","tempranillo","grenache","garnacha","mourvedre","malbec","zinfandel",
+  "chenin blanc","viognier","gewurztraminer","semillon","montepulciano","barbera","dolcetto","aglianico","verdicchio","garganega",
+  "moscato","muscat","vermentino","albarino","godello","touriga","carmenere","petit verdot","gamay","nero d avola","primitivo",
+  "corvina","fiano","falanghina","trebbiano","glera","pinotage","assyrtiko",
+];
+const COLOR_MARKERS: Record<"Red"|"White"|"Rosé", string[]> = {
+  Red: ["rouge","rosso","tinto"], White: ["blanc","bianco","branco","blanco"], Rosé: ["rosado","rosato"],
+};
+const WINERY_SUFFIX_STOPS = new Set([
+  ...STOP_WORDS,
+  "winery","wines","wine","vineyards","vineyard","cellars","cellar","estate","estates",
+  "domaine","maison","bodegas","bodega","tenuta","cantina","chateau","castillo","azienda","agricola","weingut","quinta",
+]);
+
+function guardWine(detailName: string, grapes: string[], vintage: number | null, style: string | null, winery: string | null): { pass: boolean; reason?: string } {
+  const hay = normalize(detailName);
+  if (grapes.length > 0) {
+    const ourGrapesNorm = grapes.map(normalize);
+    const ourMatch = ourGrapesNorm.some((g) => hay.includes(g));
+    if (!ourMatch) {
+      const otherGrape = GRAPE_LIST.find((g) => {
+        const gn = normalize(g);
+        if (hay.includes(gn)) return !ourGrapesNorm.some((og) => og.includes(gn) || gn.includes(og));
+        return false;
+      });
+      if (otherGrape) return { pass: false, reason: `grape:${grapes.join(",")}vs${otherGrape}` };
+    }
+  }
+  if (vintage != null) {
+    const years = (detailName.match(/\b(19|20)\d{2}\b/g) ?? []).map((y) => parseInt(y, 10));
+    if (years.length > 0 && !years.includes(vintage)) {
+      return { pass: false, reason: `vintage:${vintage}vs${years.join(",")}` };
+    }
+  }
+  if (style === "Red" || style === "White" || style === "Rosé") {
+    let detected: keyof typeof COLOR_MARKERS | null = null;
+    for (const k of ["Red","White","Rosé"] as const) {
+      for (const m of COLOR_MARKERS[k]) { if (new RegExp(`\\b${m}\\b`).test(hay)) { detected = k; break; } }
+      if (detected) break;
+    }
+    if (detected && detected !== style) return { pass: false, reason: `style:${style}vs${detected}` };
+  }
+  if (winery) {
+    const tokens = normalize(winery).split(" ").filter((w) => w.length > 2 && !WINERY_SUFFIX_STOPS.has(w));
+    if (tokens.length >= 2) {
+      const found = tokens.filter((t) => hay.includes(t)).length;
+      if (found / tokens.length < 0.7) return { pass: false, reason: `winery:${found}/${tokens.length}` };
+    }
+  }
+  return { pass: true };
 }
 
 // ─── 브라우저 ──────────────────────────────────────────────────────────────
@@ -260,7 +323,14 @@ async function processImageQueue(): Promise<void> {
   }
 }
 
-async function crawlWine(_page: Page, wineName: string, sourceId: string): Promise<CrawlResult> {
+interface GuardInput {
+  grapes: string[];
+  vintage: number | null;
+  style: string | null;
+  winery: string | null;
+}
+
+async function crawlWine(_page: Page, wineName: string, sourceId: string, guardIn: GuardInput): Promise<CrawlResult> {
   let browser: Browser | null = null;
   try {
     const launched = await launchWorker();
@@ -269,7 +339,26 @@ async function crawlWine(_page: Page, wineName: string, sourceId: string): Promi
 
     await page.goto("https://www.vivino.com", { waitUntil: "networkidle2", timeout: 20000 });
 
-    await page.waitForSelector("input[name=q]", { timeout: 5000 });
+    // Vivino IP ban 페이지 감지 (goto 직후 본문 체크)
+    const banEarly = await page.evaluate(() => {
+      const body = document.body?.innerText ?? "";
+      return /temporarily blocked|exceeded bulk request|admin@vivino\.com|requests blocked/i.test(body);
+    });
+    if (banEarly) {
+      return { success: false, error: "VIVINO_IP_BAN_DETECTED", step: "ban" };
+    }
+
+    try {
+      await page.waitForSelector("input[name=q]", { timeout: 5000 });
+    } catch (_e) {
+      // 검색바 없음 → ban 페이지 또는 레이아웃 변경 가능성. 본문 재검사.
+      const banLate = await page.evaluate(() => {
+        const body = document.body?.innerText ?? "";
+        return /temporarily blocked|exceeded bulk request|admin@vivino\.com|requests blocked/i.test(body);
+      });
+      if (banLate) return { success: false, error: "VIVINO_IP_BAN_DETECTED", step: "ban" };
+      return { success: false, error: "검색바 timeout", step: "search" };
+    }
     const input = await page.$("input[name=q]");
     if (!input) return { success: false, error: "검색바 없음", step: "search" };
 
@@ -278,21 +367,16 @@ async function crawlWine(_page: Page, wineName: string, sourceId: string): Promi
     await sleep(100);
     await input.type(wineName, { delay: 20 });
 
-    // 자동완성 대기: 최대 3초, 결과 나오면 즉시 진행
-    let candidates: Array<{ text: string; href: string }> = [];
-    const acStart = Date.now();
-    while (Date.now() - acStart < 3000) {
-      candidates = await page.evaluate(() => {
-        return Array.from(document.querySelectorAll('a[href*="/w/"]'))
-          .filter((el) => /\/w\/\d+/.test((el as HTMLAnchorElement).href))
-          .map((el) => ({
-            text: el.textContent?.trim() ?? "",
-            href: (el as HTMLAnchorElement).href,
-          }));
-      });
-      if (candidates.length > 0) break;
-      await sleep(200);
-    }
+    // 자동완성 재랭킹 대기: 2.5초 고정 (조기 탈출 시 부정확한 1차 후보로 매칭 실패)
+    await sleep(2500);
+    const candidates: Array<{ text: string; href: string }> = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll('a[href*="/w/"]'))
+        .filter((el) => /\/w\/\d+/.test((el as HTMLAnchorElement).href))
+        .map((el) => ({
+          text: el.textContent?.trim() ?? "",
+          href: (el as HTMLAnchorElement).href,
+        }));
+    });
 
     if (candidates.length === 0) {
       return { success: false, error: "자동완성 결과 없음", step: "search" };
@@ -323,6 +407,12 @@ async function crawlWine(_page: Page, wineName: string, sourceId: string): Promi
     const crossScore = matchScore(wineName, data.name);
     if (crossScore < MATCH_THRESHOLD) {
       return { success: false, error: `교차 검증 실패 (${crossScore.toFixed(2)})`, step: "cross_validation" };
+    }
+
+    // v4 precision 가드 (품종/빈티지/스타일/와이너리)
+    const guard = guardWine(data.name, guardIn.grapes, guardIn.vintage, guardIn.style, guardIn.winery);
+    if (!guard.pass) {
+      return { success: false, error: guard.reason, step: "guard" };
     }
 
     const wineIdMatch = detailUrl.match(/\/w\/(\d+)/);
@@ -366,13 +456,19 @@ async function fetchBatch(afterId: string | null): Promise<RawWine[]> {
   // retry 모드별 대상 필터
   //   browser (default): 미처리 + browser 실패만
   //   all: 미처리 + 모든 실패 (browser/search/match/cross_validation)
-  const failSteps = RETRY_MODE === "all"
-    ? "browser,search,match,cross_validation"
-    : "browser";
-  const orFilter =
-    `(raw_payload->>vivino_scraped_at.is.null,` +
-    `raw_payload.is.null,` +
-    `raw_payload->>vivino_fail_step.in.(${failSteps}))`;
+  //   match: fail_step='match' 만 (wait-fix + guard 검증용)
+  let orFilter: string;
+  if (RETRY_MODE === "match") {
+    orFilter = `(raw_payload->>vivino_fail_step.eq.match)`;
+  } else {
+    const failSteps = RETRY_MODE === "all"
+      ? "browser,search,match,cross_validation"
+      : "browser";
+    orFilter =
+      `(raw_payload->>vivino_scraped_at.is.null,` +
+      `raw_payload.is.null,` +
+      `raw_payload->>vivino_fail_step.in.(${failSteps}))`;
+  }
 
   let url =
     `${SUPABASE_URL}/rest/v1/raw_wines` +
@@ -463,6 +559,71 @@ async function restartWorker(worker: WorkerState): Promise<void> {
   worker.restartCount++;
 }
 
+// Vivino ban 상태 probe — 단건 요청으로 ban 페이지 여부 확인
+async function probeBan(): Promise<boolean> {
+  let browser: Browser | null = null;
+  try {
+    browser = await puppeteer.launch({
+      executablePath: CHROME_PATH,
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+    });
+    const page = await browser.newPage();
+    await page.setUserAgent(
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    );
+    await page.goto("https://www.vivino.com", { waitUntil: "networkidle2", timeout: 20000 });
+    const stillBanned = await page.evaluate(() => {
+      const body = document.body?.innerText ?? "";
+      return /temporarily blocked|exceeded bulk request|admin@vivino\.com|requests blocked/i.test(body);
+    });
+    return stillBanned;
+  } catch {
+    return true; // 에러도 보수적으로 ban 상태로 간주
+  } finally {
+    if (browser) await browser.close().catch(() => {});
+  }
+}
+
+// Ban rest 사이클: 휴식 → probe → 해제 시 재개 가능 (true) / 아직 ban (false) / 포기 (bannedGaveUp=true)
+async function handleBanRestCycle(workers: WorkerState[]): Promise<boolean> {
+  if (banCycles >= MAX_BAN_CYCLES) {
+    console.error(`\n   🚨 ${MAX_BAN_CYCLES}사이클 probe 모두 실패 → 포기`);
+    bannedGaveUp = true;
+    return false;
+  }
+  const restMs = BAN_REST_MS_SERIES[banCycles];
+  banCycles++;
+  console.log(`\n   🛌 IP ban 감지 → ${restMs / 60000}분 휴식 (cycle ${banCycles}/${MAX_BAN_CYCLES})`);
+
+  // 휴식 동안 워커 브라우저 닫기 (리소스 절약)
+  for (const w of workers) {
+    try { await w.browser.close(); } catch {}
+  }
+
+  await sleep(restMs);
+
+  console.log(`   🔍 Probe: ban 해제 확인 중...`);
+  const stillBanned = await probeBan();
+  if (stillBanned) {
+    console.log(`   ❌ 아직 차단 상태, 다음 사이클로`);
+    return false;
+  }
+
+  console.log(`   ✅ 해제 확인 → 워커 재시작, 재개`);
+  // 워커 재시작
+  for (const w of workers) {
+    const { browser, page } = await launchWorker();
+    w.browser = browser;
+    w.page = page;
+  }
+  // 신호·카운터 리셋
+  bannedSignal = false;
+  consecutivePauses = 0;
+  recentResults.length = 0;
+  return true;
+}
+
 // ─── 메인 ──────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -485,7 +646,15 @@ async function main() {
   let done = false;
 
   try {
-    while (!done && processed < MAX_ITEMS && !bannedSignal) {
+    while (!done && processed < MAX_ITEMS && !bannedGaveUp) {
+      // Ban 감지 시 휴식 사이클: 해제될 때까지 대기·probe 반복
+      while (bannedSignal && !bannedGaveUp) {
+        const resumed = await handleBanRestCycle(workers);
+        if (resumed) break; // 해제 → 본 루프 재개
+        if (bannedGaveUp) break; // max cycle 초과 → 종료
+      }
+      if (bannedGaveUp) break;
+
       const batch = await fetchBatch(cp.lastProcessedId);
       if (batch.length === 0) {
         console.log(`\n📭 더 이상 처리할 행 없음`);
@@ -508,7 +677,14 @@ async function main() {
             for (const wine of workerBatch) {
               if (processed >= MAX_ITEMS) return;
 
-              const result = await crawlWine(worker.page, wine.name_en, wine.source_id);
+              const p = (wine.raw_payload ?? {}) as Record<string, unknown>;
+              const guardIn: GuardInput = {
+                grapes: (p.parsed_grape_varieties as string[]) ?? [],
+                vintage: (p.parsed_vintage as number | null) ?? null,
+                style: (p.parsed_wine_style as string | null) ?? null,
+                winery: ((p.winery_en_clean as string | null) ?? (p.winery_en as string | null) ?? (p.parsed_brand as string | null)) ?? null,
+              };
+              const result = await crawlWine(worker.page, wine.name_en, wine.source_id, guardIn);
               worker.processed++;
 
               if (result.success && result.data) {
@@ -522,7 +698,15 @@ async function main() {
                 await updatePayload(wine.id, wine.raw_payload, successPatch);
                 cp.matched++;
                 recentResults.push("ok");
+                consecutivePauses = 0; // 성공 시 연속 카운터 리셋
               } else {
+                // Vivino ban 페이지 직접 감지 시 즉시 abort (crawlWine 내부 감지)
+                if (result.step === "ban" || result.error === "VIVINO_IP_BAN_DETECTED") {
+                  console.error(`\n   🚨 VIVINO IP BAN 페이지 감지 → 즉시 중단`);
+                  bannedSignal = true;
+                  return;
+                }
+
                 const failPatch: Record<string, unknown> = {
                   vivino_scraped_at: new Date().toISOString(),
                   vivino_match_failed: true,
@@ -532,7 +716,7 @@ async function main() {
                 await updatePayload(wine.id, wine.raw_payload, failPatch);
 
                 if (result.step === "search") cp.noResult++;
-                else if (result.step === "match" || result.step === "cross_validation") cp.matchFailed++;
+                else if (result.step === "match" || result.step === "cross_validation" || result.step === "guard") cp.matchFailed++;
                 else cp.errors++;
 
                 // Ban 의심 신호: search/browser 실패
@@ -562,8 +746,16 @@ async function main() {
               if (recentResults.length >= BACKOFF_WINDOW) {
                 const suspFails = recentResults.filter((r) => r === "fail_susp").length;
                 if (suspFails >= BACKOFF_FAIL_THRESHOLD) {
+                  consecutivePauses++;
+                  if (consecutivePauses > MAX_CONSECUTIVE_PAUSES) {
+                    console.error(
+                      `\n   🚨 연속 ${consecutivePauses}회 백오프 → IP BAN 확정, 즉시 중단`
+                    );
+                    bannedSignal = true;
+                    return;
+                  }
                   console.error(
-                    `\n   🛑 최근 ${BACKOFF_WINDOW}건 중 ${suspFails}건 search/browser 실패 → ${BACKOFF_PAUSE_MS / 60000}분 pause`
+                    `\n   🛑 최근 ${BACKOFF_WINDOW}건 중 ${suspFails}건 search/browser 실패 → ${BACKOFF_PAUSE_MS / 60000}분 pause (연속 ${consecutivePauses}/${MAX_CONSECUTIVE_PAUSES})`
                   );
                   await sleep(BACKOFF_PAUSE_MS);
                   recentResults.length = 0; // 윈도우 초기화
@@ -609,12 +801,18 @@ async function main() {
 
   saveCheckpoint(cp);
   const elapsed = (Date.now() - start) / 1000;
-  console.log(`\n\n🎉 완료`);
+  if (bannedGaveUp) {
+    console.log(`\n\n🚨 VIVINO IP BAN 지속 (${MAX_BAN_CYCLES}사이클 모두 차단) → 종료`);
+  } else {
+    console.log(`\n\n🎉 완료`);
+  }
   console.log(`   처리: ${cp.total}건`);
   console.log(`   매칭: ${cp.matched}건 (${((cp.matched / Math.max(cp.total, 1)) * 100).toFixed(1)}%)`);
   console.log(`   검색 0건: ${cp.noResult}, 매칭 실패: ${cp.matchFailed}, 에러: ${cp.errors}`);
   console.log(`   소요: ${(elapsed / 60).toFixed(1)}분`);
+  console.log(`   ban 사이클: ${banCycles}/${MAX_BAN_CYCLES}`);
   console.log(`   체크포인트: ${CHECKPOINT_PATH}`);
+  if (bannedGaveUp) process.exit(2);
 }
 
 main().catch((e) => {

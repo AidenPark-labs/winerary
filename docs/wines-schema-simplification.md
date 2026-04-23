@@ -86,7 +86,7 @@ DB 재설계 v3~v4를 거치면서 wines 테이블에 동일 개념의 중복 �
 
 ---
 
-## 3. 목표 스키마 (v5, 약 25 컬럼)
+## 3. 목표 스키마 (v5, 약 20 컬럼)
 
 ```
 [식별]
@@ -110,13 +110,67 @@ DB 재설계 v3~v4를 거치면서 wines 테이블에 동일 개념의 중복 �
 [검색]
   search_tsv, search_jamo, embedding, embedded_at, search_query_en
 
-[Vivino 인기도 메트릭 — 표시용 유지]
-  vivino_url, vivino_rating, vivino_reviews,
-  vivino_needs_review, vivino_reviewed_at
-
 [어드민]
   locked_fields
 ```
+
+### 분리된 테이블: `vivino_wines`
+
+Vivino 크롤링 데이터는 **별도 테이블로 분리** (2026-04-24 추가 결정).
+raw_wines가 크롤링 원본 전용이듯, vivino_wines는 Vivino 크롤링 전용.
+
+```sql
+CREATE TABLE vivino_wines (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  wine_id uuid UNIQUE,  -- FK 없는 단순 기록 (raw_wines.promoted_wine_id 원칙과 동일)
+
+  -- Vivino 식별
+  vivino_url text NOT NULL UNIQUE,
+  vivino_page_url text,
+  vivino_wine_id text,
+  vivino_name text,
+
+  -- 메트릭
+  rating numeric(2,1),
+  reviews integer,
+
+  -- 상세
+  winery text,
+  grapes text,
+  region text,
+  style text,
+  alcohol text,
+  description text,
+  allergens text,
+  image_url text,
+  image_storage text,
+
+  -- 검수 / 매칭 신뢰도
+  needs_review boolean NOT NULL DEFAULT false,
+  reviewed_at timestamptz,
+  match_score numeric,
+  match_failed boolean DEFAULT false,
+
+  -- 운영
+  scraped_at timestamptz,
+  updated_at timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  raw_payload jsonb
+);
+CREATE INDEX vivino_wines_wine_id_idx ON vivino_wines (wine_id) WHERE wine_id IS NOT NULL;
+CREATE INDEX vivino_wines_needs_review_idx ON vivino_wines (needs_review) WHERE needs_review = true;
+```
+
+**wines에서 제거될 15개 컬럼:**
+`vivino_url / vivino_page_url / vivino_wine_id / vivino_rating / vivino_reviews / vivino_winery / vivino_grapes / vivino_region / vivino_style / vivino_alcohol / vivino_description / vivino_allergens / vivino_name / vivino_needs_review / vivino_reviewed_at`
+
+**관계:**
+- `wines` 1 : 0..1 `vivino_wines` (wine_id UNIQUE)
+- FK 없음 (독립 레이어 원칙)
+- 조회 시 JOIN 또는 별도 쿼리
+
+**유저 화면에 vivino 표시 조건 (기존과 동일):**
+`vivino_wines.reviewed_at IS NOT NULL`일 때만 rating/url 노출
 
 ## 4. 제거·통합 매핑
 
@@ -132,10 +186,10 @@ DB 재설계 v3~v4를 거치면서 wines 테이블에 동일 개념의 중복 �
 | `final_wine_type` | `wine_type`으로 통합 |
 | `data_source` | `source` 하나로 |
 | `naver_link` / `naver_image` | `source_snapshot.naver` jsonb |
-| `vivino_grapes` / `vivino_region` / `vivino_winery` / `vivino_style` / `vivino_alcohol` / `vivino_description` / `vivino_allergens` / `vivino_name` / `vivino_page_url` / `vivino_wine_id` | `source_snapshot.vivino` jsonb |
+| `vivino_url` / `vivino_page_url` / `vivino_wine_id` / `vivino_rating` / `vivino_reviews` / `vivino_winery` / `vivino_grapes` / `vivino_region` / `vivino_style` / `vivino_alcohol` / `vivino_description` / `vivino_allergens` / `vivino_name` / `vivino_needs_review` / `vivino_reviewed_at` | **신규 `vivino_wines` 테이블로 이동** (이전 안은 `source_snapshot.vivino` jsonb였으나 별도 테이블로 변경) |
 | `gangnam_alcohol` | `source_snapshot.gangnam` jsonb |
 
-**유지**: `vivino_url`, `vivino_rating`, `vivino_reviews`, `vivino_needs_review`, `vivino_reviewed_at` — 검수 워크플로우와 유저 화면 별점 표시에 직접 쓰임
+**wines에서 유지되는 Vivino 흔적**: 없음. 모두 `vivino_wines` 테이블로 분리.
 
 ---
 
@@ -165,8 +219,41 @@ migration 파일로 남기되 한 달 유지 후 삭제. **이건 반드시 첫 
 - 백필 스크립트 (`scripts/backfill-source-snapshot.ts`): 기존 `vivino_*` / `gangnam_*` / `naver_*` 컬럼 → `source_snapshot` JSON 복사
 - 기존 컬럼은 그대로 유지 (읽기·쓰기 모두). 이 단계는 중단 없음.
 
-### Phase 2 — 개념별 정리 (7회 반복)
-순서: `alcohol` → `wine_style` → `description` → `wine_type` → `grape_varieties` → `region` → `producer` → `country`
+### Phase 2 — 개념별 정리 (8 사이클)
+순서: `alcohol` → `wine_style` → `description` → `wine_type` → `grape_varieties` → `region` → `producer` → `country` → **`vivino_*` (별도 테이블로 분리)**
+
+#### Phase 2.9 — Vivino 분리 (별도 테이블)
+
+다른 사이클과 성격 다름. 컬럼 통합이 아니라 **테이블 분리**.
+
+1. `vivino_wines` 테이블 생성 migration
+2. 백필 스크립트 `scripts/migrate-vivino-to-table.ts`:
+   ```
+   FOR each wine WHERE vivino_url IS NOT NULL:
+     INSERT INTO vivino_wines (wine_id, vivino_url, vivino_page_url, ...)
+     VALUES (wine.id, wine.vivino_url, wine.vivino_page_url, ...)
+   ```
+   - UNIQUE 제약으로 중복 자동 방어
+3. 어드민 UI 전면 수정 (vivino_wines 참조로 교체):
+   - `/admin/vivino-review` page.tsx / ReviewClient.tsx / actions.ts
+   - `replaceVivinoUrl`, `confirmVivinoMatch`, `unlinkVivinoMatch` → vivino_wines UPSERT/UPDATE/DELETE
+   - `updateWineVivino` (admin/wines/actions.ts) → vivino_wines 경로로 재라우트
+   - `clearWineVivino` 동일
+4. 유저 서빙 경로:
+   - `/wines/[id]/VivinoRating.tsx` 및 해당 페이지 조회 쿼리에 JOIN 추가
+   - 또는 서버 측에서 wines 읽은 후 별도로 vivino_wines 쿼리해 합치기
+   - wine-display.ts 수정 (vivino_* 입력을 vivino_wines에서 받도록)
+5. promote 경로:
+   - `scripts/promote-v2.ts`, `src/lib/promote-raw-wine.ts`의 `buildVivinoFields` / `buildVivinoFieldsDirect`가 **wines 대신 vivino_wines에 INSERT**
+   - `vivino_reviewed_at` 자동 로직 그대로 유지
+6. 검수 UI 2종 확인 (`vivino-review`, `dedupe-review`): 모든 vivino_* 참조 교체
+7. 배포 + ≥ 1주 관찰
+8. wines의 vivino_* 15개 컬럼 DROP migration
+
+**Vivino 분리 사이클 위험 요소:**
+- 가장 위험한 개념. wines의 15개 컬럼이 프론트·어드민 전반에서 참조됨
+- 사이클 분리 가능성: migration + 백필 + JOIN만 먼저 (wines 컬럼 유지 상태). 그 후 점진적으로 코드 교체 후 DROP.
+- 즉 Phase 2.9를 2단계로: **2.9a) 테이블 생성 + 백필 + 읽기 경로만 JOIN 전환**, **2.9b) 쓰기 경로 교체 + DROP**
 
 각 개념마다:
 1. 정규 컬럼 1개 결정 (이미 있으면 사용, 없으면 추가)
@@ -318,6 +405,7 @@ grep -rn "vivino_alcohol\|gangnam_alcohol\|final_alcohol" src/ scripts/
 - `brand` 컬럼 유지 여부 (LLM 추출값이라 신뢰도 점검 필요)
 - Phase 2 순서 조정 (alcohol 먼저 vs 가장 영향 큰 `grape_varieties` 먼저)
 - 백업 테이블 유지 기간 (1개월 vs 더 길게)
+- Phase 2.9 Vivino 분리 시 `vivino_wines.wine_id` FK 제약 둘지, 안 둘지 (현재 raw_wines 원칙처럼 FK 없음으로 제안. wines 삭제 시 orphan 용인)
 
 ### 질문할 사람: 기존 결정자
 - 2026-04-21 사고 관련 메모리 참조

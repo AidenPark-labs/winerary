@@ -297,31 +297,36 @@ migration 파일로 남기되 한 달 유지 후 삭제. **이건 반드시 첫 
 
 ## 6. 위험 관리
 
-### 6.1 코드 전수 스캔 필수
-각 Phase 2 사이클 시작 전에:
-```
-grep -rn "vivino_alcohol\|gangnam_alcohol\|final_alcohol" src/ scripts/
-```
-식으로 모든 참조 찾고 **한 번에** 수정. 일부만 수정하면 이중 상태 유발.
+> **맥락 (2026-04-24)**: 와이너리는 실 유저 2명뿐인 초기 프로젝트.
+> wine_records 62 / pending_wines 41 / 그 외 이벤트·찜·신고 소수.
+> 따라서 아래 "가드"는 큰 서비스 수준이 아니라 이 규모에 맞춰 적용.
 
-### 6.2 각 Phase = 독립 커밋/PR
-롤백 용이. 한 phase 실패해도 이전 phase는 유지.
+### 6.1 반드시 지킬 것 (non-negotiable)
+- `wine_records.wine_id` / `pending_wines.promoted_wine_id` FK 무결성 (유저 기록 보존)
+- merge/dedupe/삭제 시 유저 기록 재지정 누락 금지
+- `raw_wines` append-only (복구 소스)
+- 배포 전 타입체크 + 빌드 정상 확인
+- 각 사이클 완료 후 `grep` 전수 스캔으로 legacy 참조 남김 없음 확인
 
-### 6.3 DROP은 최후
-- Phase 2의 4단계(유저 측 코드 수정)가 끝나고 **배포 후 최소 1주 관찰**
-- 에러 로그 / 비어보이는 필드 / 유저 신고 체크
-- 그 후 DROP migration
+### 6.2 완화 가능한 관례
+실 유저 영향 미미하므로 다음은 **생략 가능**:
+- ~~"배포 후 최소 1주 관찰 후 DROP"~~ → 검증 끝나면 즉시 DROP 가능 (문제 생기면 수 시간 내 복구)
+- ~~"한 Phase = 한 세션"~~ → 한 세션에 여러 sub-phase 묶어도 됨
+- ~~백업 테이블 한 달 유지~~ → 수 일이면 충분
 
-### 6.4 백업 필수
-- Phase 0의 `wines_backup_pre_v5` 전체 복사본이 최후의 보루
-- 각 개념별 DROP 전에도 컬럼 단위 임시 백업 (예: `wines_producer_backup`)
+### 6.3 백업 권장
+- Phase 0의 `wines_backup_pre_v5` 전체 복사본 (수 일 유지)
+- 각 개념별 대량 UPDATE 전에는 해당 컬럼만 백업 테이블에 덤프
 
-### 6.5 frontend 영향 전수
-프로덕션에서 **와인 상세가 비어 보이는 현상**이 가장 흔한 regression. 각 phase 배포 후 5~10개 임의 와인 확인.
+### 6.4 롤백 전략
+- 각 sub-phase 독립 커밋으로 `git revert` 가능
+- DB 변경은 backup 테이블 + 역방향 migration
 
-### 6.6 search_tsv / search_jamo 재계산 누락
-- 컬럼 변경 시 트리거가 같이 업데이트되는지 확인
-- 안 되면 재계산 스크립트로 일괄 처리
+### 6.5 frontend 확인
+배포 후 5~10개 임의 와인의 상세 페이지 / 사전 / 검색 / 다이어리 빠르게 확인.
+
+### 6.6 search_tsv / search_jamo
+컬럼 변경 시 트리거 확인 + 필요하면 재계산 스크립트.
 
 ---
 

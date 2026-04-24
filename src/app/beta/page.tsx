@@ -89,20 +89,14 @@ export default function NotesHomePage() {
             <section key={section.key} className="mb-6">
               <h2 className="text-sm font-semibold text-[var(--text-muted)] mb-2 px-1">{section.label}</h2>
               <div className="flex flex-col gap-3">
-                {items.map((item) => {
-                  const isHero = item.id === firstRenderedId;
-                  const hideAuthor = item.diaryId === "d-me" && item.isMine;
-                  if (isHero) {
-                    return (
-                      <HeroWithGhostStack key={item.id}>
-                        <FeedCard item={item} variant="hero" hideAuthor={hideAuthor} />
-                      </HeroWithGhostStack>
-                    );
-                  }
-                  return (
-                    <FeedCard key={item.id} item={item} variant="compact" hideAuthor={hideAuthor} />
-                  );
-                })}
+                {items.map((item) => (
+                  <FeedCard
+                    key={item.id}
+                    item={item}
+                    variant={item.id === firstRenderedId ? "hero" : "compact"}
+                    hideAuthor={item.diaryId === "d-me" && item.isMine}
+                  />
+                ))}
               </div>
               {section.key === showHintAfterSection && filter === "all" ? <HintCard /> : null}
             </section>
@@ -158,48 +152,6 @@ function FilterChip({
       {icon}
       {children}
     </button>
-  );
-}
-
-function HeroWithGhostStack({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="relative pt-3 mt-1">
-      {/* ghost card 2 (farthest) */}
-      <div
-        aria-hidden
-        className="absolute rounded-[20px] pointer-events-none"
-        style={{
-          top: 0,
-          left: 14,
-          right: 14,
-          bottom: 12,
-          background: "rgba(255, 255, 255, 0.35)",
-          border: "1px solid rgba(255, 255, 255, 0.55)",
-          transform: "rotate(-1.8deg)",
-          transformOrigin: "bottom center",
-          zIndex: -2,
-          boxShadow: "0 6px 14px rgba(122, 27, 46, 0.08)",
-        }}
-      />
-      {/* ghost card 1 (nearer) */}
-      <div
-        aria-hidden
-        className="absolute rounded-[20px] pointer-events-none"
-        style={{
-          top: 6,
-          left: 6,
-          right: 6,
-          bottom: 6,
-          background: "rgba(255, 255, 255, 0.55)",
-          border: "1px solid rgba(255, 255, 255, 0.7)",
-          transform: "rotate(1.1deg)",
-          transformOrigin: "bottom center",
-          zIndex: -1,
-          boxShadow: "0 4px 12px rgba(122, 27, 46, 0.1)",
-        }}
-      />
-      <div className="relative z-0">{children}</div>
-    </div>
   );
 }
 

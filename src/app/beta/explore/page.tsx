@@ -40,16 +40,13 @@ export default function ExplorePage() {
           {todaysPicks.map((w) => (
             <article
               key={w.id}
-              className="shrink-0 w-[160px] rounded-[14px] overflow-hidden transition-transform"
+              className="shrink-0 w-[160px] rounded-[14px] overflow-hidden"
               style={{
                 background: "var(--gradient-card)",
                 backdropFilter: "blur(20px) saturate(1.3)",
                 WebkitBackdropFilter: "blur(20px) saturate(1.3)",
                 border: "1px solid var(--glass-border)",
-                boxShadow:
-                  "inset 0 1px 0 var(--glass-highlight), -4px 6px 0 rgba(122,27,46,0.06), -8px 12px 18px -6px rgba(122,27,46,0.18)",
-                transform: "perspective(1200px) rotateY(-7deg)",
-                transformOrigin: "right center",
+                boxShadow: "inset 0 1px 0 var(--glass-highlight)",
               }}
             >
               <div className="relative w-full aspect-[3/4] bg-[var(--surface-alt)]">
@@ -79,16 +76,13 @@ export default function ExplorePage() {
           {friendsFavorites.map((w) => (
             <article
               key={w.id}
-              className="shrink-0 w-[170px] rounded-[14px] overflow-hidden transition-transform"
+              className="shrink-0 w-[170px] rounded-[14px] overflow-hidden"
               style={{
                 background: "var(--gradient-card)",
                 backdropFilter: "blur(20px) saturate(1.3)",
                 WebkitBackdropFilter: "blur(20px) saturate(1.3)",
                 border: "1px solid var(--glass-border)",
-                boxShadow:
-                  "inset 0 1px 0 var(--glass-highlight), -4px 6px 0 rgba(122,27,46,0.06), -8px 12px 18px -6px rgba(122,27,46,0.18)",
-                transform: "perspective(1200px) rotateY(-7deg)",
-                transformOrigin: "right center",
+                boxShadow: "inset 0 1px 0 var(--glass-highlight)",
               }}
             >
               <div className="relative w-full aspect-[3/4] bg-[var(--surface-alt)]">
@@ -129,11 +123,7 @@ export default function ExplorePage() {
           {someday.map((w) => (
             <article
               key={w.id}
-              className="shrink-0 w-[140px] transition-transform"
-              style={{
-                transform: "perspective(1200px) rotateY(-7deg)",
-                transformOrigin: "right center",
-              }}
+              className="shrink-0 w-[140px]"
             >
               <div className="relative w-full aspect-[3/4] rounded-[12px] overflow-hidden bg-[var(--surface-alt)]">
                 <Image src={w.photo} alt={w.nameKo ?? w.name} fill className="object-cover" unoptimized />

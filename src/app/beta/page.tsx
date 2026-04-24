@@ -25,6 +25,15 @@ export default function NotesHomePage() {
     return myTimeline.filter((r) => r.diaryId === filter);
   }, [filter]);
 
+  // 섹션 순서대로 돌며 실제 렌더 첫 카드 id 계산 (hero 변형 대상)
+  const firstRenderedId = useMemo(() => {
+    for (const s of sections) {
+      const first = filtered.find((r) => r.section === s.key);
+      if (first) return first.id;
+    }
+    return null;
+  }, [filtered]);
+
   const sharedDiaries = diaries.filter((d) => !d.isPersonal);
 
   const showHintAfterSection = "thisWeek"; // 힌트 카드는 이번 주 끝에 간헐적으로
@@ -84,6 +93,7 @@ export default function NotesHomePage() {
                   <FeedCard
                     key={item.id}
                     item={item}
+                    variant={item.id === firstRenderedId ? "hero" : "compact"}
                     hideAuthor={item.diaryId === "d-me" && item.isMine}
                   />
                 ))}

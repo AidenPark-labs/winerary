@@ -9,53 +9,26 @@ export const metadata: Metadata = {
 export default function BetaLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      {/* Pretendard Variable via CDN (prototype only; migrate to next/font/local before launch) */}
+      {/* Pretendard Variable + Noto Serif KR (prototype CDN) */}
       <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
       />
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&display=swap"
+      />
       <div
         data-theme="beta"
-        className="relative min-h-dvh flex flex-col text-foreground"
-        style={{ fontFamily: "'Pretendard Variable', Pretendard, sans-serif" }}
+        className="min-h-dvh flex flex-col text-foreground"
+        style={{
+          background: "#FDFBF6",
+          fontFamily: "'Pretendard Variable', Pretendard, sans-serif",
+        }}
       >
-        {/* Atmospheric defocused blobs — fixed to viewport */}
-        <div aria-hidden className="fixed inset-0 -z-0 overflow-hidden pointer-events-none">
-          <div
-            className="absolute -top-24 -right-20 w-[360px] h-[360px] rounded-full"
-            style={{
-              background: "radial-gradient(circle, #FAD4C0 0%, transparent 70%)",
-              filter: "blur(60px)",
-              opacity: 0.75,
-            }}
-          />
-          <div
-            className="absolute top-[35%] -left-24 w-[320px] h-[320px] rounded-full"
-            style={{
-              background: "radial-gradient(circle, #E8A98A 0%, transparent 70%)",
-              filter: "blur(70px)",
-              opacity: 0.55,
-            }}
-          />
-          <div
-            className="absolute bottom-[18%] right-[-60px] w-[300px] h-[300px] rounded-full"
-            style={{
-              background: "radial-gradient(circle, #7A1B2E 0%, transparent 70%)",
-              filter: "blur(80px)",
-              opacity: 0.28,
-            }}
-          />
-          <div
-            className="absolute top-[12%] left-[30%] w-[260px] h-[260px] rounded-full"
-            style={{
-              background: "radial-gradient(circle, #FFD8B8 0%, transparent 70%)",
-              filter: "blur(70px)",
-              opacity: 0.5,
-            }}
-          />
-        </div>
-
-        <main className="flex-1 pb-24 relative z-[1]">{children}</main>
+        <main className="flex-1 pb-24">{children}</main>
         <BottomNav />
       </div>
     </>

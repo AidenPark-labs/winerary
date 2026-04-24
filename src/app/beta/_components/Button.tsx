@@ -11,13 +11,13 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variantClass: Record<Variant, string> = {
   primary:
-    "bg-[image:var(--gradient-primary)] text-[var(--primary-on)] hover:brightness-110 active:brightness-95 disabled:opacity-40 shadow-[0_4px_14px_rgba(122,27,46,0.25)]",
+    "bg-[var(--accent)] text-[var(--primary-on)] hover:bg-[var(--primary-hover)] active:bg-[var(--primary-pressed)] disabled:opacity-40",
   secondary:
-    "bg-white/70 backdrop-blur text-[var(--foreground)] border border-[var(--border-strong)] hover:bg-white disabled:opacity-40",
+    "bg-[var(--surface-raised)] text-[var(--foreground)] border border-[var(--border-strong)] hover:bg-[var(--surface-alt)] disabled:opacity-40",
   ghost:
     "bg-transparent text-[var(--foreground)] hover:bg-[var(--surface-alt)] disabled:opacity-40",
   "accent-soft":
-    "bg-[image:var(--gradient-accent-soft)] text-[var(--accent)] hover:brightness-95 disabled:opacity-40",
+    "bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--border)] hover:bg-[var(--surface-alt)] disabled:opacity-40",
   danger:
     "bg-[var(--danger)] text-white hover:brightness-95 disabled:opacity-40",
 };

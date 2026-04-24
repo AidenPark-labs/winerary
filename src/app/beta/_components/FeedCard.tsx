@@ -22,17 +22,7 @@ export default function FeedCard({
 
 function HeroCard({ item, hideAuthor }: { item: MockFeedItem; hideAuthor: boolean }) {
   return (
-    <article
-      className="rounded-[20px] overflow-hidden"
-      style={{
-        background: "var(--gradient-card)",
-        backdropFilter: "blur(24px) saturate(1.4)",
-        WebkitBackdropFilter: "blur(24px) saturate(1.4)",
-        border: "1px solid var(--glass-border)",
-        boxShadow:
-          "0 12px 32px -12px rgba(122, 27, 46, 0.18), inset 0 1px 0 var(--glass-highlight)",
-      }}
-    >
+    <article className="rounded-[16px] overflow-hidden bg-[var(--surface-raised)] border border-[var(--border)]">
       {/* photo area — 4:3 */}
       <div className="relative aspect-[4/3] bg-[var(--surface-alt)] overflow-hidden">
         <Image
@@ -43,79 +33,61 @@ function HeroCard({ item, hideAuthor }: { item: MockFeedItem; hideAuthor: boolea
           unoptimized
           priority
         />
-
-        {/* floating rating badge — light glass */}
-        <div
-          className="absolute top-3 right-3 inline-flex items-center gap-1 px-3 py-1.5 rounded-full"
-          style={{
-            background: "rgba(255, 255, 255, 0.82)",
-            backdropFilter: "blur(14px)",
-            WebkitBackdropFilter: "blur(14px)",
-            border: "1px solid rgba(255, 255, 255, 0.7)",
-            boxShadow: "0 2px 10px rgba(17, 24, 39, 0.12)",
-          }}
-        >
-          <span className="text-[var(--accent)] text-[11px]">★</span>
-          <span className="text-xs font-bold text-[var(--foreground)]">{item.rating.toFixed(1)}</span>
-        </div>
-
-        {/* diary badge top-left (if shared) */}
-        {item.diaryName ? (
-          <div
-            className="absolute top-3 left-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full"
-            style={{
-              background: "rgba(255, 255, 255, 0.82)",
-              backdropFilter: "blur(14px)",
-              WebkitBackdropFilter: "blur(14px)",
-              border: "1px solid rgba(255, 255, 255, 0.7)",
-              boxShadow: "0 2px 10px rgba(17, 24, 39, 0.12)",
-            }}
-          >
-            <BookOpen size={11} strokeWidth={2.2} className="text-[var(--accent)]" />
-            <span className="text-[11px] font-semibold text-[var(--accent)]">{item.diaryName}</span>
-          </div>
-        ) : null}
       </div>
 
-      {/* text panel — cream glass */}
-      <div className="px-4 pt-3 pb-4">
-        {hideAuthor ? (
-          <div className="text-xs text-[var(--text-muted)] mb-1.5">{item.timeLabel}</div>
-        ) : (
-          <div className="flex items-center gap-2 mb-2">
-            <Image
-              src={item.author.avatar}
-              alt=""
-              width={24}
-              height={24}
-              className="rounded-full object-cover"
-              unoptimized
-            />
-            <span className="text-sm font-semibold text-[var(--foreground)]">{item.author.nickname}</span>
-            <span className="text-xs text-[var(--text-muted)]">· {item.timeLabel}</span>
-          </div>
-        )}
+      {/* text panel */}
+      <div className="px-5 pt-4 pb-5">
+        <div className="flex items-center justify-between mb-3">
+          {hideAuthor ? (
+            <span className="text-xs text-[var(--text-muted)]">{item.timeLabel}</span>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Image
+                src={item.author.avatar}
+                alt=""
+                width={22}
+                height={22}
+                className="rounded-full object-cover"
+                unoptimized
+              />
+              <span className="text-xs font-semibold text-[var(--foreground)]">
+                {item.author.nickname}
+              </span>
+              <span className="text-xs text-[var(--text-muted)]">· {item.timeLabel}</span>
+            </div>
+          )}
+          <span className="text-xs font-semibold text-[var(--accent)]">⭐ {item.rating.toFixed(1)}</span>
+        </div>
 
         <h2
-          className="text-[19px] tracking-wide leading-snug text-[var(--foreground)] font-medium"
-          style={{ fontFamily: "var(--font-serif), 'Pretendard Variable', serif" }}
+          className="text-[20px] leading-snug text-[var(--foreground)]"
+          style={{
+            fontFamily: "var(--font-serif-ko)",
+            fontWeight: 600,
+            letterSpacing: "-0.01em",
+          }}
         >
           {item.wine.nameKo ?? item.wine.name}
           <span className="text-[var(--text-muted)] font-normal"> {item.wine.vintage}</span>
         </h2>
 
         {item.wine.nameKo ? (
-          <p className="text-[11px] text-[var(--text-muted)] italic mt-0.5 truncate">
+          <p className="text-[11px] text-[var(--text-muted)] mt-1 truncate tracking-wide">
             {item.wine.name}
           </p>
         ) : null}
 
-        <p className="text-xs text-[var(--text-muted)] mt-1">{item.wine.country}</p>
+        <p className="text-xs text-[var(--text-muted)] mt-1.5">{item.wine.country}</p>
 
         {item.memo ? (
-          <p className="mt-2.5 text-[14px] leading-relaxed text-[var(--foreground)] italic">
-            &ldquo;{item.memo}&rdquo;
-          </p>
+          <p className="mt-3 text-[14px] leading-relaxed text-[var(--foreground)]">{item.memo}</p>
+        ) : null}
+
+        {item.diaryName ? (
+          <div className="mt-3 inline-flex items-center gap-1 text-[11px] text-[var(--accent)] font-medium">
+            <BookOpen size={12} strokeWidth={2} />
+            <span>{item.diaryName}</span>
+          </div>
         ) : null}
       </div>
     </article>
@@ -124,18 +96,8 @@ function HeroCard({ item, hideAuthor }: { item: MockFeedItem; hideAuthor: boolea
 
 function CompactCard({ item, hideAuthor }: { item: MockFeedItem; hideAuthor: boolean }) {
   return (
-    <article
-      className="rounded-[16px] p-3 flex gap-3"
-      style={{
-        background: "var(--gradient-card)",
-        backdropFilter: "blur(24px) saturate(1.4)",
-        WebkitBackdropFilter: "blur(24px) saturate(1.4)",
-        border: "1px solid var(--glass-border)",
-        boxShadow:
-          "0 4px 24px -8px rgba(122, 27, 46, 0.12), inset 0 1px 0 var(--glass-highlight)",
-      }}
-    >
-      <div className="shrink-0 w-[104px] aspect-[4/5] rounded-[10px] overflow-hidden bg-[var(--surface-alt)] relative">
+    <article className="rounded-[12px] p-3 flex gap-3 bg-[var(--surface-raised)] border border-[var(--border)]">
+      <div className="shrink-0 w-[92px] aspect-[4/5] rounded-[8px] overflow-hidden bg-[var(--surface-alt)] relative">
         <Image
           src={item.wine.photo}
           alt={item.wine.nameKo ?? item.wine.name}
@@ -163,7 +125,10 @@ function CompactCard({ item, hideAuthor }: { item: MockFeedItem; hideAuthor: boo
           </div>
         )}
 
-        <h3 className="text-[15px] font-semibold leading-snug text-[var(--foreground)] line-clamp-2">
+        <h3
+          className="text-[15px] leading-snug text-[var(--foreground)] line-clamp-2"
+          style={{ fontFamily: "var(--font-serif-ko)", fontWeight: 500, letterSpacing: "-0.01em" }}
+        >
           {item.wine.nameKo ?? item.wine.name}{" "}
           <span className="text-[var(--text-muted)] font-normal">{item.wine.vintage}</span>
         </h3>
@@ -176,8 +141,8 @@ function CompactCard({ item, hideAuthor }: { item: MockFeedItem; hideAuthor: boo
         <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--foreground)] line-clamp-2">{item.memo}</p>
 
         {item.diaryName ? (
-          <div className="mt-auto pt-1.5 inline-flex items-center gap-1 text-xs text-[var(--accent)]">
-            <BookOpen size={12} strokeWidth={2} />
+          <div className="mt-auto pt-1.5 inline-flex items-center gap-1 text-[11px] text-[var(--accent)]">
+            <BookOpen size={11} strokeWidth={2} />
             <span className="truncate">{item.diaryName}</span>
           </div>
         ) : null}

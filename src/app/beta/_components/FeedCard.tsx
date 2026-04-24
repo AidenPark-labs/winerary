@@ -12,11 +12,14 @@ export default function FeedCard({
 }) {
   return (
     <article
-      className="rounded-[14px] border border-[var(--border)] p-3 flex gap-3"
+      className="rounded-[16px] p-3 flex gap-3"
       style={{
         background: "var(--gradient-card)",
+        backdropFilter: "blur(24px) saturate(1.4)",
+        WebkitBackdropFilter: "blur(24px) saturate(1.4)",
+        border: "1px solid var(--glass-border)",
         boxShadow:
-          "0 1px 2px rgba(17,24,39,0.04), 0 8px 24px -16px rgba(122, 27, 46, 0.08)",
+          "0 4px 24px -8px rgba(122, 27, 46, 0.12), inset 0 1px 0 var(--glass-highlight)",
       }}
     >
       {/* photo — left thumbnail */}

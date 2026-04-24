@@ -116,7 +116,16 @@ export default function MePage() {
 
       {/* settings */}
       <section className="mb-8">
-        <div className="rounded-[12px] bg-[var(--surface-raised)] border border-[var(--border)] overflow-hidden">
+        <div
+          className="rounded-[14px] overflow-hidden"
+          style={{
+            background: "var(--gradient-card)",
+            backdropFilter: "blur(20px) saturate(1.3)",
+            WebkitBackdropFilter: "blur(20px) saturate(1.3)",
+            border: "1px solid var(--glass-border)",
+            boxShadow: "inset 0 1px 0 var(--glass-highlight)",
+          }}
+        >
           <SettingRow icon={<Settings size={18} />} label="설정" />
           <div className="border-t border-[var(--border)]" />
           <Link
@@ -156,7 +165,16 @@ function StatTile({ label, value, emphasis }: { label: string; value: string; em
 
 function NavTile({ icon, label, hint }: { icon: React.ReactNode; label: string; hint?: string }) {
   return (
-    <button className="flex flex-col items-start gap-2 p-3 bg-[var(--surface-raised)] border border-[var(--border)] rounded-[12px] text-left hover:bg-[var(--surface-alt)]">
+    <button
+      className="flex flex-col items-start gap-2 p-3 rounded-[14px] text-left transition-all hover:brightness-105"
+      style={{
+        background: "var(--gradient-card)",
+        backdropFilter: "blur(20px) saturate(1.3)",
+        WebkitBackdropFilter: "blur(20px) saturate(1.3)",
+        border: "1px solid var(--glass-border)",
+        boxShadow: "inset 0 1px 0 var(--glass-highlight)",
+      }}
+    >
       <span className="text-[var(--accent)]">{icon}</span>
       <div>
         <div className="text-[15px] font-semibold">{label}</div>

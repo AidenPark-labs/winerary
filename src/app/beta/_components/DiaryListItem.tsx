@@ -6,7 +6,14 @@ export default function DiaryListItem({ diary }: { diary: MockDiary }) {
   return (
     <button
       type="button"
-      className="w-full flex items-center gap-3 p-3 bg-[var(--surface-raised)] border border-[var(--border)] rounded-[12px] hover:bg-[var(--surface-alt)] transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+      className="w-full flex items-center gap-3 p-3 rounded-[14px] text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] hover:brightness-105"
+      style={{
+        background: "var(--gradient-card)",
+        backdropFilter: "blur(20px) saturate(1.3)",
+        WebkitBackdropFilter: "blur(20px) saturate(1.3)",
+        border: "1px solid var(--glass-border)",
+        boxShadow: "inset 0 1px 0 var(--glass-highlight)",
+      }}
     >
       <div className="relative w-14 h-14 rounded-[10px] overflow-hidden bg-[var(--surface-alt)] shrink-0">
         <Image src={diary.cover} alt="" fill className="object-cover" unoptimized />

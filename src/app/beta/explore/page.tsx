@@ -9,8 +9,17 @@ export default function ExplorePage() {
         <h1 className="text-2xl font-bold tracking-tight">둘러보기</h1>
       </header>
 
-      {/* search bar */}
-      <div className="flex items-center gap-2 h-12 px-3 bg-[var(--surface-raised)] border border-[var(--border)] rounded-[12px] mb-6">
+      {/* search bar — glass */}
+      <div
+        className="flex items-center gap-2 h-12 px-3 rounded-[14px] mb-6"
+        style={{
+          background: "var(--glass-bg-strong)",
+          backdropFilter: "blur(20px) saturate(1.3)",
+          WebkitBackdropFilter: "blur(20px) saturate(1.3)",
+          border: "1px solid var(--glass-border)",
+          boxShadow: "inset 0 1px 0 var(--glass-highlight)",
+        }}
+      >
         <Search size={18} className="text-[var(--text-muted)]" />
         <input
           placeholder="이 와인, 찾고 있어요?"
@@ -31,7 +40,14 @@ export default function ExplorePage() {
           {todaysPicks.map((w) => (
             <article
               key={w.id}
-              className="shrink-0 w-[160px] bg-[var(--surface-raised)] rounded-[12px] border border-[var(--border)] overflow-hidden"
+              className="shrink-0 w-[160px] rounded-[14px] overflow-hidden"
+              style={{
+                background: "var(--gradient-card)",
+                backdropFilter: "blur(20px) saturate(1.3)",
+                WebkitBackdropFilter: "blur(20px) saturate(1.3)",
+                border: "1px solid var(--glass-border)",
+                boxShadow: "inset 0 1px 0 var(--glass-highlight)",
+              }}
             >
               <div className="relative w-full aspect-[3/4] bg-[var(--surface-alt)]">
                 <Image src={w.photo} alt={w.nameKo ?? w.name} fill className="object-cover" unoptimized />
@@ -60,7 +76,14 @@ export default function ExplorePage() {
           {friendsFavorites.map((w) => (
             <article
               key={w.id}
-              className="shrink-0 w-[170px] bg-[var(--surface-raised)] rounded-[12px] border border-[var(--border)] overflow-hidden"
+              className="shrink-0 w-[170px] rounded-[14px] overflow-hidden"
+              style={{
+                background: "var(--gradient-card)",
+                backdropFilter: "blur(20px) saturate(1.3)",
+                WebkitBackdropFilter: "blur(20px) saturate(1.3)",
+                border: "1px solid var(--glass-border)",
+                boxShadow: "inset 0 1px 0 var(--glass-highlight)",
+              }}
             >
               <div className="relative w-full aspect-[3/4] bg-[var(--surface-alt)]">
                 <Image src={w.photo} alt={w.nameKo ?? w.name} fill className="object-cover" unoptimized />
@@ -121,7 +144,14 @@ export default function ExplorePage() {
           {dictionaryTopics.map((t) => (
             <button
               key={t.id}
-              className="w-full flex items-center justify-between p-3 bg-[var(--surface-raised)] border border-[var(--border)] rounded-[12px] text-left hover:bg-[var(--surface-alt)]"
+              className="w-full flex items-center justify-between p-3 rounded-[14px] text-left transition-all hover:brightness-105"
+              style={{
+                background: "var(--gradient-card)",
+                backdropFilter: "blur(20px) saturate(1.3)",
+                WebkitBackdropFilter: "blur(20px) saturate(1.3)",
+                border: "1px solid var(--glass-border)",
+                boxShadow: "inset 0 1px 0 var(--glass-highlight)",
+              }}
             >
               <div>
                 <div className="text-[15px] font-semibold">{t.label}</div>

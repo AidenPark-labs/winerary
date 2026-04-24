@@ -54,18 +54,25 @@
   --danger: #DC2626;
 
   /* glass & gradient */
-  --glass-bg: rgba(255, 255, 255, 0.72);
-  --glass-bg-strong: rgba(255, 255, 255, 0.88);
-  --glass-border: rgba(255, 255, 255, 0.55);
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-bg-strong: rgba(255, 255, 255, 0.72);
+  --glass-bg-card: rgba(255, 255, 255, 0.64);
+  --glass-border: rgba(255, 255, 255, 0.7);
+  --glass-highlight: rgba(255, 255, 255, 0.85);
   --gradient-primary: linear-gradient(135deg, #8B2338 0%, #5A1422 100%);
   --gradient-accent-soft: linear-gradient(135deg, #FFE6D4 0%, #FAD4C0 55%, #F3BFA6 100%);
-  --gradient-card: linear-gradient(150deg, #FFFFFF 0%, #FFFBF5 100%);
-  --gradient-page: linear-gradient(180deg, #FFFBF5 0%, #FFF6E8 100%);
-  --gradient-hint: linear-gradient(135deg, rgba(250, 212, 192, 0.35) 0%, rgba(255, 255, 255, 0.6) 100%);
+  --gradient-card: linear-gradient(150deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 251, 245, 0.55) 100%);
+  --gradient-hint: linear-gradient(135deg, rgba(250, 212, 192, 0.5) 0%, rgba(255, 255, 255, 0.4) 100%);
 }
 
+/* Atmospheric page background — warm blobs on a soft base */
 [data-theme="beta"] {
-  background: var(--gradient-page) fixed;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255, 208, 172, 0.55) 0%, transparent 45%),
+    radial-gradient(circle at 92% 22%, rgba(250, 212, 192, 0.5) 0%, transparent 55%),
+    radial-gradient(circle at 22% 92%, rgba(232, 169, 138, 0.45) 0%, transparent 55%),
+    radial-gradient(circle at 85% 78%, rgba(122, 27, 46, 0.15) 0%, transparent 60%),
+    linear-gradient(180deg, #FFFCF7 0%, #FFF3DE 100%) fixed;
 }
 
 [data-theme="beta"] body,

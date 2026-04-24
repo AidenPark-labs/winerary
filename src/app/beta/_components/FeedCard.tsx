@@ -11,47 +11,58 @@ export default function FeedCard({
   hideAuthor?: boolean;
 }) {
   return (
-    <article className="bg-[var(--surface-raised)] rounded-[12px] shadow-[0_1px_2px_rgba(17,24,39,0.04)] border border-[var(--border)] overflow-hidden">
-      {hideAuthor ? (
-        <header className="px-3 pt-3 text-xs text-[var(--text-muted)]">{item.timeLabel}</header>
-      ) : (
-        <header className="flex items-center gap-3 px-3 pt-3">
-          <Image
-            src={item.author.avatar}
-            alt={item.author.nickname}
-            width={36}
-            height={36}
-            className="rounded-full object-cover"
-            unoptimized
-          />
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold text-[var(--foreground)]">{item.author.nickname}</div>
-            <div className="text-xs text-[var(--text-muted)]">{item.timeLabel}</div>
-          </div>
-        </header>
-      )}
-
-      <div className={`${hideAuthor ? "mt-2" : "mt-3"} relative aspect-[4/5] bg-[var(--surface-alt)]`}>
-        <Image src={item.wine.photo} alt={item.wine.nameKo ?? item.wine.name} fill className="object-cover" unoptimized />
+    <article className="bg-[var(--surface-raised)] rounded-[12px] border border-[var(--border)] shadow-[0_1px_2px_rgba(17,24,39,0.03)] p-3 flex gap-3">
+      {/* photo — left thumbnail */}
+      <div className="shrink-0 w-[104px] aspect-[4/5] rounded-[10px] overflow-hidden bg-[var(--surface-alt)] relative">
+        <Image
+          src={item.wine.photo}
+          alt={item.wine.nameKo ?? item.wine.name}
+          fill
+          className="object-cover"
+          unoptimized
+        />
       </div>
 
-      <div className="px-3 pt-3 pb-4">
-        <h3 className="text-[17px] font-semibold leading-snug text-[var(--foreground)]">
-          {item.wine.nameKo ?? item.wine.name} <span className="text-[var(--text-muted)] font-normal">{item.wine.vintage}</span>
-        </h3>
-        <p className="mt-0.5 text-xs text-[var(--text-muted)]">{item.wine.country}</p>
+      {/* text — right */}
+      <div className="flex-1 min-w-0 flex flex-col">
+        {/* meta row */}
+        {hideAuthor ? (
+          <div className="text-xs text-[var(--text-muted)] mb-1">{item.timeLabel}</div>
+        ) : (
+          <div className="flex items-center gap-1.5 mb-1">
+            <Image
+              src={item.author.avatar}
+              alt=""
+              width={18}
+              height={18}
+              className="rounded-full object-cover"
+              unoptimized
+            />
+            <span className="text-xs font-semibold text-[var(--foreground)]">{item.author.nickname}</span>
+            <span className="text-xs text-[var(--text-muted)]">· {item.timeLabel}</span>
+          </div>
+        )}
 
-        <div className="mt-3 flex items-center gap-2">
-          <StarRating value={item.rating} readOnly size={18} />
-          <span className="text-sm font-semibold text-[var(--foreground)]">{item.rating.toFixed(1)}</span>
+        {/* wine name */}
+        <h3 className="text-[15px] font-semibold leading-snug text-[var(--foreground)] line-clamp-2">
+          {item.wine.nameKo ?? item.wine.name}{" "}
+          <span className="text-[var(--text-muted)] font-normal">{item.wine.vintage}</span>
+        </h3>
+
+        {/* country + rating row */}
+        <div className="mt-1 flex items-center gap-2">
+          <span className="text-xs text-[var(--text-muted)] truncate">{item.wine.country}</span>
+          <span className="text-xs text-[var(--accent)] font-semibold shrink-0">⭐ {item.rating.toFixed(1)}</span>
         </div>
 
-        <p className="mt-2 text-[15px] leading-relaxed text-[var(--foreground)]">{item.memo}</p>
+        {/* memo */}
+        <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--foreground)] line-clamp-2">{item.memo}</p>
 
+        {/* diary badge */}
         {item.diaryName ? (
-          <div className="mt-3 inline-flex items-center gap-1.5 text-xs text-[var(--accent)]">
-            <BookOpen size={14} strokeWidth={2} />
-            <span>{item.diaryName}</span>
+          <div className="mt-auto pt-1.5 inline-flex items-center gap-1 text-xs text-[var(--accent)]">
+            <BookOpen size={12} strokeWidth={2} />
+            <span className="truncate">{item.diaryName}</span>
           </div>
         ) : null}
       </div>

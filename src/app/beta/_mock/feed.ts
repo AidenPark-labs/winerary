@@ -37,6 +37,21 @@ export const friends: MockFriend[] = [
     nickname: "현우",
     avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop",
   },
+  {
+    id: "u-sy",
+    nickname: "소연",
+    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&h=120&fit=crop",
+  },
+  {
+    id: "u-hr",
+    nickname: "혜리",
+    avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&h=120&fit=crop",
+  },
+  {
+    id: "u-jh",
+    nickname: "지혜",
+    avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&h=120&fit=crop",
+  },
 ];
 
 const me: MockFriend = {

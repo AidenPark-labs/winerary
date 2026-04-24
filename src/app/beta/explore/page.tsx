@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Search, Camera, ChevronRight } from "lucide-react";
-import { todaysPicks, someday, dictionaryTopics, friendsFavorites } from "../_mock/explore";
+import { todaysPicks, someday, dictionaryTopics } from "../_mock/explore";
 
 export default function ExplorePage() {
   return (
@@ -43,45 +43,6 @@ export default function ExplorePage() {
             >
               <div className="relative w-full aspect-[3/4] bg-[var(--surface-alt)]">
                 <Image src={w.photo} alt={w.nameKo ?? w.name} fill className="object-cover" unoptimized />
-              </div>
-              <div className="p-2.5">
-                <div
-                  className="text-[13px] text-[var(--foreground)] line-clamp-2 leading-tight"
-                  style={{ fontFamily: "var(--font-serif-ko)", fontWeight: 500 }}
-                >
-                  {w.nameKo ?? w.name}
-                </div>
-                <div className="mt-1 text-xs text-[var(--text-muted)]">{w.country}</div>
-                {w.rating ? (
-                  <div className="mt-1.5 text-xs text-[var(--accent)] font-semibold">⭐ {w.rating}</div>
-                ) : null}
-              </div>
-            </article>
-          ))}
-        </div>
-      </Section>
-
-      {/* friends' favorites */}
-      <Section title="친구가 좋아한 한 잔" right={<span className="text-sm text-[var(--text-muted)]">최근</span>}>
-        <div className="flex gap-3 overflow-x-auto -mx-3 px-3 pb-1">
-          {friendsFavorites.map((w) => (
-            <article
-              key={w.id}
-              className="shrink-0 w-[168px] rounded-[12px] overflow-hidden bg-[var(--surface-raised)] border border-[var(--border)]"
-            >
-              <div className="relative w-full aspect-[3/4] bg-[var(--surface-alt)]">
-                <Image src={w.photo} alt={w.nameKo ?? w.name} fill className="object-cover" unoptimized />
-                <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-white/92 rounded-full pl-0.5 pr-2 py-0.5 border border-[var(--border)]">
-                  <Image
-                    src={w.friendAvatar}
-                    alt={w.friendName}
-                    width={18}
-                    height={18}
-                    className="rounded-full object-cover"
-                    unoptimized
-                  />
-                  <span className="text-[11px] font-semibold text-[var(--accent)]">{w.friendName}</span>
-                </div>
               </div>
               <div className="p-2.5">
                 <div

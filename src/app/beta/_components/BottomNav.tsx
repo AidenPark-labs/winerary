@@ -8,7 +8,7 @@ import QuickRecordSheet from "./QuickRecordSheet";
 
 const tabs = [
   { href: "/beta", label: "노트", Icon: BookOpen, match: (p: string) => p === "/beta" || p.startsWith("/beta/notes") },
-  { href: "/beta/together", label: "함께", Icon: Users, match: (p: string) => p.startsWith("/beta/together") },
+  { href: "/beta/together", label: "모임", Icon: Users, match: (p: string) => p.startsWith("/beta/together") },
   { href: "/beta/explore", label: "둘러보기", Icon: Compass, match: (p: string) => p.startsWith("/beta/explore") },
   { href: "/beta/me", label: "나", Icon: User, match: (p: string) => p.startsWith("/beta/me") },
 ];

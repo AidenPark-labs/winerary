@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Bell, BookOpen, Sparkles } from "lucide-react";
+import { Plus, BookOpen, Sparkles } from "lucide-react";
 import FeedCard from "./_components/FeedCard";
 import Button from "./_components/Button";
 import { diaries } from "./_mock/diaries";
 import { myTimeline } from "./_mock/timeline";
-import { pendingFriendRequests, hintCard } from "./_mock/feed";
+import { hintCard } from "./_mock/feed";
 
 type FilterValue = "all" | "mine" | string;
 
@@ -40,19 +40,8 @@ export default function NotesHomePage() {
 
   return (
     <div className="max-w-[640px] mx-auto px-3">
-      <header className="flex items-center justify-between pt-5 pb-3">
+      <header className="flex items-center pt-5 pb-3">
         <h1 className="text-2xl font-bold tracking-tight">노트</h1>
-        <button
-          aria-label="알림"
-          className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--surface-alt)]"
-        >
-          <Bell size={20} strokeWidth={1.8} />
-          {pendingFriendRequests > 0 ? (
-            <span className="absolute top-1.5 right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-[var(--accent)] text-[10px] text-[var(--primary-on)] font-bold flex items-center justify-center">
-              {pendingFriendRequests}
-            </span>
-          ) : null}
-        </button>
       </header>
 
       {/* filter chips */}

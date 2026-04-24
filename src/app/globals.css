@@ -9,6 +9,20 @@
   --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-playfair);
+
+  /* beta-only extended tokens (unused by legacy) */
+  --color-surface-alt: var(--surface-alt);
+  --color-surface-raised: var(--surface-raised);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-strong: var(--accent-strong);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-pressed: var(--primary-pressed);
+  --color-primary-on: var(--primary-on);
+  --color-border-strong: var(--border-strong);
+  --color-text-muted: var(--text-muted);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
 }
 
 :root {
@@ -17,6 +31,49 @@
   --surface: #12070a; /* Slightly elevated background */
   --border: #2e161c; /* Soft burgundy border */
   --accent: #d32f4c; /* Vibrant ruby red accent */
+}
+
+/* Beta design system (docs/design-system.md) — cream surface + burgundy accent. Scoped via data-theme="beta". */
+[data-theme="beta"] {
+  --background: #FFF5E6;
+  --foreground: #111827;
+  --surface: #FFFFFF;
+  --surface-raised: #FFFFFF;
+  --surface-alt: #FBEAD4;
+  --border: #E5DCCB;
+  --border-strong: #C8B8A0;
+  --accent: #7A1B2E;
+  --accent-soft: #FAD4C0;
+  --accent-strong: #E8A98A;
+  --primary-hover: #6B1828;
+  --primary-pressed: #5A1422;
+  --primary-on: #FFF5E6;
+  --text-muted: #6B7280;
+  --success: #16A34A;
+  --warning: #D97706;
+  --danger: #DC2626;
+}
+
+[data-theme="beta"] body,
+[data-theme="beta"] {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Pretendard Variable', Pretendard, var(--font-inter), 'Apple SD Gothic Neo', sans-serif;
+}
+
+@keyframes betaSheetUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes betaFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.beta-sheet-enter { animation: betaSheetUp 240ms cubic-bezier(0.2, 0, 0, 1); }
+.beta-scrim-enter { animation: betaFadeIn 240ms ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .beta-sheet-enter, .beta-scrim-enter { animation: none; }
 }
 
 body {

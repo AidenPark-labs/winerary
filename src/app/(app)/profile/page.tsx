@@ -473,6 +473,20 @@ export default async function MyWinePage() {
           </>
         )}
 
+        <Link
+          href="/beta"
+          className="group mt-6 block rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/10 to-transparent p-4 hover:border-accent/60 transition-colors"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs uppercase tracking-widest text-accent/70 mb-1">Beta</div>
+              <div className="text-sm font-medium text-white">베타 버전 체험하기</div>
+              <div className="text-xs text-zinc-500 mt-0.5">새로운 UX를 먼저 만나보세요</div>
+            </div>
+            <span className="text-accent group-hover:translate-x-0.5 transition-transform">→</span>
+          </div>
+        </Link>
+
         <BusinessInfo />
       </div>
     </div>

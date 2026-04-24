@@ -24,7 +24,8 @@
 - 멤버 초대로 참여
 - 다이어리 내 기록은 공동 소유 — 멤버 누구나 생성/수정 가능
 - 기록의 평가(평점, 메모 등)는 각 멤버가 독립적으로 남김
-- 개인 기록을 공유 다이어리로 복사 가능 (원본 유지, 이동은 불가)
+- 개인 기록 → 공유 다이어리: **이동** 허용 (원본은 공유 다이어리로 옮겨짐). 추후 필요하면 "복사 후 유지" 옵션 추가 가능.
+- 공유 다이어리 기록 → 개인: **복사** 우선 방향 (원본은 공유 다이어리에 남음). 최종 확정 보류.
 
 ## 데이터 모델
 
@@ -257,7 +258,6 @@ CREATE POLICY "record_participants write" ON record_participants
 
 | 기능 | 관련 테이블/코드 | 대체 |
 |------|-----------------|------|
-| 멘션 공유 (@userCode) | `record_mentions` | 공유 다이어리 멤버십 |
 | 경험 연결 | `shared_experiences`, `shared_experience_records` | 같은 다이어리에 기록 |
 | 평가 초대 | `wine_records.invite_code`, `record_evaluations` | 다이어리 초대 + `record_participants` |
 | 연결하기 UI | `/diary/[id]/link`, `/diary/[id]/link-mine` | 삭제 |
@@ -270,12 +270,13 @@ CREATE POLICY "record_participants write" ON record_participants
 | 공유 링크 (ShareButton) | 외부 SNS 공유는 별도 니즈 |
 | visibility | 공개 범위 제어 유지 |
 | companions (텍스트) | 비회원 동행인 이름 기록용 |
+| 멘션 공유 (@userCode) → `record_mentions` | **유지**. UX 재설계 v1에서 멘션은 경량 액션으로 유지하되 검색 범위를 **수락된 친구로 제한**. 공유 다이어리와는 별개 기능(다이어리 = 모임 단위, 멘션 = 일회성 태그). |
 
 ### 마이그레이션 전략
 
 1. 새 테이블 생성 (`shared_diaries`, `shared_diary_members`, `record_participants`, `record_history`)
 2. `wine_records`에 `diary_id`, `created_by`, `deleting_at` 컬럼 추가
-3. 기존 `record_mentions` → 데이터 보존, 신규 기능에서는 사용하지 않음
+3. 기존 `record_mentions` → **유지.** UX 재설계 v1에서 멘션 기능 유지 결정됨(수락된 친구 범위로 제한).
 4. 기존 `record_evaluations` → 데이터 보존, 신규 기능에서는 `record_participants` 사용
 5. 기존 `shared_experiences` / `shared_experience_records` → 데이터 보존, 코드에서 제거
 6. 기존 데이터의 자동 변환은 하지 않음 (개인 기록은 그대로 개인 기록으로 유지)

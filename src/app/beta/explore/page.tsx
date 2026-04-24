@@ -1,0 +1,97 @@
+import Image from "next/image";
+import { Search, Camera, ChevronRight } from "lucide-react";
+import { todaysPicks, someday, dictionaryTopics } from "../_mock/explore";
+
+export default function ExplorePage() {
+  return (
+    <div className="max-w-[640px] mx-auto px-3">
+      <header className="pt-5 pb-3">
+        <h1 className="text-2xl font-bold tracking-tight">둘러보기</h1>
+      </header>
+
+      {/* search bar */}
+      <div className="flex items-center gap-2 h-12 px-3 bg-[var(--surface-raised)] border border-[var(--border)] rounded-[12px] mb-6">
+        <Search size={18} className="text-[var(--text-muted)]" />
+        <input
+          placeholder="이 와인, 찾고 있어요?"
+          className="flex-1 bg-transparent text-[15px] outline-none placeholder:text-[var(--text-muted)]"
+        />
+        <button aria-label="사진으로 찾기" className="text-[var(--accent)] w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--accent-soft)]">
+          <Camera size={18} strokeWidth={1.8} />
+        </button>
+      </div>
+
+      {/* today's picks */}
+      <section className="mb-7">
+        <div className="flex items-baseline justify-between mb-3 px-1">
+          <h2 className="text-lg font-semibold">오늘은 이런 와인 어때요</h2>
+          <button className="text-sm text-[var(--text-muted)]">더보기</button>
+        </div>
+        <div className="flex gap-3 overflow-x-auto -mx-3 px-3 pb-1">
+          {todaysPicks.map((w) => (
+            <article
+              key={w.id}
+              className="shrink-0 w-[160px] bg-[var(--surface-raised)] rounded-[12px] border border-[var(--border)] overflow-hidden"
+            >
+              <div className="relative w-full aspect-[3/4] bg-[var(--surface-alt)]">
+                <Image src={w.photo} alt={w.nameKo ?? w.name} fill className="object-cover" unoptimized />
+              </div>
+              <div className="p-2.5">
+                <div className="text-[13px] font-semibold text-[var(--foreground)] line-clamp-2 leading-tight">
+                  {w.nameKo ?? w.name}
+                </div>
+                <div className="mt-1 text-xs text-[var(--text-muted)]">{w.country}</div>
+                {w.rating ? (
+                  <div className="mt-1.5 text-xs text-[var(--accent)] font-semibold">⭐ {w.rating}</div>
+                ) : null}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* someday */}
+      <section className="mb-7">
+        <div className="flex items-baseline justify-between mb-3 px-1">
+          <h2 className="text-lg font-semibold">언젠가 마셔볼 와인</h2>
+          <span className="text-sm text-[var(--text-muted)]">{someday.length}</span>
+        </div>
+        <div className="flex gap-3 overflow-x-auto -mx-3 px-3 pb-1">
+          {someday.map((w) => (
+            <article
+              key={w.id}
+              className="shrink-0 w-[140px]"
+            >
+              <div className="relative w-full aspect-[3/4] rounded-[12px] overflow-hidden bg-[var(--surface-alt)]">
+                <Image src={w.photo} alt={w.nameKo ?? w.name} fill className="object-cover" unoptimized />
+              </div>
+              <div className="mt-2 text-[13px] font-medium text-[var(--foreground)] line-clamp-2 leading-tight">
+                {w.nameKo ?? w.name}
+              </div>
+              <div className="text-xs text-[var(--text-muted)]">{w.country}</div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* dictionary */}
+      <section className="mb-6">
+        <h2 className="text-lg font-semibold mb-3 px-1">와인 이야기</h2>
+        <div className="flex flex-col gap-2">
+          {dictionaryTopics.map((t) => (
+            <button
+              key={t.id}
+              className="w-full flex items-center justify-between p-3 bg-[var(--surface-raised)] border border-[var(--border)] rounded-[12px] text-left hover:bg-[var(--surface-alt)]"
+            >
+              <div>
+                <div className="text-[15px] font-semibold">{t.label}</div>
+                <div className="mt-0.5 text-xs text-[var(--text-muted)]">{t.hint}</div>
+              </div>
+              <ChevronRight size={18} className="text-[var(--text-muted)]" />
+            </button>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}

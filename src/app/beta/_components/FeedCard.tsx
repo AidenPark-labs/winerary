@@ -3,25 +3,35 @@ import { BookOpen } from "lucide-react";
 import type { MockFeedItem } from "../_mock/feed";
 import StarRating from "./StarRating";
 
-export default function FeedCard({ item }: { item: MockFeedItem }) {
+export default function FeedCard({
+  item,
+  hideAuthor = false,
+}: {
+  item: MockFeedItem;
+  hideAuthor?: boolean;
+}) {
   return (
     <article className="bg-[var(--surface-raised)] rounded-[12px] shadow-[0_1px_2px_rgba(17,24,39,0.04)] border border-[var(--border)] overflow-hidden">
-      <header className="flex items-center gap-3 px-3 pt-3">
-        <Image
-          src={item.author.avatar}
-          alt={item.author.nickname}
-          width={36}
-          height={36}
-          className="rounded-full object-cover"
-          unoptimized
-        />
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold text-[var(--foreground)]">{item.author.nickname}</div>
-          <div className="text-xs text-[var(--text-muted)]">{item.timeLabel}</div>
-        </div>
-      </header>
+      {hideAuthor ? (
+        <header className="px-3 pt-3 text-xs text-[var(--text-muted)]">{item.timeLabel}</header>
+      ) : (
+        <header className="flex items-center gap-3 px-3 pt-3">
+          <Image
+            src={item.author.avatar}
+            alt={item.author.nickname}
+            width={36}
+            height={36}
+            className="rounded-full object-cover"
+            unoptimized
+          />
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-[var(--foreground)]">{item.author.nickname}</div>
+            <div className="text-xs text-[var(--text-muted)]">{item.timeLabel}</div>
+          </div>
+        </header>
+      )}
 
-      <div className="mt-3 relative aspect-[4/5] bg-[var(--surface-alt)]">
+      <div className={`${hideAuthor ? "mt-2" : "mt-3"} relative aspect-[4/5] bg-[var(--surface-alt)]`}>
         <Image src={item.wine.photo} alt={item.wine.nameKo ?? item.wine.name} fill className="object-cover" unoptimized />
       </div>
 

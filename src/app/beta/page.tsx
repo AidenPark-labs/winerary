@@ -8,12 +8,6 @@ const sections: { key: "today" | "thisWeek" | "lastMonth"; label: string }[] = [
   { key: "lastMonth", label: "지난달" },
 ];
 
-const segments = [
-  { id: "mine", label: "내 자리" },
-  { id: "friends", label: "친구" },
-  { id: "shared", label: "함께 쓰는 노트" },
-];
-
 export default function TogetherPage() {
   return (
     <div className="max-w-[640px] mx-auto px-3">
@@ -29,36 +23,20 @@ export default function TogetherPage() {
         </button>
       </header>
 
-      {/* segment control */}
-      <nav className="flex gap-1 p-1 rounded-full bg-[var(--surface-alt)] mb-3">
-        {segments.map((s, i) => (
-          <button
-            key={s.id}
-            className={`flex-1 h-9 rounded-full text-sm font-medium transition-colors ${
-              i === 1
-                ? "bg-[var(--surface-raised)] text-[var(--foreground)] shadow-[0_1px_2px_rgba(17,24,39,0.06)]"
-                : "text-[var(--text-muted)]"
-            }`}
-          >
-            {s.label}
-          </button>
-        ))}
-      </nav>
+      <p className="text-sm text-[var(--text-muted)] mb-4">친구들의 오늘</p>
 
       {/* friend request banner */}
       {pendingFriendRequests > 0 ? (
         <button className="w-full mb-4 px-3 py-3 bg-[var(--accent-soft)] rounded-[12px] flex items-center justify-between text-left hover:bg-[var(--accent-strong)]/50 transition-colors">
           <div className="flex items-center gap-2 text-[var(--accent)]">
             <UserPlus size={18} strokeWidth={2} />
-            <span className="text-[15px] font-medium">
-              새로운 인연이 기다리고 있어요
-            </span>
+            <span className="text-[15px] font-medium">새로운 인연이 기다리고 있어요</span>
           </div>
           <span className="text-sm text-[var(--accent)] font-semibold">{pendingFriendRequests}</span>
         </button>
       ) : null}
 
-      {/* feed */}
+      {/* friends feed */}
       {sections.map((section) => {
         const items = feed.filter((f) => f.section === section.key);
         if (items.length === 0) return null;
@@ -77,9 +55,7 @@ export default function TogetherPage() {
       {/* hint card */}
       <div className="mb-6 p-3 rounded-[12px] bg-[var(--surface-raised)] border border-[var(--border)]">
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-full bg-[var(--accent-soft)] flex items-center justify-center shrink-0">
-            💡
-          </div>
+          <div className="w-8 h-8 rounded-full bg-[var(--accent-soft)] flex items-center justify-center shrink-0">💡</div>
           <div className="flex-1 min-w-0">
             <p className="text-sm text-[var(--foreground)]">
               <span className="font-semibold">{hintCard.friend.nickname}</span>님{hintCard.message}

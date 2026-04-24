@@ -19,30 +19,38 @@ export default function BottomNav() {
 
   return (
     <>
+      {/* Floating action button — bottom-right above nav */}
+      <button
+        aria-label="오늘의 한 잔 남기기"
+        onClick={() => setSheetOpen(true)}
+        className="fixed right-4 z-50 w-14 h-14 rounded-full bg-[var(--accent)] text-[var(--primary-on)] flex items-center justify-center transition-transform active:scale-95 hover:bg-[var(--primary-hover)]"
+        style={{
+          bottom: "calc(64px + env(safe-area-inset-bottom) + 16px)",
+          boxShadow: "0 6px 20px rgba(122, 27, 46, 0.28)",
+        }}
+      >
+        <Plus size={26} strokeWidth={2.5} />
+      </button>
+
+      {/* Bottom nav — 3 equal tabs */}
       <nav
         className="fixed bottom-0 left-0 right-0 z-40 bg-[var(--surface-raised)] border-t border-[var(--border)]"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        {/* 4 equal flex slots: [노트] [+] [둘러보기] [나] */}
-        <div className="relative flex max-w-[640px] mx-auto">
-          <TabButton {...tabs[0]} active={tabs[0].match(path)} onClick={() => router.push(tabs[0].href)} />
-
-          {/* center floating + */}
-          <div className="flex-1 flex items-start justify-center relative" style={{ minWidth: 56 }}>
-            <button
-              aria-label="오늘의 한 잔 남기기"
-              onClick={() => setSheetOpen(true)}
-              className="absolute -top-6 w-14 h-14 rounded-full bg-[var(--accent)] text-[var(--primary-on)] flex items-center justify-center transition-transform active:scale-95"
-              style={{ boxShadow: "0 6px 20px rgba(122, 27, 46, 0.28)" }}
-            >
-              <Plus size={26} strokeWidth={2.5} />
-            </button>
-          </div>
-
-          <TabButton {...tabs[1]} active={tabs[1].match(path)} onClick={() => router.push(tabs[1].href)} />
-          <TabButton {...tabs[2]} active={tabs[2].match(path)} onClick={() => router.push(tabs[2].href)} />
+        <div className="flex max-w-[640px] mx-auto">
+          {tabs.map((tab) => (
+            <TabButton
+              key={tab.href}
+              href={tab.href}
+              label={tab.label}
+              Icon={tab.Icon}
+              active={tab.match(path)}
+              onClick={() => router.push(tab.href)}
+            />
+          ))}
         </div>
       </nav>
+
       {sheetOpen ? <QuickRecordSheet onClose={() => setSheetOpen(false)} /> : null}
     </>
   );
@@ -59,7 +67,6 @@ function TabButton({
   label: string;
   Icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
   active: boolean;
-  match?: (p: string) => boolean;
   onClick: () => void;
 }) {
   return (

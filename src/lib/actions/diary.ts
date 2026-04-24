@@ -5,6 +5,27 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import type { WineRecord, CompanionEntry } from "@/types";
+import { loadGrapeDict, normalizeGrapeString, type GrapeDictEntry } from "@/lib/grape-normalize";
+
+/**
+ * 유저 입력 품종 문자열을 term_dict 기반으로 정규화.
+ * 사전 매칭 성공: 표준 한글(프랑스식)로 변환 후 쉼표로 join.
+ * 매칭 실패 항목: 원본 유지 (유저 입력 보존).
+ * 입력이 null/empty면 null 반환.
+ *
+ * 예) "샤도네, 카베르네 소비뇽" → "샤르도네, 까베르네 소비뇽"
+ *     "어떤이름품종" → "어떤이름품종" (원본 유지)
+ */
+function normalizeUserGrapeInput(input: string | null | undefined, dict: GrapeDictEntry[]): string | null {
+  if (!input) return null;
+  const trimmed = String(input).trim();
+  if (!trimmed) return null;
+  const result = normalizeGrapeString(trimmed, dict);
+  if (result.normalized_ko.length === 0 && result.unknowns.length === 0) return null;
+  // 매칭된 것은 표준 ko로, 실패한 것은 원본 순서 보존 대신 매칭분 + 실패분 append
+  const combined = [...result.normalized_ko, ...result.unknowns];
+  return combined.join(", ") || null;
+}
 
 function createAdminDb() {
   return createServiceClient(
@@ -20,6 +41,7 @@ async function resolvePendingWine(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
   data: Partial<WineRecord>,
+  grapeDict: GrapeDictEntry[],
 ): Promise<string | null> {
   const name = data.name?.replace(/[\u200b\u200c\u200d\ufeff]/g, "").trim();
   if (!name) return null;
@@ -46,7 +68,8 @@ async function resolvePendingWine(
     return existing.id;
   }
 
-  // 신규 pending_wine 생성
+  // 신규 pending_wine 생성 (품종 정규화)
+  const normalizedGrape = normalizeUserGrapeInput(data.grape_variety, grapeDict);
   const { data: created } = await supabase
     .from("pending_wines")
     .insert({
@@ -54,7 +77,7 @@ async function resolvePendingWine(
       name_en: data.wine_name_original || null,
       wine_type: data.wine_type || null,
       country: data.wine_country || null,
-      grape_variety: data.grape_variety || null,
+      grape_variety: normalizedGrape,
       submitted_by: userId,
       record_count: 1,
     })
@@ -102,14 +125,18 @@ export async function createWineRecord(data: Partial<WineRecord> & { companion_e
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
+  // grape_variety 정규화 (유저 입력 → 표준 한글, 실패 시 원본 유지)
+  const grapeDict = await loadGrapeDict(supabase);
+  const normalizedGrapeVariety = normalizeUserGrapeInput(data.grape_variety, grapeDict);
+
   // wine_id가 없으면 pending_wines에서 처리
   let pendingWineId: string | null = null;
   if (!data.wine_id) {
-    pendingWineId = await resolvePendingWine(supabase, user.id, data);
+    pendingWineId = await resolvePendingWine(supabase, user.id, { ...data, grape_variety: normalizedGrapeVariety }, grapeDict);
   }
 
   const companionEntries = data.companion_entries;
-  const insertData = { ...data };
+  const insertData = { ...data, grape_variety: normalizedGrapeVariety };
   delete (insertData as Record<string, unknown>).companion_entries;
 
   const { data: record, error } = await supabase

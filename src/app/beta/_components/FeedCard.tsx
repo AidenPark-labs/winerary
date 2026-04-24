@@ -23,82 +23,99 @@ export default function FeedCard({
 function HeroCard({ item, hideAuthor }: { item: MockFeedItem; hideAuthor: boolean }) {
   return (
     <article
-      className="group relative rounded-[24px] overflow-hidden shadow-xl flex flex-col border border-white/25"
-      style={{ minHeight: 420 }}
+      className="rounded-[20px] overflow-hidden"
+      style={{
+        background: "var(--gradient-card)",
+        backdropFilter: "blur(24px) saturate(1.4)",
+        WebkitBackdropFilter: "blur(24px) saturate(1.4)",
+        border: "1px solid var(--glass-border)",
+        boxShadow:
+          "0 12px 32px -12px rgba(122, 27, 46, 0.18), inset 0 1px 0 var(--glass-highlight)",
+      }}
     >
-      {/* background photo */}
-      <div className="absolute inset-0 z-0">
+      {/* photo area — 4:3 */}
+      <div className="relative aspect-[4/3] bg-[var(--surface-alt)] overflow-hidden">
         <Image
           src={item.wine.photo}
           alt={item.wine.nameKo ?? item.wine.name}
           fill
-          className="object-cover transition-transform duration-700 group-hover:scale-105"
-          style={{ objectPosition: "center 5%" }}
+          className="object-cover"
           unoptimized
           priority
         />
+
+        {/* floating rating badge — light glass */}
+        <div
+          className="absolute top-3 right-3 inline-flex items-center gap-1 px-3 py-1.5 rounded-full"
+          style={{
+            background: "rgba(255, 255, 255, 0.82)",
+            backdropFilter: "blur(14px)",
+            WebkitBackdropFilter: "blur(14px)",
+            border: "1px solid rgba(255, 255, 255, 0.7)",
+            boxShadow: "0 2px 10px rgba(17, 24, 39, 0.12)",
+          }}
+        >
+          <span className="text-[var(--accent)] text-[11px]">★</span>
+          <span className="text-xs font-bold text-[var(--foreground)]">{item.rating.toFixed(1)}</span>
+        </div>
+
+        {/* diary badge top-left (if shared) */}
+        {item.diaryName ? (
+          <div
+            className="absolute top-3 left-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full"
+            style={{
+              background: "rgba(255, 255, 255, 0.82)",
+              backdropFilter: "blur(14px)",
+              WebkitBackdropFilter: "blur(14px)",
+              border: "1px solid rgba(255, 255, 255, 0.7)",
+              boxShadow: "0 2px 10px rgba(17, 24, 39, 0.12)",
+            }}
+          >
+            <BookOpen size={11} strokeWidth={2.2} className="text-[var(--accent)]" />
+            <span className="text-[11px] font-semibold text-[var(--accent)]">{item.diaryName}</span>
+          </div>
+        ) : null}
       </div>
 
-      {/* gradient overlay for legibility */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent z-10 pointer-events-none" />
-
-      {/* top row — author/time + rating */}
-      <div className="relative z-20 flex justify-between items-start p-4">
+      {/* text panel — cream glass */}
+      <div className="px-4 pt-3 pb-4">
         {hideAuthor ? (
-          <span className="px-3 py-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/15 text-white text-xs font-medium shadow-lg">
-            {item.timeLabel}
-          </span>
+          <div className="text-xs text-[var(--text-muted)] mb-1.5">{item.timeLabel}</div>
         ) : (
-          <div className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full bg-black/45 backdrop-blur-md border border-white/15 shadow-lg">
+          <div className="flex items-center gap-2 mb-2">
             <Image
               src={item.author.avatar}
               alt=""
-              width={22}
-              height={22}
+              width={24}
+              height={24}
               className="rounded-full object-cover"
               unoptimized
             />
-            <span className="text-white text-xs font-semibold">{item.author.nickname}</span>
-            <span className="text-white/70 text-xs">· {item.timeLabel}</span>
+            <span className="text-sm font-semibold text-[var(--foreground)]">{item.author.nickname}</span>
+            <span className="text-xs text-[var(--text-muted)]">· {item.timeLabel}</span>
           </div>
         )}
 
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/15 shadow-lg">
-          <span className="text-amber-400 text-[11px]">★</span>
-          <span className="text-xs font-bold text-amber-400">{item.rating.toFixed(1)}</span>
-        </div>
-      </div>
-
-      {/* spacer */}
-      <div className="flex-1 min-h-[180px] z-10 pointer-events-none" />
-
-      {/* bottom glass panel */}
-      <div className="relative z-20 mt-auto px-5 py-4 bg-black/40 backdrop-blur-2xl border-t border-white/10">
         <h2
-          className="text-white text-lg tracking-wide leading-tight line-clamp-1 drop-shadow-md font-medium"
+          className="text-[19px] tracking-wide leading-snug text-[var(--foreground)] font-medium"
           style={{ fontFamily: "var(--font-serif), 'Pretendard Variable', serif" }}
         >
           {item.wine.nameKo ?? item.wine.name}
-          <span className="text-white/60 font-normal"> {item.wine.vintage}</span>
+          <span className="text-[var(--text-muted)] font-normal"> {item.wine.vintage}</span>
         </h2>
+
         {item.wine.nameKo ? (
-          <p className="text-[11px] text-white/70 italic font-light truncate drop-shadow-sm">
+          <p className="text-[11px] text-[var(--text-muted)] italic mt-0.5 truncate">
             {item.wine.name}
           </p>
         ) : null}
-        <p className="text-[11px] text-white/70 font-light tracking-wide mt-1">{item.wine.country}</p>
+
+        <p className="text-xs text-[var(--text-muted)] mt-1">{item.wine.country}</p>
 
         {item.memo ? (
-          <p className="mt-2 text-sm text-white/90 italic line-clamp-2 drop-shadow-sm leading-relaxed">
+          <p className="mt-2.5 text-[14px] leading-relaxed text-[var(--foreground)] italic">
             &ldquo;{item.memo}&rdquo;
           </p>
-        ) : null}
-
-        {item.diaryName ? (
-          <div className="mt-2.5 inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-white/12 border border-white/20 text-white/95">
-            <BookOpen size={11} strokeWidth={2} />
-            <span>{item.diaryName}</span>
-          </div>
         ) : null}
       </div>
     </article>

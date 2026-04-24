@@ -118,19 +118,33 @@ export default async function MyWinePage() {
 
   const grapeCounts: Record<string, number> = {};
   all.forEach((r) => {
-    // canonical wine과 연결된 경우 wines.grape_varieties_ko를 우선 사용 (철자 변형 통합)
+    // 우선순위:
+    //   1) wine_id 연결된 경우 wines.grape_varieties_ko
+    //   2) wine_records.grape_varieties_ko (유저 기록 배열)
+    //   3) wine_records.grape_varieties (영문 배열)
+    //   4) legacy grape_variety (string, "블렌드 (..)" 포맷)
+    // 길이 ≥ 2면 무조건 "블렌드"로 집계.
     const canonicalGrapes = r.wine_id ? wineGrapeMap.get(r.wine_id) : undefined;
-    if (canonicalGrapes && canonicalGrapes.length > 0) {
-      if (canonicalGrapes.length >= 2) {
+    const recordKo = (r as { grape_varieties_ko?: string[] | null }).grape_varieties_ko;
+    const recordEn = (r as { grape_varieties?: string[] | null }).grape_varieties;
+    const source: string[] | null =
+      (canonicalGrapes && canonicalGrapes.length > 0) ? canonicalGrapes :
+      (Array.isArray(recordKo) && recordKo.length > 0) ? recordKo :
+      (Array.isArray(recordEn) && recordEn.length > 0) ? recordEn :
+      null;
+
+    if (source) {
+      if (source.length >= 2) {
         grapeCounts["블렌드"] = (grapeCounts["블렌드"] ?? 0) + 1;
       } else {
-        const key = normalizeGrape(canonicalGrapes[0]);
+        const key = normalizeGrape(source[0]);
         grapeCounts[key] = (grapeCounts[key] ?? 0) + 1;
       }
       return;
     }
+
+    // legacy fallback
     if (!r.grape_variety) return;
-    // 블렌드인 경우 개별 품종 대신 "블렌드"로 카운트
     if (r.grape_variety.startsWith("블렌드")) {
       grapeCounts["블렌드"] = (grapeCounts["블렌드"] ?? 0) + 1;
     } else {

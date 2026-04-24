@@ -137,7 +137,7 @@ async function getUserPreferences(): Promise<string> {
 
   const { data: records } = await supabase
     .from("wine_records")
-    .select("name, wine_type, grape_variety, wine_country, rating, price")
+    .select("name, wine_type, grape_variety, grape_varieties, grape_varieties_ko, wine_country, rating, price")
     .eq("user_id", user.id)
     .is("deleted_at", null)
     .order("rating", { ascending: false, nullsFirst: false })
@@ -150,12 +150,31 @@ async function getUserPreferences(): Promise<string> {
   records.forEach((r) => { if (r.wine_type) typeCounts[r.wine_type] = (typeCounts[r.wine_type] ?? 0) + 1; });
   const topTypes = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([t]) => t);
 
-  // 선호 품종
+  // 선호 품종 (배열 우선, length ≥2는 "블렌드"로 집계)
   const grapeCounts: Record<string, number> = {};
   records.forEach((r) => {
-    if (r.grape_variety) r.grape_variety.split(/[,\/·&]+/).map((g: string) => g.trim()).filter(Boolean).forEach((g: string) => {
-      grapeCounts[g] = (grapeCounts[g] ?? 0) + 1;
-    });
+    const ko = (r as { grape_varieties_ko?: string[] | null }).grape_varieties_ko;
+    const en = (r as { grape_varieties?: string[] | null }).grape_varieties;
+    const arr = (Array.isArray(ko) && ko.length > 0) ? ko
+      : (Array.isArray(en) && en.length > 0) ? en
+      : null;
+    if (arr) {
+      if (arr.length >= 2) {
+        grapeCounts["블렌드"] = (grapeCounts["블렌드"] ?? 0) + 1;
+      } else {
+        grapeCounts[arr[0]] = (grapeCounts[arr[0]] ?? 0) + 1;
+      }
+      return;
+    }
+    // legacy fallback
+    if (!r.grape_variety) return;
+    if (r.grape_variety.startsWith("블렌드")) {
+      grapeCounts["블렌드"] = (grapeCounts["블렌드"] ?? 0) + 1;
+    } else {
+      r.grape_variety.split(/[,\/·&]+/).map((g: string) => g.trim()).filter(Boolean).forEach((g: string) => {
+        grapeCounts[g] = (grapeCounts[g] ?? 0) + 1;
+      });
+    }
   });
   const topGrapes = Object.entries(grapeCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([g]) => g);
 

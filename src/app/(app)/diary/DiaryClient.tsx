@@ -379,11 +379,26 @@ function FeedCard({ record, linked }: { record: WineRecord; linked?: LinkedInfo[
               {TYPE_KO[record.wine_type] ?? record.wine_type}
             </span>
           )}
-          {record.grape_variety && (
-            <span className="px-2 py-1 rounded-full bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium">
-              🍇 {/블렌드|blend/i.test(record.grape_variety) ? '블렌드' : record.grape_variety}
-            </span>
-          )}
+          {(() => {
+            // 배열 우선 (grape_varieties_ko → grape_varieties → legacy grape_variety)
+            const arrKo = (record as { grape_varieties_ko?: string[] | null }).grape_varieties_ko;
+            const arrEn = (record as { grape_varieties?: string[] | null }).grape_varieties;
+            const arr = (Array.isArray(arrKo) && arrKo.length > 0) ? arrKo
+              : (Array.isArray(arrEn) && arrEn.length > 0) ? arrEn
+              : null;
+            let label: string | null = null;
+            if (arr) {
+              label = arr.length >= 2 ? "블렌드" : arr[0];
+            } else if (record.grape_variety) {
+              label = /블렌드|blend/i.test(record.grape_variety) ? "블렌드" : record.grape_variety;
+            }
+            if (!label) return null;
+            return (
+              <span className="px-2 py-1 rounded-full bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium">
+                🍇 {label}
+              </span>
+            );
+          })()}
           {record.wine_country && (
             <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 border border-white/5 text-[10px] text-zinc-300 font-medium">
               <MapPin size={10} className="text-zinc-400" />

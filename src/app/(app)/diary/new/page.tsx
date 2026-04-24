@@ -519,6 +519,10 @@ export default function NewDiaryPage() {
     if (!wineName) { setError("와인 이름을 입력해주세요."); return; }
     setSaving(true);
     setError(null);
+    // 품종 배열화: 단일이면 [grape], 블렌드면 blendGrapes, custom이면 [grapeCustom]
+    const grapeVarietiesArr: string[] = grape === "__blend__"
+      ? blendGrapes.filter(Boolean)
+      : (grape ? [grape] : []);
     const finalGrape = grape === "__blend__"
       ? (blendGrapes.length > 0 ? `블렌드 (${blendGrapes.join(", ")})` : "블렌드")
       : grape || null;
@@ -531,7 +535,8 @@ export default function NewDiaryPage() {
       wine_vivino_url: selectedWine?.vivino_url || null,
       wine_type: (wineType as WineType) || null,
       wine_vintage: wineVintage ? parseInt(wineVintage) : null,
-      grape_variety: finalGrape,
+      grape_variety: finalGrape, // legacy 호환
+      grape_varieties: grapeVarietiesArr.length > 0 ? grapeVarietiesArr : null, // 배열 우선 저장
       wine_country: finalCountry,
       photos,
       drunk_at: drunkAt,

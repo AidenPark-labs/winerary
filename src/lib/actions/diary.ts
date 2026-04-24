@@ -5,10 +5,36 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import type { WineRecord, CompanionEntry } from "@/types";
+import { loadGrapeDict, normalizeGrapes, type GrapeDictEntry } from "@/lib/grape-normalize";
 
-// 주의: 유저 UI (GrapeCombobox + BlendGrapeSelector)는 이미 src/lib/grapes.ts 하드코딩 목록에서 선택.
-// 블렌드 저장 포맷이 "블렌드 (품종1, 품종2)" 특수 포맷이라 쉼표 기반 정규화를 적용하면 깨짐.
-// term_dict 기반 정규화는 wines/pending_wines 승격 시 insertWineDirectly에서만 수행.
+/**
+ * UI가 배열(grape_varieties)로 주면 그걸 그대로 쓰고,
+ * legacy string(grape_variety)만 있으면 블렌드 포맷 파싱으로 배열화.
+ *   "블렌드 (까베르네 소비뇽, 메를로)" → ["까베르네 소비뇽", "메를로"]
+ *   "샤르도네" → ["샤르도네"]
+ *   "카베르네, 메를로" → ["카베르네", "메를로"]
+ */
+function coerceGrapeVarieties(data: Partial<WineRecord>): string[] {
+  if (Array.isArray(data.grape_varieties) && data.grape_varieties.length > 0) {
+    return data.grape_varieties.map((s) => s?.trim()).filter((s): s is string => Boolean(s));
+  }
+  const gv = data.grape_variety;
+  if (!gv || typeof gv !== "string") return [];
+  const trimmed = gv.trim();
+  if (!trimmed) return [];
+  const blend = trimmed.match(/^블렌드\s*\((.+)\)\s*$/);
+  if (blend) {
+    return blend[1].split(/[,;/]/).map((s) => s.trim()).filter(Boolean);
+  }
+  return trimmed.split(/[,;/]/).map((s) => s.trim()).filter(Boolean);
+}
+
+/** 배열을 legacy string으로 직렬화 (grape_variety 호환 저장용) */
+function serializeGrapeString(arr: string[]): string | null {
+  if (!arr || arr.length === 0) return null;
+  if (arr.length === 1) return arr[0];
+  return `블렌드 (${arr.join(", ")})`;
+}
 
 function createAdminDb() {
   return createServiceClient(
@@ -24,6 +50,8 @@ async function resolvePendingWine(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
   data: Partial<WineRecord>,
+  grapeDict: GrapeDictEntry[],
+  grapeVarieties: string[],
 ): Promise<string | null> {
   const name = data.name?.replace(/[\u200b\u200c\u200d\ufeff]/g, "").trim();
   if (!name) return null;
@@ -50,7 +78,11 @@ async function resolvePendingWine(
     return existing.id;
   }
 
-  // 신규 pending_wine 생성 (유저 UI가 선택 기반이라 정규화 없이 원본 저장)
+  // 신규 pending_wine 생성 — 배열 정규화 + legacy string 병행 저장
+  const norm = normalizeGrapes(grapeVarieties, grapeDict);
+  const finalEn = norm.normalized_en.length > 0 ? norm.normalized_en : grapeVarieties;
+  const finalKo = norm.normalized_ko.length > 0 ? norm.normalized_ko : grapeVarieties; // 매칭 실패 시 원본 한글 유지
+
   const { data: created } = await supabase
     .from("pending_wines")
     .insert({
@@ -58,7 +90,9 @@ async function resolvePendingWine(
       name_en: data.wine_name_original || null,
       wine_type: data.wine_type || null,
       country: data.wine_country || null,
-      grape_variety: data.grape_variety || null,
+      grape_varieties: finalEn.length > 0 ? finalEn : null,
+      grape_varieties_ko: finalKo.length > 0 ? finalKo : null,
+      grape_variety: serializeGrapeString(finalKo), // legacy 호환
       submitted_by: userId,
       record_count: 1,
     })
@@ -106,15 +140,27 @@ export async function createWineRecord(data: Partial<WineRecord> & { companion_e
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
 
+  // grape 배열 정규화
+  const grapeDict = await loadGrapeDict(supabase);
+  const rawGrapes = coerceGrapeVarieties(data);
+  const norm = normalizeGrapes(rawGrapes, grapeDict);
+  const finalGrapesEn = norm.normalized_en.length > 0 ? norm.normalized_en : rawGrapes;
+  const finalGrapesKo = norm.normalized_ko.length > 0 ? norm.normalized_ko : rawGrapes;
+
   // wine_id가 없으면 pending_wines에서 처리
   let pendingWineId: string | null = null;
   if (!data.wine_id) {
-    pendingWineId = await resolvePendingWine(supabase, user.id, data);
+    pendingWineId = await resolvePendingWine(supabase, user.id, data, grapeDict, finalGrapesKo);
   }
 
   const companionEntries = data.companion_entries;
   const insertData = { ...data };
   delete (insertData as Record<string, unknown>).companion_entries;
+
+  // 배열 필드 세팅 + legacy grape_variety 병행 저장
+  (insertData as Record<string, unknown>).grape_varieties = finalGrapesEn.length > 0 ? finalGrapesEn : null;
+  (insertData as Record<string, unknown>).grape_varieties_ko = finalGrapesKo.length > 0 ? finalGrapesKo : null;
+  (insertData as Record<string, unknown>).grape_variety = serializeGrapeString(finalGrapesKo);
 
   const { data: record, error } = await supabase
     .from("wine_records")
@@ -185,8 +231,20 @@ export async function updateWineRecord(id: string, data: Partial<WineRecord> & {
   if (!user) return { error: "Unauthorized" };
 
   const companionEntries = data.companion_entries;
-  const updateData = { ...data };
-  delete (updateData as Record<string, unknown>).companion_entries;
+  const updateData: Record<string, unknown> = { ...data };
+  delete updateData.companion_entries;
+
+  // grape 배열 정규화 (입력에 grape_varieties 있을 때만 적용)
+  if ("grape_varieties" in data || "grape_variety" in data) {
+    const grapeDict = await loadGrapeDict(supabase);
+    const rawGrapes = coerceGrapeVarieties(data);
+    const norm = normalizeGrapes(rawGrapes, grapeDict);
+    const finalEn = norm.normalized_en.length > 0 ? norm.normalized_en : rawGrapes;
+    const finalKo = norm.normalized_ko.length > 0 ? norm.normalized_ko : rawGrapes;
+    updateData.grape_varieties = finalEn.length > 0 ? finalEn : null;
+    updateData.grape_varieties_ko = finalKo.length > 0 ? finalKo : null;
+    updateData.grape_variety = serializeGrapeString(finalKo);
+  }
 
   const { error } = await supabase
     .from("wine_records")

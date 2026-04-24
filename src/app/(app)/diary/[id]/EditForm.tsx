@@ -32,7 +32,16 @@ const COUNTRY_OPTIONS = [
   "남아프리카공화국", "조지아", "헝가리", "그리스", "한국",
 ];
 
-function initGrapeState(val: string | null) {
+function initGrapeState(val: string | null, arr?: string[] | null) {
+  // 배열 우선 (새 스키마)
+  if (Array.isArray(arr) && arr.length > 0) {
+    if (arr.length >= 2) return { grape: "__blend__", grapeCustom: "", blendGrapes: arr };
+    const single = arr[0];
+    const match = GRAPE_OPTIONS.find((g) => single === g);
+    if (match) return { grape: match, grapeCustom: "", blendGrapes: [] as string[] };
+    return { grape: single, grapeCustom: "", blendGrapes: [] as string[] };
+  }
+  // legacy string fallback
   if (!val) return { grape: "", grapeCustom: "", blendGrapes: [] as string[] };
   const blendMatch = val.match(/^블렌드\s*\((.+)\)$/);
   if (blendMatch) return { grape: "__blend__", grapeCustom: "", blendGrapes: blendMatch[1].split(",").map((s) => s.trim()) };
@@ -106,8 +115,8 @@ export default function EditForm({ record, onClose, redirectAfterSave, initialCo
   const [wineType, setWineType] = useState<WineType | "">(record.wine_type ?? "");
   const [wineVintage, setWineVintage] = useState(record.wine_vintage ? String(record.wine_vintage) : "");
 
-  // 품종
-  const grapeInit = initGrapeState(record.grape_variety);
+  // 품종 (배열 우선, legacy string fallback)
+  const grapeInit = initGrapeState(record.grape_variety, (record.grape_varieties_ko ?? record.grape_varieties) as string[] | null);
   const [grape, setGrape] = useState(grapeInit.grape);
   const [grapeCustom, setGrapeCustom] = useState(grapeInit.grapeCustom);
   const [blendGrapes, setBlendGrapes] = useState<string[]>(grapeInit.blendGrapes);
@@ -166,6 +175,10 @@ export default function EditForm({ record, onClose, redirectAfterSave, initialCo
     setSaving(true);
     setError(null);
 
+    // 품종 배열 + legacy 직렬화 병행
+    const grapeVarietiesArr: string[] = grape === "__blend__"
+      ? blendGrapes.filter(Boolean)
+      : (grape ? [grape] : []);
     const finalGrape = grape === "__blend__"
       ? (blendGrapes.length > 0 ? `블렌드 (${blendGrapes.join(", ")})` : "블렌드")
       : grape || null;
@@ -178,6 +191,7 @@ export default function EditForm({ record, onClose, redirectAfterSave, initialCo
       wine_type: (wineType as WineType) || null,
       wine_vintage: wineVintage ? parseInt(wineVintage) : null,
       grape_variety: finalGrape,
+      grape_varieties: grapeVarietiesArr.length > 0 ? grapeVarietiesArr : null,
       wine_country: finalCountry,
       photos,
       location: placeLocation || null,

@@ -332,7 +332,16 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
           {(() => {
             const resolved = wineData ? resolveWineDisplay(wineData) : null;
             const displayType = resolved?.wine_type ?? record.wine_type;
-            const displayGrapes = resolved?.grapes ?? record.grape_variety;
+            // 품종: wines 카탈로그 > 유저 기록 배열(_ko 우선) > legacy grape_variety string
+            const recordGrapesKo = (record as { grape_varieties_ko?: string[] | null }).grape_varieties_ko;
+            const recordGrapesEn = (record as { grape_varieties?: string[] | null }).grape_varieties;
+            const recordGrapesArr = (Array.isArray(recordGrapesKo) && recordGrapesKo.length > 0) ? recordGrapesKo
+              : (Array.isArray(recordGrapesEn) && recordGrapesEn.length > 0) ? recordGrapesEn
+              : null;
+            const displayGrapes: string | null = resolved?.grapes
+              ?? (recordGrapesArr
+                  ? (recordGrapesArr.length >= 2 ? `블렌드 (${recordGrapesArr.join(", ")})` : recordGrapesArr[0])
+                  : record.grape_variety);
             const displayCountry = resolved?.country ?? record.wine_country;
             const hasWineScores = record.rating != null || record.value_score != null;
 

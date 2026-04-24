@@ -38,7 +38,9 @@ export interface WineRecord {
   wine_name_original: string | null
   wine_vivino_url: string | null
   wine_type: WineType | null
-  grape_variety: string | null
+  grape_variety: string | null                // legacy (단수 string, 호환용)
+  grape_varieties: string[] | null            // 표준 배열 (영문 정규화)
+  grape_varieties_ko: string[] | null         // 표준 배열 (한글 프랑스식)
   wine_country: string | null
   location: string | null
   memo: string | null

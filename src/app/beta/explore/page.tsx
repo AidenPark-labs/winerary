@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Search, Camera, ChevronRight } from "lucide-react";
-import { todaysPicks, someday, dictionaryTopics } from "../_mock/explore";
+import { todaysPicks, someday, dictionaryTopics, friendsFavorites } from "../_mock/explore";
 
 export default function ExplorePage() {
   return (
@@ -35,6 +35,46 @@ export default function ExplorePage() {
             >
               <div className="relative w-full aspect-[3/4] bg-[var(--surface-alt)]">
                 <Image src={w.photo} alt={w.nameKo ?? w.name} fill className="object-cover" unoptimized />
+              </div>
+              <div className="p-2.5">
+                <div className="text-[13px] font-semibold text-[var(--foreground)] line-clamp-2 leading-tight">
+                  {w.nameKo ?? w.name}
+                </div>
+                <div className="mt-1 text-xs text-[var(--text-muted)]">{w.country}</div>
+                {w.rating ? (
+                  <div className="mt-1.5 text-xs text-[var(--accent)] font-semibold">⭐ {w.rating}</div>
+                ) : null}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* friends' favorites */}
+      <section className="mb-7">
+        <div className="flex items-baseline justify-between mb-3 px-1">
+          <h2 className="text-lg font-semibold">친구가 좋아한 한 잔</h2>
+          <span className="text-sm text-[var(--text-muted)]">최근</span>
+        </div>
+        <div className="flex gap-3 overflow-x-auto -mx-3 px-3 pb-1">
+          {friendsFavorites.map((w) => (
+            <article
+              key={w.id}
+              className="shrink-0 w-[170px] bg-[var(--surface-raised)] rounded-[12px] border border-[var(--border)] overflow-hidden"
+            >
+              <div className="relative w-full aspect-[3/4] bg-[var(--surface-alt)]">
+                <Image src={w.photo} alt={w.nameKo ?? w.name} fill className="object-cover" unoptimized />
+                <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-full pl-0.5 pr-2 py-0.5">
+                  <Image
+                    src={w.friendAvatar}
+                    alt={w.friendName}
+                    width={20}
+                    height={20}
+                    className="rounded-full object-cover"
+                    unoptimized
+                  />
+                  <span className="text-[11px] font-semibold text-[var(--accent)]">{w.friendName}</span>
+                </div>
               </div>
               <div className="p-2.5">
                 <div className="text-[13px] font-semibold text-[var(--foreground)] line-clamp-2 leading-tight">

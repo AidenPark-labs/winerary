@@ -81,3 +81,42 @@ export const dictionaryTopics = [
   { id: "region", label: "지역", hint: "보르도 · 부르고뉴 · 토스카나" },
   { id: "aroma", label: "향의 표현", hint: "베리 · 오크 · 가죽" },
 ];
+
+// 친구들이 최근 높이 평가한 와인 (둘러보기 탭의 소셜 디스커버리)
+export const friendsFavorites: Array<
+  MockWine & { friendName: string; friendAvatar: string }
+> = [
+  {
+    id: "ff1",
+    name: "Château Margaux",
+    nameKo: "샤또 마고",
+    vintage: 2018,
+    country: "프랑스 · 보르도",
+    photo: "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=400&h=600&fit=crop",
+    rating: 4.5,
+    friendName: "지영",
+    friendAvatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop",
+  },
+  {
+    id: "ff2",
+    name: "Caymus Cabernet Sauvignon",
+    nameKo: "케이머스 까베르네 소비뇽",
+    vintage: 2020,
+    country: "미국 · 나파밸리",
+    photo: "https://images.unsplash.com/photo-1569919659476-f0852f6834b7?w=400&h=600&fit=crop",
+    rating: 4.7,
+    friendName: "민수",
+    friendAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop",
+  },
+  {
+    id: "ff3",
+    name: "Veuve Clicquot Yellow Label",
+    nameKo: "뵈브 클리코 옐로우 라벨",
+    vintage: 2020,
+    country: "프랑스 · 샹파뉴",
+    photo: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=400&h=600&fit=crop",
+    rating: 4.3,
+    friendName: "지영",
+    friendAvatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop",
+  },
+];

@@ -120,11 +120,24 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-medium whitespace-nowrap transition-colors shrink-0 ${
+      className={`inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-medium whitespace-nowrap transition-all shrink-0 ${
         active
-          ? "bg-[var(--accent)] text-[var(--primary-on)]"
-          : "bg-[var(--surface-alt)] text-[var(--foreground)] hover:bg-[var(--accent-soft)]"
+          ? "text-[var(--primary-on)]"
+          : "text-[var(--foreground)] hover:bg-[var(--accent-soft)]"
       }`}
+      style={
+        active
+          ? {
+              background: "var(--gradient-primary)",
+              boxShadow: "0 4px 12px rgba(122, 27, 46, 0.25)",
+            }
+          : {
+              background: "rgba(255, 255, 255, 0.5)",
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
+              border: "1px solid rgba(216, 201, 178, 0.5)",
+            }
+      }
     >
       {icon}
       {children}
@@ -134,9 +147,21 @@ function FilterChip({
 
 function HintCard() {
   return (
-    <div className="mt-3 p-3 rounded-[12px] bg-[var(--surface-raised)] border border-[var(--border)]">
+    <div
+      className="mt-3 p-3 rounded-[14px] border"
+      style={{
+        background: "var(--gradient-hint)",
+        backdropFilter: "blur(14px)",
+        WebkitBackdropFilter: "blur(14px)",
+        borderColor: "rgba(250, 212, 192, 0.6)",
+        boxShadow: "0 4px 16px rgba(232, 169, 138, 0.15)",
+      }}
+    >
       <div className="flex items-start gap-3">
-        <div className="w-8 h-8 rounded-full bg-[var(--accent-soft)] flex items-center justify-center shrink-0">
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+          style={{ background: "var(--gradient-accent-soft)" }}
+        >
           <Sparkles size={15} className="text-[var(--accent)]" strokeWidth={2} />
         </div>
         <div className="flex-1 min-w-0">

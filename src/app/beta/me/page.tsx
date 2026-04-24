@@ -32,11 +32,22 @@ export default function MePage() {
       {/* monthly story — C-tone preview */}
       <section className="mb-6">
         <div
-          className="relative rounded-[16px] p-5 overflow-hidden"
+          className="relative rounded-[18px] p-5 overflow-hidden"
           style={{
-            background: "linear-gradient(135deg, #FFF5E6 0%, #FAD4C0 60%, #E8A98A 100%)",
+            background:
+              "linear-gradient(135deg, #FFF9F0 0%, #FAD4C0 50%, #E8A98A 100%)",
+            boxShadow:
+              "0 12px 32px -8px rgba(232, 169, 138, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.6)",
           }}
         >
+          {/* decorative blur blob */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-10 -right-10 w-40 h-40 rounded-full"
+            style={{
+              background: "radial-gradient(circle, rgba(122,27,46,0.25) 0%, transparent 70%)",
+            }}
+          />
           <div className="flex items-baseline gap-2">
             <span className="text-3xl">🍷</span>
             <h2 className="text-2xl font-extrabold text-[var(--accent)] tracking-tight">
@@ -50,11 +61,27 @@ export default function MePage() {
           </div>
 
           <div className="mt-3 grid grid-cols-1 gap-2 text-sm text-[var(--accent)]">
-            <div className="flex items-center justify-between bg-white/50 rounded-[10px] px-3 py-2">
+            <div
+              className="flex items-center justify-between rounded-[12px] px-3 py-2 border"
+              style={{
+                background: "rgba(255, 255, 255, 0.55)",
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
+                borderColor: "rgba(255, 255, 255, 0.7)",
+              }}
+            >
               <span className="font-medium">최애 품종</span>
               <span className="font-semibold">{monthlyStats.topGrape}</span>
             </div>
-            <div className="flex items-center justify-between bg-white/50 rounded-[10px] px-3 py-2">
+            <div
+              className="flex items-center justify-between rounded-[12px] px-3 py-2 border"
+              style={{
+                background: "rgba(255, 255, 255, 0.55)",
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
+                borderColor: "rgba(255, 255, 255, 0.7)",
+              }}
+            >
               <span className="font-medium">도장 깬 와인바</span>
               <span className="font-semibold">{monthlyStats.placesCount}곳</span>
             </div>
@@ -109,7 +136,16 @@ export default function MePage() {
 
 function StatTile({ label, value, emphasis }: { label: string; value: string; emphasis?: boolean }) {
   return (
-    <div className="rounded-[12px] bg-white/60 px-3 py-4 text-center">
+    <div
+      className="rounded-[14px] px-3 py-4 text-center border"
+      style={{
+        background: "rgba(255, 255, 255, 0.55)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        borderColor: "rgba(255, 255, 255, 0.7)",
+        boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.8)",
+      }}
+    >
       <div className={`${emphasis ? "text-3xl" : "text-xl"} font-extrabold text-[var(--accent)] tabular-nums`}>
         {value}
       </div>

@@ -19,23 +19,31 @@ export default function BottomNav() {
 
   return (
     <>
-      {/* Floating action button — bottom-right above nav */}
+      {/* Floating action button — bottom-right above nav, gradient + halo */}
       <button
         aria-label="오늘의 한 잔 남기기"
         onClick={() => setSheetOpen(true)}
-        className="fixed right-4 z-50 w-14 h-14 rounded-full bg-[var(--accent)] text-[var(--primary-on)] flex items-center justify-center transition-transform active:scale-95 hover:bg-[var(--primary-hover)]"
+        className="fixed right-4 z-50 w-14 h-14 rounded-full text-[var(--primary-on)] flex items-center justify-center transition-transform active:scale-95"
         style={{
           bottom: "calc(64px + env(safe-area-inset-bottom) + 16px)",
-          boxShadow: "0 6px 20px rgba(122, 27, 46, 0.28)",
+          background: "var(--gradient-primary)",
+          boxShadow:
+            "0 10px 28px rgba(122, 27, 46, 0.38), 0 2px 6px rgba(122, 27, 46, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.18)",
         }}
       >
         <Plus size={26} strokeWidth={2.5} />
       </button>
 
-      {/* Bottom nav — 3 equal tabs */}
+      {/* Bottom nav — glass */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-40 bg-[var(--surface-raised)] border-t border-[var(--border)]"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        className="fixed bottom-0 left-0 right-0 z-40 border-t"
+        style={{
+          paddingBottom: "env(safe-area-inset-bottom)",
+          background: "var(--glass-bg-strong)",
+          backdropFilter: "blur(18px) saturate(1.2)",
+          WebkitBackdropFilter: "blur(18px) saturate(1.2)",
+          borderColor: "var(--glass-border)",
+        }}
       >
         <div className="flex max-w-[640px] mx-auto">
           {tabs.map((tab) => (

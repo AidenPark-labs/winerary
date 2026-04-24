@@ -11,7 +11,14 @@ export default function FeedCard({
   hideAuthor?: boolean;
 }) {
   return (
-    <article className="bg-[var(--surface-raised)] rounded-[12px] border border-[var(--border)] shadow-[0_1px_2px_rgba(17,24,39,0.03)] p-3 flex gap-3">
+    <article
+      className="rounded-[14px] border border-[var(--border)] p-3 flex gap-3"
+      style={{
+        background: "var(--gradient-card)",
+        boxShadow:
+          "0 1px 2px rgba(17,24,39,0.04), 0 8px 24px -16px rgba(122, 27, 46, 0.08)",
+      }}
+    >
       {/* photo — left thumbnail */}
       <div className="shrink-0 w-[104px] aspect-[4/5] rounded-[10px] overflow-hidden bg-[var(--surface-alt)] relative">
         <Image

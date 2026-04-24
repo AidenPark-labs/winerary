@@ -33,25 +33,39 @@
   --accent: #d32f4c; /* Vibrant ruby red accent */
 }
 
-/* Beta design system (docs/design-system.md) — cream surface + burgundy accent. Scoped via data-theme="beta". */
+/* Beta design system (docs/design-system.md) — airy off-white + burgundy accent + glass/gradient. Scoped via data-theme="beta". */
 [data-theme="beta"] {
-  --background: #FFF5E6;
+  --background: #FFFBF5;
   --foreground: #111827;
   --surface: #FFFFFF;
   --surface-raised: #FFFFFF;
-  --surface-alt: #FBEAD4;
-  --border: #E5DCCB;
-  --border-strong: #C8B8A0;
+  --surface-alt: #FAF0E2;
+  --border: #EEE4D3;
+  --border-strong: #D8C9B2;
   --accent: #7A1B2E;
   --accent-soft: #FAD4C0;
   --accent-strong: #E8A98A;
   --primary-hover: #6B1828;
   --primary-pressed: #5A1422;
-  --primary-on: #FFF5E6;
+  --primary-on: #FFFBF5;
   --text-muted: #6B7280;
   --success: #16A34A;
   --warning: #D97706;
   --danger: #DC2626;
+
+  /* glass & gradient */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-strong: rgba(255, 255, 255, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.55);
+  --gradient-primary: linear-gradient(135deg, #8B2338 0%, #5A1422 100%);
+  --gradient-accent-soft: linear-gradient(135deg, #FFE6D4 0%, #FAD4C0 55%, #F3BFA6 100%);
+  --gradient-card: linear-gradient(150deg, #FFFFFF 0%, #FFFBF5 100%);
+  --gradient-page: linear-gradient(180deg, #FFFBF5 0%, #FFF6E8 100%);
+  --gradient-hint: linear-gradient(135deg, rgba(250, 212, 192, 0.35) 0%, rgba(255, 255, 255, 0.6) 100%);
+}
+
+[data-theme="beta"] {
+  background: var(--gradient-page) fixed;
 }
 
 [data-theme="beta"] body,

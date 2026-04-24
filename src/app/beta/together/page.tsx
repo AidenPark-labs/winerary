@@ -1,6 +1,8 @@
 import { Bell, UserPlus, Sparkles } from "lucide-react";
 import FeedCard from "../_components/FeedCard";
+import PublicUserCard from "../_components/PublicUserCard";
 import { feed, hintCard, pendingFriendRequests } from "../_mock/feed";
+import { publicUsers } from "../_mock/publicUsers";
 
 const sections: { key: "today" | "thisWeek" | "lastMonth"; label: string }[] = [
   { key: "today", label: "오늘" },
@@ -27,6 +29,19 @@ export default function TogetherPage() {
       </header>
 
       <p className="text-sm text-[var(--text-muted)] mb-4">친구들의 오늘</p>
+
+      {/* public users discovery — shown always, but especially useful for new users with 0 friends */}
+      <section className="mb-6">
+        <div className="flex items-baseline justify-between mb-3 px-1">
+          <h2 className="text-lg font-semibold">이런 한 잔을 남기는 사람들</h2>
+          <button className="text-sm text-[var(--text-muted)]">더보기</button>
+        </div>
+        <div className="flex gap-3 overflow-x-auto -mx-3 px-3 pb-1">
+          {publicUsers.map((u) => (
+            <PublicUserCard key={u.id} user={u} />
+          ))}
+        </div>
+      </section>
 
       {/* friend request banner */}
       {pendingFriendRequests > 0 ? (

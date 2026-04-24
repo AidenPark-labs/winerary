@@ -3,14 +3,26 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { loadGrapeDict, normalizeGrapes } from "@/lib/grape-normalize";
 
-export async function updateWine(id: string, data: Record<string, string | number | null | undefined>) {
+export async function updateWine(id: string, data: Record<string, string | number | string[] | null | undefined>) {
   const { supabase } = await requireAdmin();
 
-  const { error } = await supabase
-    .from("wines")
-    .update({ ...data, updated_at: new Date().toISOString() })
-    .eq("id", id);
+  const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  for (const [k, v] of Object.entries(data)) {
+    if (v === undefined) continue;
+    if (k === "grape_varieties" && Array.isArray(v)) {
+      // term_dict 기반 정규화 → en + ko 자동 생성
+      const dict = await loadGrapeDict(supabase);
+      const result = normalizeGrapes(v, dict);
+      payload.grape_varieties = result.normalized_en;
+      payload.grape_varieties_ko = result.normalized_ko;
+    } else {
+      payload[k] = v;
+    }
+  }
+
+  const { error } = await supabase.from("wines").update(payload).eq("id", id);
 
   if (error) {
     if (error.code === "23505" && error.message.includes("wines_name_ko_unique")) {
@@ -140,21 +152,19 @@ export async function updateWineVivino(
     }
   }
 
-  // vivino_grapes → grape_varieties[], grape_varieties_ko[]
+  // vivino_grapes → grape_varieties[], grape_varieties_ko[] (정규화 적용)
   if (data.vivino_grapes) {
     const grapes = cleanGrapeString(data.vivino_grapes);
     if (grapes.length > 0) {
+      const grapeDict = await loadGrapeDict(supabase);
+      const norm = normalizeGrapes(grapes, grapeDict);
       const currentGv = (current.grape_varieties as string[] | null) ?? [];
-      if (currentGv.length === 0) updates.grape_varieties = grapes;
-
+      if (currentGv.length === 0 && norm.normalized_en.length > 0) {
+        updates.grape_varieties = norm.normalized_en;
+      }
       const currentGvKo = (current.grape_varieties_ko as string[] | null) ?? [];
-      if (currentGvKo.length === 0) {
-        const gvKo: string[] = [];
-        for (const g of grapes) {
-          const e = lookup(dict, "grape", g);
-          if (e && !gvKo.includes(e.ko)) gvKo.push(e.ko);
-        }
-        if (gvKo.length > 0) updates.grape_varieties_ko = gvKo;
+      if (currentGvKo.length === 0 && norm.normalized_ko.length > 0) {
+        updates.grape_varieties_ko = norm.normalized_ko;
       }
     }
   }

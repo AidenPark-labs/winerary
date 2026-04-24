@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 import { crawlByUrl } from "@/lib/vivino-crawler";
+import { loadGrapeDict, normalizeGrapes } from "@/lib/grape-normalize";
 
 export interface WineFieldUpdate {
   name_ko?: string;
@@ -24,9 +25,18 @@ export interface WineFieldUpdate {
 export async function updateWineFields(id: string, patch: WineFieldUpdate) {
   const { supabase } = await requireAdmin();
   const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  let grapeUnknowns: string[] = [];
+
   for (const [k, v] of Object.entries(patch)) {
     if (v === undefined) continue;
-    if (Array.isArray(v)) {
+    if (k === "grape_varieties" && Array.isArray(v)) {
+      // term_dict 기반 정규화 → grape_varieties + grape_varieties_ko 자동 생성
+      const dict = await loadGrapeDict(supabase);
+      const result = normalizeGrapes(v as string[], dict);
+      payload.grape_varieties = result.normalized_en;
+      payload.grape_varieties_ko = result.normalized_ko;
+      grapeUnknowns = result.unknowns;
+    } else if (Array.isArray(v)) {
       payload[k] = v.filter((s) => typeof s === "string" && s.trim().length > 0).map((s) => s.trim());
     } else if (typeof v === "string") {
       payload[k] = v.trim() === "" ? null : v.trim();
@@ -42,7 +52,7 @@ export async function updateWineFields(id: string, patch: WineFieldUpdate) {
     return { error: error.message };
   }
   revalidatePath("/admin/vivino-review");
-  return { success: true };
+  return { success: true, grape_unknowns: grapeUnknowns };
 }
 
 export async function confirmVivinoMatch(id: string) {

@@ -37,6 +37,9 @@ import {
 } from "../src/lib/wine-dedupe";
 import { loadGrapeDict, normalizeGrapes, type GrapeDictEntry } from "../src/lib/grape-normalize";
 
+// main()에서 1회 로드, 이후 buildInsertRow / autoMerge에서 재사용
+let GRAPE_DICT: GrapeDictEntry[] = [];
+
 config({ path: resolve(process.cwd(), ".env.local") });
 
 const sb: SupabaseClient = createClient(
@@ -363,6 +366,9 @@ function buildVivinoFields(raw: RawWine, v: ReturnType<typeof evalVivino>): Reco
 
 function buildInsertRow(raw: RawWine, grapes: string[], v: ReturnType<typeof evalVivino>): Record<string, unknown> {
   const vivino = buildVivinoFields(raw, v);
+  // 품종 정규화 (term_dict 기반) — main()에서 미리 로드한 GRAPE_DICT 재사용
+  const norm = normalizeGrapes(grapes, GRAPE_DICT);
+  const finalGrapes = norm.normalized_en.length > 0 ? norm.normalized_en : grapes;
   return {
     name_ko: stripVintage(raw.name_ko ?? "") || raw.name_ko,
     name_en: stripVintage(raw.name_en ?? "") || raw.name_en,
@@ -373,7 +379,8 @@ function buildInsertRow(raw: RawWine, grapes: string[], v: ReturnType<typeof eva
     producer_ko: raw.producer_ko,
     producer_en: raw.producer_en,
     producer: raw.producer_ko ?? raw.producer_en, // legacy
-    grape_varieties: grapes,
+    grape_varieties: finalGrapes,
+    grape_varieties_ko: norm.normalized_ko,
     price: raw.price,
     alcohol: raw.alcohol,
     image_url: raw.image_url,
@@ -438,10 +445,13 @@ async function executeAutoMerge(raw: RawWine, targetWineId: string, grapes: stri
   fillEmpty("alcohol", raw.alcohol);
   fillEmpty("price", raw.price);
 
-  // grape union
+  // grape union + term_dict 정규화
   const existingGrapes = Array.isArray(t.grape_varieties) ? (t.grape_varieties as string[]) : [];
-  const merged = Array.from(new Set([...existingGrapes, ...grapes].map((g) => g.trim()).filter(Boolean)));
-  if (merged.length > existingGrapes.length) updates.grape_varieties = merged;
+  const unionNorm = normalizeGrapes([...existingGrapes, ...grapes], GRAPE_DICT);
+  if (unionNorm.normalized_en.length > existingGrapes.length) {
+    updates.grape_varieties = unionNorm.normalized_en;
+    updates.grape_varieties_ko = unionNorm.normalized_ko;
+  }
 
   // source_refs append
   const existingRefs = Array.isArray(t.source_refs) ? (t.source_refs as string[]) : [];
@@ -770,7 +780,11 @@ function aggregateStats(all: Stats[]): Stats {
 async function main() {
   console.log("wines 인덱스 로드 중...");
   const idx = await loadWinesIndex();
-  console.log(`  기존 wines: ${idx.all.length.toLocaleString()}건, byExact 크기: ${idx.byExact.size.toLocaleString()}\n`);
+  console.log(`  기존 wines: ${idx.all.length.toLocaleString()}건, byExact 크기: ${idx.byExact.size.toLocaleString()}`);
+
+  // grape term_dict 로드 (buildInsertRow / autoMerge 에서 재사용)
+  GRAPE_DICT = await loadGrapeDict(sb);
+  console.log(`  grape term_dict: ${GRAPE_DICT.length}개 로드\n`);
 
   const sources = SOURCE_ARG === "all"
     ? ["wine21", "winenara", "gangnam", "naver_shopping", "user_submission"]

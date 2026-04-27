@@ -66,7 +66,6 @@ interface WineData {
   id?: string;
   description?: string | null;
   vivino_url?: string | null;
-  vivino_page_url?: string | null;
   vivino_rating?: number | null;
   vivino_reviews?: number | null;
   vivino_winery?: string | null;

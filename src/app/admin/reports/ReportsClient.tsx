@@ -19,7 +19,6 @@ interface WineRef {
   grape_variety: string | null;
   producer: string | null;
   vivino_url: string | null;
-  vivino_page_url: string | null;
   vivino_rating: number | null;
   vivino_winery: string | null;
   vivino_region: string | null;
@@ -301,15 +300,15 @@ export default function ReportsClient({
                         {/* Vivino 정보 */}
                         <div className="rounded bg-zinc-900 border border-zinc-800 p-3 mb-3">
                           <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Vivino 매칭</p>
-                          {wine.vivino_page_url || wine.vivino_url ? (
+                          {wine.vivino_url ? (
                             <div className="flex items-center gap-2 flex-wrap">
                               <a
-                                href={wine.vivino_page_url ?? wine.vivino_url ?? "#"}
+                                href={wine.vivino_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-sm text-sky-400 hover:text-sky-300 underline break-all"
                               >
-                                {wine.vivino_page_url ?? wine.vivino_url}
+                                {wine.vivino_url}
                               </a>
                               {wine.vivino_rating && (
                                 <span className="text-xs text-amber-400">★ {wine.vivino_rating}</span>

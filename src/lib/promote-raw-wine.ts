@@ -123,7 +123,6 @@ function buildVivinoFields(raw: RawWineInput, v: ReturnType<typeof evalVivino>):
   if (!v.hasVivino) {
     return {
       vivino_url: null,
-      vivino_page_url: null,
       vivino_wine_id: null,
       vivino_rating: null,
       vivino_reviews: null,
@@ -143,9 +142,10 @@ function buildVivinoFields(raw: RawWineInput, v: ReturnType<typeof evalVivino>):
   const wine_id = typeof p.vivino_wine_id === "number" || typeof p.vivino_wine_id === "string"
     ? String(p.vivino_wine_id)
     : null;
+  // raw_payload에 vivino_page_url(상세 URL)이 있으면 그 값을, 없으면 vivino_url을 canonical로 사용
+  const canonicalUrl = (p.vivino_page_url as string) ?? (p.vivino_url as string) ?? null;
   return {
-    vivino_url: (p.vivino_url as string) ?? null,
-    vivino_page_url: (p.vivino_page_url as string) ?? (p.vivino_url as string) ?? null,
+    vivino_url: canonicalUrl,
     vivino_wine_id: wine_id,
     vivino_rating: typeof p.vivino_rating === "number" ? p.vivino_rating : null,
     vivino_reviews: typeof p.vivino_reviews === "number" ? p.vivino_reviews : null,
@@ -387,7 +387,6 @@ export interface WineCreateInput {
   data_source?: string;               // 'admin' | 'user_submission' | ...
   // Vivino 매핑은 옵션 — 있으면 적용
   vivino_url?: string | null;
-  vivino_page_url?: string | null;
   vivino_wine_id?: string | number | null;
   vivino_rating?: number | null;
   vivino_reviews?: number | null;
@@ -438,7 +437,6 @@ function buildVivinoFieldsDirect(input: WineCreateInput): Record<string, unknown
   if (!input.vivino_url) {
     return {
       vivino_url: null,
-      vivino_page_url: null,
       vivino_wine_id: null,
       vivino_rating: null,
       vivino_reviews: null,
@@ -457,7 +455,6 @@ function buildVivinoFieldsDirect(input: WineCreateInput): Record<string, unknown
   const autoReviewed = typeof input.vivino_match_score === "number" && input.vivino_match_score >= 0.9;
   return {
     vivino_url: input.vivino_url,
-    vivino_page_url: input.vivino_page_url ?? input.vivino_url,
     vivino_wine_id: input.vivino_wine_id == null ? null : String(input.vivino_wine_id),
     vivino_rating: input.vivino_rating ?? null,
     vivino_reviews: input.vivino_reviews ?? null,

@@ -9,19 +9,19 @@ export async function GET(request: Request) {
   try {
     const supabase = await createClient();
 
-    // 1단계: DB에 vivino_page_url이 이미 있으면 바로 사용
+    // 1단계: DB에 vivino_url이 이미 있으면 바로 사용
     if (wineId) {
       const { data: wine } = await supabase
         .from("wines")
-        .select("vivino_page_url")
+        .select("vivino_url")
         .eq("id", wineId)
         .single();
 
-      if (wine?.vivino_page_url) {
-        const result = await extractRatingFromJsonLd(wine.vivino_page_url);
+      if (wine?.vivino_url) {
+        const result = await extractRatingFromJsonLd(wine.vivino_url);
         if (result) {
           cacheRating(supabase, wineId, result.rating, result.reviews, undefined, undefined, result.vivinoName);
-          return Response.json({ ...result, vivinoPageUrl: wine.vivino_page_url });
+          return Response.json({ ...result, vivinoPageUrl: wine.vivino_url });
         }
       }
     }
@@ -123,7 +123,6 @@ async function cacheRating(supabase: any, wineId: string, rating: number, review
   try {
     const update: Record<string, unknown> = { vivino_rating: rating, vivino_reviews: reviews };
     if (pageUrl) {
-      update.vivino_page_url = pageUrl;
       update.vivino_url = pageUrl;
     }
     if (vivinoWineId) update.vivino_wine_id = vivinoWineId;

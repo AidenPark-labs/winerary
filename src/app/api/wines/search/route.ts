@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 
-const SELECT = "id, name_ko, name_en, wine_type, country, country_ko, region, region_path, region_ko, grape_variety, grape_varieties, grape_varieties_ko, producer, producer_ko, producer_en, description, price, naver_link, naver_image, image_url, vivino_url, vivino_page_url, vivino_rating, vivino_reviews, source";
+const SELECT = "id, name_ko, name_en, wine_type, country, country_ko, region, region_path, region_ko, grape_variety, grape_varieties, grape_varieties_ko, producer, producer_ko, producer_en, description, price, naver_link, naver_image, image_url, vivino_url, vivino_rating, vivino_reviews, source";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

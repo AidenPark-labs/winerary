@@ -1,7 +1,6 @@
 /**
  * 와인 DB 보강 스크립트
  * - description: Claude로 와인 설명 생성
- * - vivino_url: 영어 이름 기반 Vivino 검색 URL 생성
  *
  * 실행: npx tsx scripts/enrich-wines.ts
  */
@@ -81,11 +80,6 @@ async function updateWine(id: string, updates: Record<string, string | null>) {
   });
 }
 
-function buildVivinoUrl(nameEn: string | null): string | null {
-  if (!nameEn) return null;
-  return `https://www.vivino.com/search/wines?q=${encodeURIComponent(nameEn)}`;
-}
-
 async function main() {
   console.log("🍷 와인 DB 보강 시작\n");
 
@@ -106,16 +100,9 @@ async function main() {
     let updated = 0;
     for (const wine of wines) {
       const desc = descriptions[wine.id];
-      const vivinoUrl = buildVivinoUrl(wine.name_en);
-
-      const updates: Record<string, string | null> = {};
-      if (desc) updates.description = desc;
-      if (vivinoUrl) updates.vivino_url = vivinoUrl;
-
-      if (Object.keys(updates).length > 0) {
-        await updateWine(wine.id, updates);
-        updated++;
-      }
+      if (!desc) continue;
+      await updateWine(wine.id, { description: desc });
+      updated++;
     }
 
     console.log(` ✅ ${updated}개 업데이트`);

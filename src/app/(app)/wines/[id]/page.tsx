@@ -200,7 +200,7 @@ export default async function WineDetailPage({
                 nameEn={wine.name_en}
                 initialRating={wine.vivino_rating}
                 initialReviews={wine.vivino_reviews}
-                initialPageUrl={wine.vivino_page_url}
+                initialPageUrl={wine.vivino_url}
               />
             </div>
           </div>

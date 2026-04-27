@@ -103,7 +103,6 @@ export async function updateWineVivino(
   id: string,
   data: {
     vivino_url?: string | null;
-    vivino_page_url?: string | null;
     vivino_wine_id?: number | null;
     vivino_rating?: number | null;
     vivino_reviews?: number | null;
@@ -204,7 +203,6 @@ export async function clearWineVivino(id: string) {
     .from("wines")
     .update({
       vivino_url: null,
-      vivino_page_url: null,
       vivino_wine_id: null,
       vivino_rating: null,
       vivino_reviews: null,

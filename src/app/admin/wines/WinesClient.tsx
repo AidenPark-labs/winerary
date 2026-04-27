@@ -27,7 +27,6 @@ interface Wine {
   naver_link: string | null;
   naver_image: string | null;
   vivino_url: string | null;
-  vivino_page_url: string | null;
   vivino_rating: number | null;
   vivino_reviews: number | null;
   vivino_winery: string | null;
@@ -219,7 +218,6 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
     const r = result as VivinoCrawlResult;
     const res = await updateWineVivino(wineId, {
       vivino_url: r.vivinoUrl,
-      vivino_page_url: r.vivinoUrl,
       vivino_wine_id: r.vivinoWineId,
       vivino_rating: r.rating,
       vivino_reviews: r.reviews,
@@ -441,7 +439,7 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
                         <button onClick={() => startEdit(w)} className="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition-colors">
                           오버라이드
                         </button>
-                        {(w.vivino_url || w.vivino_page_url || w.vivino_rating != null) && (
+                        {(w.vivino_url || w.vivino_rating != null) && (
                           <button
                             onClick={async () => {
                               if (!confirm(`"${w.name_ko}"의 Vivino 수집 정보를 모두 지우시겠습니까?\n(한글 지역·스타일·품종 등 파생 필드는 유지됩니다)`)) return;
@@ -487,8 +485,8 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
                     <div className="flex flex-col gap-1.5 text-sm">
                       <div className="flex items-start gap-2">
                         <span className="text-zinc-500 text-xs w-20 flex-shrink-0 pt-0.5">URL</span>
-                        {(w.vivino_page_url || w.vivino_url) ? (
-                          <a href={w.vivino_page_url || w.vivino_url!} target="_blank" rel="noopener noreferrer" className="text-rose-400 hover:underline truncate">{w.vivino_page_url || w.vivino_url}</a>
+                        {w.vivino_url ? (
+                          <a href={w.vivino_url} target="_blank" rel="noopener noreferrer" className="text-rose-400 hover:underline truncate">{w.vivino_url}</a>
                         ) : (
                           <span className="text-zinc-600 italic">없음</span>
                         )}
@@ -599,7 +597,7 @@ export default function WinesClient({ wines, totalCount, page, totalPages, searc
                             </div>
                             <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
                               {[
-                                ["URL", r.vivinoUrl, w.vivino_page_url || w.vivino_url],
+                                ["URL", r.vivinoUrl, w.vivino_url],
                                 ["평점", r.rating != null ? `★ ${r.rating}` : null, w.vivino_rating != null ? `★ ${w.vivino_rating}` : null],
                                 ["리뷰", r.reviews != null ? `${r.reviews.toLocaleString()}개` : null, w.vivino_reviews != null ? `${w.vivino_reviews.toLocaleString()}개` : null],
                                 ["Winery", r.facts.winery, w.vivino_winery],

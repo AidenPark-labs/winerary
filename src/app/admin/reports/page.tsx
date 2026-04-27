@@ -33,7 +33,7 @@ export default async function AdminReportsPage({
       created_at, resolved_at, resolved_by, resolved_note,
       wines (
         id, name_ko, name_en, wine_type, country, region, grape_variety, producer,
-        vivino_url, vivino_page_url, vivino_rating, vivino_winery, vivino_region, vivino_grapes, vivino_style,
+        vivino_url, vivino_rating, vivino_winery, vivino_region, vivino_grapes, vivino_style,
         final_wine_type, final_grapes, final_country, final_region, final_producer, final_alcohol, final_style, final_description
       ),
       reporter:profiles!wine_reports_user_id_fkey (nickname, user_code)

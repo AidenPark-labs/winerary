@@ -95,7 +95,6 @@ export async function replaceVivinoUrl(id: string, newUrl: string) {
     .from("wines")
     .update({
       vivino_url: crawl.vivinoUrl,
-      vivino_page_url: crawl.vivinoUrl,
       vivino_wine_id: crawl.vivinoWineId,
       vivino_name: crawl.vivinoName,
       vivino_rating: crawl.rating,
@@ -126,7 +125,6 @@ export async function unlinkVivinoMatch(id: string) {
     .from("wines")
     .update({
       vivino_url: null,
-      vivino_page_url: null,
       vivino_wine_id: null,
       vivino_rating: null,
       vivino_reviews: null,

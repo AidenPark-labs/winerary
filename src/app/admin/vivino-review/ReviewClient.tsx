@@ -24,7 +24,6 @@ export interface ReviewWine {
   winery_en_clean: string | null;
   image_url: string | null;
   vivino_url: string | null;
-  vivino_page_url: string | null;
   vivino_wine_id: number | null;
   vivino_rating: number | null;
   vivino_reviews: number | null;
@@ -424,7 +423,7 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
                 )}
               </div>
               {(() => {
-                const link = current.vivino_page_url ?? current.vivino_url;
+                const link = current.vivino_url;
                 return link ? (
                   <a
                     href={link}

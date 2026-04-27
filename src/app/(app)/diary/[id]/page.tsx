@@ -35,7 +35,7 @@ export default async function DiaryDetailPage({ params }: { params: Promise<{ id
   }
 
   // wines 테이블에서 Vivino 데이터 조회 (v3: 한글/정규화 필드 포함)
-  const wineFields = "id, description, vivino_url, vivino_page_url, vivino_rating, vivino_reviews, vivino_winery, vivino_grapes, vivino_region, vivino_style, vivino_alcohol, vivino_description, grape_variety, region, region_path, country, country_ko, region_ko, producer, producer_ko, producer_en, wine_type, wine_style, wine_style_ko, grape_varieties, grape_varieties_ko, final_grapes, final_region, final_country, final_producer, final_wine_type, final_alcohol, final_style, final_description, gangnam_alcohol";
+  const wineFields = "id, description, vivino_url, vivino_rating, vivino_reviews, vivino_winery, vivino_grapes, vivino_region, vivino_style, vivino_alcohol, vivino_description, grape_variety, region, region_path, country, country_ko, region_ko, producer, producer_ko, producer_en, wine_type, wine_style, wine_style_ko, grape_varieties, grape_varieties_ko, final_grapes, final_region, final_country, final_producer, final_wine_type, final_alcohol, final_style, final_description, gangnam_alcohol";
   let wineData = null;
 
   if (record.wine_id) {

@@ -214,5 +214,5 @@ export interface WineSuggestion {
   type: string
   grapes: string
   vintage_range: string
-  vivino_url: string
+  vivino_url: string | null
 }

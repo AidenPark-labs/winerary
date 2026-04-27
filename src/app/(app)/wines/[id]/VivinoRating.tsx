@@ -38,7 +38,7 @@ export default function VivinoRating({
       .finally(() => setLoading(false));
   }, [nameEn, wineId, rating]);
 
-  const vivinoHref = pageUrl || (nameEn ? `https://www.vivino.com/search/wines?q=${encodeURIComponent(nameEn)}` : null);
+  const vivinoHref = pageUrl;
 
   if (loading) {
     return (

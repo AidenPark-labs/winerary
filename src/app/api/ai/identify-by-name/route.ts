@@ -24,7 +24,6 @@ export async function POST(request: Request) {
   "wine_type": "red/white/rose/sparkling/fortified/other 중 하나",
   "grape_variety": "포도 품종 (한국어, 모르면 null)",
   "vintage": null,
-  "vivino_url": "https://www.vivino.com/search/wines?q=URL인코딩된원본와인명",
   "description": "이 와인의 특징을 2~3문장으로 설명 (확실한 정보만)",
   "food_pairing": "어울리는 음식 3~4가지"
 }`;

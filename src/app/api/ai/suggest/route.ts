@@ -22,7 +22,7 @@ export async function GET(request: Request) {
       type: w.wine_type ?? "",
       grapes: w.grape_variety ?? "",
       vintage_range: "",
-      vivino_url: w.vivino_url ?? `https://www.vivino.com/search/wines?q=${encodeURIComponent(name)}`,
+      vivino_url: w.vivino_url ?? null,
     };
   });
 

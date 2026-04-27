@@ -88,7 +88,6 @@ description과 food_pairing은 사진이 아닌, 해당 와인 자체의 알려�
   "wine_type": "red/white/rose/sparkling/fortified/other 중 하나",
   "grape_variety": "포도 품종 (한국어, 모르면 null)",
   "vintage": 숫자 연도 또는 null,
-  "vivino_url": "https://www.vivino.com/search/wines?q=URL인코딩된원본와인명",
   "description": "이 와인의 알려진 특징 (맛, 향, 바디감 등)을 2~3문장으로 설명",
   "food_pairing": "이 와인과 잘 어울리는 음식 3~4가지를 간략히 (예: '소고기 스테이크, 양갈비, 숙성 치즈')"
 }`;

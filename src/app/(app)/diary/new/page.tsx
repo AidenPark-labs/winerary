@@ -173,7 +173,7 @@ function fillWineFields(
     type: ai.wine_type || "",
     grapes: notNull(ai.grape_variety) ?? "",
     vintage_range: "",
-    vivino_url: notNull(ai.vivino_url) ?? `https://www.vivino.com/search/wines?q=${encodeURIComponent(nameOrig)}`,
+    vivino_url: notNull(ai.vivino_url),
   });
 }
 
@@ -250,8 +250,7 @@ export default function NewDiaryPage() {
     if (!hasUrlParams) return;
     const name = searchParams.get("name")!;
     const nameOriginal = searchParams.get("name_original") || name;
-    const vivinoUrl = searchParams.get("vivino_url") ||
-      `https://www.vivino.com/search/wines?q=${encodeURIComponent(nameOriginal)}`;
+    const vivinoUrl = searchParams.get("vivino_url") ?? undefined;
 
     const synth: AiResult = {
       name,

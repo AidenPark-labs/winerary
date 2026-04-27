@@ -23,6 +23,7 @@ export interface ReviewWine {
   producer_en: string | null;
   winery_en_clean: string | null;
   image_url: string | null;
+  review_image_url: string | null;
   vivino_url: string | null;
   vivino_wine_id: number | null;
   vivino_rating: number | null;
@@ -328,13 +329,20 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
                   </div>
                 )}
               </div>
-              {current.image_url && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={current.image_url}
-                  alt={current.name_ko}
-                  className="w-24 h-32 object-contain bg-zinc-950 rounded mb-3"
-                />
+              {(current.image_url || current.review_image_url) && (
+                <div className="relative inline-block mb-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={current.image_url ?? current.review_image_url ?? ""}
+                    alt={current.name_ko}
+                    className="w-24 h-32 object-contain bg-zinc-950 rounded"
+                  />
+                  {!current.image_url && current.review_image_url && (
+                    <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-amber-900/80 border border-amber-700 text-[9px] text-amber-200 tracking-wider">
+                      검수용 (워터마크)
+                    </span>
+                  )}
+                </div>
               )}
               {editMode ? (
                 <div className="space-y-1.5 text-sm">

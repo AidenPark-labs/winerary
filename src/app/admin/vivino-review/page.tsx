@@ -36,7 +36,7 @@ export default async function VivinoReviewPage({
     .select(`
       id, name_ko, name_en, wine_type, country, country_ko, region, region_ko,
       grape_variety, grape_varieties, producer, producer_ko, producer_en, winery_en_clean,
-      image_url,
+      image_url, review_image_url,
       vivino_url, vivino_wine_id, vivino_rating, vivino_reviews,
       vivino_winery, vivino_grapes, vivino_region, vivino_style, vivino_alcohol, vivino_description,
       vivino_needs_review, vivino_reviewed_at

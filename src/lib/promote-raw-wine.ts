@@ -109,6 +109,19 @@ export function validateRequired(raw: RawWineInput, grapes: string[]): string[] 
   return missing;
 }
 
+/**
+ * 어드민 검수 전용 이미지 URL 도출. 사용자 노출 image_url과 별개.
+ * 현재 wine21만 raw_payload.image_path → img.wine21.com 절대 URL로 조립.
+ */
+function buildReviewImageUrl(raw: RawWineInput): string | null {
+  const p = (raw.raw_payload ?? {}) as Record<string, unknown>;
+  if (raw.source === "wine21") {
+    const path = p.image_path as string | undefined;
+    if (path && !/no_image/i.test(path)) return `https://img.wine21.com${path}`;
+  }
+  return null;
+}
+
 function evalVivino(raw: RawWineInput): { hasVivino: boolean; autoReviewed: boolean; needsReview: boolean } {
   const p = raw.raw_payload ?? {};
   const hasUrl = typeof p.vivino_url === "string" && (p.vivino_url as string).length > 0;
@@ -260,6 +273,7 @@ export async function promoteSingleRawWine(
     price: raw.price,
     alcohol: raw.alcohol,
     image_url: raw.image_url,
+    review_image_url: buildReviewImageUrl(raw),
     data_source: raw.source,
     source: raw.source,
     source_refs: [raw.id],

@@ -329,21 +329,31 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
                   </div>
                 )}
               </div>
-              {(current.image_url || current.review_image_url) && (
-                <div className="relative inline-block mb-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={current.image_url ?? current.review_image_url ?? ""}
-                    alt={current.name_ko}
-                    className="w-24 h-32 object-contain bg-zinc-950 rounded"
-                  />
-                  {!current.image_url && current.review_image_url && (
-                    <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-amber-900/80 border border-amber-700 text-[9px] text-amber-200 tracking-wider">
-                      검수용 (워터마크)
-                    </span>
-                  )}
-                </div>
-              )}
+              {(current.image_url || current.review_image_url) && (() => {
+                const imgSrc = current.image_url ?? current.review_image_url ?? "";
+                const isReview = !current.image_url && !!current.review_image_url;
+                return (
+                  <a
+                    href={imgSrc}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="relative block mb-3 w-full max-w-xs mx-auto"
+                    title="클릭하면 풀사이즈로 열립니다"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={imgSrc}
+                      alt={current.name_ko}
+                      className="w-full h-80 object-contain bg-zinc-950 rounded hover:ring-2 hover:ring-zinc-600 transition"
+                    />
+                    {isReview && (
+                      <span className="absolute bottom-2 left-2 px-2 py-1 rounded bg-amber-900/85 border border-amber-700 text-[10px] text-amber-200 tracking-wider font-medium">
+                        검수용 (워터마크)
+                      </span>
+                    )}
+                  </a>
+                );
+              })()}
               {editMode ? (
                 <div className="space-y-1.5 text-sm">
                   <EditRow

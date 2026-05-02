@@ -31,6 +31,27 @@ export default function ReviewClient({ initial }: { initial: Wine[] }) {
     return <p className="text-zinc-400">검수 대상 없음. 모든 변환 정상.</p>;
   }
 
+  // 정책 안내 박스
+  const Policy = () => (
+    <div className="rounded border border-zinc-800 bg-zinc-900/40 p-3 mb-4 text-xs text-zinc-400 space-y-1">
+      <div className="text-zinc-300 font-medium mb-1">⚠ 입력 규칙 (저장 시 자동 정규화됨)</div>
+      <div>• <b>country_ko</b>: 한글 단일 단어 (예: 프랑스, 미국, 이탈리아)</div>
+      <div>
+        • <b>region_ko</b>: <span className="text-amber-400">와인이 명시한 가장 구체적인 산지 한 단어</span>
+        (예: 메독, 캘리포니아, 토스카나).
+        country는 따로 country_ko에. path/슬래시/괄호 영문 X
+      </div>
+      <div>
+        • <b>producer</b>: <span className="text-amber-400">단일 영문 와이너리명</span>
+        (예: E&J Gallo Winery). 두 와이너리 연결 X, 한국어 X
+      </div>
+      <div>
+        • <b>grape_varieties</b>: 한글 배열, 콤마 구분 (예: 까베르네 소비뇽, 메를로).
+        비율 입력 시 자동 분리됨 (예: "Cabernet 60%" → grape_blend로)
+      </div>
+    </div>
+  );
+
   const setField = (id: string, key: keyof Wine, value: any) => {
     setEditing((prev) => ({ ...prev, [id]: { ...prev[id], [key]: value } }));
   };
@@ -46,11 +67,34 @@ export default function ReviewClient({ initial }: { initial: Wine[] }) {
       if (patch.producer !== undefined) cleaned.producer = patch.producer as string | null;
       if (patch.grape_varieties !== undefined) cleaned.grape_varieties = patch.grape_varieties as string[];
       const r = await updateWineV2(w.id, cleaned);
-      if (r.error) {
+      if ("error" in r && r.error) {
         setMsg((p) => ({ ...p, [w.id]: `❌ ${r.error}` }));
-      } else {
-        setMsg((p) => ({ ...p, [w.id]: "✓ 저장" }));
-        setWines((prev) => prev.map((x) => (x.id === w.id ? { ...x, ...cleaned } as Wine : x)));
+      } else if (r.success) {
+        // 변환 모듈이 정규화한 값으로 카드 갱신
+        const n = r.normalized;
+        const updated: Partial<Wine> = {};
+        if (n.country_ko !== undefined) updated.country_ko = n.country_ko;
+        if (n.region_ko !== undefined) updated.region_ko = n.region_ko;
+        if (n.producer !== undefined) updated.producer = n.producer;
+        if (n.grape_varieties !== undefined) updated.grape_varieties = n.grape_varieties;
+
+        if (r.new_reasons.length === 0) {
+          // 검수 통과 → 목록에서 제거
+          setWines((prev) => prev.filter((x) => x.id !== w.id));
+        } else {
+          // 사유 남음 → 정규화 결과로 갱신, 사유 표시
+          setWines((prev) =>
+            prev.map((x) =>
+              x.id === w.id
+                ? ({ ...x, ...updated, needs_review_reasons: r.new_reasons } as Wine)
+                : x,
+            ),
+          );
+          setMsg((p) => ({
+            ...p,
+            [w.id]: `정규화됨 · 잔여 사유: ${r.new_reasons.join(" · ")}`,
+          }));
+        }
         setEditing((prev) => {
           const next = { ...prev };
           delete next[w.id];
@@ -76,6 +120,7 @@ export default function ReviewClient({ initial }: { initial: Wine[] }) {
 
   return (
     <div className="space-y-4">
+      <Policy />
       {wines.map((w) => {
         const cur = { ...w, ...editing[w.id] };
         const isBusy = busy === w.id;
@@ -104,24 +149,25 @@ export default function ReviewClient({ initial }: { initial: Wine[] }) {
 
             <div className="grid grid-cols-2 gap-3 text-sm">
               <Field
-                label="country_ko"
+                label="country_ko (한글, 필수)"
                 value={cur.country_ko ?? ""}
                 onChange={(v) => setField(w.id, "country_ko", v)}
+                placeholder="예: 프랑스, 미국"
               />
               <Field
-                label="region_ko"
+                label="region_ko (finest 한 단어)"
                 value={cur.region_ko ?? ""}
                 onChange={(v) => setField(w.id, "region_ko", v || null)}
-                placeholder="(NULL 가능)"
+                placeholder="예: 메독, 캘리포니아 / 비울 수 있음"
               />
               <Field
-                label="producer"
+                label="producer (단일 영문)"
                 value={cur.producer ?? ""}
                 onChange={(v) => setField(w.id, "producer", v || null)}
-                placeholder="(영문, NULL 가능)"
+                placeholder="예: E&J Gallo Winery / 비울 수 있음"
               />
               <Field
-                label="grape_varieties (콤마)"
+                label="grape_varieties (한글, 콤마)"
                 value={cur.grape_varieties.join(", ")}
                 onChange={(v) =>
                   setField(
@@ -130,6 +176,7 @@ export default function ReviewClient({ initial }: { initial: Wine[] }) {
                     v.split(",").map((s) => s.trim()).filter(Boolean),
                   )
                 }
+                placeholder="예: 진판델, 까베르네 소비뇽"
               />
             </div>
 

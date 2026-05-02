@@ -836,6 +836,34 @@ COMMIT;
 - [ ] 이 문서 "완료" 표시
 - [ ] 메모리 갱신 (`project_wines_v5_simplification_pending.md` → `_complete.md`)
 
+### Phase 8 — 어드민 검수 통합 (별도 후속)
+
+> v5 본 흐름 끝난 후 진행. 데이터 모델이 안정된 상태에서 UI 재구성.
+
+**배경**:
+모든 검수 페이지(wines·raw-wines·vivino-review·dedupe-review·pending-wines·reports)가 본질적으로 "부정확/중복인 데이터를 어드민이 손으로 정정"하는 동일 작업의 다른 입구. 분산되어 있어 어드민이 작업 흐름을 헷갈림.
+
+**v5 swap 후 자연 정리되는 페이지**:
+- `/admin/wines-v2-review` (변환 모호 케이스) — wines로 흡수
+- `/admin/vivino-dup-review` (Vivino URL 중복) — wines 편집 또는 dedupe-review로 흡수
+
+**통합 방향 — 와인 단위 (옵션 C 추정)**:
+- `/admin/wines/[id]` 단일 페이지에서 모든 검수 정보 표시:
+  - 기본 정보 편집
+  - Vivino 매칭 상태 (검수 완료 / 사유)
+  - 중복 후보 (vivino_url 기준)
+  - 변환 사유 (needs_review_reasons)
+  - 신고 이력
+  - 유저 기록 통계
+- 검수 큐 페이지(`/admin/inbox`)는 단순 todo list — 검수 필요 wine_id 모음
+  - 클릭 시 와인 단일 페이지로 이동
+
+**작업 분량**: 1~2 세션 (swap 후 데이터 모델 안정 시점)
+
+**미결**:
+- 단일 와인 페이지 vs 검수 유형별 페이지 — 정확한 IA는 swap 후 재평가
+- raw_wines 승격은 본질이 다른 작업이라 별도 페이지 유지할지
+
 ---
 
 ## 6. 위험 관리
@@ -964,6 +992,29 @@ Phase 0 (DDL) + Phase 1 (변환 모듈) 설계를 단단히 한 세션. 마이�
   - 단위 테스트
   - backfill 스크립트 (`scripts/build-wines-v2.ts`)
   - Phase 0 마이그레이션 적용
+
+### 2026-05-02 (세션 2 — 적용·backfill·검수 UI)
+
+- 완료:
+  - **Phase 0 마이그레이션 적용** (wines_v2 + vivino_wines 빈 테이블 생성)
+  - **Phase 1.1 단위 테스트** (`wines-v2-transform.test.ts`, 68 케이스 통과)
+  - **Phase 1.2 LLM 보강** — 미커버 unique 90건 (grape 64 / region 6 / country 0 / producer 20)
+    - claude-haiku 번역 ($0.03)
+    - grape 63건 term_dict 등록 (Barbaresco 1건 LLM 오분류 제외)
+    - region·winery는 검수 위임 (환각·노이즈 위험)
+    - producer 한글에 괄호 영문 있는 케이스 정규식 추출 추가 (415→20건)
+  - **Phase 1.3 backfill** — wines 20,603 → wines_v2 20,600 / vivino_wines 11,677
+    - country 누락 3건만 진입 거부
+    - vivino_url 중복 851 그룹 발견 → UNIQUE 제약 완화 + 검수 view 추가
+  - **Phase 3 search_jamo** — 트리거 + 일괄 채움 (20,600건)
+  - **Phase 2 검수 UI** — `/admin/wines-v2-review` + `/admin/vivino-dup-review`
+    - 변환 모듈 자동 정규화 + placeholder 정책 안내 (사용자 피드백 반영)
+- 추가 결정:
+  - **Phase 8 신설** — 어드민 검수 통합 (swap 후, 와인 단위 페이지로 통합 추정)
+  - 임베딩·search_query_en은 후속 (description 데이터 부족)
+- 5개 커밋 main push 완료 (`d5a52a2..3e27193`)
+- 미결:
+  - Phase 4 (코드 전환) — 4.1 타입+lib → 4.2 read → 4.3 write+UI → 4.4 scripts
 
 ---
 

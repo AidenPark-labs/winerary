@@ -167,7 +167,7 @@ export async function queryWines(filters: WineFilters): Promise<string> {
 
 async function runWineQuery(supabase: Awaited<ReturnType<typeof createClient>>, filters: WineFilters) {
   let query = supabase
-    .from("wines_v2")
+    .from("wines")
     .select("name_ko, name_en, wine_type, country_ko, grape_varieties, producer, price")
     .eq("is_published", true)
     .not("price", "is", null);
@@ -285,7 +285,7 @@ export async function searchMentionedWines(messages: { role: string; content: st
       if (fuzzy) orFilters.push(`name_ko.ilike.${fuzzy}`);
 
       const { data } = await supabase
-        .from("wines_v2")
+        .from("wines")
         .select("name_ko, name_en, wine_type, country_ko, grape_varieties, producer, price")
         .or(orFilters.join(","))
         .limit(5);

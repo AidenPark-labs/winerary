@@ -13,7 +13,7 @@ export default async function WinesV2ReviewPage() {
   const { supabase } = await requireAdmin();
 
   const { data, count, error } = await supabase
-    .from("wines_v2")
+    .from("wines")
     .select(
       "id, name_ko, name_en, country_ko, region_ko, producer, grape_varieties, wine_type, wine_style, alcohol, brand, source, needs_review, needs_review_reasons",
       { count: "exact" },

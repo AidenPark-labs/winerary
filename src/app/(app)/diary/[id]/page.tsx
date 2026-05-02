@@ -43,7 +43,7 @@ export default async function DiaryDetailPage({ params }: { params: Promise<{ id
   }
   if (!wineData && record.name) {
     const { data: byName } = await supabase
-      .from("wines_v2")
+      .from("wines")
       .select("id")
       .eq("name_ko", record.name)
       .maybeSingle();

@@ -81,7 +81,7 @@ export default async function MyWinePage() {
   const wineGrapeMap = new Map<string, string[]>();
   if (wineIds.length > 0) {
     const { data: wineRows } = await supabase
-      .from("wines_v2")
+      .from("wines")
       .select("id, grape_varieties")
       .in("id", wineIds);
     for (const w of wineRows ?? []) {

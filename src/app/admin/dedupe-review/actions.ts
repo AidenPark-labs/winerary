@@ -43,7 +43,7 @@ export async function confirmDedupe(
 
   // 2) target 현재 행 조회 (변환 모듈 buildUpdatePatch 입력용)
   const { data: target, error: tErr } = await supabase
-    .from("wines_v2")
+    .from("wines")
     .select(
       "name_ko, name_en, wine_type, wine_style, country_ko, region_ko, producer, grape_varieties, grape_blend, alcohol, brand, price, description, image_url, locked_fields, source_refs, source_snapshot",
     )
@@ -78,7 +78,7 @@ export async function confirmDedupe(
   // 4) wines_v2 UPDATE
   const update = { ...result.wineUpdate, updated_at: now };
   const { error: uErr } = await supabase
-    .from("wines_v2")
+    .from("wines")
     .update(update)
     .eq("id", candidate.target_wine_id);
   if (uErr) {

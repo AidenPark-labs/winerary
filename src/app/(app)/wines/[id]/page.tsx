@@ -58,7 +58,7 @@ export default async function WineDetailPage({
 
   // 1순위: 같은 타입 + 같은 국가 + 비슷한 가격대
   let q1 = supabase
-    .from("wines_v2")
+    .from("wines")
     .select("id")
     .neq("id", id)
     .eq("wine_type", wine.wine_type)
@@ -74,7 +74,7 @@ export default async function WineDetailPage({
   if (similarIds.length < 5) {
     const exclude = new Set([id, ...similarIds]);
     const { data: fallbackIds } = await supabase
-      .from("wines_v2")
+      .from("wines")
       .select("id")
       .eq("wine_type", wine.wine_type)
       .eq("is_published", true)

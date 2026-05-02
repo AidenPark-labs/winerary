@@ -22,7 +22,7 @@ export async function searchWines<T extends { id: string }>(
   if (error || !ranked || ranked.length === 0) return [];
 
   const ids = (ranked as Array<{ id: string }>).map((r) => r.id);
-  const { data: full } = await supabase.from("wines_v2").select(select).in("id", ids);
+  const { data: full } = await supabase.from("wines").select(select).in("id", ids);
   if (!full) return [];
 
   const byId = new Map<string, T>();

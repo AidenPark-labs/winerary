@@ -12,7 +12,7 @@ export default async function AdminWinesPage({ searchParams }: { searchParams: P
   const to = from + PAGE_SIZE - 1;
 
   let query = admin
-    .from("wines_v2")
+    .from("wines")
     .select("*", { count: "exact" })
     .order("created_at", { ascending: false });
 

@@ -36,7 +36,7 @@ export async function updateWineV2(id: string, patch: WineV2Patch) {
 
   // 1) 현재 wines_v2 행 조회
   const { data: current, error: cErr } = await supabase
-    .from("wines_v2")
+    .from("wines")
     .select(
       "name_ko, name_en, wine_type, wine_style, country_ko, region_ko, producer, grape_varieties, grape_blend, alcohol, brand, price, description, image_url, locked_fields, source_refs, source_snapshot",
     )
@@ -81,7 +81,7 @@ export async function updateWineV2(id: string, patch: WineV2Patch) {
     update.needs_review_reasons = result.needs_review_reasons;
   }
 
-  const { error } = await supabase.from("wines_v2").update(update).eq("id", id);
+  const { error } = await supabase.from("wines").update(update).eq("id", id);
   if (error) {
     if (error.code === "23505") return { error: "중복된 값이 있어 저장할 수 없습니다" };
     return { error: error.message };
@@ -113,7 +113,7 @@ export async function updateWineV2(id: string, patch: WineV2Patch) {
 export async function approveWineV2(id: string) {
   const { supabase } = await requireAdmin();
   const { error } = await supabase
-    .from("wines_v2")
+    .from("wines")
     .update({
       needs_review: false,
       needs_review_reasons: null,

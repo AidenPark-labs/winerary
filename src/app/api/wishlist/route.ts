@@ -28,7 +28,7 @@ export async function GET() {
   if (withId.length > 0) {
     const ids = withId.map((d) => d.wine_id);
     const { data: wines } = await supabase
-      .from("wines_v2")
+      .from("wines")
       .select(wineFields)
       .in("id", ids);
     if (wines) {
@@ -41,7 +41,7 @@ export async function GET() {
   if (withoutId.length > 0) {
     const names = withoutId.map((d) => d.name_en);
     const { data: matched } = await supabase
-      .from("wines_v2")
+      .from("wines")
       .select(wineFields)
       .in("name_en", names);
 

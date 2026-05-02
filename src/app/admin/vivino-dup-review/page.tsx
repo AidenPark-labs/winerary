@@ -32,7 +32,7 @@ export default async function VivinoDupReviewPage() {
   // 모든 wine_id 모아서 wines_v2 정보 한 번에 조회
   const allWineIds = (groups ?? []).flatMap((g) => g.wine_ids as string[]);
   const { data: wines } = await supabase
-    .from("wines_v2")
+    .from("wines")
     .select("id, name_ko, name_en, country_ko, region_ko, producer, source, image_url")
     .in("id", allWineIds.length > 0 ? allWineIds : ["00000000-0000-0000-0000-000000000000"]);
 

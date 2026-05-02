@@ -208,7 +208,7 @@ export async function promoteSingleRawWine(
 
   // 1) exact match 후보 조회
   const { data: exactCands } = await sb
-    .from("wines_v2")
+    .from("wines")
     .select("id, name_ko, name_en, country_ko")
     .eq("name_ko", (raw.name_ko ?? "").trim())
     .limit(50);
@@ -223,7 +223,7 @@ export async function promoteSingleRawWine(
 
   // 2) 부분 일치 후보 → wine_dedupe_candidates 등록
   const { data: partialCands } = await sb
-    .from("wines_v2")
+    .from("wines")
     .select("id, name_ko, name_en, country_ko")
     .or(`name_ko.eq.${(raw.name_ko ?? "").trim()},name_en.eq.${(raw.name_en ?? "").trim()}`)
     .limit(50);
@@ -256,7 +256,7 @@ export async function promoteSingleRawWine(
 
   const { randomUUID } = await import("crypto");
   const newId = randomUUID();
-  const { error } = await sb.from("wines_v2").insert({
+  const { error } = await sb.from("wines").insert({
     id: newId,
     ...result.wineRow,
     created_at: now,
@@ -266,7 +266,7 @@ export async function promoteSingleRawWine(
     if (error.code === "23505" && error.message.includes("name_ko")) {
       // 중복 → 같은 name_ko 가진 wines_v2를 찾아 candidate 등록 시도
       const { data: collide } = await sb
-        .from("wines_v2")
+        .from("wines")
         .select("id")
         .eq("name_ko", result.wineRow.name_ko)
         .limit(1);
@@ -308,7 +308,7 @@ async function autoMergeV2(
 ): Promise<boolean> {
   // 현재 wines_v2 행 조회
   const { data: target } = await sb
-    .from("wines_v2")
+    .from("wines")
     .select(
       "name_ko, name_en, wine_type, wine_style, country_ko, region_ko, producer, grape_varieties, grape_blend, alcohol, brand, price, description, image_url, locked_fields, source_refs, source_snapshot",
     )
@@ -324,7 +324,7 @@ async function autoMergeV2(
   // wines_v2 UPDATE
   const update = { ...result.wineUpdate, updated_at: now };
   if (Object.keys(update).length > 1) {
-    const upd = await sb.from("wines_v2").update(update).eq("id", targetId);
+    const upd = await sb.from("wines").update(update).eq("id", targetId);
     if (upd.error) return false;
   }
 
@@ -439,7 +439,7 @@ export async function insertWineDirectly(
 
   // 1) exact match → auto_merge
   const { data: exactCands } = await sb
-    .from("wines_v2")
+    .from("wines")
     .select("id, name_ko, name_en, country_ko, grape_varieties, source_refs")
     .eq("name_ko", (nameKo ?? "").trim())
     .limit(50);
@@ -455,7 +455,7 @@ export async function insertWineDirectly(
         const r = await buildUpdatePatch(sb, w as any, { grape_varieties: merged }, { dict });
         Object.assign(updates, r.wineUpdate);
       }
-      await sb.from("wines_v2").update(updates).eq("id", w.id);
+      await sb.from("wines").update(updates).eq("id", w.id);
       return { kind: "auto_merged", wine_id: w.id };
     }
   }
@@ -482,7 +482,7 @@ export async function insertWineDirectly(
 
   const { randomUUID } = await import("crypto");
   const newId = randomUUID();
-  const { error } = await sb.from("wines_v2").insert({
+  const { error } = await sb.from("wines").insert({
     id: newId,
     ...result.wineRow,
     created_at: now,
@@ -491,7 +491,7 @@ export async function insertWineDirectly(
   if (error) {
     if (error.code === "23505" && error.message.includes("name_ko")) {
       const { data: collide } = await sb
-        .from("wines_v2")
+        .from("wines")
         .select("id, grape_varieties")
         .eq("name_ko", result.wineRow.name_ko)
         .limit(1);
@@ -500,7 +500,7 @@ export async function insertWineDirectly(
         const existingGrapes = Array.isArray(target.grape_varieties) ? (target.grape_varieties as string[]) : [];
         const merged = Array.from(new Set([...existingGrapes, ...grapes]));
         if (merged.length > existingGrapes.length) {
-          await sb.from("wines_v2").update({ grape_varieties: merged, updated_at: now }).eq("id", target.id);
+          await sb.from("wines").update({ grape_varieties: merged, updated_at: now }).eq("id", target.id);
         }
         return { kind: "auto_merged", wine_id: target.id };
       }

@@ -99,7 +99,7 @@ async function queryWines(filters: WineFilters): Promise<string> {
   const supabase = await createClient();
 
   let query = supabase
-    .from("wines_v2")
+    .from("wines")
     .select("name_ko, name_en, wine_type, country_ko, grape_varieties, producer, price")
     .eq("is_published", true)
     .not("price", "is", null);

@@ -47,7 +47,7 @@ export default async function VivinoReviewPage({
   let winesV2: Record<string, any> = {};
   if (wineIds.length > 0) {
     const { data: ws } = await supabase
-      .from("wines_v2")
+      .from("wines")
       .select(
         "id, name_ko, name_en, wine_type, country_ko, region_ko, producer, grape_varieties, image_url",
       )

@@ -24,7 +24,7 @@ export async function fetchWineWithVivinoById(
   id: string,
 ): Promise<Wine | null> {
   const [wineRes, vivinoRes] = await Promise.all([
-    sb.from("wines_v2").select("*").eq("id", id).maybeSingle(),
+    sb.from("wines").select("*").eq("id", id).maybeSingle(),
     sb.from("vivino_wines").select("*").eq("wine_id", id).maybeSingle(),
   ]);
   if (wineRes.error || !wineRes.data) return null;
@@ -43,7 +43,7 @@ export async function fetchWinesWithVivinoByIds(
 ): Promise<Wine[]> {
   if (ids.length === 0) return [];
   const [winesRes, vivinosRes] = await Promise.all([
-    sb.from("wines_v2").select("*").in("id", ids),
+    sb.from("wines").select("*").in("id", ids),
     sb.from("vivino_wines").select("*").in("wine_id", ids),
   ]);
   if (winesRes.error || !winesRes.data) return [];
@@ -68,7 +68,7 @@ export async function fetchWineWithVivinoForAdmin(
   id: string,
 ): Promise<Wine | null> {
   const [wineRes, vivinoRes] = await Promise.all([
-    sb.from("wines_v2").select("*").eq("id", id).maybeSingle(),
+    sb.from("wines").select("*").eq("id", id).maybeSingle(),
     sb.from("vivino_wines").select("*").eq("wine_id", id).maybeSingle(),
   ]);
   if (wineRes.error || !wineRes.data) return null;

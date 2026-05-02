@@ -74,7 +74,7 @@ export default async function DictionaryPage({ searchParams }: { searchParams: P
     const ids = (topRanked as Array<{ wine_id: string; score: number }>).map((r) => r.wine_id);
     const [winesRes, vivinosRes] = await Promise.all([
       supabase
-        .from("wines_v2")
+        .from("wines")
         .select("id, name_ko, name_en, country_ko, wine_type, image_url")
         .in("id", ids),
       supabase

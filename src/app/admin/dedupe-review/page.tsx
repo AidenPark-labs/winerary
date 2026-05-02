@@ -33,7 +33,7 @@ export default async function DedupeReviewPage() {
       : Promise.resolve({ data: [] as unknown[] }),
     targetIds.length > 0
       ? supabase
-          .from("wines_v2")
+          .from("wines")
           .select("id, name_ko, name_en, producer, country_ko, region_ko, wine_type, grape_varieties, image_url, alcohol")
           .in("id", targetIds)
       : Promise.resolve({ data: [] as unknown[] }),

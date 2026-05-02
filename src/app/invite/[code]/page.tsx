@@ -53,7 +53,7 @@ export default async function InvitePage({ params }: { params: Promise<{ code: s
   }
   if (!wineData && record.name) {
     const { data: byName } = await admin
-      .from("wines_v2")
+      .from("wines")
       .select("id")
       .eq("name_ko", record.name)
       .maybeSingle();

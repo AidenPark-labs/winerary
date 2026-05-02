@@ -21,7 +21,7 @@ export async function updateWine(
 
   // 현재 행 조회
   const { data: current, error: cErr } = await supabase
-    .from("wines_v2")
+    .from("wines")
     .select(
       "name_ko, name_en, wine_type, wine_style, country_ko, region_ko, producer, grape_varieties, grape_blend, alcohol, brand, price, description, image_url, locked_fields, source_refs, source_snapshot",
     )
@@ -86,7 +86,7 @@ export async function updateWine(
     update.needs_review_reasons = null;
   }
 
-  const { error } = await supabase.from("wines_v2").update(update).eq("id", id);
+  const { error } = await supabase.from("wines").update(update).eq("id", id);
   if (error) {
     if (error.code === "23505" && error.message.includes("name_ko")) {
       return { error: "이미 사용 중인 한국어명입니다" };
@@ -127,7 +127,7 @@ export async function updateWineVivino(
 
   // wines_v2 행 조회 (자동 보강용)
   const { data: current } = await supabase
-    .from("wines_v2")
+    .from("wines")
     .select(
       "name_ko, name_en, wine_type, wine_style, country_ko, region_ko, producer, grape_varieties, grape_blend, alcohol, brand, price, description, image_url, locked_fields, source_refs, source_snapshot",
     )
@@ -171,7 +171,7 @@ export async function updateWineVivino(
   // wines_v2 UPDATE
   if (Object.keys(result.wineUpdate).length > 0) {
     const upd = await supabase
-      .from("wines_v2")
+      .from("wines")
       .update({ ...result.wineUpdate, updated_at: now })
       .eq("id", id);
     if (upd.error) return { error: upd.error.message };
@@ -211,7 +211,7 @@ export async function clearWineVivino(id: string) {
 export async function deleteWine(id: string) {
   const { supabase } = await requireAdmin();
   await supabase.from("vivino_wines").delete().eq("wine_id", id);
-  const { error } = await supabase.from("wines_v2").delete().eq("id", id);
+  const { error } = await supabase.from("wines").delete().eq("id", id);
   if (error) return { error: error.message };
   return { success: true };
 }

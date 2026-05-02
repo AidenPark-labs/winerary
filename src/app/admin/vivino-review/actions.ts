@@ -27,7 +27,7 @@ export async function updateWineFields(id: string, patch: WineFieldUpdate) {
 
   // current 조회
   const { data: current } = await supabase
-    .from("wines_v2")
+    .from("wines")
     .select(
       "name_ko, name_en, wine_type, wine_style, country_ko, region_ko, producer, grape_varieties, grape_blend, alcohol, brand, price, description, image_url, locked_fields, source_refs, source_snapshot",
     )
@@ -57,7 +57,7 @@ export async function updateWineFields(id: string, patch: WineFieldUpdate) {
     update.needs_review_reasons = null;
   }
 
-  const { error } = await supabase.from("wines_v2").update(update).eq("id", id);
+  const { error } = await supabase.from("wines").update(update).eq("id", id);
   if (error) {
     if (error.code === "23505" && error.message.includes("name_ko")) {
       return { error: "이미 사용 중인 한국어명입니다" };

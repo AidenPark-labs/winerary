@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     const { randomUUID } = await import("crypto");
     const newId = randomUUID();
     const { error: wineError } = await admin
-      .from("wines_v2")
+      .from("wines")
       .insert({ id: newId, ...result.wineRow });
     if (wineError) return Response.json({ error: wineError.message }, { status: 500 });
     await admin.from("wine_records").update({ wine_id: newId }).eq("id", recordId);

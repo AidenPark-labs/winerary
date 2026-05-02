@@ -1016,6 +1016,27 @@ Phase 0 (DDL) + Phase 1 (변환 모듈) 설계를 단단히 한 세션. 마이�
 - 미결:
   - Phase 4 (코드 전환) — 4.1 타입+lib → 4.2 read → 4.3 write+UI → 4.4 scripts
 
+### 2026-05-02 (세션 3 — Phase 4·5 완료, Swap)
+
+- 완료: **Phase 4 코드 전환** (4.1·4.2a·4.2b·4.2c·4.3)
+  - 타입: Wine + VivinoWine + GrapeBlendItem 신설 (`src/types/index.ts`)
+  - 라이브러리: wine-display.ts(resolveWineDisplayV2), wine-search.ts, wines-v2-fetch.ts(헬퍼) 신설
+  - read 경로 (페이지 8 + API 8): 모두 wines_v2 + vivino_wines 합성
+  - write 경로: lib/promote-raw-wine 변환 모듈 통합, admin/wines·vivino-review·dedupe-review actions·page 모두 v5
+- 완료: **Phase 5 Swap**
+  - 마이그레이션 `20260502_swap_wines_v2.sql` (단일 트랜잭션):
+    - FK 7개 임시 제거 → RENAME → FK 신 wines로 재생성
+    - wines → wines_old, wines_v2 → wines
+    - wines_display view DROP
+    - RLS: service-only → public read (is_published=true)
+  - 코드 sed: `from("wines_v2")` → `from("wines")` 일괄
+  - 검증: wines 20,600 / wines_old 20,603 / vivino_wines 11,677, FK 7개 정상, 빌드 통과
+- 4개 커밋 main push 완료 (`a735ffc..5b65a0f`)
+- 미결:
+  - Phase 6 (모니터링): 자연 진행 (수일 어드민 점검)
+  - Phase 7 (정리): wines_old DROP, active scripts 정리, term_dict 보강분
+  - Phase 8 (검수 통합): 별도 세션
+
 ---
 
 ## 10. 관련 파일

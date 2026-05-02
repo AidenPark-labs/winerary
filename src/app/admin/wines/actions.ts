@@ -2,103 +2,105 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { loadGrapeDict, normalizeGrapes } from "@/lib/grape-normalize";
+import {
+  loadTermDict,
+  buildUpdatePatch,
+  type WinesV2Input,
+  type VivinoInput,
+} from "@/lib/wines-v2-transform";
 
-export async function updateWine(id: string, data: Record<string, string | number | string[] | null | undefined>) {
+/**
+ * v5: 일반 와인 편집 (어드민 폼).
+ * 변환 모듈을 통과시켜 자동 정규화 (path 분해, 한·영 변환, grape 비율 분리 등).
+ */
+export async function updateWine(
+  id: string,
+  data: Record<string, string | number | string[] | null | undefined>,
+) {
   const { supabase } = await requireAdmin();
 
-  const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  // 현재 행 조회
+  const { data: current, error: cErr } = await supabase
+    .from("wines_v2")
+    .select(
+      "name_ko, name_en, wine_type, wine_style, country_ko, region_ko, producer, grape_varieties, grape_blend, alcohol, brand, price, description, image_url, locked_fields, source_refs, source_snapshot",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (cErr || !current) return { error: "와인을 찾을 수 없습니다" };
+
+  // UI 필드 → WinesV2Input 매핑
+  const patch: Partial<WinesV2Input> = {};
+  const passthrough: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(data)) {
     if (v === undefined) continue;
-    if (k === "grape_varieties" && Array.isArray(v)) {
-      // term_dict 기반 정규화 → en + ko 자동 생성
-      const dict = await loadGrapeDict(supabase);
-      const result = normalizeGrapes(v, dict);
-      payload.grape_varieties = result.normalized_en;
-      payload.grape_varieties_ko = result.normalized_ko;
-    } else {
-      payload[k] = v;
+    switch (k) {
+      case "name_ko":
+      case "name_en":
+        patch[k] = v as string;
+        break;
+      case "country_ko":
+        patch.country = v as string;
+        break;
+      case "region_ko":
+        patch.region = v as string | null;
+        break;
+      case "producer":
+        patch.producer = v as string | null;
+        break;
+      case "wine_type":
+      case "wine_style":
+      case "brand":
+      case "description":
+      case "image_url":
+        (patch as Record<string, unknown>)[k] = v;
+        break;
+      case "grape_varieties":
+        if (Array.isArray(v)) patch.grape_varieties = v;
+        break;
+      case "alcohol":
+        patch.alcohol = v as string | number;
+        break;
+      case "price":
+        patch.price = typeof v === "number" ? v : null;
+        break;
+      case "is_published":
+        patch.is_published = v as unknown as boolean;
+        break;
+      default:
+        // 기타 필드는 그대로 (locked_fields 등)
+        passthrough[k] = v;
     }
   }
 
-  const { error } = await supabase.from("wines").update(payload).eq("id", id);
+  const dict = await loadTermDict(supabase);
+  const result = await buildUpdatePatch(supabase, current as any, patch, { dict });
 
+  const update: Record<string, unknown> = {
+    ...result.wineUpdate,
+    ...passthrough,
+    updated_at: new Date().toISOString(),
+  };
+  if (result.needs_review_reasons.length === 0 && "needs_review" in update === false) {
+    update.needs_review = false;
+    update.needs_review_reasons = null;
+  }
+
+  const { error } = await supabase.from("wines_v2").update(update).eq("id", id);
   if (error) {
-    if (error.code === "23505" && error.message.includes("wines_name_ko_unique")) {
+    if (error.code === "23505" && error.message.includes("name_ko")) {
       return { error: "이미 사용 중인 한국어명입니다" };
     }
-    if (error.code === "23505") {
-      return { error: "중복된 값이 있어 저장할 수 없습니다" };
-    }
+    if (error.code === "23505") return { error: "중복된 값이 있어 저장할 수 없습니다" };
     return { error: error.message };
   }
   revalidatePath("/admin/wines");
   return { success: true };
 }
 
-interface TermDictEntry { category: string; en: string; ko: string; aliases: string[] }
-
-function normKey(s: string): string {
-  return s.replace(/\s*\([^)]*\)\s*/g, " ").trim().toLowerCase().replace(/\s+/g, " ");
-}
-
-async function loadTermDict(supabase: SupabaseClient): Promise<Map<string, TermDictEntry>> {
-  const map = new Map<string, TermDictEntry>();
-  let offset = 0;
-  while (true) {
-    const { data, error } = await supabase
-      .from("term_dict")
-      .select("category, en, ko, aliases")
-      .order("category")
-      .order("en")
-      .range(offset, offset + 999);
-    if (error) throw error;
-    if (!data || data.length === 0) break;
-    for (const r of data as Array<{ category: string; en: string; ko: string; aliases: string[] | null }>) {
-      const entry: TermDictEntry = { category: r.category, en: r.en, ko: r.ko, aliases: r.aliases ?? [] };
-      map.set(`${entry.category}::${normKey(entry.en)}`, entry);
-      map.set(`${entry.category}::${normKey(entry.ko)}`, entry);
-      for (const a of entry.aliases) if (a) map.set(`${entry.category}::${normKey(a)}`, entry);
-    }
-    if (data.length < 1000) break;
-    offset += data.length;
-  }
-  return map;
-}
-
-function lookup(dict: Map<string, TermDictEntry>, category: string, value: string | null | undefined): TermDictEntry | null {
-  if (!value) return null;
-  const n = normKey(value);
-  return n ? dict.get(`${category}::${n}`) ?? null : null;
-}
-
-function cleanGrapeString(s: string): string[] {
-  return s
-    .split(/[,;]/)
-    .map((x) =>
-      x.replace(/^\s*\d+(?:\.\d+)?\s*%\s*/, "")
-       .replace(/\s*\d+(?:\.\d+)?\s*%\s*$/, "")
-       .replace(/\s*\([^)]*\)\s*/g, " ")
-       .trim(),
-    )
-    .filter((x) => x.length > 0 && !/^[\d%.\s]+$/.test(x));
-}
-
-const VALID_WINE_TYPES = new Set(["red", "white", "rose", "sparkling", "fortified", "dessert", "other"]);
-
-function inferWineTypeFromStyle(style: string | null | undefined): string | null {
-  if (!style) return null;
-  const low = style.toLowerCase();
-  if (low.includes("rosé") || low.includes("rose")) return "rose";
-  if (low.includes("red")) return "red";
-  if (low.includes("white")) return "white";
-  if (low.includes("sparkling") || low.includes("champagne")) return "sparkling";
-  if (low.includes("dessert")) return "dessert";
-  if (low.includes("fortified") || low.includes("port") || low.includes("sherry") || low.includes("madeira")) return "fortified";
-  return null;
-}
-
+/**
+ * v5: Vivino 매칭 데이터 입력 → vivino_wines UPSERT + wines_v2의 country_ko/region_ko/wine_style 자동 보강.
+ */
 export async function updateWineVivino(
   id: string,
   data: {
@@ -113,123 +115,103 @@ export async function updateWineVivino(
     vivino_alcohol?: string | null;
     vivino_allergens?: string | null;
     vivino_description?: string | null;
-  }
+  },
 ) {
   const { supabase } = await requireAdmin();
 
-  const { data: current, error: curErr } = await supabase
-    .from("wines")
-    .select("country, country_ko, region_path, region_ko, grape_varieties, grape_varieties_ko, wine_type, wine_style, wine_style_ko, winery_en_clean")
+  if (!data.vivino_url || !/vivino\.com/i.test(data.vivino_url)) {
+    return { error: "Vivino URL이 필요합니다" };
+  }
+
+  const now = new Date().toISOString();
+
+  // wines_v2 행 조회 (자동 보강용)
+  const { data: current } = await supabase
+    .from("wines_v2")
+    .select(
+      "name_ko, name_en, wine_type, wine_style, country_ko, region_ko, producer, grape_varieties, grape_blend, alcohol, brand, price, description, image_url, locked_fields, source_refs, source_snapshot",
+    )
     .eq("id", id)
-    .single();
-  if (curErr || !current) return { error: "와인을 찾을 수 없습니다" };
+    .maybeSingle();
+  if (!current) return { error: "와인을 찾을 수 없습니다" };
 
-  const dict = await loadTermDict(supabase);
-
-  const updates: Record<string, unknown> = {
-    ...data,
-    updated_at: new Date().toISOString(),
+  // vivino input
+  const vivinoInput: VivinoInput = {
+    url: data.vivino_url,
+    wine_id: data.vivino_wine_id ?? null,
+    rating: data.vivino_rating ?? null,
+    reviews: data.vivino_reviews ?? null,
+    winery: data.vivino_winery ?? null,
+    grapes: data.vivino_grapes ?? null,
+    region: data.vivino_region ?? null,
+    style: data.vivino_style ?? null,
+    alcohol: data.vivino_alcohol ?? null,
+    description: data.vivino_description ?? null,
+    allergens: data.vivino_allergens ?? null,
   };
 
-  // vivino_region → country, region_path, country_ko, region_ko
-  if (data.vivino_region) {
-    const segments = data.vivino_region.split("/").map((s) => s.trim()).filter(Boolean);
-    const countryCandidate = segments[0] ?? null;
-    const finestRegion = segments.length > 1 ? segments[segments.length - 1] : null;
+  // wines_v2 자동 보강 — vivino_region → country/region (빈 필드만)
+  const patch: Partial<WinesV2Input> = { vivino: vivinoInput };
+  if (data.vivino_region && (!current.country_ko || !current.region_ko)) {
+    // path 첫 항목을 country로, 마지막 항목을 region으로
+    const segs = data.vivino_region.split("/").map((s) => s.trim()).filter(Boolean);
+    if (segs.length > 0 && !current.country_ko) patch.country = segs[0];
+    if (segs.length > 1 && !current.region_ko) patch.region = data.vivino_region;
+  }
+  if (data.vivino_style && !current.wine_style) {
+    patch.wine_style = data.vivino_style;
+  }
 
-    if (!current.country && countryCandidate) updates.country = countryCandidate;
-    if (!current.country_ko && countryCandidate) {
-      const e = lookup(dict, "country", countryCandidate);
-      if (e) updates.country_ko = e.ko;
-    }
-    if (!current.region_path && finestRegion) updates.region_path = data.vivino_region;
-    if (!current.region_ko) {
-      for (let i = segments.length - 1; i >= 1; i--) {
-        const e = lookup(dict, "region", segments[i]);
-        if (e) { updates.region_ko = e.ko; break; }
-      }
+  const dict = await loadTermDict(supabase);
+  const result = await buildUpdatePatch(supabase, current as any, patch, {
+    dict,
+    fillEmptyOnly: true,
+  });
+
+  // wines_v2 UPDATE
+  if (Object.keys(result.wineUpdate).length > 0) {
+    const upd = await supabase
+      .from("wines_v2")
+      .update({ ...result.wineUpdate, updated_at: now })
+      .eq("id", id);
+    if (upd.error) return { error: upd.error.message };
+  }
+
+  // vivino_wines UPSERT
+  if (result.vivinoUpsert) {
+    const { data: existing } = await supabase
+      .from("vivino_wines")
+      .select("wine_id")
+      .eq("wine_id", id)
+      .maybeSingle();
+    if (existing) {
+      await supabase
+        .from("vivino_wines")
+        .update({ ...result.vivinoUpsert, updated_at: now })
+        .eq("wine_id", id);
+    } else {
+      await supabase.from("vivino_wines").insert({ wine_id: id, ...result.vivinoUpsert });
     }
   }
 
-  // vivino_grapes → grape_varieties[], grape_varieties_ko[] (정규화 적용)
-  if (data.vivino_grapes) {
-    const grapes = cleanGrapeString(data.vivino_grapes);
-    if (grapes.length > 0) {
-      const grapeDict = await loadGrapeDict(supabase);
-      const norm = normalizeGrapes(grapes, grapeDict);
-      const currentGv = (current.grape_varieties as string[] | null) ?? [];
-      if (currentGv.length === 0 && norm.normalized_en.length > 0) {
-        updates.grape_varieties = norm.normalized_en;
-      }
-      const currentGvKo = (current.grape_varieties_ko as string[] | null) ?? [];
-      if (currentGvKo.length === 0 && norm.normalized_ko.length > 0) {
-        updates.grape_varieties_ko = norm.normalized_ko;
-      }
-    }
-  }
-
-  // vivino_style → wine_style, wine_style_ko, wine_type
-  if (data.vivino_style) {
-    if (!current.wine_style) updates.wine_style = data.vivino_style;
-    if (!current.wine_style_ko) {
-      for (const cand of ["Red", "White", "Rose", "Rosé", "Sparkling", "Dessert", "Fortified"]) {
-        if (data.vivino_style.toLowerCase().includes(cand.toLowerCase())) {
-          const e = lookup(dict, "style", cand);
-          if (e) { updates.wine_style_ko = e.ko; break; }
-        }
-      }
-    }
-    if (!current.wine_type) {
-      const inferred = inferWineTypeFromStyle(data.vivino_style);
-      if (inferred && VALID_WINE_TYPES.has(inferred)) updates.wine_type = inferred;
-    }
-  }
-
-  // vivino_winery → winery_en_clean (기본 복사; 정제는 수동 또는 Phase 3 스크립트가 담당)
-  if (data.vivino_winery && !current.winery_en_clean) {
-    updates.winery_en_clean = data.vivino_winery;
-  }
-
-  const { error } = await supabase.from("wines").update(updates).eq("id", id);
-  if (error) return { error: error.message };
   revalidatePath("/admin/wines");
   return { success: true };
 }
 
+/** Vivino 매칭 해제 — vivino_wines DELETE. */
 export async function clearWineVivino(id: string) {
   const { supabase } = await requireAdmin();
-
-  const { error } = await supabase
-    .from("wines")
-    .update({
-      vivino_url: null,
-      vivino_wine_id: null,
-      vivino_rating: null,
-      vivino_reviews: null,
-      vivino_winery: null,
-      vivino_grapes: null,
-      vivino_region: null,
-      vivino_style: null,
-      vivino_alcohol: null,
-      vivino_allergens: null,
-      vivino_description: null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id);
-
+  const { error } = await supabase.from("vivino_wines").delete().eq("wine_id", id);
   if (error) return { error: error.message };
   revalidatePath("/admin/wines");
   return { success: true };
 }
 
+/** 와인 삭제 — wines_v2 + vivino_wines 둘 다 (cascading manual). */
 export async function deleteWine(id: string) {
   const { supabase } = await requireAdmin();
-
-  const { error } = await supabase
-    .from("wines")
-    .delete()
-    .eq("id", id);
-
+  await supabase.from("vivino_wines").delete().eq("wine_id", id);
+  const { error } = await supabase.from("wines_v2").delete().eq("id", id);
   if (error) return { error: error.message };
   return { success: true };
 }

@@ -15,9 +15,9 @@ export default async function AdminDashboard() {
     supabase.from("profiles").select("*", { count: "exact", head: true }),
     supabase.from("wine_records").select("*", { count: "exact", head: true }),
     supabase.from("wine_records").select("*", { count: "exact", head: true }).is("deleted_at", null),
-    supabase.from("wines").select("*", { count: "exact", head: true }),
+    supabase.from("wines_v2").select("*", { count: "exact", head: true }),
     supabase.from("wine_wishlist").select("*", { count: "exact", head: true }),
-    supabase.from("wines").select("*", { count: "exact", head: true }).not("vivino_rating", "is", null),
+    supabase.from("vivino_wines").select("*", { count: "exact", head: true }).not("rating", "is", null),
     supabase.from("pending_wines").select("*", { count: "exact", head: true }).eq("status", "pending"),
   ]);
 

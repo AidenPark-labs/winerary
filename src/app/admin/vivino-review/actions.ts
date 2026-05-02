@@ -3,80 +3,91 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 import { crawlByUrl } from "@/lib/vivino-crawler";
-import { loadGrapeDict, normalizeGrapes } from "@/lib/grape-normalize";
+import {
+  loadTermDict,
+  buildUpdatePatch,
+  type WinesV2Input,
+} from "@/lib/wines-v2-transform";
 
 export interface WineFieldUpdate {
   name_ko?: string;
   name_en?: string;
-  producer_ko?: string;
-  producer_en?: string;
-  country?: string;
+  producer?: string; // v5: 영문 단일
   country_ko?: string;
-  region?: string;
   region_ko?: string;
   wine_type?: string;
-  grape_varieties?: string[]; // 배열 전체 교체
+  grape_varieties?: string[];
 }
 
 /**
- * wines 필드 일괄 UPDATE. 빈 문자열은 null로 변환, undefined는 무시.
- * 빈티지 제거 검수에서 어드민이 직접 교정할 때 사용.
+ * v5: wines_v2 필드 일괄 UPDATE — 변환 모듈 통과해 자동 정규화.
  */
 export async function updateWineFields(id: string, patch: WineFieldUpdate) {
   const { supabase } = await requireAdmin();
-  const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
-  let grapeUnknowns: string[] = [];
 
-  for (const [k, v] of Object.entries(patch)) {
-    if (v === undefined) continue;
-    if (k === "grape_varieties" && Array.isArray(v)) {
-      // term_dict 기반 정규화 → grape_varieties + grape_varieties_ko 자동 생성
-      const dict = await loadGrapeDict(supabase);
-      const result = normalizeGrapes(v as string[], dict);
-      payload.grape_varieties = result.normalized_en;
-      payload.grape_varieties_ko = result.normalized_ko;
-      grapeUnknowns = result.unknowns;
-    } else if (Array.isArray(v)) {
-      payload[k] = v.filter((s) => typeof s === "string" && s.trim().length > 0).map((s) => s.trim());
-    } else if (typeof v === "string") {
-      payload[k] = v.trim() === "" ? null : v.trim();
-    } else {
-      payload[k] = v;
-    }
+  // current 조회
+  const { data: current } = await supabase
+    .from("wines_v2")
+    .select(
+      "name_ko, name_en, wine_type, wine_style, country_ko, region_ko, producer, grape_varieties, grape_blend, alcohol, brand, price, description, image_url, locked_fields, source_refs, source_snapshot",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (!current) return { error: "와인을 찾을 수 없습니다" };
+
+  // UI 필드 → WinesV2Input
+  const transformPatch: Partial<WinesV2Input> = {};
+  if (patch.name_ko !== undefined) transformPatch.name_ko = patch.name_ko;
+  if (patch.name_en !== undefined) transformPatch.name_en = patch.name_en;
+  if (patch.country_ko !== undefined) transformPatch.country = patch.country_ko;
+  if (patch.region_ko !== undefined) transformPatch.region = patch.region_ko;
+  if (patch.producer !== undefined) transformPatch.producer = patch.producer;
+  if (patch.wine_type !== undefined) transformPatch.wine_type = patch.wine_type;
+  if (Array.isArray(patch.grape_varieties)) {
+    transformPatch.grape_varieties = patch.grape_varieties;
   }
-  const { error } = await supabase.from("wines").update(payload).eq("id", id);
+
+  const dict = await loadTermDict(supabase);
+  const result = await buildUpdatePatch(supabase, current as any, transformPatch, { dict });
+
+  const now = new Date().toISOString();
+  const update: Record<string, unknown> = { ...result.wineUpdate, updated_at: now };
+  if (result.needs_review_reasons.length === 0 && "needs_review" in update === false) {
+    update.needs_review = false;
+    update.needs_review_reasons = null;
+  }
+
+  const { error } = await supabase.from("wines_v2").update(update).eq("id", id);
   if (error) {
-    if (error.code === "23505" && error.message.includes("wines_name_ko_unique")) {
+    if (error.code === "23505" && error.message.includes("name_ko")) {
       return { error: "이미 사용 중인 한국어명입니다" };
     }
     return { error: error.message };
   }
   revalidatePath("/admin/vivino-review");
+  // grape_unknowns는 needs_review_reasons 중 grape: 카테고리만 추출
+  const grapeUnknowns = result.needs_review_reasons
+    .filter((r) => r.startsWith("grape:"))
+    .map((r) => r.slice(6));
   return { success: true, grape_unknowns: grapeUnknowns };
 }
 
+/** Vivino 매칭 확정 — vivino_wines.needs_review=false, reviewed_at=now */
 export async function confirmVivinoMatch(id: string) {
   const { supabase } = await requireAdmin();
-
   const now = new Date().toISOString();
   const { error } = await supabase
-    .from("wines")
-    .update({
-      vivino_needs_review: false,
-      vivino_reviewed_at: now,
-      updated_at: now,
-    })
-    .eq("id", id);
-
+    .from("vivino_wines")
+    .update({ needs_review: false, reviewed_at: now, updated_at: now })
+    .eq("wine_id", id);
   if (error) return { error: error.message };
   revalidatePath("/admin/vivino-review");
   return { success: true };
 }
 
 /**
- * 검수 중에 어드민이 올바른 Vivino URL을 찾았을 때 호출.
- * 새 URL로 크롤링 → wines.vivino_* 덮어쓰기 → needs_review=true 유지, reviewed_at=null (재검수 대기).
- * 어드민은 갱신된 카드 보고 K(유지) / U(해제)로 최종 확정.
+ * 어드민이 올바른 Vivino URL을 찾았을 때.
+ * 새 URL로 크롤링 → vivino_wines UPSERT → needs_review=true (재검수 대기).
  */
 export async function replaceVivinoUrl(id: string, newUrl: string) {
   const trimmed = newUrl.trim();
@@ -84,63 +95,49 @@ export async function replaceVivinoUrl(id: string, newUrl: string) {
   if (!trimmed.includes("vivino.com")) return { error: "Vivino URL이 아닙니다" };
 
   const { supabase } = await requireAdmin();
-
   const crawl = await crawlByUrl(trimmed);
   if (!crawl.success) {
     return { error: `크롤링 실패 (${crawl.step}): ${crawl.error}` };
   }
 
   const now = new Date().toISOString();
-  const { error } = await supabase
-    .from("wines")
-    .update({
-      vivino_url: crawl.vivinoUrl,
-      vivino_wine_id: crawl.vivinoWineId,
-      vivino_name: crawl.vivinoName,
-      vivino_rating: crawl.rating,
-      vivino_reviews: crawl.reviews,
-      vivino_winery: crawl.facts.winery || null,
-      vivino_grapes: crawl.facts.grapes || null,
-      vivino_region: crawl.facts.region || null,
-      vivino_style: crawl.facts.style || null,
-      vivino_alcohol: crawl.facts.alcohol || null,
-      vivino_description: crawl.facts.description || null,
-      vivino_allergens: crawl.facts.allergens || null,
-      vivino_needs_review: true,
-      vivino_reviewed_at: null,
-      updated_at: now,
-    })
-    .eq("id", id);
+  const vivinoRow = {
+    vivino_url: crawl.vivinoUrl,
+    vivino_wine_id: crawl.vivinoWineId != null ? String(crawl.vivinoWineId) : null,
+    vivino_name: crawl.vivinoName,
+    rating: crawl.rating,
+    reviews: crawl.reviews,
+    winery: crawl.facts.winery || null,
+    grapes: crawl.facts.grapes || null,
+    region: crawl.facts.region || null,
+    style: crawl.facts.style || null,
+    alcohol: crawl.facts.alcohol || null,
+    description: crawl.facts.description || null,
+    allergens: crawl.facts.allergens || null,
+    needs_review: true,
+    reviewed_at: null,
+    updated_at: now,
+  };
+
+  // UPSERT
+  const { data: existing } = await supabase
+    .from("vivino_wines")
+    .select("wine_id")
+    .eq("wine_id", id)
+    .maybeSingle();
+  const { error } = existing
+    ? await supabase.from("vivino_wines").update(vivinoRow).eq("wine_id", id)
+    : await supabase.from("vivino_wines").insert({ wine_id: id, ...vivinoRow });
 
   if (error) return { error: error.message };
   revalidatePath("/admin/vivino-review");
   return { success: true };
 }
 
+/** Vivino 매칭 해제 — vivino_wines DELETE */
 export async function unlinkVivinoMatch(id: string) {
   const { supabase } = await requireAdmin();
-
-  const now = new Date().toISOString();
-  const { error } = await supabase
-    .from("wines")
-    .update({
-      vivino_url: null,
-      vivino_wine_id: null,
-      vivino_rating: null,
-      vivino_reviews: null,
-      vivino_winery: null,
-      vivino_grapes: null,
-      vivino_region: null,
-      vivino_style: null,
-      vivino_alcohol: null,
-      vivino_allergens: null,
-      vivino_description: null,
-      vivino_needs_review: false,
-      vivino_reviewed_at: now,
-      updated_at: now,
-    })
-    .eq("id", id);
-
+  const { error } = await supabase.from("vivino_wines").delete().eq("wine_id", id);
   if (error) return { error: error.message };
   revalidatePath("/admin/vivino-review");
   return { success: true };

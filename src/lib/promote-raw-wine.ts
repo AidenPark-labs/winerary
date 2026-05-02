@@ -1,10 +1,10 @@
 /**
- * 단건 raw_wine → wines 승격 로직 (scripts/promote-v2.ts의 서브셋)
+ * 단건 raw_wine → wines_v2 승격 로직 (v5).
  *
- * 서버 액션에서 어드민이 "지금 승격" 버튼을 누를 때 사용.
- * 일괄 promote와 동일한 정책이지만:
- *   - wines 전체 인덱스를 매번 로드하지 않고 DB 쿼리로 매칭
- *   - pending_wines 재연결은 여기서 안 함 (별도 일괄 잡)
+ * v3 코드를 변환 모듈(wines-v2-transform.ts)에 통합 — buildVivinoFields/autoMerge fillEmpty 등은
+ * 모두 모듈 안으로 이동. 이 파일에는 dedupe 매칭(buildMatchKey/classifyCandidate)과 raw → input 어댑터만 남김.
+ *
+ * Phase 5 swap 후 wines_v2 → wines로 sed.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -15,15 +15,15 @@ import {
   classifyCandidate,
   type MatchReason,
 } from "./wine-dedupe";
-import { loadGrapeDict, normalizeGrapes } from "./grape-normalize";
+import {
+  loadTermDict,
+  transformInput,
+  buildUpdatePatch,
+  type WinesV2Input,
+  type VivinoInput,
+} from "./wines-v2-transform";
 
-const VALID_WINE_TYPES = new Set(["red", "white", "rose", "sparkling", "fortified", "dessert", "other"]);
-
-function normalizeWineType(raw: string | null | undefined): string {
-  const v = (raw ?? "").toLowerCase().trim();
-  if (VALID_WINE_TYPES.has(v)) return v;
-  return "other";
-}
+// ─── grape 추출 (정책: wine21만 parsed_grape 검증, 나머지 raw.grape_variety 분해) ─────
 
 const GRAPE_KEYWORDS: Record<string, string[]> = {
   "Cabernet Sauvignon": ["cabernet sauvignon", "cab sauv", "cabernet-sauvignon"],
@@ -100,6 +100,75 @@ export function extractGrapes(raw: RawWineInput): string[] {
   return gv.split(/[,;/]/).map((s) => s.trim()).filter((s) => s.length > 0);
 }
 
+// ─── raw → WinesV2Input 어댑터 ────────────────────────────────────────────────
+
+const VALID_SOURCES = new Set([
+  "wine21",
+  "winenara",
+  "gangnam",
+  "naver_shopping",
+  "user_submission",
+  "admin",
+]);
+
+function buildVivinoFromRawPayload(p: Record<string, unknown> | null | undefined): VivinoInput | null {
+  if (!p) return null;
+  const url = typeof p.vivino_url === "string" ? p.vivino_url : null;
+  if (!url) return null;
+  return {
+    url,
+    wine_id: typeof p.vivino_wine_id === "number" || typeof p.vivino_wine_id === "string" ? p.vivino_wine_id : null,
+    name: typeof p.vivino_name === "string" ? p.vivino_name : null,
+    rating: typeof p.vivino_rating === "number" ? p.vivino_rating : null,
+    reviews: typeof p.vivino_reviews === "number" ? p.vivino_reviews : null,
+    winery: typeof p.vivino_winery === "string" ? p.vivino_winery : null,
+    grapes: typeof p.vivino_grapes === "string" ? p.vivino_grapes : null,
+    region: typeof p.vivino_region === "string" ? p.vivino_region : null,
+    style: typeof p.vivino_style === "string" ? p.vivino_style : null,
+    alcohol: typeof p.vivino_alcohol === "string" ? p.vivino_alcohol : null,
+    description: typeof p.vivino_description === "string" ? p.vivino_description : null,
+    allergens: typeof p.vivino_allergens === "string" ? p.vivino_allergens : null,
+    image_url: typeof p.vivino_image_url === "string" ? p.vivino_image_url : null,
+    match_score: typeof p.vivino_match_score === "number" ? p.vivino_match_score : null,
+    scraped_at: typeof p.vivino_scraped_at === "string" ? p.vivino_scraped_at : null,
+  };
+}
+
+function rawToInput(raw: RawWineInput, grapes: string[]): WinesV2Input {
+  const source = VALID_SOURCES.has(raw.source) ? raw.source : "admin";
+  return {
+    source: source as WinesV2Input["source"],
+    source_refs: [raw.id],
+    name_ko: stripVintage(raw.name_ko ?? "") || (raw.name_ko ?? ""),
+    name_en: stripVintage(raw.name_en ?? "") || (raw.name_en ?? ""),
+    country: raw.country ?? "",
+    region: raw.region,
+    wine_type: raw.wine_type,
+    producer: raw.producer_en ?? raw.producer_ko ?? null,
+    grape_varieties: grapes,
+    alcohol: raw.alcohol,
+    price: raw.price,
+    image_url: raw.image_url,
+    is_published: true,
+    vivino: buildVivinoFromRawPayload(raw.raw_payload),
+    legacy: {
+      raw_payload: raw.raw_payload ?? undefined,
+      review_image_url: typeof (raw.raw_payload as Record<string, unknown> | null)?.image_path === "string"
+        ? buildReviewImageUrl(raw)
+        : undefined,
+    },
+  };
+}
+
+function buildReviewImageUrl(raw: RawWineInput): string | undefined {
+  const p = (raw.raw_payload ?? {}) as Record<string, unknown>;
+  if (raw.source === "wine21") {
+    const path = p.image_path as string | undefined;
+    if (path && !/no_image/i.test(path)) return `https://img.wine21.com${path}`;
+  }
+  return undefined;
+}
+
 export function validateRequired(raw: RawWineInput, grapes: string[]): string[] {
   const missing: string[] = [];
   if (!raw.name_ko?.trim()) missing.push("name_ko");
@@ -109,71 +178,7 @@ export function validateRequired(raw: RawWineInput, grapes: string[]): string[] 
   return missing;
 }
 
-/**
- * 어드민 검수 전용 이미지 URL 도출. 사용자 노출 image_url과 별개.
- * 현재 wine21만 raw_payload.image_path → img.wine21.com 절대 URL로 조립.
- */
-function buildReviewImageUrl(raw: RawWineInput): string | null {
-  const p = (raw.raw_payload ?? {}) as Record<string, unknown>;
-  if (raw.source === "wine21") {
-    const path = p.image_path as string | undefined;
-    if (path && !/no_image/i.test(path)) return `https://img.wine21.com${path}`;
-  }
-  return null;
-}
-
-function evalVivino(raw: RawWineInput): { hasVivino: boolean; autoReviewed: boolean; needsReview: boolean } {
-  const p = raw.raw_payload ?? {};
-  const hasUrl = typeof p.vivino_url === "string" && (p.vivino_url as string).length > 0;
-  if (!hasUrl) return { hasVivino: false, autoReviewed: false, needsReview: false };
-  const score = typeof p.vivino_match_score === "number" ? (p.vivino_match_score as number) : null;
-  if (score != null && score >= 0.9) return { hasVivino: true, autoReviewed: true, needsReview: false };
-  return { hasVivino: true, autoReviewed: false, needsReview: true };
-}
-
-function buildVivinoFields(raw: RawWineInput, v: ReturnType<typeof evalVivino>): Record<string, unknown> {
-  const p = (raw.raw_payload ?? {}) as Record<string, unknown>;
-  if (!v.hasVivino) {
-    return {
-      vivino_url: null,
-      vivino_wine_id: null,
-      vivino_rating: null,
-      vivino_reviews: null,
-      vivino_winery: null,
-      vivino_grapes: null,
-      vivino_region: null,
-      vivino_style: null,
-      vivino_alcohol: null,
-      vivino_description: null,
-      vivino_allergens: null,
-      vivino_name: null,
-      vivino_needs_review: false,
-      vivino_reviewed_at: null,
-    };
-  }
-  const now = new Date().toISOString();
-  const wine_id = typeof p.vivino_wine_id === "number" || typeof p.vivino_wine_id === "string"
-    ? String(p.vivino_wine_id)
-    : null;
-  // raw_payload에 vivino_page_url(상세 URL)이 있으면 그 값을, 없으면 vivino_url을 canonical로 사용
-  const canonicalUrl = (p.vivino_page_url as string) ?? (p.vivino_url as string) ?? null;
-  return {
-    vivino_url: canonicalUrl,
-    vivino_wine_id: wine_id,
-    vivino_rating: typeof p.vivino_rating === "number" ? p.vivino_rating : null,
-    vivino_reviews: typeof p.vivino_reviews === "number" ? p.vivino_reviews : null,
-    vivino_winery: (p.vivino_winery as string) ?? null,
-    vivino_grapes: (p.vivino_grapes as string) ?? null,
-    vivino_region: (p.vivino_region as string) ?? null,
-    vivino_style: (p.vivino_style as string) ?? null,
-    vivino_alcohol: (p.vivino_alcohol as string) ?? null,
-    vivino_description: (p.vivino_description as string) ?? null,
-    vivino_allergens: (p.vivino_allergens as string) ?? null,
-    vivino_name: (p.vivino_name as string) ?? null,
-    vivino_needs_review: v.needsReview,
-    vivino_reviewed_at: v.autoReviewed ? now : null,
-  };
-}
+// ─── promote outcome ──────────────────────────────────────────────────────────
 
 export type PromoteOutcome =
   | { kind: "already_promoted"; wine_id: string }
@@ -183,10 +188,8 @@ export type PromoteOutcome =
   | { kind: "candidate"; wine_id: string; reason: MatchReason; score: number }
   | { kind: "error"; message: string };
 
-/**
- * 단건 raw_wine을 정책대로 처리.
- * DB에서 직접 기존 wines를 쿼리하여 매칭.
- */
+// ─── 메인 — promote 단건 ──────────────────────────────────────────────────────
+
 export async function promoteSingleRawWine(
   sb: SupabaseClient,
   raw: RawWineInput,
@@ -197,40 +200,37 @@ export async function promoteSingleRawWine(
 
   const grapes = extractGrapes(raw);
   const missing = validateRequired(raw, grapes);
-  if (missing.length > 0) {
-    return { kind: "missing_fields", missing };
-  }
+  if (missing.length > 0) return { kind: "missing_fields", missing };
 
   const key = buildMatchKey({ name_en: raw.name_en, name_ko: raw.name_ko, country: raw.country });
   const now = new Date().toISOString();
+  const dict = await loadTermDict(sb);
 
-  // 1) exact match (3요소) — 정규화 후 DB에서 후보 조회 (name_ko 원본으로 먼저, 정규화는 JS에서 비교)
-  // Postgres 쪽에 정규화 함수 없으니 name_ko(trim)로 일단 좁히고 JS에서 필터
+  // 1) exact match 후보 조회
   const { data: exactCands } = await sb
-    .from("wines")
-    .select("id, name_ko, name_en, country")
+    .from("wines_v2")
+    .select("id, name_ko, name_en, country_ko")
     .eq("name_ko", (raw.name_ko ?? "").trim())
     .limit(50);
 
   for (const w of exactCands ?? []) {
-    const wk = buildMatchKey({ name_en: w.name_en, name_ko: w.name_ko, country: w.country });
+    const wk = buildMatchKey({ name_en: w.name_en, name_ko: w.name_ko, country: w.country_ko });
     if (wk.name_en_n === key.name_en_n && wk.name_ko_n === key.name_ko_n && wk.country === key.country) {
-      // auto_merge
-      const ok = await autoMerge(sb, raw, w.id, grapes, evalVivino(raw), now);
+      const ok = await autoMergeV2(sb, raw, w.id, grapes, dict, now);
       return ok ? { kind: "auto_merged", wine_id: w.id } : { kind: "error", message: "merge 실패" };
     }
   }
 
-  // 2) 부분 일치 후보 (이름 기반)
+  // 2) 부분 일치 후보 → wine_dedupe_candidates 등록
   const { data: partialCands } = await sb
-    .from("wines")
-    .select("id, name_ko, name_en, country")
+    .from("wines_v2")
+    .select("id, name_ko, name_en, country_ko")
     .or(`name_ko.eq.${(raw.name_ko ?? "").trim()},name_en.eq.${(raw.name_en ?? "").trim()}`)
     .limit(50);
 
   let best: { reason: MatchReason; score: number; target: string } | null = null;
   for (const w of partialCands ?? []) {
-    const wk = buildMatchKey({ name_en: w.name_en, name_ko: w.name_ko, country: w.country });
+    const wk = buildMatchKey({ name_en: w.name_en, name_ko: w.name_ko, country: w.country_ko });
     const c = classifyCandidate(key, wk);
     if (c && (!best || c.score > best.score)) {
       best = { reason: c.reason, score: c.score, target: w.id };
@@ -250,47 +250,25 @@ export async function promoteSingleRawWine(
     return { kind: "candidate", wine_id: best.target, reason: best.reason, score: best.score };
   }
 
-  // 3) 신규 INSERT
-  const v = evalVivino(raw);
-  const vivino = buildVivinoFields(raw, v);
+  // 3) 신규 INSERT — 변환 모듈 통과
+  const result = await transformInput(sb, rawToInput(raw, grapes), dict);
+  if (!result.ok) return { kind: "error", message: result.error };
 
-  // 품종 정규화 (term_dict)
-  const dict = await loadGrapeDict(sb);
-  const normGrape = normalizeGrapes(grapes, dict);
-
-  const row: Record<string, unknown> = {
-    name_ko: stripVintage(raw.name_ko ?? "") || raw.name_ko,
-    name_en: stripVintage(raw.name_en ?? "") || raw.name_en,
-    country: raw.country,
-    country_ko: raw.country,
-    region: raw.region,
-    wine_type: normalizeWineType(raw.wine_type),
-    producer_ko: raw.producer_ko,
-    producer_en: raw.producer_en,
-    producer: raw.producer_ko ?? raw.producer_en,
-    grape_varieties: normGrape.normalized_en.length > 0 ? normGrape.normalized_en : grapes,
-    grape_varieties_ko: normGrape.normalized_ko,
-    price: raw.price,
-    alcohol: raw.alcohol,
-    image_url: raw.image_url,
-    review_image_url: buildReviewImageUrl(raw),
-    data_source: raw.source,
-    source: raw.source,
-    source_refs: [raw.id],
-    is_published: true,
-    ...vivino,
+  const { randomUUID } = await import("crypto");
+  const newId = randomUUID();
+  const { error } = await sb.from("wines_v2").insert({
+    id: newId,
+    ...result.wineRow,
     created_at: now,
     updated_at: now,
-  };
-
-  const { data, error } = await sb.from("wines").insert(row).select("id").single();
+  });
   if (error) {
-    // name_ko UNIQUE 충돌 fallback
-    if (error.code === "23505" && error.message.includes("wines_name_ko_unique")) {
+    if (error.code === "23505" && error.message.includes("name_ko")) {
+      // 중복 → 같은 name_ko 가진 wines_v2를 찾아 candidate 등록 시도
       const { data: collide } = await sb
-        .from("wines")
+        .from("wines_v2")
         .select("id")
-        .eq("name_ko", (raw.name_ko ?? "").trim())
+        .eq("name_ko", result.wineRow.name_ko)
         .limit(1);
       const target = collide?.[0]?.id;
       if (target) {
@@ -307,7 +285,11 @@ export async function promoteSingleRawWine(
     return { kind: "error", message: error.message };
   }
 
-  const newId = (data as { id: string }).id;
+  // vivino_wines 별도 INSERT
+  if (result.vivinoRow) {
+    await sb.from("vivino_wines").insert({ wine_id: newId, ...result.vivinoRow });
+  }
+
   await sb
     .from("raw_wines")
     .update({ promoted_wine_id: newId, promoted_at: now })
@@ -316,57 +298,48 @@ export async function promoteSingleRawWine(
   return { kind: "new_promoted", wine_id: newId };
 }
 
-async function autoMerge(
+async function autoMergeV2(
   sb: SupabaseClient,
   raw: RawWineInput,
   targetId: string,
   grapes: string[],
-  v: ReturnType<typeof evalVivino>,
+  dict: Awaited<ReturnType<typeof loadTermDict>>,
   now: string,
 ): Promise<boolean> {
-  const { data: target, error } = await sb.from("wines").select("*").eq("id", targetId).single();
-  if (error || !target) return false;
-  const t = target as Record<string, unknown>;
+  // 현재 wines_v2 행 조회
+  const { data: target } = await sb
+    .from("wines_v2")
+    .select(
+      "name_ko, name_en, wine_type, wine_style, country_ko, region_ko, producer, grape_varieties, grape_blend, alcohol, brand, price, description, image_url, locked_fields, source_refs, source_snapshot",
+    )
+    .eq("id", targetId)
+    .maybeSingle();
+  if (!target) return false;
 
-  const updates: Record<string, unknown> = { updated_at: now };
-  const fillEmpty = (key: string, value: unknown) => {
-    if (value == null || value === "") return;
-    if (t[key] == null || t[key] === "") updates[key] = value;
-  };
-  fillEmpty("name_ko", stripVintage(raw.name_ko ?? "") || raw.name_ko);
-  fillEmpty("name_en", stripVintage(raw.name_en ?? "") || raw.name_en);
-  fillEmpty("country", raw.country);
-  fillEmpty("country_ko", raw.country);
-  fillEmpty("region", raw.region);
-  fillEmpty("wine_type", normalizeWineType(raw.wine_type));
-  fillEmpty("producer_ko", raw.producer_ko);
-  fillEmpty("producer_en", raw.producer_en);
-  fillEmpty("image_url", raw.image_url);
-  fillEmpty("price", raw.price);
+  const result = await buildUpdatePatch(sb, target as any, rawToInput(raw, grapes), {
+    dict,
+    fillEmptyOnly: true,
+  });
 
-  // grape 정규화 후 union
-  const existingGrapes = Array.isArray(t.grape_varieties) ? (t.grape_varieties as string[]) : [];
-  const dict = await loadGrapeDict(sb);
-  const unionRes = normalizeGrapes([...existingGrapes, ...grapes], dict);
-  if (unionRes.normalized_en.length > existingGrapes.length) {
-    updates.grape_varieties = unionRes.normalized_en;
-    updates.grape_varieties_ko = unionRes.normalized_ko;
+  // wines_v2 UPDATE
+  const update = { ...result.wineUpdate, updated_at: now };
+  if (Object.keys(update).length > 1) {
+    const upd = await sb.from("wines_v2").update(update).eq("id", targetId);
+    if (upd.error) return false;
   }
 
-  const existingRefs = Array.isArray(t.source_refs) ? (t.source_refs as string[]) : [];
-  if (!existingRefs.includes(raw.id)) updates.source_refs = [...existingRefs, raw.id];
-
-  if (v.hasVivino && !t.vivino_url) {
-    const vivFields = buildVivinoFields(raw, v);
-    for (const [k, val] of Object.entries(vivFields)) {
-      if (val != null) updates[k] = val;
+  // vivino_wines 처리 (있고 wine_id에 없으면 INSERT, 있으면 빈 필드 채움)
+  if (result.vivinoUpsert) {
+    const { data: existingVivino } = await sb
+      .from("vivino_wines")
+      .select("wine_id")
+      .eq("wine_id", targetId)
+      .maybeSingle();
+    if (!existingVivino) {
+      await sb.from("vivino_wines").insert({ wine_id: targetId, ...result.vivinoUpsert });
     }
   }
 
-  if (Object.keys(updates).length > 1) {
-    const upd = await sb.from("wines").update(updates).eq("id", targetId);
-    if (upd.error) return false;
-  }
   const rawUpd = await sb
     .from("raw_wines")
     .update({ promoted_wine_id: targetId, promoted_at: now })
@@ -374,32 +347,26 @@ async function autoMerge(
   return !rawUpd.error;
 }
 
-// normalize는 뷰에서도 사용 가능하게 re-export
 export { normalize };
 
-// ─── raw_wines 경유 없이 wines에 직접 INSERT ────────────────────────
-//
-// raw_wines는 "크롤링 원본 데이터"만 보관하는 레이어로 한정하기로 함 (2026-04-24 재정립).
-// pending 승인, 어드민 직접 추가, 향후 OCR 기반 유저 기록 확정 같은 "크롤링 아닌" 경로는
-// 이 함수를 통해 wines에 직접 INSERT한다. 단, promote-v2와 동일한 정책 유지:
-//   4필드 검증 + stripVintage + dedupe 판정 + Vivino 매핑 (data에 vivino_* 있을 때만)
+// ─── 어드민 직접 INSERT ────────────────────────────────────────────────────────
 
 export interface WineCreateInput {
   name_ko: string | null;
   name_en: string | null;
   country: string | null;
-  country_ko?: string | null;
+  country_ko?: string | null; // 무시 (변환 모듈이 자동 처리)
   region?: string | null;
   region_ko?: string | null;
   wine_type?: string | null;
-  grape_variety?: string | null;      // 쉼표 구분 문자열
-  grape_varieties?: string[] | null;  // 또는 배열 직접
+  grape_variety?: string | null;
+  grape_varieties?: string[] | null;
   producer_ko?: string | null;
   producer_en?: string | null;
   image_url?: string | null;
   price?: number | null;
-  data_source?: string;               // 'admin' | 'user_submission' | ...
-  // Vivino 매핑은 옵션 — 있으면 적용
+  data_source?: string;
+  // Vivino 직접 입력
   vivino_url?: string | null;
   vivino_wine_id?: string | number | null;
   vivino_rating?: number | null;
@@ -422,12 +389,6 @@ export type InsertWineOutcome =
   | { kind: "missing_fields"; missing: string[] }
   | { kind: "error"; message: string };
 
-const VALID_WINE_TYPES_DIRECT = new Set(["red", "white", "rose", "sparkling", "fortified", "dessert", "other"]);
-function normalizeWineTypeDirect(v: string | null | undefined): string {
-  const s = (v ?? "").toLowerCase().trim();
-  return VALID_WINE_TYPES_DIRECT.has(s) ? s : "other";
-}
-
 function collectGrapes(input: WineCreateInput): string[] {
   if (Array.isArray(input.grape_varieties) && input.grape_varieties.length > 0) {
     return input.grape_varieties.map((s) => s.trim()).filter((s) => s.length > 0);
@@ -438,50 +399,22 @@ function collectGrapes(input: WineCreateInput): string[] {
   return [];
 }
 
-function validateDirect(input: WineCreateInput, grapes: string[]): string[] {
-  const missing: string[] = [];
-  if (!input.name_ko?.trim()) missing.push("name_ko");
-  if (!input.name_en?.trim()) missing.push("name_en");
-  if (!input.country?.trim()) missing.push("country");
-  if (grapes.length === 0) missing.push("grape");
-  return missing;
-}
-
-function buildVivinoFieldsDirect(input: WineCreateInput): Record<string, unknown> {
-  if (!input.vivino_url) {
-    return {
-      vivino_url: null,
-      vivino_wine_id: null,
-      vivino_rating: null,
-      vivino_reviews: null,
-      vivino_winery: null,
-      vivino_grapes: null,
-      vivino_region: null,
-      vivino_style: null,
-      vivino_alcohol: null,
-      vivino_description: null,
-      vivino_allergens: null,
-      vivino_name: null,
-      vivino_needs_review: false,
-      vivino_reviewed_at: null,
-    };
-  }
-  const autoReviewed = typeof input.vivino_match_score === "number" && input.vivino_match_score >= 0.9;
+function buildVivinoFromCreateInput(input: WineCreateInput): VivinoInput | null {
+  if (!input.vivino_url) return null;
   return {
-    vivino_url: input.vivino_url,
-    vivino_wine_id: input.vivino_wine_id == null ? null : String(input.vivino_wine_id),
-    vivino_rating: input.vivino_rating ?? null,
-    vivino_reviews: input.vivino_reviews ?? null,
-    vivino_winery: input.vivino_winery ?? null,
-    vivino_grapes: input.vivino_grapes ?? null,
-    vivino_region: input.vivino_region ?? null,
-    vivino_style: input.vivino_style ?? null,
-    vivino_alcohol: input.vivino_alcohol ?? null,
-    vivino_description: input.vivino_description ?? null,
-    vivino_allergens: input.vivino_allergens ?? null,
-    vivino_name: input.vivino_name ?? null,
-    vivino_needs_review: !autoReviewed,
-    vivino_reviewed_at: autoReviewed ? new Date().toISOString() : null,
+    url: input.vivino_url,
+    wine_id: input.vivino_wine_id ?? null,
+    name: input.vivino_name ?? null,
+    rating: input.vivino_rating ?? null,
+    reviews: input.vivino_reviews ?? null,
+    winery: input.vivino_winery ?? null,
+    grapes: input.vivino_grapes ?? null,
+    region: input.vivino_region ?? null,
+    style: input.vivino_style ?? null,
+    alcohol: input.vivino_alcohol ?? null,
+    description: input.vivino_description ?? null,
+    allergens: input.vivino_allergens ?? null,
+    match_score: input.vivino_match_score ?? null,
   };
 }
 
@@ -490,117 +423,94 @@ export async function insertWineDirectly(
   input: WineCreateInput,
 ): Promise<InsertWineOutcome> {
   const grapes = collectGrapes(input);
-  const missing = validateDirect(input, grapes);
+  const missing: string[] = [];
+  if (!input.name_ko?.trim()) missing.push("name_ko");
+  if (!input.name_en?.trim()) missing.push("name_en");
+  if (!input.country?.trim()) missing.push("country");
+  if (grapes.length === 0) missing.push("grape");
   if (missing.length > 0) return { kind: "missing_fields", missing };
 
-  // 품종 정규화
-  const dict = await loadGrapeDict(sb);
-  const normGrape = normalizeGrapes(grapes, dict);
-  const finalGrapes = normGrape.normalized_en.length > 0 ? normGrape.normalized_en : grapes;
-
-  // 이름 빈티지 제거 (끝의 19xx/20xx)
-  const nameKo = stripVintage(input.name_ko ?? "") || input.name_ko;
-  const nameEn = stripVintage(input.name_en ?? "") || input.name_en;
+  const dict = await loadTermDict(sb);
+  const nameKo = stripVintage(input.name_ko ?? "") || (input.name_ko ?? "");
+  const nameEn = stripVintage(input.name_en ?? "") || (input.name_en ?? "");
 
   const key = buildMatchKey({ name_en: nameEn, name_ko: nameKo, country: input.country });
   const now = new Date().toISOString();
 
   // 1) exact match → auto_merge
   const { data: exactCands } = await sb
-    .from("wines")
-    .select("id, name_ko, name_en, country, grape_varieties, source_refs")
+    .from("wines_v2")
+    .select("id, name_ko, name_en, country_ko, grape_varieties, source_refs")
     .eq("name_ko", (nameKo ?? "").trim())
     .limit(50);
 
   for (const w of exactCands ?? []) {
-    const wk = buildMatchKey({ name_en: w.name_en, name_ko: w.name_ko, country: w.country });
+    const wk = buildMatchKey({ name_en: w.name_en, name_ko: w.name_ko, country: w.country_ko });
     if (wk.name_en_n === key.name_en_n && wk.name_ko_n === key.name_ko_n && wk.country === key.country) {
-      // 빈 필드 채움 + grape 정규화 + union
-      const existingGrapes = Array.isArray(w.grape_varieties) ? (w.grape_varieties as string[]) : [];
-      const existingNormalized = normalizeGrapes(existingGrapes, dict).normalized_en;
-      const mergedGrapes = Array.from(new Set([...existingNormalized, ...finalGrapes]));
       const updates: Record<string, unknown> = { updated_at: now };
-      if (mergedGrapes.length > existingGrapes.length) {
-        const mergedResult = normalizeGrapes(mergedGrapes, dict);
-        updates.grape_varieties = mergedResult.normalized_en;
-        updates.grape_varieties_ko = mergedResult.normalized_ko;
+      const existingGrapes = Array.isArray(w.grape_varieties) ? (w.grape_varieties as string[]) : [];
+      const merged = Array.from(new Set([...existingGrapes, ...grapes]));
+      if (merged.length > existingGrapes.length) {
+        // 변환 모듈로 정규화
+        const r = await buildUpdatePatch(sb, w as any, { grape_varieties: merged }, { dict });
+        Object.assign(updates, r.wineUpdate);
       }
-      await sb.from("wines").update(updates).eq("id", w.id);
+      await sb.from("wines_v2").update(updates).eq("id", w.id);
       return { kind: "auto_merged", wine_id: w.id };
     }
   }
 
-  // 2) 부분 일치 후보 → candidate
-  const { data: partialCands } = await sb
-    .from("wines")
-    .select("id, name_ko, name_en, country")
-    .or(`name_ko.eq.${(nameKo ?? "").trim()},name_en.eq.${(nameEn ?? "").trim()}`)
-    .limit(50);
+  // 2) 신규 INSERT
+  const result = await transformInput(
+    sb,
+    {
+      source: (input.data_source as WinesV2Input["source"]) ?? "admin",
+      name_ko: nameKo,
+      name_en: nameEn,
+      country: input.country ?? "",
+      region: input.region ?? input.region_ko ?? null,
+      wine_type: input.wine_type,
+      producer: input.producer_en ?? input.producer_ko ?? null,
+      grape_varieties: grapes,
+      price: input.price,
+      image_url: input.image_url,
+      vivino: buildVivinoFromCreateInput(input),
+    },
+    dict,
+  );
+  if (!result.ok) return { kind: "error", message: result.error };
 
-  let best: { reason: MatchReason; score: number; target: string } | null = null;
-  for (const w of partialCands ?? []) {
-    const wk = buildMatchKey({ name_en: w.name_en, name_ko: w.name_ko, country: w.country });
-    const c = classifyCandidate(key, wk);
-    if (c && (!best || c.score > best.score)) {
-      best = { reason: c.reason, score: c.score, target: w.id };
-    }
-  }
-  if (best) {
-    // 후보로 가지만 raw_wine 없음 → candidate 테이블에 raw_wine_id 필수라 등록 불가
-    // 대신 merge (기존 wines에 빈 필드 채움)로 동작 or 그냥 신규 INSERT로 fallthrough
-    // 현실적으로 어드민이 명시적으로 승인한 것이므로 후보로 안 두고 신규 INSERT 진행
-  }
-
-  // 3) 신규 INSERT
-  const vivino = buildVivinoFieldsDirect(input);
-  const row: Record<string, unknown> = {
-    name_ko: nameKo,
-    name_en: nameEn,
-    country: input.country,
-    country_ko: input.country_ko ?? input.country,
-    region: input.region ?? null,
-    region_ko: input.region_ko ?? null,
-    wine_type: normalizeWineTypeDirect(input.wine_type),
-    producer_ko: input.producer_ko ?? null,
-    producer_en: input.producer_en ?? null,
-    producer: input.producer_ko ?? input.producer_en ?? null,
-    grape_varieties: finalGrapes,
-    grape_varieties_ko: normGrape.normalized_ko,
-    price: input.price ?? null,
-    image_url: input.image_url ?? null,
-    data_source: input.data_source ?? "admin",
-    source: input.data_source ?? "admin",
-    is_published: true,
-    ...vivino,
+  const { randomUUID } = await import("crypto");
+  const newId = randomUUID();
+  const { error } = await sb.from("wines_v2").insert({
+    id: newId,
+    ...result.wineRow,
     created_at: now,
     updated_at: now,
-  };
-
-  const { data, error } = await sb.from("wines").insert(row).select("id").single();
+  });
   if (error) {
-    if (error.code === "23505" && error.message.includes("wines_name_ko_unique")) {
-      // 충돌 → 같은 name_ko 가진 기존 wines로 auto_merge처럼 처리
+    if (error.code === "23505" && error.message.includes("name_ko")) {
       const { data: collide } = await sb
-        .from("wines")
+        .from("wines_v2")
         .select("id, grape_varieties")
-        .eq("name_ko", (nameKo ?? "").trim())
+        .eq("name_ko", result.wineRow.name_ko)
         .limit(1);
       const target = collide?.[0];
       if (target) {
         const existingGrapes = Array.isArray(target.grape_varieties) ? (target.grape_varieties as string[]) : [];
-        const unionRes = normalizeGrapes([...existingGrapes, ...finalGrapes], dict);
-        const updates: Record<string, unknown> = { updated_at: now };
-        if (unionRes.normalized_en.length > existingGrapes.length) {
-          updates.grape_varieties = unionRes.normalized_en;
-          updates.grape_varieties_ko = unionRes.normalized_ko;
+        const merged = Array.from(new Set([...existingGrapes, ...grapes]));
+        if (merged.length > existingGrapes.length) {
+          await sb.from("wines_v2").update({ grape_varieties: merged, updated_at: now }).eq("id", target.id);
         }
-        await sb.from("wines").update(updates).eq("id", target.id);
         return { kind: "auto_merged", wine_id: target.id };
       }
     }
     return { kind: "error", message: error.message };
   }
 
-  const newId = (data as { id: string }).id;
+  if (result.vivinoRow) {
+    await sb.from("vivino_wines").insert({ wine_id: newId, ...result.vivinoRow });
+  }
+
   return { kind: "new_inserted", wine_id: newId };
 }

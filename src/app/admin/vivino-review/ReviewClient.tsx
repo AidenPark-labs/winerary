@@ -12,20 +12,15 @@ export interface ReviewWine {
   name_ko: string;
   name_en: string | null;
   wine_type: string | null;
-  country: string | null;
   country_ko: string | null;
-  region: string | null;
   region_ko: string | null;
-  grape_variety: string | null;
-  grape_varieties: string[] | null;
   producer: string | null;
-  producer_ko: string | null;
-  producer_en: string | null;
-  winery_en_clean: string | null;
+  grape_varieties: string[];
   image_url: string | null;
-  review_image_url: string | null;
+  // vivino_wines 데이터 (분리)
   vivino_url: string | null;
-  vivino_wine_id: number | null;
+  vivino_wine_id: string | null;
+  vivino_name: string | null;
   vivino_rating: number | null;
   vivino_reviews: number | null;
   vivino_winery: string | null;
@@ -34,27 +29,26 @@ export interface ReviewWine {
   vivino_style: string | null;
   vivino_alcohol: string | null;
   vivino_description: string | null;
+  vivino_image_url: string | null;
   vivino_needs_review: boolean | null;
   vivino_reviewed_at: string | null;
 }
 
 function displayProducer(w: ReviewWine): string | null {
-  return w.producer_ko || w.producer_en || w.winery_en_clean || w.producer || null;
+  return w.producer || null;
 }
 
 function displayGrapes(w: ReviewWine): string | null {
-  if (Array.isArray(w.grape_varieties) && w.grape_varieties.length > 0) {
-    return w.grape_varieties.join(", ");
-  }
-  return w.grape_variety || null;
+  if (w.grape_varieties.length > 0) return w.grape_varieties.join(", ");
+  return null;
 }
 
 function displayCountry(w: ReviewWine): string | null {
-  return w.country_ko || w.country || null;
+  return w.country_ko || null;
 }
 
 function displayRegion(w: ReviewWine): string | null {
-  return w.region_ko || w.region || null;
+  return w.region_ko || null;
 }
 
 interface Props {
@@ -296,11 +290,8 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
                       setEditDraft({
                         name_ko: current.name_ko ?? "",
                         name_en: current.name_en ?? "",
-                        producer_ko: current.producer_ko ?? "",
-                        producer_en: current.producer_en ?? "",
-                        country: current.country ?? "",
+                        producer: current.producer ?? "",
                         country_ko: current.country_ko ?? "",
-                        region: current.region ?? "",
                         region_ko: current.region_ko ?? "",
                         wine_type: current.wine_type ?? "",
                         grape_varieties: current.grape_varieties ?? [],
@@ -329,9 +320,9 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
                   </div>
                 )}
               </div>
-              {(current.image_url || current.review_image_url) && (() => {
-                const imgSrc = current.image_url ?? current.review_image_url ?? "";
-                const isReview = !current.image_url && !!current.review_image_url;
+              {current.image_url && (() => {
+                const imgSrc = current.image_url ?? "";
+                const isReview = false;
                 return (
                   <a
                     href={imgSrc}
@@ -373,32 +364,17 @@ export default function ReviewClient({ mode, wines, pendingInMode, totalAll, tot
                     options={["", "red", "white", "rose", "sparkling", "fortified", "dessert", "other"]}
                   />
                   <EditRow
-                    label="생산자(ko)"
-                    value={editDraft.producer_ko ?? ""}
-                    onChange={(v) => setEditDraft((d) => ({ ...d, producer_ko: v }))}
+                    label="생산자 (영문)"
+                    value={editDraft.producer ?? ""}
+                    onChange={(v) => setEditDraft((d) => ({ ...d, producer: v }))}
                   />
                   <EditRow
-                    label="생산자(en)"
-                    value={editDraft.producer_en ?? ""}
-                    onChange={(v) => setEditDraft((d) => ({ ...d, producer_en: v }))}
-                  />
-                  <EditRow
-                    label="국가(en)"
-                    value={editDraft.country ?? ""}
-                    onChange={(v) => setEditDraft((d) => ({ ...d, country: v }))}
-                  />
-                  <EditRow
-                    label="국가(ko)"
+                    label="국가 (한글)"
                     value={editDraft.country_ko ?? ""}
                     onChange={(v) => setEditDraft((d) => ({ ...d, country_ko: v }))}
                   />
                   <EditRow
-                    label="지역(en)"
-                    value={editDraft.region ?? ""}
-                    onChange={(v) => setEditDraft((d) => ({ ...d, region: v }))}
-                  />
-                  <EditRow
-                    label="지역(ko)"
+                    label="지역 (한글, finest)"
                     value={editDraft.region_ko ?? ""}
                     onChange={(v) => setEditDraft((d) => ({ ...d, region_ko: v }))}
                   />

@@ -2,35 +2,27 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
-import { loadGrapeDict, normalizeGrapes } from "@/lib/grape-normalize";
+import {
+  loadTermDict,
+  buildUpdatePatch,
+  type WinesV2Input,
+} from "@/lib/wines-v2-transform";
 
 export interface FinalMergeData {
   name_ko?: string | null;
   name_en?: string | null;
-  country?: string | null;
-  country_ko?: string | null;
-  region?: string | null;
+  country_ko?: string | null;   // v5: 한글 단일
   region_ko?: string | null;
   wine_type?: string | null;
-  producer_ko?: string | null;
-  producer_en?: string | null;
+  producer?: string | null;     // v5: 영문 단일
   grape_varieties?: string[] | null;
   alcohol?: string | null;
   image_url?: string | null;
 }
 
 /**
- * 같은 와인 확정 — raw_wine을 target wine으로 merge.
- *
- * 어드민이 UI에서 raw/target/직접편집으로 조합한 "최종 반영 값"을 통째로 받아
- * target wines를 UPDATE한다. 빈 문자열은 null로 저장.
- *
- * 공통 동작:
- *   - raw_wines.promoted_wine_id = target_wine_id (+ promoted_at)
- *   - source_refs[]에 raw_wine.id 추가
- *   - candidate.status = 'confirmed'
- *
- * Vivino 필드는 이 경로에서 안 건드림 (vivino-review 전용).
+ * v5: raw_wine을 target wines_v2로 merge.
+ * 변환 모듈을 통과시켜 자동 정규화. Vivino 필드는 vivino-review 전용.
  */
 export async function confirmDedupe(
   candidateId: string,
@@ -49,66 +41,48 @@ export async function confirmDedupe(
   if (cErr || !candidate) return { error: "후보를 찾을 수 없습니다" };
   if (candidate.status !== "pending") return { error: `이미 ${candidate.status} 상태입니다` };
 
-  // 2) target 조회 (source_refs만 필요)
+  // 2) target 현재 행 조회 (변환 모듈 buildUpdatePatch 입력용)
   const { data: target, error: tErr } = await supabase
-    .from("wines")
-    .select("source_refs")
+    .from("wines_v2")
+    .select(
+      "name_ko, name_en, wine_type, wine_style, country_ko, region_ko, producer, grape_varieties, grape_blend, alcohol, brand, price, description, image_url, locked_fields, source_refs, source_snapshot",
+    )
     .eq("id", candidate.target_wine_id)
     .single();
   if (tErr || !target) return { error: "target wine을 찾을 수 없습니다" };
 
-  // 3) 업데이트 payload 구성: finalData의 모든 필드 적용 (빈 문자열 → null)
-  const updates: Record<string, unknown> = { updated_at: now };
-  const keys: Array<keyof FinalMergeData> = [
-    "name_ko", "name_en", "country", "country_ko", "region", "region_ko",
-    "wine_type", "producer_ko", "producer_en", "alcohol", "image_url",
-  ];
-  for (const k of keys) {
-    if (k in finalData) {
-      const v = finalData[k];
-      if (typeof v === "string") {
-        updates[k] = v.trim() === "" ? null : v.trim();
-      } else {
-        updates[k] = v ?? null;
-      }
-    }
+  // 3) finalData → WinesV2Input
+  const transformPatch: Partial<WinesV2Input> = {};
+  if ("name_ko" in finalData) transformPatch.name_ko = finalData.name_ko ?? "";
+  if ("name_en" in finalData) transformPatch.name_en = finalData.name_en ?? "";
+  if ("country_ko" in finalData && finalData.country_ko != null) {
+    transformPatch.country = finalData.country_ko;
   }
-  // grape_varieties 정규화: term_dict 기반 매칭 → 표준 en + ko 배열
-  let grapeUnknowns: string[] = [];
+  if ("region_ko" in finalData) transformPatch.region = finalData.region_ko;
+  if ("wine_type" in finalData) transformPatch.wine_type = finalData.wine_type;
+  if ("producer" in finalData) transformPatch.producer = finalData.producer;
+  if ("alcohol" in finalData) transformPatch.alcohol = finalData.alcohol;
+  if ("image_url" in finalData) transformPatch.image_url = finalData.image_url;
   if ("grape_varieties" in finalData) {
-    const gv = finalData.grape_varieties;
-    if (Array.isArray(gv)) {
-      const dict = await loadGrapeDict(supabase);
-      const result = normalizeGrapes(gv, dict);
-      updates.grape_varieties = result.normalized_en;
-      updates.grape_varieties_ko = result.normalized_ko;
-      grapeUnknowns = result.unknowns;
-    } else if (gv == null) {
-      updates.grape_varieties = [];
-      updates.grape_varieties_ko = [];
-    }
+    transformPatch.grape_varieties = finalData.grape_varieties ?? [];
   }
-
-  // legacy producer 컬럼도 편의상 채움 (producer_ko ?? producer_en)
-  if ("producer_ko" in finalData || "producer_en" in finalData) {
-    const pko = (updates.producer_ko as string | null | undefined) ?? null;
-    const pen = (updates.producer_en as string | null | undefined) ?? null;
-    updates.producer = pko || pen || null;
-  }
-
-  // source_refs에 raw_wine.id 추가
+  // source_refs 누적
   const existingRefs = Array.isArray(target.source_refs) ? (target.source_refs as string[]) : [];
   if (!existingRefs.includes(candidate.raw_wine_id)) {
-    updates.source_refs = [...existingRefs, candidate.raw_wine_id];
+    transformPatch.source_refs = [...existingRefs, candidate.raw_wine_id];
   }
 
-  // 4) wines UPDATE
+  const dict = await loadTermDict(supabase);
+  const result = await buildUpdatePatch(supabase, target as any, transformPatch, { dict });
+
+  // 4) wines_v2 UPDATE
+  const update = { ...result.wineUpdate, updated_at: now };
   const { error: uErr } = await supabase
-    .from("wines")
-    .update(updates)
+    .from("wines_v2")
+    .update(update)
     .eq("id", candidate.target_wine_id);
   if (uErr) {
-    if (uErr.code === "23505" && uErr.message.includes("wines_name_ko_unique")) {
+    if (uErr.code === "23505" && uErr.message.includes("name_ko")) {
       return { error: "이미 사용 중인 한국어명입니다" };
     }
     return { error: `wines 병합 실패: ${uErr.message}` };
@@ -134,18 +108,18 @@ export async function confirmDedupe(
   if (statErr) return { error: `상태 업데이트 실패: ${statErr.message}` };
 
   revalidatePath("/admin/dedupe-review");
+  const grapeUnknowns = result.needs_review_reasons
+    .filter((r) => r.startsWith("grape:"))
+    .map((r) => r.slice(6));
   return {
     success: true,
     wine_id: candidate.target_wine_id,
-    normalized_grapes_en: updates.grape_varieties as string[] | undefined,
-    normalized_grapes_ko: updates.grape_varieties_ko as string[] | undefined,
+    normalized_grapes: result.wineUpdate.grape_varieties,
     grape_unknowns: grapeUnknowns,
   };
 }
 
-/**
- * 다른 와인이라고 판단 — 그냥 반려. raw_wine은 별도 promote 대상으로 남음.
- */
+/** 다른 와인이라고 판단 — 반려. raw_wine은 별도 promote 대상으로 남음. */
 export async function rejectDedupe(candidateId: string, note?: string) {
   const { supabase, user } = await requireAdmin();
   const now = new Date().toISOString();

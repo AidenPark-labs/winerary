@@ -142,7 +142,7 @@ export async function GET(request: Request) {
     if (wineId && priceRange) {
       const supabase = await createClient();
       supabase
-        .from("wines")
+        .from("wines_v2")
         .update({ price: priceRange.min, updated_at: new Date().toISOString() })
         .eq("id", wineId)
         .then(() => {});

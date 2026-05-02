@@ -218,16 +218,14 @@ export default function ReviewClient({ candidates, pendingCount }: Props) {
 
   const handleConfirm = useCallback(() => {
     if (!current || isPending) return;
+    // v5: country_ko/region_ko/producer 단일. 변환 모듈이 한·영 입력 모두 처리.
     const finalData: FinalMergeData = {
       name_ko: draft.name_ko,
       name_en: draft.name_en,
-      country: draft.country,
-      country_ko: draft.country_ko,
-      region: draft.region,
-      region_ko: draft.region_ko,
+      country_ko: draft.country_ko || draft.country || null,
+      region_ko: draft.region_ko || draft.region || null,
       wine_type: draft.wine_type,
-      producer_ko: draft.producer_ko,
-      producer_en: draft.producer_en,
+      producer: draft.producer_en || draft.producer_ko || null,
       grape_varieties: draft.grape_varieties
         .split(",")
         .map((s) => s.trim())
@@ -244,9 +242,8 @@ export default function ReviewClient({ candidates, pendingCount }: Props) {
       }
       setSessionConfirmed((n) => n + 1);
       setMergeDone(true);
-      // 정규화 결과를 draft에 반영해 사용자가 결과를 확인 가능
-      if (result.normalized_grapes_en) {
-        setDraft((d) => ({ ...d, grape_varieties: result.normalized_grapes_en!.join(", ") }));
+      if (result.normalized_grapes) {
+        setDraft((d) => ({ ...d, grape_varieties: result.normalized_grapes!.join(", ") }));
       }
       setGrapeUnknowns(result.grape_unknowns ?? []);
       router.refresh();

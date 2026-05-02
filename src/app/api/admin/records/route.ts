@@ -31,22 +31,30 @@ export async function POST(request: Request) {
   } else if (action === "update_wine_id") {
     await admin.from("wine_records").update({ wine_id: wineId ?? null }).eq("id", recordId);
   } else if (action === "create_wine") {
-    // wines 테이블에 새 와인 생성 후 wine_records에 매핑
-    const { data: newWine, error: wineError } = await admin
-      .from("wines")
-      .insert({
-        name_ko: wineData.name_ko,
-        name_en: wineData.name_en,
-        wine_type: wineData.wine_type,
-        grape_variety: wineData.grape_variety,
-        country: wineData.country,
-        data_source: "manual",
-      })
-      .select("id")
-      .single();
+    // v5: 변환 모듈 통과 후 wines_v2 INSERT
+    const { transformInput } = await import("@/lib/wines-v2-transform");
+    const grapes = wineData.grape_variety
+      ? String(wineData.grape_variety).split(/[,;/]/).map((s: string) => s.trim()).filter(Boolean)
+      : [];
+    const result = await transformInput(admin, {
+      source: "admin",
+      name_ko: wineData.name_ko,
+      name_en: wineData.name_en,
+      country: wineData.country,
+      wine_type: wineData.wine_type,
+      grape_varieties: grapes,
+    });
+    if (!result.ok) {
+      return Response.json({ error: result.error }, { status: 400 });
+    }
+    const { randomUUID } = await import("crypto");
+    const newId = randomUUID();
+    const { error: wineError } = await admin
+      .from("wines_v2")
+      .insert({ id: newId, ...result.wineRow });
     if (wineError) return Response.json({ error: wineError.message }, { status: 500 });
-    await admin.from("wine_records").update({ wine_id: newWine.id }).eq("id", recordId);
-    return Response.json({ ok: true, wine_id: newWine.id });
+    await admin.from("wine_records").update({ wine_id: newId }).eq("id", recordId);
+    return Response.json({ ok: true, wine_id: newId });
   }
 
   return Response.json({ ok: true });

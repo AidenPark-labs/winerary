@@ -17,6 +17,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/admin/raw-wines" className="text-zinc-400 hover:text-zinc-200 transition-colors">raw_wines</Link>
             <Link href="/admin/vivino-review" className="text-zinc-400 hover:text-zinc-200 transition-colors">Vivino 검수</Link>
             <Link href="/admin/dedupe-review" className="text-zinc-400 hover:text-zinc-200 transition-colors">중복 검수</Link>
+            <Link href="/admin/wines-v2-review" className="text-zinc-400 hover:text-zinc-200 transition-colors">v5 검수</Link>
+            <Link href="/admin/vivino-dup-review" className="text-zinc-400 hover:text-zinc-200 transition-colors">Vivino 중복</Link>
             <Link href="/admin/pending-wines" className="text-zinc-400 hover:text-zinc-200 transition-colors">편입 대기</Link>
             <Link href="/admin/reports" className="text-zinc-400 hover:text-zinc-200 transition-colors">신고</Link>
           </div>

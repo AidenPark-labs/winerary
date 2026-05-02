@@ -76,16 +76,16 @@ export default async function MyWinePage() {
   const all = (records ?? []) as WineRecord[];
   const total = all.length;
 
-  // wine_id → grape_varieties_ko 맵 (품종 카운트 canonical 소스)
+  // wine_id → grape_varieties 맵 (v5: 한글 단일 컬럼)
   const wineIds = [...new Set(all.map((r) => r.wine_id).filter((v): v is string => !!v))];
   const wineGrapeMap = new Map<string, string[]>();
   if (wineIds.length > 0) {
     const { data: wineRows } = await supabase
-      .from("wines")
-      .select("id, grape_varieties_ko")
+      .from("wines_v2")
+      .select("id, grape_varieties")
       .in("id", wineIds);
     for (const w of wineRows ?? []) {
-      const gv = (w.grape_varieties_ko ?? []) as string[];
+      const gv = (w.grape_varieties ?? []) as string[];
       if (gv.length > 0) wineGrapeMap.set(w.id as string, gv);
     }
   }

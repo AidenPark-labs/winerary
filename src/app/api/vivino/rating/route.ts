@@ -9,19 +9,19 @@ export async function GET(request: Request) {
   try {
     const supabase = await createClient();
 
-    // 1단계: DB에 vivino_url이 이미 있으면 바로 사용
+    // 1단계: vivino_wines에 url이 이미 있으면 바로 사용 (v5)
     if (wineId) {
-      const { data: wine } = await supabase
-        .from("wines")
+      const { data: vivino } = await supabase
+        .from("vivino_wines")
         .select("vivino_url")
-        .eq("id", wineId)
-        .single();
+        .eq("wine_id", wineId)
+        .maybeSingle();
 
-      if (wine?.vivino_url) {
-        const result = await extractRatingFromJsonLd(wine.vivino_url);
+      if (vivino?.vivino_url) {
+        const result = await extractRatingFromJsonLd(vivino.vivino_url);
         if (result) {
           cacheRating(supabase, wineId, result.rating, result.reviews, undefined, undefined, result.vivinoName);
-          return Response.json({ ...result, vivinoPageUrl: wine.vivino_url });
+          return Response.json({ ...result, vivinoPageUrl: vivino.vivino_url });
         }
       }
     }
@@ -118,15 +118,37 @@ async function extractRatingFromJsonLd(url: string): Promise<{ rating: number; r
   return null;
 }
 
+// v5: vivino_wines UPSERT (wine_id PK 기준)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function cacheRating(supabase: any, wineId: string, rating: number, reviews: number, pageUrl?: string, vivinoWineId?: number, _vivinoName?: string) {
+async function cacheRating(supabase: any, wineId: string, rating: number, reviews: number, pageUrl?: string, vivinoWineId?: number, vivinoName?: string) {
   try {
-    const update: Record<string, unknown> = { vivino_rating: rating, vivino_reviews: reviews };
-    if (pageUrl) {
-      update.vivino_url = pageUrl;
+    // 기존 행 있으면 메트릭만 갱신, 없으면 신규 INSERT
+    const { data: existing } = await supabase
+      .from("vivino_wines")
+      .select("wine_id")
+      .eq("wine_id", wineId)
+      .maybeSingle();
+
+    if (existing) {
+      const update: Record<string, unknown> = { rating, reviews };
+      if (pageUrl) update.vivino_url = pageUrl;
+      if (vivinoWineId) update.vivino_wine_id = String(vivinoWineId);
+      if (vivinoName) update.vivino_name = vivinoName;
+      await supabase.from("vivino_wines").update(update).eq("wine_id", wineId);
+    } else if (pageUrl && /vivino\.com/i.test(pageUrl)) {
+      // 신규: vivino_url 필수 (NOT NULL UNIQUE)
+      await supabase.from("vivino_wines").insert({
+        wine_id: wineId,
+        vivino_url: pageUrl,
+        vivino_wine_id: vivinoWineId ? String(vivinoWineId) : null,
+        vivino_name: vivinoName ?? null,
+        rating,
+        reviews,
+        // 캐시 경로라 자동 검수 통과 (이미 사용자에게 노출되는 url 기반)
+        needs_review: false,
+        reviewed_at: new Date().toISOString(),
+      });
     }
-    if (vivinoWineId) update.vivino_wine_id = vivinoWineId;
-    await supabase.from("wines").update(update).eq("id", wineId);
   } catch {}
 }
 

@@ -5,17 +5,16 @@ import { useRouter } from "next/navigation";
 import AuthPrompt from "@/components/AuthPrompt";
 import ReportWineModal from "./ReportWineModal";
 
-interface Wine {
+interface WineActionsInput {
   id: string;
   name_ko: string;
   name_en: string | null;
   wine_type: string | null;
-  country: string | null;
-  grape_variety: string | null;
-  vivino_url: string | null;
+  country_ko: string | null;
+  grape_varieties: string[];
 }
 
-export default function WineActions({ wine, isLoggedIn }: { wine: Wine; isLoggedIn: boolean }) {
+export default function WineActions({ wine, isLoggedIn }: { wine: WineActionsInput; isLoggedIn: boolean }) {
   const router = useRouter();
   const [wishSaving, setWishSaving] = useState(false);
   const [wishSaved, setWishSaved] = useState(false);
@@ -53,8 +52,8 @@ export default function WineActions({ wine, isLoggedIn }: { wine: Wine; isLogged
     p.set("name", wine.name_ko);
     if (wine.name_en) p.set("name_original", wine.name_en);
     if (wine.wine_type) p.set("wine_type", wine.wine_type);
-    if (wine.country) p.set("country", wine.country);
-    if (wine.grape_variety) p.set("grape", wine.grape_variety);
+    if (wine.country_ko) p.set("country", wine.country_ko);
+    if (wine.grape_varieties.length > 0) p.set("grape", wine.grape_varieties.join(", "));
     if (wine.id) p.set("wine_id", wine.id);
     router.push(`/diary/new?${p.toString()}`);
   }

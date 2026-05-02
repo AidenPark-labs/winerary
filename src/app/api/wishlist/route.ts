@@ -14,28 +14,34 @@ export async function GET() {
 
   if (!data || data.length === 0) return Response.json({ items: [] });
 
-  const wineFields = "id, name_ko, name_en, wine_type, country, grape_variety, naver_image, vivino_rating, vivino_reviews, price, final_grapes, vivino_grapes, final_country, final_wine_type";
+  // v5: wines_v2 + vivino_wines 합성
+  const wineFields = "id, name_ko, name_en, wine_type, country_ko, grape_varieties, image_url, price";
 
   // wine_id가 있는 항목들의 와인 상세정보 조회
   const withId = data.filter((d) => d.wine_id);
   const withoutId = data.filter((d) => !d.wine_id);
-  let winesMap: Record<string, any> = {};
+  const winesMap: Record<string, any> = {};
+
+  // vivino 정보 (rating·reviews) 한 번에
+  const allWineIds: string[] = [];
 
   if (withId.length > 0) {
+    const ids = withId.map((d) => d.wine_id);
     const { data: wines } = await supabase
-      .from("wines")
+      .from("wines_v2")
       .select(wineFields)
-      .in("id", withId.map((d) => d.wine_id));
+      .in("id", ids);
     if (wines) {
       wines.forEach((w) => { winesMap[w.id] = w; });
+      allWineIds.push(...wines.map((w) => w.id));
     }
   }
 
-  // wine_id 없는 항목: name_en으로 wines 테이블 매칭 시도 → wine_id 백필
+  // wine_id 없는 항목: name_en으로 wines_v2 매칭 시도 → wine_id 백필
   if (withoutId.length > 0) {
     const names = withoutId.map((d) => d.name_en);
     const { data: matched } = await supabase
-      .from("wines")
+      .from("wines_v2")
       .select(wineFields)
       .in("name_en", names);
 
@@ -47,18 +53,34 @@ export async function GET() {
       const updates = withoutId
         .filter((d) => nameMap[d.name_en])
         .map((d) =>
-          supabase.from("wine_wishlist").update({ wine_id: nameMap[d.name_en].id }).eq("id", d.id)
+          supabase.from("wine_wishlist").update({ wine_id: nameMap[d.name_en].id }).eq("id", d.id),
         );
       Promise.all(updates).catch(() => {});
 
-      // 매칭된 와인을 winesMap에 추가
       withoutId.forEach((d) => {
         const w = nameMap[d.name_en];
         if (w) {
           winesMap[w.id] = w;
           d.wine_id = w.id;
+          allWineIds.push(w.id);
         }
       });
+    }
+  }
+
+  // vivino_wines 한 번에 조회 (검수 완료된 것만)
+  if (allWineIds.length > 0) {
+    const { data: vivinos } = await supabase
+      .from("vivino_wines")
+      .select("wine_id, rating, reviews, reviewed_at")
+      .in("wine_id", allWineIds)
+      .not("reviewed_at", "is", null);
+    for (const v of vivinos ?? []) {
+      const w = winesMap[v.wine_id];
+      if (w) {
+        w.vivino_rating = v.rating;
+        w.vivino_reviews = v.reviews;
+      }
     }
   }
 

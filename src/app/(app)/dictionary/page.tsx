@@ -36,11 +36,9 @@ export interface PopularWine {
   id: string;
   name_ko: string;
   name_en: string | null;
-  country: string | null;
   country_ko: string | null;
   wine_type: string | null;
   image_url: string | null;
-  naver_image: string | null;
   vivino_rating: number | null;
   popularity_score: number;
 }
@@ -70,21 +68,41 @@ export default async function DictionaryPage({ searchParams }: { searchParams: P
     supabase.rpc("top_wines_by_events", { window_days: 30, k: 10 }),
   ]);
 
-  // 인기 와인 상세 조회 (순위 유지)
+  // 인기 와인 상세 조회 (순위 유지) — wines_v2 + vivino_wines 합성
   let popular: PopularWine[] = [];
   if (topRanked && topRanked.length > 0) {
     const ids = (topRanked as Array<{ wine_id: string; score: number }>).map((r) => r.wine_id);
-    const { data: wines } = await supabase
-      .from("wines")
-      .select("id, name_ko, name_en, country, country_ko, wine_type, image_url, naver_image, vivino_rating")
-      .in("id", ids);
-    const byId = new Map<string, Record<string, unknown>>();
-    for (const w of wines ?? []) byId.set((w as { id: string }).id, w as Record<string, unknown>);
+    const [winesRes, vivinosRes] = await Promise.all([
+      supabase
+        .from("wines_v2")
+        .select("id, name_ko, name_en, country_ko, wine_type, image_url")
+        .in("id", ids),
+      supabase
+        .from("vivino_wines")
+        .select("wine_id, rating, reviewed_at")
+        .in("wine_id", ids),
+    ]);
+    const byId = new Map<string, any>();
+    for (const w of winesRes.data ?? []) byId.set(w.id, w);
+    const ratingMap = new Map<string, number>();
+    for (const v of vivinosRes.data ?? []) {
+      // 검수 완료된 것만 노출
+      if (v.reviewed_at && v.rating != null) ratingMap.set(v.wine_id, v.rating);
+    }
     popular = (topRanked as Array<{ wine_id: string; score: number }>)
       .map((r) => {
         const row = byId.get(r.wine_id);
         if (!row) return null;
-        return { ...(row as Omit<PopularWine, "popularity_score">), popularity_score: r.score };
+        return {
+          id: row.id,
+          name_ko: row.name_ko,
+          name_en: row.name_en,
+          country_ko: row.country_ko,
+          wine_type: row.wine_type,
+          image_url: row.image_url,
+          vivino_rating: ratingMap.get(r.wine_id) ?? null,
+          popularity_score: r.score,
+        } as PopularWine;
       })
       .filter((w): w is PopularWine => w !== null);
   }

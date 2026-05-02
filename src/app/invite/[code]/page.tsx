@@ -45,16 +45,21 @@ export default async function InvitePage({ params }: { params: Promise<{ code: s
 
   if (!record) notFound();
 
-  // wines 데이터 조회
-  const wineFields = "id, description, vivino_url, vivino_rating, vivino_reviews, vivino_winery, vivino_grapes, vivino_region, vivino_style, vivino_alcohol, vivino_description, grape_variety, region, country, producer, wine_type, final_grapes, final_region, final_country, final_producer, final_wine_type, final_alcohol, final_style, final_description";
+  // v5: wines_v2 + vivino_wines 합성
+  const { fetchWineWithVivinoById } = await import("@/lib/wines-v2-fetch");
   let wineData = null;
   if (record.wine_id) {
-    const { data } = await admin.from("wines").select(wineFields).eq("id", record.wine_id).maybeSingle();
-    wineData = data;
+    wineData = await fetchWineWithVivinoById(admin, record.wine_id);
   }
   if (!wineData && record.name) {
-    const { data } = await admin.from("wines").select(wineFields).eq("name_ko", record.name).maybeSingle();
-    wineData = data;
+    const { data: byName } = await admin
+      .from("wines_v2")
+      .select("id")
+      .eq("name_ko", record.name)
+      .maybeSingle();
+    if (byName?.id) {
+      wineData = await fetchWineWithVivinoById(admin, byName.id);
+    }
   }
 
   // 기존 평가 조회 (v3: evaluations role='guest')

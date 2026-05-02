@@ -154,8 +154,10 @@ export async function queryWines(filters: WineFilters): Promise<string> {
     if (w.name_en) parts.push(`(${w.name_en})`);
     parts.push(`${w.price?.toLocaleString()}원`);
     if (w.wine_type) parts.push(w.wine_type);
-    if (w.country) parts.push(w.country);
-    if (w.grape_variety) parts.push(w.grape_variety);
+    if (w.country_ko) parts.push(w.country_ko);
+    if (Array.isArray(w.grape_varieties) && w.grape_varieties.length > 0) {
+      parts.push(w.grape_varieties.join(", "));
+    }
     if (w.producer) parts.push(w.producer);
     return `- ${parts.join(" | ")}`;
   });
@@ -165,15 +167,16 @@ export async function queryWines(filters: WineFilters): Promise<string> {
 
 async function runWineQuery(supabase: Awaited<ReturnType<typeof createClient>>, filters: WineFilters) {
   let query = supabase
-    .from("wines")
-    .select("name_ko, name_en, wine_type, country, grape_variety, producer, price")
+    .from("wines_v2")
+    .select("name_ko, name_en, wine_type, country_ko, grape_varieties, producer, price")
+    .eq("is_published", true)
     .not("price", "is", null);
 
   if (filters.wineType) query = query.eq("wine_type", filters.wineType);
   if (filters.priceMin != null) query = query.gte("price", filters.priceMin);
   if (filters.priceMax != null) query = query.lte("price", filters.priceMax);
-  if (filters.grape) query = query.ilike("grape_variety", `%${filters.grape}%`);
-  if (filters.country) query = query.eq("country", filters.country);
+  if (filters.grape) query = query.contains("grape_varieties", [filters.grape]);
+  if (filters.country) query = query.eq("country_ko", filters.country);
 
   query = query.order("price", { ascending: true }).limit(30);
   const { data } = await query;
@@ -282,8 +285,8 @@ export async function searchMentionedWines(messages: { role: string; content: st
       if (fuzzy) orFilters.push(`name_ko.ilike.${fuzzy}`);
 
       const { data } = await supabase
-        .from("wines")
-        .select("name_ko, name_en, wine_type, country, grape_variety, producer, price")
+        .from("wines_v2")
+        .select("name_ko, name_en, wine_type, country_ko, grape_varieties, producer, price")
         .or(orFilters.join(","))
         .limit(5);
 
@@ -293,11 +296,13 @@ export async function searchMentionedWines(messages: { role: string; content: st
           if (w.name_en) parts.push(`(${w.name_en})`);
           if (w.price) parts.push(`${w.price.toLocaleString()}원`);
           if (w.wine_type) parts.push(w.wine_type);
-          if (w.country) parts.push(w.country);
-          if (w.grape_variety) parts.push(w.grape_variety);
+          if (w.country_ko) parts.push(w.country_ko);
+          if (Array.isArray(w.grape_varieties) && w.grape_varieties.length > 0) {
+            parts.push(w.grape_varieties.join(", "));
+          }
           allResults.push(`- ${parts.join(" | ")}`);
         });
-        break; // 이 메시지에서 매칭 찾으면 다음 메시지로
+        break;
       }
     }
   }

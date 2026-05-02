@@ -31,8 +31,8 @@ export async function POST(request: Request) {
     return Response.json({ error: "내용은 1000자 이하로 작성해주세요" }, { status: 400 });
   }
 
-  // 와인 존재 확인
-  const { data: wine } = await supabase.from("wines").select("id").eq("id", wine_id).single();
+  // 와인 존재 확인 (v5: wines_v2)
+  const { data: wine } = await supabase.from("wines_v2").select("id").eq("id", wine_id).single();
   if (!wine) return Response.json({ error: "와인을 찾을 수 없습니다" }, { status: 404 });
 
   // 중복 신고 방지: 같은 유저가 같은 와인·유형으로 이미 open 상태로 제출한 것이 있는지

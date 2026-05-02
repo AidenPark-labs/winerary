@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import type { WineRecord, RecordEvaluation } from "@/types";
+import type { WineRecord, RecordEvaluation, Wine } from "@/types";
 import DiaryDetail from "@/app/(app)/diary/[id]/DiaryDetail";
 import StarRating from "@/components/StarRating";
 
 export default function InviteDetail({ record, wineData, evaluations, inviteCode, hasFoods }: {
   record: WineRecord;
-  wineData: Record<string, unknown> | null;
+  wineData: Wine | null;
   evaluations: RecordEvaluation[];
   inviteCode: string;
   hasFoods: boolean;

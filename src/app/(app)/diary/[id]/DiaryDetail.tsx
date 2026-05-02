@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import type { WineRecord, RecordEvaluation, LinkedRecord } from "@/types";
-import { resolveWineDisplay } from "@/lib/wine-display";
+import { resolveWineDisplayV2 } from "@/lib/wine-display";
 import DeleteButton from "./DeleteButton";
 import ShareButton from "./ShareButton";
 import InviteButton from "./InviteButton";
@@ -62,44 +62,9 @@ function renderStars(score: number, max = 5) {
   });
 }
 
-interface WineData {
-  id?: string;
-  description?: string | null;
-  vivino_url?: string | null;
-  vivino_rating?: number | null;
-  vivino_reviews?: number | null;
-  vivino_winery?: string | null;
-  vivino_grapes?: string | null;
-  vivino_region?: string | null;
-  vivino_style?: string | null;
-  vivino_alcohol?: string | null;
-  vivino_description?: string | null;
-  grape_variety?: string | null;
-  region?: string | null;
-  country?: string | null;
-  producer?: string | null;
-  producer_ko?: string | null;
-  producer_en?: string | null;
-  wine_type?: string | null;
-  // v3 정규화/한글 필드
-  country_ko?: string | null;
-  region_ko?: string | null;
-  region_path?: string | null;
-  grape_varieties?: string[] | null;
-  grape_varieties_ko?: string[] | null;
-  wine_style?: string | null;
-  wine_style_ko?: string | null;
-  // legacy final_*
-  final_grapes?: string | null;
-  final_region?: string | null;
-  final_country?: string | null;
-  final_producer?: string | null;
-  final_wine_type?: string | null;
-  final_alcohol?: string | null;
-  final_style?: string | null;
-  final_description?: string | null;
-  gangnam_alcohol?: string | null;
-}
+// v5: Wine 타입 직접 사용 (vivino는 옵셔널 join)
+import type { Wine } from "@/types";
+type WineData = Wine | null;
 
 const WINE_TYPE_COLORS: Record<string, string> = {
   red: "bg-[#722F37]", white: "bg-[#F7E7CE]", rose: "bg-[#FFC0CB]",
@@ -109,7 +74,7 @@ const WINE_TYPE_COLORS: Record<string, string> = {
 export default function DiaryDetail({ record, readOnly = false, wineData = null, evaluations = [], myEvaluation = null, currentUserId = null, ownerNickname = "작성자", currentNickname = "", linkedRecords = [], hasMatchingRecord = false, resolvedCompanions }: {
   record: WineRecord;
   readOnly?: boolean;
-  wineData?: WineData | null;
+  wineData?: WineData;
   evaluations?: RecordEvaluation[];
   myEvaluation?: RecordEvaluation | null;
   currentUserId?: string | null;
@@ -329,7 +294,7 @@ export default function DiaryDetail({ record, readOnly = false, wineData = null,
 
           {/* ━━━━━━━━━━ 1. Wine ━━━━━━━━━━ */}
           {(() => {
-            const resolved = wineData ? resolveWineDisplay(wineData) : null;
+            const resolved = wineData ? resolveWineDisplayV2(wineData) : null;
             const displayType = resolved?.wine_type ?? record.wine_type;
             // 품종: wines 카탈로그 > 유저 기록 배열(_ko 우선) > legacy grape_variety string
             const recordGrapesKo = (record as { grape_varieties_ko?: string[] | null }).grape_varieties_ko;

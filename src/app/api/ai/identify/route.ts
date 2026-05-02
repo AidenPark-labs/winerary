@@ -20,7 +20,7 @@ async function matchFromDB(name: string, nameOriginal: string | null) {
   // 1차: 영어 원본명 유사 매칭
   if (nameOriginal) {
     const { data } = await supabase
-      .from("wines")
+      .from("wines_v2")
       .select("*")
       .ilike("name_en", `%${nameOriginal}%`)
       .limit(10);
@@ -30,7 +30,7 @@ async function matchFromDB(name: string, nameOriginal: string | null) {
   // 2차: 한국어명 유사 매칭
   if (name) {
     const { data } = await supabase
-      .from("wines")
+      .from("wines_v2")
       .select("*")
       .ilike("name_ko", `%${name}%`)
       .limit(10);
@@ -42,7 +42,7 @@ async function matchFromDB(name: string, nameOriginal: string | null) {
     const keywords = nameOriginal.split(/[\s\-]+/).filter((w) => w.length > 3).slice(0, 3);
     for (const keyword of keywords) {
       const { data } = await supabase
-        .from("wines")
+        .from("wines_v2")
         .select("*")
         .or(`name_en.ilike.%${keyword}%,name_ko.ilike.%${keyword}%`)
         .limit(5);
@@ -131,8 +131,10 @@ description과 food_pairing은 사진이 아닌, 해당 와인 자체의 알려�
         result.db_price = exact.price;
         result.wine_id = exact.id;
         if (exact.wine_type) result.wine_type = exact.wine_type;
-        if (exact.country) result.country = exact.country;
-        if (exact.grape_variety) result.grape_variety = exact.grape_variety;
+        if (exact.country_ko) result.country = exact.country_ko;
+        if (Array.isArray(exact.grape_varieties) && exact.grape_varieties.length > 0) {
+          result.grape_variety = exact.grape_varieties.join(", ");
+        }
         if (exact.producer) result.producer = exact.producer;
         if (exact.name_en && !result.name_original) result.name_original = exact.name_en;
       } else if (candidates.length > 0) {

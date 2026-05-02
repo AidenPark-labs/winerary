@@ -142,7 +142,7 @@ export default function DictionaryClient({ initial, options, results, popular }:
                     {i + 1}
                   </div>
                   <img
-                    src={getWineImage(w.image_url ?? w.naver_image, w.wine_type)}
+                    src={getWineImage(w.image_url, w.wine_type)}
                     alt=""
                     className="w-full h-32 object-cover bg-white/5"
                   />
@@ -152,7 +152,7 @@ export default function DictionaryClient({ initial, options, results, popular }:
                     </p>
                     <div className="flex items-center gap-1.5 mt-1 text-[10px] text-zinc-400">
                       {w.vivino_rating != null && <span className="text-purple-300">★ {w.vivino_rating.toFixed(1)}</span>}
-                      {(w.country_ko ?? w.country) && <span className="truncate">{w.country_ko ?? w.country}</span>}
+                      {w.country_ko && <span className="truncate">{w.country_ko}</span>}
                     </div>
                   </div>
                 </Link>

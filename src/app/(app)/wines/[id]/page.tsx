@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { resolveWineDisplay } from "@/lib/wine-display";
+import { resolveWineDisplayV2 } from "@/lib/wine-display";
+import { fetchWineWithVivinoById, fetchWinesWithVivinoByIds } from "@/lib/wines-v2-fetch";
 import VivinoRating from "./VivinoRating";
 import WineActions from "./WineActions";
 import BackButton from "./BackButton";
@@ -25,12 +26,7 @@ export default async function WineDetailPage({
   const sp = (await searchParams) ?? {};
   const supabase = await createClient();
 
-  const { data: wine } = await supabase
-    .from("wines")
-    .select("*")
-    .eq("id", id)
-    .single();
-
+  const wine = await fetchWineWithVivinoById(supabase, id);
   if (!wine) notFound();
 
   // 검색 결과에서 진입한 경우에만 인기도 집계 (view 이벤트)
@@ -39,7 +35,7 @@ export default async function WineDetailPage({
     logWineEvent({ wineId: id, eventType: "view", userId: viewer?.id ?? null }).catch(() => {});
   }
 
-  const d = resolveWineDisplay(wine);
+  const d = resolveWineDisplayV2(wine);
 
   // 본인이 이 와인을 기록한 횟수
   const { data: { user } } = await supabase.auth.getUser();
@@ -55,53 +51,56 @@ export default async function WineDetailPage({
   }
 
   // 유사 와인 추천: 같은 국가+품종 > 같은 국가 > 같은 타입, 비슷한 가격대
-  const similarFields = "id, name_ko, wine_type, country, country_ko, price, vivino_rating, naver_image, image_url, grape_variety, grape_varieties, grape_varieties_ko, final_grapes, vivino_grapes";
   const priceMin = wine.price ? Math.round(wine.price * 0.5) : null;
   const priceMax = wine.price ? Math.round(wine.price * 1.5) : null;
 
-  let similar: typeof tier1 = [];
+  let similarIds: string[] = [];
 
   // 1순위: 같은 타입 + 같은 국가 + 비슷한 가격대
   let q1 = supabase
-    .from("wines")
-    .select(similarFields)
+    .from("wines_v2")
+    .select("id")
     .neq("id", id)
     .eq("wine_type", wine.wine_type)
-    .eq("country", d.country ?? "")
-    .order("vivino_rating", { ascending: false, nullsFirst: false })
+    .eq("country_ko", wine.country_ko)
+    .eq("is_published", true)
+    .order("created_at", { ascending: false })
     .limit(20);
   if (priceMin && priceMax) q1 = q1.gte("price", priceMin).lte("price", priceMax);
-  const { data: tier1 } = await q1;
+  const { data: tier1Ids } = await q1;
+  similarIds = (tier1Ids ?? []).map((r) => r.id);
 
-  if (tier1 && tier1.length > 0) {
-    // 품종이 겹치는 것을 먼저, 나머지는 Vivino 평점순
-    const wineGrapes = (d.grapes ?? "").toLowerCase();
-    similar = tier1.sort((a, b) => {
-      const aGrapes = ((a.grape_varieties_ko ?? []).join(" ") || (a.grape_varieties ?? []).join(" ") || a.final_grapes || a.vivino_grapes || a.grape_variety || "").toLowerCase();
-      const bGrapes = ((b.grape_varieties_ko ?? []).join(" ") || (b.grape_varieties ?? []).join(" ") || b.final_grapes || b.vivino_grapes || b.grape_variety || "").toLowerCase();
-      const aMatch = wineGrapes && aGrapes.includes(wineGrapes) ? 1 : 0;
-      const bMatch = wineGrapes && bGrapes.includes(wineGrapes) ? 1 : 0;
-      if (aMatch !== bMatch) return bMatch - aMatch;
-      return (Number(b.vivino_rating) || 0) - (Number(a.vivino_rating) || 0);
-    }).slice(0, 5);
-  }
-
-  // 부족하면 같은 타입에서 추가 충당
-  if (similar.length < 5) {
-    const existingIds = new Set(similar.map((w) => w.id));
-    existingIds.add(id);
-    const { data: fallback } = await supabase
-      .from("wines")
-      .select(similarFields)
+  // 2순위: 부족하면 같은 타입에서 추가 충당
+  if (similarIds.length < 5) {
+    const exclude = new Set([id, ...similarIds]);
+    const { data: fallbackIds } = await supabase
+      .from("wines_v2")
+      .select("id")
       .eq("wine_type", wine.wine_type)
-      .not("id", "in", `(${[...existingIds].join(",")})`)
+      .eq("is_published", true)
+      .not("id", "in", `(${[...exclude].join(",")})`)
       .not("price", "is", null)
-      .order("vivino_rating", { ascending: false, nullsFirst: false })
-      .limit(5 - similar.length);
-    if (fallback) similar = [...similar, ...fallback];
+      .limit(5 - similarIds.length);
+    similarIds = [...similarIds, ...(fallbackIds ?? []).map((r) => r.id)];
   }
 
-  const heroImage = getWineImage(wine.image_url ?? wine.naver_image, wine.wine_type);
+  // similar 와인 + Vivino 정보 합성
+  const similarFull = await fetchWinesWithVivinoByIds(supabase, similarIds);
+
+  // 같은 품종 우선 + Vivino 평점 보조 정렬
+  const wineGrapesLower = wine.grape_varieties.join(" ").toLowerCase();
+  const similar = similarFull
+    .sort((a, b) => {
+      const aGrapes = a.grape_varieties.join(" ").toLowerCase();
+      const bGrapes = b.grape_varieties.join(" ").toLowerCase();
+      const aMatch = wineGrapesLower && aGrapes.includes(wineGrapesLower) ? 1 : 0;
+      const bMatch = wineGrapesLower && bGrapes.includes(wineGrapesLower) ? 1 : 0;
+      if (aMatch !== bMatch) return bMatch - aMatch;
+      return (Number(b.vivino?.rating) || 0) - (Number(a.vivino?.rating) || 0);
+    })
+    .slice(0, 5);
+
+  const heroImage = getWineImage(wine.image_url, wine.wine_type);
 
   return (
     <div className="relative min-h-screen bg-black">
@@ -198,9 +197,9 @@ export default async function WineDetailPage({
               <VivinoRating
                 wineId={wine.id}
                 nameEn={wine.name_en}
-                initialRating={wine.vivino_rating}
-                initialReviews={wine.vivino_reviews}
-                initialPageUrl={wine.vivino_url}
+                initialRating={wine.vivino?.rating ?? null}
+                initialReviews={wine.vivino?.reviews ?? null}
+                initialPageUrl={wine.vivino?.vivino_url ?? null}
               />
             </div>
           </div>
@@ -221,7 +220,7 @@ export default async function WineDetailPage({
           <NaverShopping query={wine.name_ko} wineId={wine.id} />
 
           {/* ── 유사 와인 ── */}
-          {similar && similar.length > 0 && (
+          {similar.length > 0 && (
             <div className="rounded-[20px] bg-black/30 backdrop-blur-xl border border-white/15 overflow-hidden shadow-2xl">
               <div className="px-5 pt-4 pb-2">
                 <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em]">Similar Wines</p>
@@ -233,13 +232,13 @@ export default async function WineDetailPage({
                     href={`/wines/${w.id}`}
                     className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] transition-colors"
                   >
-                    <img src={getWineImage(w.image_url ?? w.naver_image, w.wine_type)} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-zinc-700" />
+                    <img src={getWineImage(w.image_url, w.wine_type)} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-zinc-700" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-zinc-200 truncate">{w.name_ko}</p>
                       <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-500">
                         {w.price && <span className="text-emerald-400">{w.price.toLocaleString()}원</span>}
-                        {w.vivino_rating && <span className="text-rose-300">★ {Number(w.vivino_rating).toFixed(1)}</span>}
-                        {(w.country_ko ?? w.country) && <span>{w.country_ko ?? w.country}</span>}
+                        {w.vivino?.rating && <span className="text-rose-300">★ {Number(w.vivino.rating).toFixed(1)}</span>}
+                        {w.country_ko && <span>{w.country_ko}</span>}
                       </div>
                     </div>
                   </Link>
@@ -254,8 +253,8 @@ export default async function WineDetailPage({
           {/* ── 데이터 출처 ── */}
           <div className="flex items-center justify-center gap-1.5 pt-2 pb-4">
             <span className="text-[10px] text-zinc-600">
-              데이터 출처: {(wine.source ?? wine.data_source) === "naver_shopping" ? "네이버 쇼핑" : (wine.source ?? wine.data_source) ?? "알 수 없음"}
-              {wine.vivino_rating ? " · Vivino" : ""}
+              데이터 출처: {wine.source === "naver_shopping" ? "네이버 쇼핑" : wine.source}
+              {wine.vivino?.rating ? " · Vivino" : ""}
             </span>
           </div>
         </div>

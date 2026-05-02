@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-
-const SELECT = "id, name_ko, name_en, wine_type, country, country_ko, region, region_path, region_ko, grape_variety, grape_varieties, grape_varieties_ko, producer, producer_ko, producer_en, description, price, naver_link, naver_image, image_url, vivino_url, vivino_rating, vivino_reviews, source";
+import { fetchWinesWithVivinoByIds } from "@/lib/wines-v2-fetch";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -24,22 +23,16 @@ export async function GET(request: Request) {
   }
 
   const ids = (ranked as Array<{ id: string }>).map((r) => r.id);
-  const { data: full } = await supabase
-    .from("wines")
-    .select(SELECT)
-    .in("id", ids);
+  const full = await fetchWinesWithVivinoByIds(supabase, ids);
 
-  const byId = new Map<string, Record<string, unknown>>();
-  for (const w of full ?? []) byId.set((w as { id: string }).id, w as Record<string, unknown>);
+  const byId = new Map<string, (typeof full)[0]>();
+  for (const w of full) byId.set(w.id, w);
 
-  const wines = (ranked as Array<Record<string, unknown>>)
+  const wines = (ranked as Array<{ id: string; score: number }>)
     .map((r) => {
-      const row = byId.get(r.id as string);
+      const row = byId.get(r.id);
       if (!row) return null;
-      return {
-        ...row,
-        score: r.score,
-      };
+      return { ...row, score: r.score };
     })
     .filter(Boolean);
 

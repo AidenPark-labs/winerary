@@ -1,8 +1,13 @@
 /**
- * 와인 표시값 결정 (v3):
- *   한글(*_ko) > 정규화 v3 필드 > final_* 수동 오버라이드 > vivino_* > 원본
- * final_*은 v3 이전 수동 오버라이드 잔재 — Phase 5 안정화 후 DROP 예정.
+ * 와인 표시값 결정.
+ *
+ * v3 (legacy): 한글(*_ko) > v3 정규화 > final_* > vivino_* > 원본
+ * v5 (Wine 타입): fallback 없음 — wines_v2가 이미 정규화된 단일 컬럼만 가짐
+ *
+ * Phase 4 진행 중 — 호출자 점진 전환 (resolveWineDisplay → resolveWineDisplayV2).
  */
+
+import type { Wine } from "@/types";
 
 type WineDisplayInput = {
   // v3 한글/정규화 필드
@@ -101,5 +106,48 @@ export function resolveWineDisplay(wine: WineDisplayInput) {
       wine.vivino_description ??
       wine.description ??
       null,
+  };
+}
+
+// ============================================================================
+// v5 — wines_v2 정규 타입 직접 매핑 (fallback 불필요)
+// ============================================================================
+
+/**
+ * v5 와인 표시값 결정.
+ * wines_v2는 이미 단일 표준 언어로 정규화돼 있어 fallback 없음.
+ *
+ * @param wine wines_v2 행 (Wine 타입의 일부 필드만 있어도 됨)
+ * @param vivino vivino_wines 행 (있으면 표시 보강)
+ */
+export function resolveWineDisplayV2(
+  wine: Pick<
+    Wine,
+    | "country_ko"
+    | "region_ko"
+    | "producer"
+    | "grape_varieties"
+    | "grape_blend"
+    | "alcohol"
+    | "brand"
+    | "wine_type"
+    | "wine_style"
+    | "description"
+  >,
+) {
+  return {
+    grapes:
+      wine.grape_varieties && wine.grape_varieties.length > 0
+        ? wine.grape_varieties.join(", ")
+        : null,
+    grape_blend: wine.grape_blend ?? null,
+    region: wine.region_ko,
+    country: wine.country_ko,
+    producer: wine.producer,
+    wine_type: wine.wine_type,
+    alcohol: wine.alcohol != null ? `${wine.alcohol}%` : null,
+    style: wine.wine_style,
+    description: wine.description,
+    brand: wine.brand,
   };
 }

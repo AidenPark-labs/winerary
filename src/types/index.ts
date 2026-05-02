@@ -2,6 +2,95 @@ export type Visibility = 'private' | 'link' | 'public'
 
 export type WineType = 'red' | 'white' | 'rose' | 'sparkling' | 'fortified' | 'dessert' | 'other'
 
+export type WineSource =
+  | 'wine21'
+  | 'winenara'
+  | 'gangnam'
+  | 'naver_shopping'
+  | 'user_submission'
+  | 'admin'
+
+/**
+ * v5 와인 정규 타입 (wines_v2 → swap 후 wines).
+ * 단일 표준 언어로 정규화됨:
+ *   - country_ko / region_ko / grape_varieties: 한글
+ *   - producer / wine_style / brand: 영문 단일
+ *   - wine_type: 영문 enum
+ *
+ * Vivino 데이터는 별도 vivino_wines 테이블 (선택적 join).
+ *
+ * 관련: docs/wines-schema-simplification.md §3.1
+ *      memory/project_v5_normalization_decisions.md
+ */
+export interface Wine {
+  id: string
+  source: WineSource
+  source_refs: string[] | null
+  source_snapshot: Record<string, unknown> | null
+
+  // 이름 (이중)
+  name_ko: string
+  name_en: string
+
+  // 분류
+  wine_type: WineType
+  wine_style: string | null
+
+  // 지리 (한글)
+  country_ko: string                // NOT NULL
+  region_ko: string | null
+
+  // 와이너리 (영문 단일)
+  producer: string | null
+
+  // 와인 정보
+  grape_varieties: string[]         // 한글, 프랑스식 발음
+  grape_blend: GrapeBlendItem[] | null
+  alcohol: number | null
+  brand: string | null
+  price: number | null
+
+  // 서빙
+  description: string | null
+  image_url: string | null
+  is_published: boolean
+
+  // 옵셔널 join — vivino_wines 데이터
+  vivino?: VivinoWine | null
+
+  created_at: string
+  updated_at: string
+}
+
+export interface GrapeBlendItem {
+  grape: string                     // 한글 표준 (term_dict 매칭 시) 또는 원문
+  percent: number                   // 0~100
+}
+
+/**
+ * vivino_wines 행 (Vivino 매칭 결과).
+ * 유저 노출 조건: reviewed_at IS NOT NULL일 때만 표시.
+ */
+export interface VivinoWine {
+  wine_id: string
+  vivino_url: string
+  vivino_wine_id: string | null
+  vivino_name: string | null
+  rating: number | null
+  reviews: number | null
+  winery: string | null
+  grapes: string | null
+  region: string | null
+  style: string | null
+  alcohol: string | null
+  description: string | null
+  allergens: string | null
+  image_url: string | null
+  needs_review: boolean
+  reviewed_at: string | null
+  match_score: number | null
+}
+
 export interface WineRecord {
   id: string
   user_id: string
@@ -92,6 +181,10 @@ export interface WineRecordEnriched {
   evaluation_memo: string | null
 }
 
+/**
+ * @deprecated v5에서는 {@link Wine} + {@link VivinoWine} 사용.
+ * Phase 4 코드 전환 진행 중 — 호출자 점진 전환 후 제거 예정.
+ */
 export interface WineDisplay {
   id: string
   name_ko: string

@@ -1,4 +1,12 @@
-# Phase 2.9 — Vivino 데이터 분리 체크리스트
+# Phase 2.9 — Vivino 데이터 분리 체크리스트 ⚠️ DEPRECATED
+
+> **2026-04-28 폐기**. wines_v2 신설 전략으로 전환되어, vivino_wines 분리는 wines_v2 backfill에 통합됨.
+> **현재 마스터 문서**: `docs/wines-schema-simplification.md` (전체 재작성됨)
+> 이 문서는 히스토리용으로만 보존. 실행하지 말 것.
+
+---
+
+# (이하 구 계획)
 
 > `docs/wines-schema-simplification.md`의 Phase 2.9 상세판.
 > v5 리팩터 중 **가장 광범위한 사이클**. 체크박스로 진행 추적.

@@ -231,16 +231,9 @@ export default function WineDetailClient({
       {tab === "vivino" && <VivinoSection wine={wine} onChanged={onChanged} />}
       {tab === "review" && <ReviewSection wine={wine} onChanged={onChanged} />}
       {tab === "dedupe" && (
-        <DedupeSection wineId={wine.id} candidates={dedupeCandidates} onChanged={onChanged} />
+        <DedupeSection wine={wine} candidates={dedupeCandidates} onChanged={onChanged} />
       )}
-      {tab === "url_dup" && (
-        <UrlDupSection
-          wineId={wine.id}
-          vivinoUrl={wine.vivino_url}
-          members={dupGroup}
-          onChanged={onChanged}
-        />
-      )}
+      {tab === "url_dup" && <UrlDupSection wine={wine} members={dupGroup} onChanged={onChanged} />}
       {tab === "reports" && (
         <ReportsSection wineId={wine.id} reports={reports} onChanged={onChanged} />
       )}
@@ -492,6 +485,29 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
     );
   }
 
+  // 비교 행 정의 — 좌(우리 DB)와 우(Vivino) 같은 의미 필드끼리
+  const grapesKo = (wine.grape_varieties ?? []).join(", ");
+  const compareRows: Array<{
+    label: string;
+    ours: string | null;
+    vivino: string | null;
+  }> = [
+    { label: "와인명", ours: wine.name_en || wine.name_ko, vivino: wine.vivino_name },
+    { label: "와이너리", ours: wine.producer, vivino: wine.vivino_winery },
+    {
+      label: "지역",
+      ours: [wine.country_ko, wine.region_ko].filter(Boolean).join(" · ") || null,
+      vivino: wine.vivino_region,
+    },
+    { label: "품종", ours: grapesKo || null, vivino: wine.vivino_grapes },
+    { label: "스타일", ours: wine.wine_style, vivino: wine.vivino_style },
+    {
+      label: "도수",
+      ours: wine.alcohol != null ? `${wine.alcohol}%` : null,
+      vivino: wine.vivino_alcohol,
+    },
+  ];
+
   return (
     <Card>
       <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
@@ -546,36 +562,77 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
         </div>
       </div>
 
-      {wine.vivino_image_url && (
-        <img
-          src={wine.vivino_image_url}
-          alt={wine.vivino_name ?? ""}
-          className="w-24 h-24 rounded-lg object-cover border border-zinc-700 mb-4"
+      {/* 좌우 이미지 + 제목 */}
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <CompareHeader
+          title="우리 DB (wines)"
+          subtitle={wine.name_ko}
+          imageUrl={wine.image_url}
+          fallbackType={wine.wine_type}
+          tone="zinc"
         />
-      )}
+        <CompareHeader
+          title="Vivino"
+          subtitle={wine.vivino_name}
+          imageUrl={wine.vivino_image_url}
+          fallbackType={wine.wine_type}
+          tone="rose"
+        />
+      </div>
 
-      <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-        <Info label="Vivino 와인명" value={wine.vivino_name} />
-        <Info label="Winery" value={wine.vivino_winery} />
-        <Info label="Region" value={wine.vivino_region} />
-        <Info label="Style" value={wine.vivino_style} />
-        <Info label="Grapes" value={wine.vivino_grapes} />
-        <Info label="Alcohol" value={wine.vivino_alcohol} />
-        <Info
-          label="Rating"
-          value={
-            wine.vivino_rating != null
-              ? `★ ${wine.vivino_rating}${
-                  wine.vivino_reviews != null ? ` (${wine.vivino_reviews.toLocaleString()})` : ""
-                }`
-              : null
-          }
-        />
-        <Info label="Vivino wine_id" value={wine.vivino_wine_id} />
-      </dl>
+      {/* 비교 표 */}
+      <div className="rounded-xl border border-zinc-800 overflow-hidden">
+        {compareRows.map((r, i) => {
+          const diff = compareDiffers(r.ours, r.vivino);
+          return (
+            <div
+              key={r.label}
+              className={`grid grid-cols-[7rem_1fr_1fr] text-sm ${
+                i > 0 ? "border-t border-zinc-800" : ""
+              } ${diff ? "bg-amber-500/[0.04]" : ""}`}
+            >
+              <div className="px-3 py-2 bg-zinc-900/60 text-zinc-500 text-xs uppercase tracking-wider flex items-center">
+                {r.label}
+                {diff && <span className="ml-2 text-amber-400" title="차이 있음">⚠</span>}
+              </div>
+              <div className={`px-3 py-2 ${diff ? "text-amber-100" : "text-zinc-200"}`}>
+                {r.ours ?? <span className="text-zinc-600">—</span>}
+              </div>
+              <div
+                className={`px-3 py-2 border-l border-zinc-800 ${
+                  diff ? "text-amber-100" : "text-zinc-200"
+                }`}
+              >
+                {r.vivino ?? <span className="text-zinc-600">—</span>}
+              </div>
+            </div>
+          );
+        })}
+        {/* Vivino 단독 정보 */}
+        {(wine.vivino_rating != null || wine.vivino_wine_id) && (
+          <div className="grid grid-cols-[7rem_1fr_1fr] text-sm border-t border-zinc-800">
+            <div className="px-3 py-2 bg-zinc-900/60 text-zinc-500 text-xs uppercase tracking-wider">
+              평점·ID
+            </div>
+            <div className="px-3 py-2 text-zinc-600">—</div>
+            <div className="px-3 py-2 border-l border-zinc-800 text-zinc-200">
+              {wine.vivino_rating != null && (
+                <span className="text-amber-400 mr-2">
+                  ★ {wine.vivino_rating}
+                  {wine.vivino_reviews != null && ` (${wine.vivino_reviews.toLocaleString()})`}
+                </span>
+              )}
+              {wine.vivino_wine_id && (
+                <span className="text-zinc-500 text-xs font-mono">#{wine.vivino_wine_id}</span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
       {wine.vivino_description && (
-        <div className="mt-4">
-          <span className="text-zinc-500 text-xs uppercase tracking-wider">Description</span>
+        <div className="mt-4 rounded-xl border border-zinc-800 p-3 bg-zinc-900/40">
+          <span className="text-zinc-500 text-xs uppercase tracking-wider">Vivino Description</span>
           <p className="text-sm text-zinc-300 mt-1 whitespace-pre-wrap">{wine.vivino_description}</p>
         </div>
       )}
@@ -611,6 +668,44 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
         {msg && <p className="text-xs text-zinc-400 mt-2">{msg}</p>}
       </div>
     </Card>
+  );
+}
+
+function compareDiffers(a: string | null, b: string | null): boolean {
+  if (!a || !b) return false; // 한쪽만 있으면 정보 보강이지 의심 아님
+  const norm = (s: string) => s.toLowerCase().replace(/\s+/g, "");
+  return norm(a) !== norm(b);
+}
+
+function CompareHeader({
+  title,
+  subtitle,
+  imageUrl,
+  fallbackType,
+  tone,
+}: {
+  title: string;
+  subtitle: string | null;
+  imageUrl: string | null;
+  fallbackType: string | null;
+  tone: "zinc" | "rose";
+}) {
+  const toneBorder = tone === "rose" ? "border-rose-500/30" : "border-zinc-700";
+  const toneTitle = tone === "rose" ? "text-rose-300" : "text-zinc-300";
+  return (
+    <div className={`rounded-xl border ${toneBorder} bg-zinc-900/40 p-3 flex items-center gap-3`}>
+      <img
+        src={getWineImage(imageUrl, fallbackType)}
+        alt={title}
+        className="w-16 h-16 rounded-lg object-cover border border-zinc-700 flex-shrink-0"
+      />
+      <div className="min-w-0">
+        <p className={`text-[11px] uppercase tracking-wider font-semibold ${toneTitle}`}>{title}</p>
+        <p className="text-sm text-zinc-100 truncate" title={subtitle ?? ""}>
+          {subtitle ?? <span className="text-zinc-600">—</span>}
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -671,17 +766,14 @@ function ReviewSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
 // ─────────────────────────────────────────────────────────
 
 function DedupeSection({
-  wineId,
+  wine,
   candidates,
   onChanged,
 }: {
-  wineId: string;
+  wine: WineDetail;
   candidates: DedupeCandidate[];
   onChanged: () => void;
 }) {
-  const [pending, startTransition] = useTransition();
-  const [msg, setMsg] = useState<string | null>(null);
-
   if (candidates.length === 0) {
     return (
       <Card>
@@ -693,87 +785,259 @@ function DedupeSection({
   return (
     <Card>
       <p className="text-sm text-zinc-400 mb-4">
-        다음 raw_wines가 이 와인과 같은 와인일 수 있습니다. <strong>Merge</strong>: source_refs 누적 +
-        promoted_wine_id 연결. <strong>Reject</strong>: 다른 와인으로 처리.
+        다음 raw_wines가 이 와인과 같은 와인일 수 있습니다. raw / 현재 / 최종을 비교해서 최종값을 정한 뒤
+        <strong> Merge</strong>하면 변환 모듈을 통과해 자동 정규화됩니다. 최종 칸이 비어있으면 현재값 유지.
       </p>
-      <div className="space-y-3">
+      <div className="space-y-6">
         {candidates.map((c) => (
-          <div key={c.id} className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
-            <div className="flex items-start justify-between gap-3 mb-3">
-              <div>
-                <p className="text-xs text-zinc-500">
-                  {c.match_reason}
-                  {c.match_score != null ? ` · 점수 ${(c.match_score * 100).toFixed(0)}%` : ""}
-                  {c.raw_wine && (
-                    <>
-                      {" · "}
-                      {c.raw_wine.source}/{c.raw_wine.source_id}
-                    </>
-                  )}
-                </p>
-                {c.raw_wine ? (
-                  <div className="mt-2">
-                    <p className="text-zinc-100 font-medium">{c.raw_wine.name_ko ?? "—"}</p>
-                    {c.raw_wine.name_en && (
-                      <p className="text-xs text-zinc-500 italic">{c.raw_wine.name_en}</p>
-                    )}
-                    <div className="flex flex-wrap gap-2 mt-2 text-[11px] text-zinc-400">
-                      {(c.raw_wine.producer_ko || c.raw_wine.producer_en) && (
-                        <span className="bg-zinc-800/60 px-1.5 py-0.5 rounded">
-                          🏭 {c.raw_wine.producer_ko ?? c.raw_wine.producer_en}
-                        </span>
-                      )}
-                      {c.raw_wine.country && (
-                        <span className="bg-zinc-800/60 px-1.5 py-0.5 rounded">
-                          📍 {c.raw_wine.country}
-                          {c.raw_wine.region ? ` · ${c.raw_wine.region}` : ""}
-                        </span>
-                      )}
-                      {c.raw_wine.grape_variety && (
-                        <span className="bg-zinc-800/60 px-1.5 py-0.5 rounded">🍇 {c.raw_wine.grape_variety}</span>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-rose-400 text-xs mt-1">raw_wine을 찾을 수 없습니다 (id: {c.raw_wine_id})</p>
-                )}
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <button
-                  onClick={() =>
-                    startTransition(async () => {
-                      const res = await confirmDedupe(c.id, {});
-                      setMsg(res.error ? `오류: ${res.error}` : "Merge 완료");
-                      if (!res.error) onChanged();
-                    })
-                  }
-                  disabled={pending}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25"
-                >
-                  Merge
-                </button>
-                <button
-                  onClick={() =>
-                    startTransition(async () => {
-                      const res = await rejectDedupe(c.id);
-                      setMsg(res.error ? `오류: ${res.error}` : "반려");
-                      if (!res.error) onChanged();
-                    })
-                  }
-                  disabled={pending}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-rose-500/15 text-rose-300 border border-rose-500/30 hover:bg-rose-500/25"
-                >
-                  Reject
-                </button>
-              </div>
-            </div>
-          </div>
+          <CandidateCompare key={c.id} candidate={c} target={wine} onChanged={onChanged} />
         ))}
       </div>
-      {msg && <p className="text-xs text-zinc-400 mt-3">{msg}</p>}
-      {/* wineId는 여기서 직접 안 쓰지만, 이 섹션이 어떤 와인 기준인지 명시용 */}
-      <p className="text-[10px] text-zinc-600 font-mono mt-4">target: {wineId}</p>
     </Card>
+  );
+}
+
+interface DedupeFormState {
+  name_ko: string;
+  name_en: string;
+  country_ko: string;
+  region_ko: string;
+  wine_type: string;
+  producer: string;
+  grape_varieties: string;
+  alcohol: string;
+  image_url: string;
+}
+
+const EMPTY_DEDUPE_FORM: DedupeFormState = {
+  name_ko: "",
+  name_en: "",
+  country_ko: "",
+  region_ko: "",
+  wine_type: "",
+  producer: "",
+  grape_varieties: "",
+  alcohol: "",
+  image_url: "",
+};
+
+function CandidateCompare({
+  candidate: c,
+  target,
+  onChanged,
+}: {
+  candidate: DedupeCandidate;
+  target: WineDetail;
+  onChanged: () => void;
+}) {
+  const [pending, startTransition] = useTransition();
+  const [msg, setMsg] = useState<string | null>(null);
+  const [form, setForm] = useState<DedupeFormState>(EMPTY_DEDUPE_FORM);
+
+  const raw = c.raw_wine;
+  const targetGrapes = (target.grape_varieties ?? []).join(", ");
+  const rawProducer = raw?.producer_ko ?? raw?.producer_en ?? "";
+
+  // 행 정의: [필드, raw 값, target 값, form key]
+  const rows: Array<{
+    label: string;
+    rawValue: string;
+    targetValue: string;
+    key: keyof DedupeFormState;
+    placeholder?: string;
+  }> = [
+    { label: "name_ko", rawValue: raw?.name_ko ?? "", targetValue: target.name_ko, key: "name_ko" },
+    { label: "name_en", rawValue: raw?.name_en ?? "", targetValue: target.name_en, key: "name_en" },
+    { label: "country", rawValue: raw?.country ?? "", targetValue: target.country_ko, key: "country_ko" },
+    { label: "region", rawValue: raw?.region ?? "", targetValue: target.region_ko ?? "", key: "region_ko" },
+    { label: "wine_type", rawValue: raw?.wine_type ?? "", targetValue: target.wine_type, key: "wine_type" },
+    { label: "producer", rawValue: rawProducer, targetValue: target.producer ?? "", key: "producer" },
+    {
+      label: "grapes",
+      rawValue: raw?.grape_variety ?? "",
+      targetValue: targetGrapes,
+      key: "grape_varieties",
+      placeholder: "콤마로 구분",
+    },
+    {
+      label: "alcohol",
+      rawValue: raw?.alcohol ?? "",
+      targetValue: target.alcohol != null ? String(target.alcohol) : "",
+      key: "alcohol",
+    },
+    {
+      label: "image_url",
+      rawValue: raw?.image_url ?? "",
+      targetValue: target.image_url ?? "",
+      key: "image_url",
+    },
+  ];
+
+  function copyAll(side: "raw" | "target") {
+    const next: DedupeFormState = { ...EMPTY_DEDUPE_FORM };
+    for (const r of rows) {
+      next[r.key] = side === "raw" ? r.rawValue : r.targetValue;
+    }
+    setForm(next);
+  }
+
+  function clearForm() {
+    setForm(EMPTY_DEDUPE_FORM);
+  }
+
+  function buildFinalData(): Record<string, unknown> {
+    const out: Record<string, unknown> = {};
+    const trim = (s: string) => s.trim();
+    if (trim(form.name_ko)) out.name_ko = trim(form.name_ko);
+    if (trim(form.name_en)) out.name_en = trim(form.name_en);
+    if (trim(form.country_ko)) out.country_ko = trim(form.country_ko);
+    if (trim(form.region_ko)) out.region_ko = trim(form.region_ko);
+    if (trim(form.wine_type)) out.wine_type = trim(form.wine_type);
+    if (trim(form.producer)) out.producer = trim(form.producer);
+    if (trim(form.grape_varieties)) {
+      out.grape_varieties = form.grape_varieties
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+    if (trim(form.alcohol)) out.alcohol = trim(form.alcohol);
+    if (trim(form.image_url)) out.image_url = trim(form.image_url);
+    return out;
+  }
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
+      <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
+        <div>
+          <p className="text-xs text-zinc-500">
+            {c.match_reason}
+            {c.match_score != null ? ` · 점수 ${(c.match_score * 100).toFixed(0)}%` : ""}
+            {raw && ` · ${raw.source}/${raw.source_id}`}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => copyAll("raw")}
+            className="text-[11px] px-2 py-1 rounded-lg bg-blue-500/15 text-blue-300 border border-blue-500/30 hover:bg-blue-500/25"
+          >
+            전체 ← raw
+          </button>
+          <button
+            onClick={() => copyAll("target")}
+            className="text-[11px] px-2 py-1 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700"
+          >
+            전체 ← 현재
+          </button>
+          <button
+            onClick={clearForm}
+            className="text-[11px] px-2 py-1 rounded-lg bg-zinc-800 text-zinc-500 border border-zinc-700 hover:bg-zinc-700"
+          >
+            비우기
+          </button>
+        </div>
+      </div>
+
+      {!raw ? (
+        <p className="text-rose-400 text-xs">raw_wine을 찾을 수 없습니다 (id: {c.raw_wine_id})</p>
+      ) : (
+        <div className="rounded-lg border border-zinc-800 overflow-hidden">
+          <div className="grid grid-cols-[6rem_1fr_1.5rem_1fr_1.5rem_1.5fr] text-[10px] uppercase tracking-wider text-zinc-500 bg-zinc-900/80">
+            <div className="px-2 py-1.5">필드</div>
+            <div className="px-2 py-1.5">raw_wine</div>
+            <div></div>
+            <div className="px-2 py-1.5">현재 wine</div>
+            <div></div>
+            <div className="px-2 py-1.5">최종 (편집)</div>
+          </div>
+          {rows.map((r) => {
+            const formVal = form[r.key];
+            return (
+              <div
+                key={r.label}
+                className="grid grid-cols-[6rem_1fr_1.5rem_1fr_1.5rem_1.5fr] text-sm border-t border-zinc-800"
+              >
+                <div className="px-2 py-1.5 text-zinc-500 text-xs flex items-center bg-zinc-900/40">
+                  {r.label}
+                </div>
+                <div className="px-2 py-1.5 text-zinc-300 truncate" title={r.rawValue}>
+                  {r.rawValue || <span className="text-zinc-600">—</span>}
+                </div>
+                <button
+                  onClick={() => setForm({ ...form, [r.key]: r.rawValue })}
+                  disabled={!r.rawValue}
+                  title="raw → 최종"
+                  className="text-zinc-500 hover:text-blue-300 disabled:opacity-20 text-xs flex items-center justify-center"
+                >
+                  →
+                </button>
+                <div className="px-2 py-1.5 text-zinc-300 truncate" title={r.targetValue}>
+                  {r.targetValue || <span className="text-zinc-600">—</span>}
+                </div>
+                <button
+                  onClick={() => setForm({ ...form, [r.key]: r.targetValue })}
+                  disabled={!r.targetValue}
+                  title="현재 → 최종"
+                  className="text-zinc-500 hover:text-zinc-200 disabled:opacity-20 text-xs flex items-center justify-center"
+                >
+                  →
+                </button>
+                <input
+                  value={formVal}
+                  onChange={(e) => setForm({ ...form, [r.key]: e.target.value })}
+                  placeholder={r.placeholder ?? "비우면 현재값 유지"}
+                  className="px-2 py-1 bg-zinc-800/60 text-zinc-100 text-sm border-l border-zinc-800 focus:outline-none focus:bg-zinc-800"
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="mt-3 flex items-center justify-between flex-wrap gap-2">
+        <p className="text-[11px] text-zinc-500">
+          {msg ?? "최종 칸이 비어있는 필드는 건드리지 않습니다. source_refs는 자동 누적."}
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() =>
+              startTransition(async () => {
+                const finalData = buildFinalData();
+                // FinalMergeData 형식에 맞게 캐스팅 (string[] · string · null 허용)
+                const res = await confirmDedupe(c.id, finalData as never);
+                if (res.error) setMsg(`오류: ${res.error}`);
+                else {
+                  const flag = res.grape_unknowns?.length
+                    ? ` (정규화 미해결 grape: ${res.grape_unknowns.join(", ")})`
+                    : "";
+                  setMsg(`Merge 완료${flag}`);
+                  onChanged();
+                }
+              })
+            }
+            disabled={pending}
+            className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 disabled:opacity-50"
+          >
+            Merge
+          </button>
+          <button
+            onClick={() =>
+              startTransition(async () => {
+                const res = await rejectDedupe(c.id);
+                if (res.error) setMsg(`오류: ${res.error}`);
+                else {
+                  setMsg("반려");
+                  onChanged();
+                }
+              })
+            }
+            disabled={pending}
+            className="text-xs px-3 py-1.5 rounded-lg bg-rose-500/15 text-rose-300 border border-rose-500/30 hover:bg-rose-500/25 disabled:opacity-50"
+          >
+            Reject
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -782,20 +1046,18 @@ function DedupeSection({
 // ─────────────────────────────────────────────────────────
 
 function UrlDupSection({
-  wineId,
-  vivinoUrl,
+  wine,
   members,
   onChanged,
 }: {
-  wineId: string;
-  vivinoUrl: string | null;
+  wine: WineDetail;
   members: DupGroupMember[];
   onChanged: () => void;
 }) {
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
 
-  if (!vivinoUrl) {
+  if (!wine.vivino_url) {
     return (
       <Card>
         <p className="text-zinc-400 text-sm">이 와인에 Vivino URL이 없어 그룹을 확인할 수 없습니다.</p>
@@ -807,70 +1069,141 @@ function UrlDupSection({
       <Card>
         <p className="text-zinc-400 text-sm">같은 Vivino URL을 가리키는 다른 와인이 없습니다.</p>
         <a
-          href={vivinoUrl}
+          href={wine.vivino_url}
           target="_blank"
           rel="noreferrer"
           className="text-xs text-rose-400 hover:underline mt-2 inline-block"
         >
-          {vivinoUrl}
+          {wine.vivino_url}
         </a>
       </Card>
     );
   }
 
+  // 모든 멤버 (현재 와인 + 다른 와인) 비교 행 정의
+  type Member = {
+    id: string;
+    name_ko: string;
+    name_en: string;
+    producer: string | null;
+    country_ko: string;
+    region_ko: string | null;
+    source: string;
+    image_url: string | null;
+    isThis: boolean;
+  };
+  const all: Member[] = [
+    {
+      id: wine.id,
+      name_ko: wine.name_ko,
+      name_en: wine.name_en,
+      producer: wine.producer,
+      country_ko: wine.country_ko,
+      region_ko: wine.region_ko,
+      source: wine.source,
+      image_url: wine.image_url,
+      isThis: true,
+    },
+    ...members.map((m) => ({ ...m, isThis: false })),
+  ];
+
   return (
     <Card>
       <p className="text-sm text-zinc-400 mb-2">
-        같은 Vivino URL을 가리키는 다른 와인 {members.length}건. 잘못 매칭된 와인의 Vivino를 해제하세요.
+        같은 Vivino URL을 가리키는 와인 {all.length}건 (현재 포함). 잘못 매칭된 와인의 Vivino를 해제하세요.
       </p>
       <a
-        href={vivinoUrl}
+        href={wine.vivino_url}
         target="_blank"
         rel="noreferrer"
         className="text-xs text-rose-400 hover:underline mb-4 inline-block"
       >
-        {vivinoUrl}
+        {wine.vivino_url}
       </a>
-      <div className="space-y-2 mt-4">
-        {members.map((m) => (
+
+      <div className="rounded-xl border border-zinc-800 overflow-hidden">
+        <div className="grid grid-cols-[3rem_1.5fr_1fr_1fr_1fr_5rem_5rem] text-[10px] uppercase tracking-wider text-zinc-500 bg-zinc-900/80">
+          <div></div>
+          <div className="px-3 py-2">와인명</div>
+          <div className="px-3 py-2">producer</div>
+          <div className="px-3 py-2">국가·지역</div>
+          <div className="px-3 py-2">source</div>
+          <div className="px-3 py-2 text-center">표시</div>
+          <div className="px-3 py-2 text-center">액션</div>
+        </div>
+        {all.map((m) => (
           <div
             key={m.id}
-            className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/60 p-3"
+            className={`grid grid-cols-[3rem_1.5fr_1fr_1fr_1fr_5rem_5rem] text-sm border-t border-zinc-800 items-center ${
+              m.isThis ? "bg-rose-500/[0.06]" : ""
+            }`}
           >
-            <img
-              src={getWineImage(m.image_url, null)}
-              alt={m.name_ko}
-              className="w-10 h-10 rounded-lg object-cover border border-zinc-700"
-            />
-            <div className="flex-1 min-w-0">
-              <Link href={`/admin/wine-db/${m.id}`} className="text-sm font-medium text-zinc-200 hover:underline">
-                {m.name_ko}
-              </Link>
-              <p className="text-[11px] text-zinc-500 italic truncate">{m.name_en}</p>
-              <p className="text-[11px] text-zinc-500">
-                {m.producer ?? "—"} · {m.country_ko}
-                {m.region_ko ? ` · ${m.region_ko}` : ""} · {m.source}
-              </p>
+            <div className="px-2 py-2 flex items-center justify-center">
+              <img
+                src={getWineImage(m.image_url, null)}
+                alt={m.name_ko}
+                className="w-9 h-9 rounded-lg object-cover border border-zinc-700"
+              />
             </div>
-            <button
-              onClick={() => {
-                if (!confirm(`"${m.name_ko}"의 Vivino 매칭을 해제합니다.`)) return;
-                startTransition(async () => {
-                  const res = await unlinkVivino(m.id);
-                  setMsg(res.error ? `오류: ${res.error}` : "해제 완료");
-                  if (!res.error) onChanged();
-                });
-              }}
-              disabled={pending}
-              className="text-xs px-3 py-1.5 rounded-lg bg-rose-500/15 text-rose-300 border border-rose-500/30 hover:bg-rose-500/25"
-            >
-              Vivino 해제
-            </button>
+            <div className="px-3 py-2 min-w-0">
+              {m.isThis ? (
+                <span className="text-rose-300 font-medium truncate inline-flex items-center gap-2">
+                  {m.name_ko}
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                    이 와인
+                  </span>
+                </span>
+              ) : (
+                <Link
+                  href={`/admin/wine-db?wine=${m.id}`}
+                  className="text-zinc-200 hover:underline truncate font-medium"
+                >
+                  {m.name_ko}
+                </Link>
+              )}
+              <p className="text-[11px] text-zinc-500 italic truncate">{m.name_en}</p>
+            </div>
+            <div className="px-3 py-2 text-zinc-300 truncate">
+              {m.producer ?? <span className="text-zinc-600">—</span>}
+            </div>
+            <div className="px-3 py-2 text-zinc-300 truncate">
+              {m.country_ko}
+              {m.region_ko ? ` · ${m.region_ko}` : ""}
+            </div>
+            <div className="px-3 py-2 text-zinc-500 text-xs">{m.source}</div>
+            <div className="px-2 py-2 text-center">
+              {!m.isThis && (
+                <a
+                  href={`/admin/wine-db/${m.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[11px] text-zinc-400 hover:text-zinc-200"
+                >
+                  새 탭 ↗
+                </a>
+              )}
+            </div>
+            <div className="px-2 py-2 text-center">
+              <button
+                onClick={() => {
+                  const label = m.isThis ? "이 와인의" : `"${m.name_ko}"의`;
+                  if (!confirm(`${label} Vivino 매칭을 해제합니다.`)) return;
+                  startTransition(async () => {
+                    const res = await unlinkVivino(m.id);
+                    setMsg(res.error ? `오류: ${res.error}` : "해제 완료");
+                    if (!res.error) onChanged();
+                  });
+                }}
+                disabled={pending}
+                className="text-[11px] px-2 py-1 rounded-lg bg-rose-500/15 text-rose-300 border border-rose-500/30 hover:bg-rose-500/25 disabled:opacity-50"
+              >
+                해제
+              </button>
+            </div>
           </div>
         ))}
       </div>
       {msg && <p className="text-xs text-zinc-400 mt-3">{msg}</p>}
-      <p className="text-[10px] text-zinc-600 font-mono mt-4">this: {wineId}</p>
     </Card>
   );
 }
@@ -1095,11 +1428,3 @@ function SelectField({
   );
 }
 
-function Info({ label, value }: { label: string; value: string | number | null | undefined }) {
-  return (
-    <div>
-      <span className="text-zinc-500 text-xs uppercase tracking-wider">{label}</span>
-      <div className="text-zinc-200 mt-0.5">{value ?? <span className="text-zinc-600">—</span>}</div>
-    </div>
-  );
-}

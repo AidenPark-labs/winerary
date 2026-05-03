@@ -43,7 +43,7 @@ export async function GET(request: Request) {
   for (const v of vivinosRes.data ?? []) vivinoMap.set(v.wine_id, v);
 
   const wines: WineSuggestion[] = (ranked as Array<{ id: string }>)
-    .map((r) => {
+    .map((r): WineSuggestion | null => {
       const w = wineMap.get(r.id);
       if (!w) return null;
       const v = vivinoMap.get(r.id);
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
             : "",
         vintage_range: "",
         vivino_url: v?.vivino_url ?? null,
-      } satisfies WineSuggestion;
+      };
     })
     .filter((x): x is WineSuggestion => x !== null);
 

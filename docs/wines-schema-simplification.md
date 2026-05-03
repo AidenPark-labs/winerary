@@ -1032,10 +1032,37 @@ Phase 0 (DDL) + Phase 1 (변환 모듈) 설계를 단단히 한 세션. 마이�
   - 코드 sed: `from("wines_v2")` → `from("wines")` 일괄
   - 검증: wines 20,600 / wines_old 20,603 / vivino_wines 11,677, FK 7개 정상, 빌드 통과
 - 4개 커밋 main push 완료 (`a735ffc..5b65a0f`)
+
+### 2026-05-03 (세션 4 — Phase 6 모니터링·후속 fix)
+
+swap 후 깨진 곳 발견·수정. Phase 6의 자연 진행 결과로 6개 영역 fix.
+
+- **fix(rls): vivino_wines anon SELECT** — service-only 정책이 별점 노출 차단. public read (reviewed_at NOT NULL) 추가.
+- **fix(admin): /admin/wines Vivino 필터 0건** — supabase-js 1000 limit. wines_with_vivino LEFT JOIN view + 단일 쿼리.
+- **fix(rpc): search_wines v5** — 구 wines 컬럼 (country/region_path/grape_varieties_ko/wine_style_ko/vivino_rating/vivino_reviews) 참조 → "column does not exist" 검색 전체 실패. wines + vivino_wines LEFT JOIN으로 재작성.
+- **fix(rpc): dictionary_filter_options v5** — grape_varieties_ko → grape_varieties.
+- **fix(post-swap): find/recommend/wishlist 페이지** — DbWine/WineInfo/WineDetail 타입에 구 컬럼. v5 정합 매핑 + naver_image → image_url + vivino?:{rating}.
+- **fix(search): search_jamo 공백 제거** — 트리거가 공백 유지로 "무초마스" 같은 띄어쓰기 차이 검색 0건. REPLACE(jamo,' ','') + 20,600건 backfill.
+- **fix(api): /api/ai/suggest** — searchWines 헬퍼에 구 wines 컬럼 SELECT 에러. RPC + wines + vivino_wines 직접 합성으로 재작성.
+- **fix(api): /api/naver/shopping 가격 갱신** — anon client UPDATE가 RLS로 막혀 silent fail. service_role 사용 + 에러 로깅.
+
+- audit-post-swap.ts 자동 점검 통과 (RPC 3종, view, 트리거, build).
+- main push 완료 (`5b65a0f..8dc14d0`).
+
 - 미결:
-  - Phase 6 (모니터링): 자연 진행 (수일 어드민 점검)
   - Phase 7 (정리): wines_old DROP, active scripts 정리, term_dict 보강분
-  - Phase 8 (검수 통합): 별도 세션
+  - **Phase 8 (검수 통합): 다음 세션 시작 (사용자 합의 — C단계적 옵션 추정)**
+
+### Phase 8 시작 시 합의된 IA (옵션 C 단계적)
+
+1. **1단계** (작은 시작, 한 세션 0.5 분량):
+   - `/admin/inbox` 신설 — 검수 필요 todo 리스트 (Vivino / 중복 / 변환 / 신고 탭)
+   - 기존 검수 페이지들 그대로 두고 진입점만 통합
+2. **2단계**: `/admin/wines/[id]` 단일 페이지에 모든 검수 정보 합치기 (1~2 세션)
+3. **3단계**: 기존 검수 페이지 deprecate
+
+통합 대상 5개: vivino-review / vivino-dup-review / dedupe-review / wines-v2-review / reports
+별개 유지 3개: wines (편집) / raw-wines (크롤링) / pending-wines (유저 제출)
 
 ---
 

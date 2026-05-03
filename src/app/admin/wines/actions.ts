@@ -15,7 +15,7 @@ import {
  */
 export async function updateWine(
   id: string,
-  data: Record<string, string | number | string[] | null | undefined>,
+  data: Record<string, string | number | boolean | string[] | null | undefined>,
 ) {
   const { supabase } = await requireAdmin();
 

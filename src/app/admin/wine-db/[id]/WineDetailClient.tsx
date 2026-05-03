@@ -130,13 +130,25 @@ interface Props {
   dedupeCandidates: DedupeCandidate[];
   dupGroup: DupGroupMember[];
   reports: ReportRow[];
+  /** drawer 등 외부 컨텍스트에서 데이터 갱신 주체를 주입할 때 사용. 없으면 router.refresh */
+  onChanged?: () => void;
+  /** drawer에 임베드 시 헤더의 "← 목록으로" 링크 숨김 */
+  embedded?: boolean;
 }
 
 type Tab = "basic" | "vivino" | "review" | "dedupe" | "url_dup" | "reports";
 
-export default function WineDetailClient({ wine, dedupeCandidates, dupGroup, reports }: Props) {
+export default function WineDetailClient({
+  wine,
+  dedupeCandidates,
+  dupGroup,
+  reports,
+  onChanged: onChangedProp,
+  embedded = false,
+}: Props) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("basic");
+  const onChanged = onChangedProp ?? (() => router.refresh());
 
   const openReports = reports.filter((r) => r.status === "open");
   const reviewBadges = {
@@ -148,13 +160,15 @@ export default function WineDetailClient({ wine, dedupeCandidates, dupGroup, rep
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className={embedded ? "" : "max-w-6xl mx-auto"}>
       {/* 헤더 */}
       <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
         <div>
-          <Link href="/admin/wine-db" className="text-sm text-zinc-500 hover:text-zinc-300">
-            ← 목록으로
-          </Link>
+          {!embedded && (
+            <Link href="/admin/wine-db" className="text-sm text-zinc-500 hover:text-zinc-300">
+              ← 목록으로
+            </Link>
+          )}
           <h1 className="text-2xl font-bold mt-2">{wine.name_ko}</h1>
           {wine.name_en && <p className="text-sm text-zinc-500 italic">{wine.name_en}</p>}
           <p className="text-[10px] text-zinc-600 font-mono mt-1 select-all">{wine.id}</p>
@@ -213,26 +227,22 @@ export default function WineDetailClient({ wine, dedupeCandidates, dupGroup, rep
       </div>
 
       {/* 탭 컨텐츠 */}
-      {tab === "basic" && <BasicSection wine={wine} onChanged={() => router.refresh()} />}
-      {tab === "vivino" && <VivinoSection wine={wine} onChanged={() => router.refresh()} />}
-      {tab === "review" && <ReviewSection wine={wine} onChanged={() => router.refresh()} />}
+      {tab === "basic" && <BasicSection wine={wine} onChanged={onChanged} embedded={embedded} />}
+      {tab === "vivino" && <VivinoSection wine={wine} onChanged={onChanged} />}
+      {tab === "review" && <ReviewSection wine={wine} onChanged={onChanged} />}
       {tab === "dedupe" && (
-        <DedupeSection
-          wineId={wine.id}
-          candidates={dedupeCandidates}
-          onChanged={() => router.refresh()}
-        />
+        <DedupeSection wineId={wine.id} candidates={dedupeCandidates} onChanged={onChanged} />
       )}
       {tab === "url_dup" && (
         <UrlDupSection
           wineId={wine.id}
           vivinoUrl={wine.vivino_url}
           members={dupGroup}
-          onChanged={() => router.refresh()}
+          onChanged={onChanged}
         />
       )}
       {tab === "reports" && (
-        <ReportsSection wineId={wine.id} reports={reports} onChanged={() => router.refresh()} />
+        <ReportsSection wineId={wine.id} reports={reports} onChanged={onChanged} />
       )}
     </div>
   );
@@ -286,7 +296,15 @@ function TabButton({
 // 1. 기본 편집
 // ─────────────────────────────────────────────────────────
 
-function BasicSection({ wine, onChanged }: { wine: WineDetail; onChanged: () => void }) {
+function BasicSection({
+  wine,
+  onChanged,
+  embedded = false,
+}: {
+  wine: WineDetail;
+  onChanged: () => void;
+  embedded?: boolean;
+}) {
   const router = useRouter();
   const [form, setForm] = useState({
     name_ko: wine.name_ko,
@@ -344,7 +362,11 @@ function BasicSection({ wine, onChanged }: { wine: WineDetail; onChanged: () => 
       return;
     }
     const res = await deleteWine(wine.id);
-    if (res.error) alert(`삭제 실패: ${res.error}`);
+    if (res.error) {
+      alert(`삭제 실패: ${res.error}`);
+      return;
+    }
+    if (embedded) onChanged();
     else router.push("/admin/wine-db");
   }
 

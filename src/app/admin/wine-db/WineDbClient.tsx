@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getWineImage } from "@/lib/wine-placeholder";
+import WineDetailDrawer from "./WineDetailDrawer";
 
 const TYPE_KO: Record<string, string> = {
   red: "레드 🍷",
@@ -90,25 +91,71 @@ export default function WineDbClient({
   counts,
 }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState(initialSearch);
   const [filterType, setFilterType] = useState(initialType);
   const [vivinoFilter, setVivinoFilter] = useState(initialVivino);
   const [reviewFilter, setReviewFilter] = useState(initialReview);
+  const selectedId = searchParams.get("wine");
 
-  function navigate(overrides: { page?: number; q?: string; type?: string; vivino?: string; review?: string }) {
+  // selected wine이 현재 페이지 wines 안에 있을 때만 prev/next 가능
+  const selectedIndex = selectedId ? wines.findIndex((w) => w.id === selectedId) : -1;
+  const hasPrev = selectedIndex > 0;
+  const hasNext = selectedIndex >= 0 && selectedIndex < wines.length - 1;
+
+  function buildHref(overrides: {
+    page?: number;
+    q?: string;
+    type?: string;
+    vivino?: string;
+    review?: string;
+    wine?: string | null;
+  }) {
     const params = new URLSearchParams();
     const q = overrides.q ?? search;
     const type = overrides.type ?? filterType;
     const viv = overrides.vivino ?? vivinoFilter;
     const rev = overrides.review ?? reviewFilter;
     const p = overrides.page ?? 1;
+    const wine = "wine" in overrides ? overrides.wine : selectedId;
     if (q) params.set("q", q);
     if (type && type !== "all") params.set("type", type);
     if (viv && viv !== "all") params.set("vivino", viv);
     if (rev && rev !== "all") params.set("review", rev);
     if (p > 1) params.set("page", String(p));
-    router.push(`/admin/wine-db${params.toString() ? `?${params}` : ""}`);
+    if (wine) params.set("wine", wine);
+    return `/admin/wine-db${params.toString() ? `?${params}` : ""}`;
   }
+
+  function navigate(overrides: {
+    page?: number;
+    q?: string;
+    type?: string;
+    vivino?: string;
+    review?: string;
+    wine?: string | null;
+  }) {
+    router.push(buildHref(overrides));
+  }
+
+  function openWine(id: string) {
+    router.push(buildHref({ wine: id }), { scroll: false });
+  }
+  function closeWine() {
+    router.push(buildHref({ wine: null }), { scroll: false });
+  }
+  function gotoOffset(delta: number) {
+    if (selectedIndex < 0) return;
+    const next = wines[selectedIndex + delta];
+    if (next) openWine(next.id);
+  }
+
+  // selected wine이 페이지에서 사라졌으면 (필터 변경 등) drawer 자동 닫힘
+  useEffect(() => {
+    if (selectedId && selectedIndex < 0) {
+      // 그래도 직접 ID 입력 가능하므로 자동 닫지는 않음 — drawer가 fetch 시도
+    }
+  }, [selectedId, selectedIndex]);
 
   const REVIEW_TABS: Array<{ key: string; label: string; count: number; tone: string }> = [
     { key: "all", label: "전체", count: totalCount, tone: "zinc" },
@@ -213,8 +260,12 @@ export default function WineDbClient({
             return (
               <div
                 key={w.id}
-                onClick={() => router.push(`/admin/wine-db/${w.id}`)}
-                className="rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-colors cursor-pointer overflow-hidden"
+                onClick={() => openWine(w.id)}
+                className={`rounded-2xl bg-zinc-900 border transition-colors cursor-pointer overflow-hidden ${
+                  selectedId === w.id
+                    ? "border-rose-500/60 ring-1 ring-rose-500/30"
+                    : "border-zinc-800 hover:border-zinc-600"
+                }`}
               >
                 <div className="flex items-center gap-4 p-4">
                   <img
@@ -339,6 +390,17 @@ export default function WineDbClient({
             다음 →
           </button>
         </div>
+      )}
+
+      {selectedId && (
+        <WineDetailDrawer
+          wineId={selectedId}
+          onClose={closeWine}
+          onPrev={() => gotoOffset(-1)}
+          onNext={() => gotoOffset(1)}
+          hasPrev={hasPrev}
+          hasNext={hasNext}
+        />
       )}
     </div>
   );

@@ -562,34 +562,48 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
         </div>
       </div>
 
-      {/* 좌우 이미지 + 제목 */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <CompareHeader
-          title="우리 DB (wines)"
-          subtitle={wine.name_ko}
-          imageUrl={wine.image_url}
-          fallbackType={wine.wine_type}
-          tone="zinc"
-        />
-        <CompareHeader
-          title="Vivino"
-          subtitle={wine.vivino_name}
-          imageUrl={wine.vivino_image_url}
-          fallbackType={wine.wine_type}
-          tone="rose"
-        />
-      </div>
-
-      {/* 비교 표 */}
+      {/* 헤더 + 비교 표 — 같은 grid로 라인 정렬 */}
       <div className="rounded-xl border border-zinc-800 overflow-hidden">
-        {compareRows.map((r, i) => {
+        {/* 헤더 행 (라벨칸 비움, 좌·우 카드) */}
+        <div className="grid grid-cols-[7rem_1fr_1fr]">
+          <div className="bg-zinc-900/60" />
+          <div className="px-3 py-3 bg-zinc-900/40 flex items-center gap-3">
+            <img
+              src={getWineImage(wine.image_url, wine.wine_type)}
+              alt={wine.name_ko}
+              className="w-12 h-12 rounded-lg object-cover border border-zinc-700 flex-shrink-0"
+            />
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-wider font-semibold text-zinc-400">
+                우리 DB (wines)
+              </p>
+              <p className="text-sm text-zinc-100 truncate">{wine.name_ko}</p>
+            </div>
+          </div>
+          <div className="px-3 py-3 bg-rose-500/[0.06] border-l border-zinc-800 flex items-center gap-3">
+            <img
+              src={getWineImage(wine.vivino_image_url, wine.wine_type)}
+              alt={wine.vivino_name ?? ""}
+              className="w-12 h-12 rounded-lg object-cover border border-zinc-700 flex-shrink-0"
+            />
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-wider font-semibold text-rose-300">Vivino</p>
+              <p className="text-sm text-zinc-100 truncate">
+                {wine.vivino_name ?? <span className="text-zinc-600">—</span>}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 비교 행들 */}
+        {compareRows.map((r) => {
           const diff = compareDiffers(r.ours, r.vivino);
           return (
             <div
               key={r.label}
-              className={`grid grid-cols-[7rem_1fr_1fr] text-sm ${
-                i > 0 ? "border-t border-zinc-800" : ""
-              } ${diff ? "bg-amber-500/[0.04]" : ""}`}
+              className={`grid grid-cols-[7rem_1fr_1fr] text-sm border-t border-zinc-800 ${
+                diff ? "bg-amber-500/[0.04]" : ""
+              }`}
             >
               <div className="px-3 py-2 bg-zinc-900/60 text-zinc-500 text-xs uppercase tracking-wider flex items-center">
                 {r.label}
@@ -608,6 +622,7 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
             </div>
           );
         })}
+
         {/* Vivino 단독 정보 */}
         {(wine.vivino_rating != null || wine.vivino_wine_id) && (
           <div className="grid grid-cols-[7rem_1fr_1fr] text-sm border-t border-zinc-800">
@@ -675,38 +690,6 @@ function compareDiffers(a: string | null, b: string | null): boolean {
   if (!a || !b) return false; // 한쪽만 있으면 정보 보강이지 의심 아님
   const norm = (s: string) => s.toLowerCase().replace(/\s+/g, "");
   return norm(a) !== norm(b);
-}
-
-function CompareHeader({
-  title,
-  subtitle,
-  imageUrl,
-  fallbackType,
-  tone,
-}: {
-  title: string;
-  subtitle: string | null;
-  imageUrl: string | null;
-  fallbackType: string | null;
-  tone: "zinc" | "rose";
-}) {
-  const toneBorder = tone === "rose" ? "border-rose-500/30" : "border-zinc-700";
-  const toneTitle = tone === "rose" ? "text-rose-300" : "text-zinc-300";
-  return (
-    <div className={`rounded-xl border ${toneBorder} bg-zinc-900/40 p-3 flex items-center gap-3`}>
-      <img
-        src={getWineImage(imageUrl, fallbackType)}
-        alt={title}
-        className="w-16 h-16 rounded-lg object-cover border border-zinc-700 flex-shrink-0"
-      />
-      <div className="min-w-0">
-        <p className={`text-[11px] uppercase tracking-wider font-semibold ${toneTitle}`}>{title}</p>
-        <p className="text-sm text-zinc-100 truncate" title={subtitle ?? ""}>
-          {subtitle ?? <span className="text-zinc-600">—</span>}
-        </p>
-      </div>
-    </div>
-  );
 }
 
 // ─────────────────────────────────────────────────────────

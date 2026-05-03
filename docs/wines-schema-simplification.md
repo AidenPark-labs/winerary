@@ -836,33 +836,51 @@ COMMIT;
 - [ ] 이 문서 "완료" 표시
 - [ ] 메모리 갱신 (`project_wines_v5_simplification_pending.md` → `_complete.md`)
 
-### Phase 8 — 어드민 검수 통합 (별도 후속)
+### Phase 8 — 어드민 검수 통합 (`/admin/wine-db` 신설)
 
-> v5 본 흐름 끝난 후 진행. 데이터 모델이 안정된 상태에서 UI 재구성.
+> v5 swap 끝난 후 본격 시작. 2026-05-03 사용자와 IA 확정. inbox 단계 건너뛰고 와인 단일 페이지 통합으로 직행.
 
 **배경**:
-모든 검수 페이지(wines·raw-wines·vivino-review·dedupe-review·pending-wines·reports)가 본질적으로 "부정확/중복인 데이터를 어드민이 손으로 정정"하는 동일 작업의 다른 입구. 분산되어 있어 어드민이 작업 흐름을 헷갈림.
+모든 검수 페이지(vivino-review·vivino-dup-review·dedupe-review·wines-v2-review·reports)가 본질적으로 "부정확/중복인 데이터를 어드민이 손으로 정정"하는 동일 작업의 다른 입구. 분산되어 있어 어드민이 작업 흐름을 헷갈림.
 
-**v5 swap 후 자연 정리되는 페이지**:
-- `/admin/wines-v2-review` (변환 모호 케이스) — wines로 흡수
-- `/admin/vivino-dup-review` (Vivino URL 중복) — wines 편집 또는 dedupe-review로 흡수
+**확정 IA (2026-05-03)**:
 
-**통합 방향 — 와인 단위 (옵션 C 추정)**:
-- `/admin/wines/[id]` 단일 페이지에서 모든 검수 정보 표시:
-  - 기본 정보 편집
-  - Vivino 매칭 상태 (검수 완료 / 사유)
-  - 중복 후보 (vivino_url 기준)
-  - 변환 사유 (needs_review_reasons)
-  - 신고 이력
-  - 유저 기록 통계
-- 검수 큐 페이지(`/admin/inbox`)는 단순 todo list — 검수 필요 wine_id 모음
-  - 클릭 시 와인 단일 페이지로 이동
+새 라우트 2개로 우산 통합:
+- **`/admin/wine-db`** — 검색·필터·리스트 (검수 필요 필터 = inbox 역할 흡수)
+- **`/admin/wine-db/[id]`** — 와인 1개의 조회·수정·검수 통합
 
-**작업 분량**: 1~2 세션 (swap 후 데이터 모델 안정 시점)
+검색 범위는 `wines`만 (raw_wines/pending_wines는 별도). 기존 5개 검수 페이지는 새 페이지가 안정될 때까지 그대로 유지 후 deprecate.
 
-**미결**:
-- 단일 와인 페이지 vs 검수 유형별 페이지 — 정확한 IA는 swap 후 재평가
-- raw_wines 승격은 본질이 다른 작업이라 별도 페이지 유지할지
+**`/admin/wine-db/[id]` 통합 6섹션**:
+1. **기본 편집** — wines 모든 필드 (기존 `/admin/wines` 편집 흡수)
+2. **Vivino 매칭** — vivino_wines 행 + reviewed_at/needs_review + URL 교체/해제 (vivino-review 흡수)
+3. **변환 검수** — needs_review_reasons 표시 + 정규화 승인 (wines-v2-review 흡수)
+4. **중복 후보** — 이 wines.id를 target으로 한 `wine_dedupe_candidates pending` 목록 + merge/reject (dedupe-review 흡수, A안)
+5. **같은 Vivino URL** — `vivino_url_duplicates` 뷰에서 같은 URL 가리키는 다른 와인 + unlink (vivino-dup-review 흡수, A안)
+6. **신고** — wine_id로 필터한 wine_reports + resolve/dismiss (reports 흡수)
+
+**리스트 페이지 필터/배지**:
+- 검색 (name_ko/name_en/producer)
+- needs_review=true (변환)
+- vivino_wines.reviewed_at IS NULL (Vivino 검수 대기)
+- 미해결 wine_reports N건
+- pending wine_dedupe_candidates N건
+- vivino_url_duplicates 그룹 멤버
+
+**별개 유지 (통합 대상 아님)**:
+- `/admin/raw-wines` — 크롤링 원천 (단위 다름)
+- `/admin/pending-wines` — 유저 제출 편입 (워크플로 다름)
+- `/admin/users`, `/admin/records`
+
+**dedupe A안 근거**:
+페어 큐 페이지를 별도로 두는 B안도 검토했으나, 사용자가 "검수는 모두 통합" 명시. 와인 페이지 안 "이 와인을 target으로 한 후보 N건" 섹션으로 흡수. 페어 흐름은 잃지만 단일 진입점 확보가 우선.
+
+**작업 분량**: 2~3 세션
+- 세션 1: 이 문서 갱신 (이번)
+- 세션 2: `/admin/wine-db` 리스트 페이지 (검색·필터)
+- 세션 3: `/admin/wine-db/[id]` 6섹션 통합
+
+**deprecate 시점**: 새 페이지가 5개 모두 흡수 + 1주 이상 안정 운영 확인 후 일괄 삭제.
 
 ---
 
@@ -1053,16 +1071,27 @@ swap 후 깨진 곳 발견·수정. Phase 6의 자연 진행 결과로 6개 영�
   - Phase 7 (정리): wines_old DROP, active scripts 정리, term_dict 보강분
   - **Phase 8 (검수 통합): 다음 세션 시작 (사용자 합의 — C단계적 옵션 추정)**
 
-### Phase 8 시작 시 합의된 IA (옵션 C 단계적)
+### Phase 8 시작 시 합의된 IA (2026-05-03 갱신 — `/admin/wine-db` 단일 우산)
 
-1. **1단계** (작은 시작, 한 세션 0.5 분량):
-   - `/admin/inbox` 신설 — 검수 필요 todo 리스트 (Vivino / 중복 / 변환 / 신고 탭)
-   - 기존 검수 페이지들 그대로 두고 진입점만 통합
-2. **2단계**: `/admin/wines/[id]` 단일 페이지에 모든 검수 정보 합치기 (1~2 세션)
-3. **3단계**: 기존 검수 페이지 deprecate
+이전 옵션 C 단계적 안에서 1단계(/admin/inbox)는 **건너뜀**. 사용자 결정으로 inbox 우회 + 와인 단일 페이지 통합으로 직행.
 
-통합 대상 5개: vivino-review / vivino-dup-review / dedupe-review / wines-v2-review / reports
-별개 유지 3개: wines (편집) / raw-wines (크롤링) / pending-wines (유저 제출)
+**확정 라우트**:
+- `/admin/wine-db` (검색·필터·리스트, 검수 필요 필터로 inbox 역할 흡수)
+- `/admin/wine-db/[id]` (편집 + 검수 6섹션 통합)
+
+**검수 통합 방식 — A안 (사용자 합의)**:
+모든 검수를 wines.id 단위로 끌어옴. dedupe(페어 단위)·vivino-dup(URL 그룹 단위) 도 와인 페이지 안 섹션으로 흡수. 작업 단위 차이로 어색해지는 부분은 감수.
+
+**통합 대상 5개**: vivino-review / vivino-dup-review / dedupe-review / wines-v2-review / reports
+**별개 유지**: wines(→ wine-db로 흡수 후 deprecate) / raw-wines / pending-wines
+
+**구현 순서**:
+1. ✅ Phase 8 설계 문서 갱신 (이 섹션)
+2. ⬜ `/admin/wine-db` 리스트 페이지
+3. ⬜ `/admin/wine-db/[id]` 6섹션 통합
+4. ⬜ 새 페이지 안정 후 기존 5개 + `/admin/wines` 일괄 deprecate
+
+자세한 구성은 §5 Phase 8 참조.
 
 ---
 

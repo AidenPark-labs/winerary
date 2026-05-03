@@ -343,10 +343,18 @@ export async function loadTermDict(sb: SupabaseClient): Promise<TermDictLookup> 
         ko: r.ko,
         aliases: Array.isArray(r.aliases) ? r.aliases : [],
       };
-      const keys = [entry.en, entry.ko, ...entry.aliases].filter(Boolean);
-      for (const k of keys) {
+      // 우선순위: ko/en이 canonical, alias는 fallback. 다른 entry의 alias가
+      // 이미 점유한 키도 ko/en은 덮어쓰되, alias는 비어있는 슬롯에만 set.
+      // (예전엔 단일 forEach였는데, "Côt"의 alias '말벡'이 "Malbec/말벡"의
+      // ko 키를 덮어써서 정규화가 잘못되던 버그가 있었음.)
+      for (const k of [entry.en, entry.ko].filter(Boolean)) {
         const nk = normKey(k);
         if (nk) map.set(`${entry.category}::${nk}`, entry);
+      }
+      for (const k of entry.aliases.filter(Boolean)) {
+        const nk = normKey(k);
+        const key = `${entry.category}::${nk}`;
+        if (nk && !map.has(key)) map.set(key, entry);
       }
     }
     if (data.length < PAGE) break;

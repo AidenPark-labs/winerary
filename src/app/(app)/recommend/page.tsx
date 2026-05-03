@@ -22,12 +22,14 @@ interface WishlistItem {
 
 interface WineInfo {
   id: string;
-  naver_image: string | null;
+  image_url: string | null;
   price: number | null;
   wine_type: string | null;
-  country: string | null;
-  grape_variety: string | null;
-  vivino_rating: number | null;
+  country_ko: string | null;
+  grape_varieties: string[] | null;
+  vivino?: {
+    rating: number | null;
+  } | null;
 }
 
 const WINE_TYPE_KO: Record<string, string> = {
@@ -76,14 +78,17 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded, alreadySaved, onLoad }
   }
 
   const wineType = wine?.wine_type ? WINE_TYPE_KO[wine.wine_type] ?? wine.wine_type : null;
-  const meta = [wineType, wine?.country, wine?.grape_variety].filter(Boolean).join(" · ");
+  const grapeText = wine?.grape_varieties && wine.grape_varieties.length > 0
+    ? wine.grape_varieties.join(", ")
+    : null;
+  const meta = [wineType, wine?.country_ko, grapeText].filter(Boolean).join(" · ");
 
   return (
     <span className="block my-2 rounded-2xl overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.03) 100%)", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06)", backdropFilter: "blur(20px)" }}>
       <span className="flex items-center gap-3 px-3 pt-3">
-        {wine?.naver_image ? (
+        {wine?.image_url ? (
           <span className="flex-shrink-0 w-12 h-12 rounded-xl overflow-hidden">
-            <img src={wine.naver_image} alt={nameKo} className="w-full h-full object-cover" />
+            <img src={wine.image_url} alt={nameKo} className="w-full h-full object-cover" />
           </span>
         ) : (
           <span className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-zinc-600 text-base" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
@@ -103,9 +108,9 @@ function WineCard({ nameKo, nameEn, onSave, onAuthNeeded, alreadySaved, onLoad }
               {wine.price.toLocaleString()}원
             </span>
           )}
-          {wine?.vivino_rating && (
+          {wine?.vivino?.rating != null && (
             <span className="text-[11px] text-rose-400 font-medium">
-              Vivino ★ {wine.vivino_rating.toFixed(1)}
+              Vivino ★ {wine.vivino.rating.toFixed(1)}
             </span>
           )}
         </span>

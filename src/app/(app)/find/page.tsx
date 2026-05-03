@@ -53,22 +53,25 @@ interface ShoppingItem {
 type Step = "select" | "preview" | "analyzing" | "candidates" | "result";
 type SearchMode = "photo" | "text";
 
+// v5: search RPC 결과 + vivino_wines 합성 (api/wines/search 응답 형태)
 interface DbWine {
   id: string;
   name_ko: string;
   name_en: string | null;
   wine_type: string | null;
-  country: string | null;
-  region: string | null;
-  grape_variety: string | null;
+  country_ko: string | null;
+  region_ko: string | null;
+  grape_varieties: string[] | null;
   producer: string | null;
   description: string | null;
   price: number | null;
-  naver_link: string | null;
-  naver_image: string | null;
-  vivino_url: string | null;
-  vivino_rating: number | null;
-  vivino_reviews: number | null;
+  image_url: string | null;
+  // vivino: 옵셔널 join (검수 완료된 것만)
+  vivino?: {
+    vivino_url: string | null;
+    rating: number | null;
+    reviews: number | null;
+  } | null;
 }
 
 function notNull(v: string | null | undefined): string | null {
@@ -304,19 +307,19 @@ export default function FindPage() {
       name: wine.name_ko,
       name_original: wine.name_en ?? undefined,
       wine_type: wine.wine_type ?? undefined,
-      country: wine.country ?? undefined,
-      region: wine.region ?? undefined,
-      grape_variety: wine.grape_variety,
+      country: wine.country_ko ?? undefined,
+      region: wine.region_ko ?? undefined,
+      grape_variety: wine.grape_varieties?.join(", ") ?? null,
       producer: wine.producer ?? undefined,
       description: wine.description ?? undefined,
-      vivino_url: wine.vivino_url ?? undefined,
-      vivino_rating: wine.vivino_rating ?? undefined,
-      vivino_reviews: wine.vivino_reviews ?? undefined,
+      vivino_url: wine.vivino?.vivino_url ?? undefined,
+      vivino_rating: wine.vivino?.rating ?? undefined,
+      vivino_reviews: wine.vivino?.reviews ?? undefined,
       db_match: true,
       db_price: wine.price ?? undefined,
-      db_image: wine.naver_image ?? undefined,
+      db_image: wine.image_url ?? undefined,
     });
-    setPreviewUrl(wine.naver_image ?? null);
+    setPreviewUrl(wine.image_url ?? null);
     setStep("result");
     // 네이버 쇼핑 검색도 실행
     if (wine.name_ko) searchShopping(wine.name_ko);
@@ -525,15 +528,15 @@ export default function FindPage() {
                   href={`/wines/${wine.id}?from=search`}
                   className="flex items-center gap-3 p-3 rounded-2xl bg-surface/80 border border-white/5 text-left hover:border-white/20 transition-all backdrop-blur-sm"
                 >
-                  <img src={getWineImage(wine.naver_image, wine.wine_type)} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-white/5" />
+                  <img src={getWineImage(wine.image_url, wine.wine_type)} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-white/5" />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-white text-sm truncate">{wine.name_ko}</p>
                     {wine.name_en && <p className="text-xs text-zinc-500 mt-0.5 truncate">{wine.name_en}</p>}
                     <div className="flex items-center gap-2.5 mt-1.5 text-xs text-zinc-400">
                       {wine.price && <span className="text-emerald-400 font-semibold">{wine.price.toLocaleString()}원</span>}
-                      {wine.vivino_rating && <span className="text-purple-300">★ {wine.vivino_rating}</span>}
+                      {wine.vivino?.rating && <span className="text-purple-300">★ {wine.vivino.rating}</span>}
                       {wine.wine_type && <span>{TYPE_KO[wine.wine_type] ?? wine.wine_type}</span>}
-                      {wine.country && <span>{wine.country}</span>}
+                      {wine.country_ko && <span>{wine.country_ko}</span>}
                     </div>
                   </div>
                 </Link>
@@ -733,15 +736,15 @@ export default function FindPage() {
                 href={`/wines/${wine.id}`}
                 className="flex items-center gap-3 p-3 rounded-2xl bg-surface/80 border border-white/5 text-left hover:border-white/20 transition-all backdrop-blur-sm"
               >
-                <img src={getWineImage(wine.naver_image, wine.wine_type)} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-white/5" />
+                <img src={getWineImage(wine.image_url, wine.wine_type)} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-white/5" />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-white text-sm truncate">{wine.name_ko}</p>
                   {wine.name_en && <p className="text-xs text-zinc-500 mt-0.5 truncate">{wine.name_en}</p>}
                   <div className="flex items-center gap-2.5 mt-1.5 text-xs text-zinc-400">
                     {wine.price && <span className="text-emerald-400 font-semibold">{wine.price.toLocaleString()}원</span>}
-                    {wine.vivino_rating && <span className="text-purple-300">★ {wine.vivino_rating}</span>}
+                    {wine.vivino?.rating && <span className="text-purple-300">★ {wine.vivino.rating}</span>}
                     {wine.wine_type && <span>{TYPE_KO[wine.wine_type] ?? wine.wine_type}</span>}
-                    {wine.country && <span>{wine.country}</span>}
+                    {wine.country_ko && <span>{wine.country_ko}</span>}
                   </div>
                 </div>
               </Link>

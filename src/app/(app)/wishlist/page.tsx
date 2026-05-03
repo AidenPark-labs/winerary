@@ -8,21 +8,18 @@ import { Wine, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { getWineImage } from "@/lib/wine-placeholder";
 
+// v5: api/wishlist에서 합성된 응답 형태 (wines_v2 + vivino_wines)
 interface WineDetail {
   id: string;
   name_ko: string;
   name_en: string | null;
   wine_type: string | null;
-  country: string | null;
-  grape_variety: string | null;
-  naver_image: string | null;
+  country_ko: string | null;
+  grape_varieties: string[] | null;
+  image_url: string | null;
   vivino_rating: number | null;
   vivino_reviews: number | null;
   price: number | null;
-  final_grapes: string | null;
-  vivino_grapes: string | null;
-  final_country: string | null;
-  final_wine_type: string | null;
 }
 
 interface WishlistItem {
@@ -87,10 +84,12 @@ export default function MyWinePage() {
     const w = item.wine;
     if (!w) return { type: null, country: null, grapes: null, image: getWineImage(null, null), rating: null, reviews: null, price: null };
     return {
-      type: w.final_wine_type ?? w.wine_type,
-      country: w.final_country ?? w.country,
-      grapes: w.final_grapes ?? w.vivino_grapes ?? w.grape_variety,
-      image: getWineImage(w.naver_image, w.wine_type),
+      type: w.wine_type,
+      country: w.country_ko,
+      grapes: Array.isArray(w.grape_varieties) && w.grape_varieties.length > 0
+        ? w.grape_varieties.join(", ")
+        : null,
+      image: getWineImage(w.image_url, w.wine_type),
       rating: w.vivino_rating,
       reviews: w.vivino_reviews,
       price: w.price,

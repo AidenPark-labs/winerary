@@ -114,17 +114,19 @@ export default async function AdminWineDbPage({
     }
   }
 
-  // 4) 전체 검수 카운트 (필터 옆 배지용 — 무필터 기준)
-  const [needsReviewCount, vivinoUnreviewedCount, openReportsCount, pendingDedupeCount] = await Promise.all([
-    supabase.from("wines").select("id", { count: "exact", head: true }).eq("needs_review", true),
-    supabase
-      .from("wines_with_vivino")
-      .select("id", { count: "exact", head: true })
-      .not("vivino_url", "is", null)
-      .is("vivino_reviewed_at", null),
-    supabase.from("wine_reports").select("id", { count: "exact", head: true }).eq("status", "open"),
-    supabase.from("wine_dedupe_candidates").select("id", { count: "exact", head: true }).eq("status", "pending"),
-  ]);
+  // 4) 전체 검수 카운트 (필터 옆 배지용 — 무필터 기준 wines 절대값)
+  const [allWinesCount, needsReviewCount, vivinoUnreviewedCount, openReportsCount, pendingDedupeCount] =
+    await Promise.all([
+      supabase.from("wines").select("id", { count: "exact", head: true }),
+      supabase.from("wines").select("id", { count: "exact", head: true }).eq("needs_review", true),
+      supabase
+        .from("wines_with_vivino")
+        .select("id", { count: "exact", head: true })
+        .not("vivino_url", "is", null)
+        .is("vivino_reviewed_at", null),
+      supabase.from("wine_reports").select("id", { count: "exact", head: true }).eq("status", "open"),
+      supabase.from("wine_dedupe_candidates").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    ]);
 
   return (
     <WineDbClient
@@ -138,6 +140,7 @@ export default async function AdminWineDbPage({
       vivinoFilter={vivino}
       reviewFilter={review}
       counts={{
+        all: allWinesCount.count ?? 0,
         needs_review: needsReviewCount.count ?? 0,
         vivino_unreviewed: vivinoUnreviewedCount.count ?? 0,
         open_reports: openReportsCount.count ?? 0,

@@ -71,6 +71,7 @@ interface Props {
   vivinoFilter: string;
   reviewFilter: string;
   counts: {
+    all: number;
     needs_review: number;
     vivino_unreviewed: number;
     open_reports: number;
@@ -158,7 +159,7 @@ export default function WineDbClient({
   }, [selectedId, selectedIndex]);
 
   const REVIEW_TABS: Array<{ key: string; label: string; count: number; tone: string }> = [
-    { key: "all", label: "전체", count: totalCount, tone: "zinc" },
+    { key: "all", label: "전체", count: counts.all, tone: "zinc" },
     { key: "needs_review", label: "변환 검수", count: counts.needs_review, tone: "amber" },
     { key: "vivino_unreviewed", label: "Vivino 미검수", count: counts.vivino_unreviewed, tone: "purple" },
     { key: "pending_dedupe", label: "중복 후보", count: counts.pending_dedupe, tone: "blue" },

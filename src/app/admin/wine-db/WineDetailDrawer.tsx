@@ -75,68 +75,58 @@ export default function WineDetailDrawer({ wineId, onClose, onPrev, onNext, hasP
   }
 
   return (
-    <>
-      {/* 백드롭 */}
-      <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-        onClick={onClose}
-      />
-      {/* drawer */}
-      <aside className="fixed top-0 right-0 bottom-0 w-full max-w-4xl bg-zinc-950 border-l border-zinc-800 z-50 overflow-y-auto shadow-2xl">
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-6 py-3 bg-zinc-950/95 backdrop-blur border-b border-zinc-800">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => onPrev && onPrev()}
-              disabled={!hasPrev}
-              title="이전 (k)"
-              className="px-2 py-1 rounded text-zinc-400 hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed text-sm"
-            >
-              ↑
-            </button>
-            <button
-              onClick={() => onNext && onNext()}
-              disabled={!hasNext}
-              title="다음 (j)"
-              className="px-2 py-1 rounded text-zinc-400 hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed text-sm"
-            >
-              ↓
-            </button>
-            <span className="text-[11px] text-zinc-600 ml-2">j/k 이동 · ESC 닫기</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <a
-              href={`/admin/wine-db/${wineId}`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-[11px] text-zinc-500 hover:text-zinc-300"
-            >
-              새 탭으로 열기 ↗
-            </a>
-            <button
-              onClick={onClose}
-              className="px-3 py-1.5 rounded-lg text-zinc-300 hover:bg-zinc-800 text-sm"
-            >
-              ✕
-            </button>
-          </div>
+    <aside className="fixed inset-0 bg-zinc-950 z-50 overflow-y-auto">
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-6 py-3 bg-zinc-950/95 backdrop-blur border-b border-zinc-800">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onClose}
+            className="px-3 py-1.5 rounded-lg text-zinc-300 hover:bg-zinc-800 text-sm"
+            title="닫기 (ESC)"
+          >
+            ← 목록으로
+          </button>
+          <span className="w-px h-5 bg-zinc-800 mx-2" />
+          <button
+            onClick={() => onPrev && onPrev()}
+            disabled={!hasPrev}
+            title="이전 (k)"
+            className="px-2 py-1 rounded text-zinc-400 hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed text-sm"
+          >
+            ↑
+          </button>
+          <button
+            onClick={() => onNext && onNext()}
+            disabled={!hasNext}
+            title="다음 (j)"
+            className="px-2 py-1 rounded text-zinc-400 hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed text-sm"
+          >
+            ↓
+          </button>
+          <span className="text-[11px] text-zinc-600 ml-2">j/k 이동 · ESC 닫기</span>
         </div>
+        <a
+          href={`/admin/wine-db/${wineId}`}
+          target="_blank"
+          rel="noreferrer"
+          className="text-[11px] text-zinc-500 hover:text-zinc-300"
+        >
+          새 탭으로 열기 ↗
+        </a>
+      </div>
 
-        <div className="p-6">
-          {loading && <p className="text-zinc-500 text-sm">불러오는 중…</p>}
-          {error && (
-            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-rose-300 text-sm">
-              불러오기 실패: {error}
-              <button onClick={load} className="ml-3 underline">
-                재시도
-              </button>
-            </div>
-          )}
-          {bundle && (
-            <DrawerContent bundle={bundle} onChanged={handleChanged} />
-          )}
-        </div>
-      </aside>
-    </>
+      <div className="max-w-6xl mx-auto p-6">
+        {loading && <p className="text-zinc-500 text-sm">불러오는 중…</p>}
+        {error && (
+          <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-rose-300 text-sm">
+            불러오기 실패: {error}
+            <button onClick={load} className="ml-3 underline">
+              재시도
+            </button>
+          </div>
+        )}
+        {bundle && <DrawerContent bundle={bundle} onChanged={handleChanged} />}
+      </div>
+    </aside>
   );
 }
 

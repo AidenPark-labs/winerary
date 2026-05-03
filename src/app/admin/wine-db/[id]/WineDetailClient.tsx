@@ -613,8 +613,33 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
       const res = await updateWine(wine.id, data);
       if (res.error) {
         setEditMsg(`저장 실패: ${res.error}`);
+        return;
+      }
+      // 변환 결과 분석 — 어떤 필드가 실제로 변경됐는지 / 변환 후 값
+      const changed = res.changedKeys ?? [];
+      const normalized = (res.normalized ?? {}) as Record<string, unknown>;
+      // updated_at·검수 메타 컬럼 제외하고 사용자가 의미있게 받아들일 변경만
+      const meaningful = changed.filter(
+        (k) => !["updated_at", "needs_review", "needs_review_reasons", "search_tsv", "search_jamo"].includes(k),
+      );
+      // 변환 후 값과 기존 wines 값을 비교해서 진짜로 데이터가 변했는지 판정
+      const reallyChanged = meaningful.filter((k) => {
+        const before = (wine as unknown as Record<string, unknown>)[k];
+        const after = normalized[k];
+        return JSON.stringify(before) !== JSON.stringify(after);
+      });
+      if (reallyChanged.length === 0) {
+        // update 자체는 성공했지만 변환 모듈이 입력을 기존값과 동일하게 정규화했음
+        const hint =
+          meaningful.length > 0
+            ? `입력값이 변환 모듈에 의해 기존값과 동일하게 정규화됐습니다 (${meaningful.join(", ")}). 한글로 직접 입력하거나, 다른 값을 시도해 주세요.`
+            : "변경 사항 없음 (입력값이 기존값과 동일).";
+        setEditMsg(hint);
       } else {
-        setEditMsg("저장 완료");
+        const summary = reallyChanged
+          .map((k) => `${k}: ${JSON.stringify(normalized[k])}`)
+          .join(" · ");
+        setEditMsg(`저장 완료 — ${summary}`);
         setEditing(false);
         onChanged();
       }

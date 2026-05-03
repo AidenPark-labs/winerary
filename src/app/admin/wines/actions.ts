@@ -95,7 +95,15 @@ export async function updateWine(
     return { error: error.message };
   }
   revalidatePath("/admin/wines");
-  return { success: true };
+  revalidatePath("/admin/wine-db");
+  // 어드민이 어떤 키가 실제 update됐는지 알 수 있게 변환 결과 반환 (updated_at 제외)
+  const changedKeys = Object.keys(result.wineUpdate);
+  return {
+    success: true as const,
+    changedKeys,
+    normalized: result.wineUpdate as Record<string, unknown>,
+    needs_review_reasons: result.needs_review_reasons,
+  };
 }
 
 /**

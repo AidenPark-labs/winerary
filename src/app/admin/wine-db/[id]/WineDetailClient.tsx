@@ -581,47 +581,38 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
     setDraft((prev) => ({ ...prev, [key]: value }));
   }
   async function saveEdits() {
-    const data: Record<string, string | string[] | null> = {};
-    if (draft.name_ko.trim() !== wine.name_ko && draft.name_ko.trim()) {
-      data.name_ko = draft.name_ko.trim();
-    }
-    if (draft.name_en.trim() !== wine.name_en && draft.name_en.trim()) {
-      data.name_en = draft.name_en.trim();
-    }
-    const trimmedProducer = draft.producer.trim();
-    if (trimmedProducer !== (wine.producer ?? "")) {
-      data.producer = trimmedProducer || null;
-    }
-    if (draft.country_ko.trim() !== wine.country_ko && draft.country_ko.trim()) {
-      data.country_ko = draft.country_ko.trim();
-    }
-    const trimmedRegion = draft.region_ko.trim();
-    if (trimmedRegion !== (wine.region_ko ?? "")) {
-      data.region_ko = trimmedRegion || null;
-    }
-    const newGrapes = draft.grape_varieties
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const currGrapes = (wine.grape_varieties ?? []).join(",");
-    if (newGrapes.join(",") !== currGrapes) {
-      data.grape_varieties = newGrapes;
-    }
-    const trimmedAlc = draft.alcohol.trim();
-    const currAlc = wine.alcohol != null ? String(wine.alcohol) : "";
-    if (trimmedAlc !== currAlc) {
-      data.alcohol = trimmedAlc || null;
-    }
-    if (Object.keys(data).length === 0) {
-      setEditMsg("변경 사항 없음");
-      setEditing(false);
+    // 변경 비교는 server에 위임. 항상 draft 전체를 보내고 변환 모듈이 처리.
+    const data: Record<string, string | string[] | null> = {
+      name_ko: draft.name_ko.trim(),
+      name_en: draft.name_en.trim(),
+      producer: draft.producer.trim() || null,
+      country_ko: draft.country_ko.trim(),
+      region_ko: draft.region_ko.trim() || null,
+      grape_varieties: draft.grape_varieties
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      alcohol: draft.alcohol.trim() || null,
+    };
+    // 필수값 비어있으면 차단
+    if (!data.name_ko) {
+      setEditMsg("오류: 한국어명은 비울 수 없음");
       return;
     }
+    if (!data.name_en) {
+      setEditMsg("오류: 영문명은 비울 수 없음");
+      return;
+    }
+    if (!data.country_ko) {
+      setEditMsg("오류: 국가는 비울 수 없음");
+      return;
+    }
+
     setEditMsg("저장 중…");
     startTransition(async () => {
       const res = await updateWine(wine.id, data);
       if (res.error) {
-        setEditMsg(`오류: ${res.error}`);
+        setEditMsg(`저장 실패: ${res.error}`);
       } else {
         setEditMsg("저장 완료");
         setEditing(false);
@@ -696,7 +687,7 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
                 disabled={pending}
                 className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50"
               >
-                저장
+                {pending ? "저장 중…" : "저장"}
               </button>
               <button
                 onClick={cancelEdit}
@@ -710,6 +701,21 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
         </div>
       </div>
 
+      {/* 저장 결과 메시지 — 명확히 보이도록 별도 영역 */}
+      {editMsg && (
+        <div
+          className={`rounded-xl border p-3 mb-4 text-sm font-medium ${
+            editMsg.startsWith("저장 실패") || editMsg.startsWith("오류")
+              ? "border-rose-500/40 bg-rose-500/10 text-rose-200"
+              : editMsg === "저장 중…"
+              ? "border-zinc-700 bg-zinc-800/40 text-zinc-300"
+              : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+          }`}
+        >
+          {editMsg}
+        </div>
+      )}
+
       {/* 안내 박스 */}
       <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 mb-4 text-xs text-zinc-400 leading-relaxed">
         <strong className="text-zinc-200">왼쪽</strong>은 우리 카탈로그(<code className="text-zinc-500">wines</code>)의 정규화된 값,{" "}
@@ -717,7 +723,6 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
         두 와인이 같은 와인을 가리키는지 비교해서 <strong>매칭 확정</strong>·<strong>해제</strong>·<strong>URL 교체</strong>를 결정하세요.
         ⚠가 붙은 행은 표기/내용에 차이가 있는 행 (정보 보강 또는 정정 후보).
         {" "}<strong>우리 DB 편집</strong>을 누르면 좌측 input + 우측 ← 버튼으로 Vivino 값을 옮겨올 수 있습니다 (변환 모듈 자동 정규화 통과).
-        {editMsg && <span className="ml-2 text-emerald-300">· {editMsg}</span>}
       </div>
 
       {/* 헤더 + 비교 표 — 같은 grid로 라인 정렬 */}

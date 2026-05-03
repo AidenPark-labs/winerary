@@ -62,7 +62,7 @@ function titleMatchScore(query: string, title: string): number {
   return totalWeight > 0 ? matchedWeight / totalWeight : 1;
 }
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -138,14 +138,19 @@ export async function GET(request: Request) {
       ? { min: Math.min(...prices), max: Math.max(...prices) }
       : null;
 
-    // wine_id가 있으면 최저가로 DB 가격 갱신
+    // wine_id가 있으면 최저가로 DB 가격 갱신 (service_role — RLS 우회)
     if (wineId && priceRange) {
-      const supabase = await createClient();
-      supabase
+      const admin = createServiceClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      );
+      admin
         .from("wines")
         .update({ price: priceRange.min, updated_at: new Date().toISOString() })
         .eq("id", wineId)
-        .then(() => {});
+        .then((r) => {
+          if (r.error) console.error("[naver/shopping] price update:", r.error.message);
+        });
     }
 
     return Response.json({ items: items.slice(0, 10), priceRange });

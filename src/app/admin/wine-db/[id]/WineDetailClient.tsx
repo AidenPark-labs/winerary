@@ -562,11 +562,21 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
         </div>
       </div>
 
+      {/* 안내 박스 */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 mb-4 text-xs text-zinc-400 leading-relaxed">
+        <strong className="text-zinc-200">왼쪽</strong>은 우리 카탈로그(<code className="text-zinc-500">wines</code>)의 정규화된 값,{" "}
+        <strong className="text-rose-300">오른쪽</strong>은 Vivino에서 가져온 원본(<code className="text-zinc-500">vivino_wines</code>)입니다.
+        두 와인이 같은 와인을 가리키는지 비교해서 <strong>매칭 확정</strong>·<strong>해제</strong>·<strong>URL 교체</strong>를 결정하세요.
+        ⚠가 붙은 행은 표기/내용에 차이가 있는 행입니다 (정보 보강 또는 정정 후보).
+      </div>
+
       {/* 헤더 + 비교 표 — 같은 grid로 라인 정렬 */}
       <div className="rounded-xl border border-zinc-800 overflow-hidden">
         {/* 헤더 행 (라벨칸 비움, 좌·우 카드) */}
         <div className="grid grid-cols-[7rem_1fr_1fr]">
-          <div className="bg-zinc-900/60" />
+          <div className="bg-zinc-900/60 px-3 py-2 flex items-center text-[10px] uppercase tracking-wider text-zinc-600">
+            필드
+          </div>
           <div className="px-3 py-3 bg-zinc-900/40 flex items-center gap-3">
             <img
               src={getWineImage(wine.image_url, wine.wine_type)}
@@ -574,20 +584,22 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
               className="w-12 h-12 rounded-lg object-cover border border-zinc-700 flex-shrink-0"
             />
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-wider font-semibold text-zinc-400">
-                우리 DB (wines)
+              <p className="text-[10px] uppercase tracking-wider font-semibold text-zinc-300">
+                우리 DB · wines
               </p>
               <p className="text-sm text-zinc-100 truncate">{wine.name_ko}</p>
             </div>
           </div>
-          <div className="px-3 py-3 bg-rose-500/[0.06] border-l border-zinc-800 flex items-center gap-3">
+          <div className="px-3 py-3 bg-rose-500/[0.08] border-l border-zinc-800 flex items-center gap-3">
             <img
               src={getWineImage(wine.vivino_image_url, wine.wine_type)}
               alt={wine.vivino_name ?? ""}
               className="w-12 h-12 rounded-lg object-cover border border-zinc-700 flex-shrink-0"
             />
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-wider font-semibold text-rose-300">Vivino</p>
+              <p className="text-[10px] uppercase tracking-wider font-semibold text-rose-300">
+                Vivino · vivino_wines
+              </p>
               <p className="text-sm text-zinc-100 truncate">
                 {wine.vivino_name ?? <span className="text-zinc-600">—</span>}
               </p>

@@ -445,10 +445,36 @@ function BasicSection({
 // 2. Vivino
 // ─────────────────────────────────────────────────────────
 
+type VivinoEditField =
+  | "name_ko"
+  | "name_en"
+  | "producer"
+  | "country_ko"
+  | "region_ko"
+  | "grape_varieties"
+  | "alcohol";
+
+type VivinoEditDraft = Record<VivinoEditField, string>;
+
+function makeDraft(wine: WineDetail): VivinoEditDraft {
+  return {
+    name_ko: wine.name_ko,
+    name_en: wine.name_en,
+    producer: wine.producer ?? "",
+    country_ko: wine.country_ko,
+    region_ko: wine.region_ko ?? "",
+    grape_varieties: (wine.grape_varieties ?? []).join(", "),
+    alcohol: wine.alcohol != null ? String(wine.alcohol) : "",
+  };
+}
+
 function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () => void }) {
   const [pending, startTransition] = useTransition();
   const [newUrl, setNewUrl] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<VivinoEditDraft>(() => makeDraft(wine));
+  const [editMsg, setEditMsg] = useState<string | null>(null);
 
   if (!wine.vivino_url) {
     return (
@@ -485,28 +511,124 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
     );
   }
 
+  // vivino_region(예: "Argentina / Mendoza / Uco Valley") segment 추출
+  const vivinoRegionSegs = (wine.vivino_region ?? "")
+    .split("/")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const vivinoCountryEn = vivinoRegionSegs[0] ?? null;
+  const vivinoRegionDeepest = vivinoRegionSegs.length > 1 ? vivinoRegionSegs.slice(1).join(" / ") : null;
+
   // 비교 행 정의 — 좌(우리 DB)와 우(Vivino) 같은 의미 필드끼리
   const grapesKo = (wine.grape_varieties ?? []).join(", ");
   const compareRows: Array<{
     label: string;
     ours: string | null;
     vivino: string | null;
+    editKey?: VivinoEditField;
+    /** ← 버튼이 눌렸을 때 input에 채워질 값 (vivino_region 처럼 표시값과 복사값이 다른 경우) */
+    copyValue?: string | null;
   }> = [
-    { label: "와인명", ours: wine.name_en || wine.name_ko, vivino: wine.vivino_name },
-    { label: "와이너리", ours: wine.producer, vivino: wine.vivino_winery },
+    { label: "와인명 (한)", ours: wine.name_ko, vivino: null, editKey: "name_ko" },
+    {
+      label: "와인명 (영)",
+      ours: wine.name_en,
+      vivino: wine.vivino_name,
+      editKey: "name_en",
+    },
+    { label: "와이너리", ours: wine.producer, vivino: wine.vivino_winery, editKey: "producer" },
+    {
+      label: "국가",
+      ours: wine.country_ko,
+      vivino: vivinoCountryEn,
+      editKey: "country_ko",
+    },
     {
       label: "지역",
-      ours: [wine.country_ko, wine.region_ko].filter(Boolean).join(" · ") || null,
-      vivino: wine.vivino_region,
+      ours: wine.region_ko,
+      vivino: vivinoRegionDeepest ?? wine.vivino_region,
+      editKey: "region_ko",
+      copyValue: vivinoRegionDeepest ?? wine.vivino_region,
     },
-    { label: "품종", ours: grapesKo || null, vivino: wine.vivino_grapes },
+    {
+      label: "품종",
+      ours: grapesKo || null,
+      vivino: wine.vivino_grapes,
+      editKey: "grape_varieties",
+    },
     { label: "스타일", ours: wine.wine_style, vivino: wine.vivino_style },
     {
       label: "도수",
       ours: wine.alcohol != null ? `${wine.alcohol}%` : null,
       vivino: wine.vivino_alcohol,
+      editKey: "alcohol",
+      // alcohol input은 숫자만 — vivino_alcohol "13.5%" 에서 % 떼고
+      copyValue: wine.vivino_alcohol ? wine.vivino_alcohol.replace(/[^0-9.]/g, "") : null,
     },
   ];
+
+  function startEdit() {
+    setDraft(makeDraft(wine));
+    setEditing(true);
+    setEditMsg(null);
+  }
+  function cancelEdit() {
+    setEditing(false);
+    setEditMsg(null);
+  }
+  function copyFromVivino(key: VivinoEditField, value: string | null) {
+    if (!value) return;
+    setDraft((prev) => ({ ...prev, [key]: value }));
+  }
+  async function saveEdits() {
+    const data: Record<string, string | string[] | null> = {};
+    if (draft.name_ko.trim() !== wine.name_ko && draft.name_ko.trim()) {
+      data.name_ko = draft.name_ko.trim();
+    }
+    if (draft.name_en.trim() !== wine.name_en && draft.name_en.trim()) {
+      data.name_en = draft.name_en.trim();
+    }
+    const trimmedProducer = draft.producer.trim();
+    if (trimmedProducer !== (wine.producer ?? "")) {
+      data.producer = trimmedProducer || null;
+    }
+    if (draft.country_ko.trim() !== wine.country_ko && draft.country_ko.trim()) {
+      data.country_ko = draft.country_ko.trim();
+    }
+    const trimmedRegion = draft.region_ko.trim();
+    if (trimmedRegion !== (wine.region_ko ?? "")) {
+      data.region_ko = trimmedRegion || null;
+    }
+    const newGrapes = draft.grape_varieties
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const currGrapes = (wine.grape_varieties ?? []).join(",");
+    if (newGrapes.join(",") !== currGrapes) {
+      data.grape_varieties = newGrapes;
+    }
+    const trimmedAlc = draft.alcohol.trim();
+    const currAlc = wine.alcohol != null ? String(wine.alcohol) : "";
+    if (trimmedAlc !== currAlc) {
+      data.alcohol = trimmedAlc || null;
+    }
+    if (Object.keys(data).length === 0) {
+      setEditMsg("변경 사항 없음");
+      setEditing(false);
+      return;
+    }
+    setEditMsg("저장 중…");
+    startTransition(async () => {
+      const res = await updateWine(wine.id, data);
+      if (res.error) {
+        setEditMsg(`오류: ${res.error}`);
+      } else {
+        setEditMsg("저장 완료");
+        setEditing(false);
+        onChanged();
+      }
+    });
+  }
 
   return (
     <Card>
@@ -559,6 +681,32 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
           >
             매칭 해제
           </button>
+          {!editing ? (
+            <button
+              onClick={startEdit}
+              disabled={pending}
+              className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/15 text-blue-300 border border-blue-500/30 hover:bg-blue-500/25"
+            >
+              우리 DB 편집
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={saveEdits}
+                disabled={pending}
+                className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50"
+              >
+                저장
+              </button>
+              <button
+                onClick={cancelEdit}
+                disabled={pending}
+                className="text-xs px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700"
+              >
+                취소
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -567,7 +715,9 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
         <strong className="text-zinc-200">왼쪽</strong>은 우리 카탈로그(<code className="text-zinc-500">wines</code>)의 정규화된 값,{" "}
         <strong className="text-rose-300">오른쪽</strong>은 Vivino에서 가져온 원본(<code className="text-zinc-500">vivino_wines</code>)입니다.
         두 와인이 같은 와인을 가리키는지 비교해서 <strong>매칭 확정</strong>·<strong>해제</strong>·<strong>URL 교체</strong>를 결정하세요.
-        ⚠가 붙은 행은 표기/내용에 차이가 있는 행입니다 (정보 보강 또는 정정 후보).
+        ⚠가 붙은 행은 표기/내용에 차이가 있는 행 (정보 보강 또는 정정 후보).
+        {" "}<strong>우리 DB 편집</strong>을 누르면 좌측 input + 우측 ← 버튼으로 Vivino 값을 옮겨올 수 있습니다 (변환 모듈 자동 정규화 통과).
+        {editMsg && <span className="ml-2 text-emerald-300">· {editMsg}</span>}
       </div>
 
       {/* 헤더 + 비교 표 — 같은 grid로 라인 정렬 */}
@@ -610,6 +760,8 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
         {/* 비교 행들 */}
         {compareRows.map((r) => {
           const diff = compareDiffers(r.ours, r.vivino);
+          const inEdit = editing && r.editKey;
+          const copySrc = r.copyValue !== undefined ? r.copyValue : r.vivino;
           return (
             <div
               key={r.label}
@@ -619,17 +771,43 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
             >
               <div className="px-3 py-2 bg-zinc-900/60 text-zinc-500 text-xs uppercase tracking-wider flex items-center">
                 {r.label}
-                {diff && <span className="ml-2 text-amber-400" title="차이 있음">⚠</span>}
+                {diff && (
+                  <span className="ml-2 text-amber-400" title="차이 있음">
+                    ⚠
+                  </span>
+                )}
               </div>
-              <div className={`px-3 py-2 ${diff ? "text-amber-100" : "text-zinc-200"}`}>
-                {r.ours ?? <span className="text-zinc-600">—</span>}
+              <div className={`px-3 py-1.5 ${diff && !inEdit ? "text-amber-100" : "text-zinc-200"}`}>
+                {inEdit ? (
+                  <input
+                    value={draft[r.editKey!]}
+                    onChange={(e) =>
+                      setDraft((prev) => ({ ...prev, [r.editKey!]: e.target.value }))
+                    }
+                    placeholder={r.label}
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-zinc-100 focus:outline-none focus:border-blue-500"
+                  />
+                ) : (
+                  r.ours ?? <span className="text-zinc-600">—</span>
+                )}
               </div>
               <div
-                className={`px-3 py-2 border-l border-zinc-800 ${
-                  diff ? "text-amber-100" : "text-zinc-200"
+                className={`px-3 py-2 border-l border-zinc-800 flex items-center gap-2 ${
+                  diff && !inEdit ? "text-amber-100" : "text-zinc-200"
                 }`}
               >
-                {r.vivino ?? <span className="text-zinc-600">—</span>}
+                {inEdit && r.editKey && copySrc && (
+                  <button
+                    onClick={() => copyFromVivino(r.editKey!, copySrc)}
+                    title="Vivino 값으로 좌측 채우기"
+                    className="text-zinc-500 hover:text-rose-300 text-base leading-none flex-shrink-0"
+                  >
+                    ←
+                  </button>
+                )}
+                <span className="flex-1 min-w-0 truncate" title={r.vivino ?? ""}>
+                  {r.vivino ?? <span className="text-zinc-600">—</span>}
+                </span>
               </div>
             </div>
           );

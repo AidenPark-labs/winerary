@@ -4,12 +4,13 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getWineImage } from "@/lib/wine-placeholder";
-import { updateWine, deleteWine } from "@/app/admin/wines/actions";
+import { updateWine, deleteWine, updateWineVivino } from "@/app/admin/wines/actions";
 import {
   confirmVivinoMatch,
   replaceVivinoUrl,
   unlinkVivinoMatch,
 } from "@/app/admin/vivino-review/actions";
+import type { VivinoCrawlResponse, VivinoCrawlResult } from "@/lib/vivino-crawler";
 import { approveWineV2 } from "@/app/admin/wines-v2-review/actions";
 import { confirmDedupe, rejectDedupe } from "@/app/admin/dedupe-review/actions";
 import { unlinkVivino } from "@/app/admin/vivino-dup-review/actions";
@@ -475,38 +476,115 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<VivinoEditDraft>(() => makeDraft(wine));
   const [editMsg, setEditMsg] = useState<string | null>(null);
+  const [crawling, setCrawling] = useState(false);
+  const [crawlSaving, setCrawlSaving] = useState(false);
+  const [crawlResult, setCrawlResult] = useState<VivinoCrawlResponse | null>(null);
+
+  async function handleCrawlByName() {
+    setCrawling(true);
+    setCrawlResult(null);
+    setMsg("이름으로 Vivino 검색 중…");
+    try {
+      const res = await fetch("/api/admin/vivino/crawl", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wineName: wine.name_en || wine.name_ko }),
+      });
+      const data = (await res.json()) as VivinoCrawlResponse;
+      setCrawlResult(data);
+      setMsg(data.success ? "검색 완료 — 아래 미리보기 확인 후 적용" : `검색 실패: ${data.error}`);
+    } catch (e) {
+      setCrawlResult({ success: false, error: e instanceof Error ? e.message : "네트워크 오류", step: "browser" });
+      setMsg("네트워크 오류");
+    } finally {
+      setCrawling(false);
+    }
+  }
+
+  async function handleCrawlByUrl(url: string) {
+    setCrawling(true);
+    setCrawlResult(null);
+    setMsg("URL 크롤링 중…");
+    try {
+      const res = await fetch("/api/admin/vivino/crawl", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vivinoUrl: url }),
+      });
+      const data = (await res.json()) as VivinoCrawlResponse;
+      setCrawlResult(data);
+      setMsg(data.success ? "크롤링 완료 — 아래 미리보기 확인 후 적용" : `실패: ${data.error}`);
+    } catch (e) {
+      setCrawlResult({ success: false, error: e instanceof Error ? e.message : "네트워크 오류", step: "browser" });
+      setMsg("네트워크 오류");
+    } finally {
+      setCrawling(false);
+    }
+  }
+
+  async function applyCrawlResult() {
+    if (!crawlResult || !crawlResult.success) return;
+    const r = crawlResult as VivinoCrawlResult;
+    setCrawlSaving(true);
+    const res = await updateWineVivino(wine.id, {
+      vivino_url: r.vivinoUrl,
+      vivino_wine_id: r.vivinoWineId,
+      vivino_rating: r.rating,
+      vivino_reviews: r.reviews,
+      vivino_winery: r.facts.winery || null,
+      vivino_grapes: r.facts.grapes || null,
+      vivino_region: r.facts.region || null,
+      vivino_style: r.facts.style || null,
+      vivino_alcohol: r.facts.alcohol || null,
+      vivino_allergens: r.facts.allergens || null,
+      vivino_description: r.facts.description || null,
+    });
+    setCrawlSaving(false);
+    if (res.error) {
+      setMsg(`적용 실패: ${res.error}`);
+    } else {
+      setCrawlResult(null);
+      setMsg("매칭 적용 완료");
+      onChanged();
+    }
+  }
 
   if (!wine.vivino_url) {
     return (
       <Card>
         <p className="text-zinc-400 text-sm mb-4">이 와인에는 Vivino 매칭이 없습니다.</p>
-        <div className="flex items-center gap-2">
-          <input
-            value={newUrl}
-            onChange={(e) => setNewUrl(e.target.value)}
-            placeholder="https://www.vivino.com/w/..."
-            className="flex-1 rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-200"
-          />
+        <div className="flex flex-col gap-3">
           <button
-            onClick={() => {
-              if (!newUrl.trim()) return;
-              setMsg("크롤링 중…");
-              startTransition(async () => {
-                const res = await replaceVivinoUrl(wine.id, newUrl.trim());
-                setMsg(res.error ? `오류: ${res.error}` : "매칭 완료");
-                if (!res.error) {
-                  setNewUrl("");
-                  onChanged();
-                }
-              });
-            }}
-            disabled={pending}
-            className="px-3 py-2 rounded-lg bg-rose-500 text-white text-sm font-medium hover:bg-rose-600 disabled:opacity-50"
+            onClick={handleCrawlByName}
+            disabled={crawling || pending}
+            className="px-3 py-2 rounded-lg bg-purple-500/15 text-purple-300 border border-purple-500/30 hover:bg-purple-500/25 text-sm font-medium disabled:opacity-50 self-start"
           >
-            URL로 매칭
+            {crawling ? "검색 중…" : `이름으로 Vivino 검색 (${wine.name_en || wine.name_ko})`}
           </button>
+          <div className="flex items-center gap-2">
+            <input
+              value={newUrl}
+              onChange={(e) => setNewUrl(e.target.value)}
+              placeholder="https://www.vivino.com/w/..."
+              className="flex-1 rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-200"
+            />
+            <button
+              onClick={() => newUrl.trim() && handleCrawlByUrl(newUrl.trim())}
+              disabled={crawling || pending}
+              className="px-3 py-2 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 disabled:opacity-50"
+            >
+              URL로 매칭
+            </button>
+          </div>
         </div>
         {msg && <p className="text-xs text-zinc-400 mt-2">{msg}</p>}
+        <CrawlPreview
+          wine={wine}
+          result={crawlResult}
+          saving={crawlSaving}
+          onApply={applyCrawlResult}
+          onCancel={() => setCrawlResult(null)}
+        />
       </Card>
     );
   }
@@ -697,6 +775,14 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
           >
             매칭 해제
           </button>
+          <button
+            onClick={handleCrawlByName}
+            disabled={crawling || pending}
+            className="text-xs px-3 py-1.5 rounded-lg bg-purple-500/15 text-purple-300 border border-purple-500/30 hover:bg-purple-500/25 disabled:opacity-50"
+            title={`이름으로 Vivino 재검색: ${wine.name_en || wine.name_ko}`}
+          >
+            {crawling ? "검색 중…" : "이름으로 재검색"}
+          </button>
           {!editing ? (
             <button
               onClick={startEdit}
@@ -873,7 +959,7 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
       )}
 
       <div className="mt-6 pt-4 border-t border-zinc-800">
-        <p className="text-xs text-zinc-500 mb-2">다른 URL로 교체</p>
+        <p className="text-xs text-zinc-500 mb-2">다른 URL로 교체 (크롤링 후 미리보기 → 적용)</p>
         <div className="flex items-center gap-2">
           <input
             value={newUrl}
@@ -884,7 +970,6 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
           <button
             onClick={() => {
               if (!newUrl.trim()) return;
-              setMsg("크롤링 중…");
               startTransition(async () => {
                 const res = await replaceVivinoUrl(wine.id, newUrl.trim());
                 setMsg(res.error ? `오류: ${res.error}` : "교체 완료");
@@ -896,13 +981,131 @@ function VivinoSection({ wine, onChanged }: { wine: WineDetail; onChanged: () =>
             }}
             disabled={pending}
             className="px-3 py-2 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 disabled:opacity-50"
+            title="입력한 URL로 즉시 매칭 교체 (크롤링 결과 미리보기 없이 적용)"
           >
-            교체
+            즉시 교체
           </button>
         </div>
         {msg && <p className="text-xs text-zinc-400 mt-2">{msg}</p>}
       </div>
+
+      <CrawlPreview
+        wine={wine}
+        result={crawlResult}
+        saving={crawlSaving}
+        onApply={applyCrawlResult}
+        onCancel={() => setCrawlResult(null)}
+      />
     </Card>
+  );
+}
+
+// ─────────────────────────────────────────────────────────
+// Crawl 결과 미리보기 (이름/URL 검색 후 적용 전 비교)
+// ─────────────────────────────────────────────────────────
+
+function CrawlPreview({
+  wine,
+  result,
+  saving,
+  onApply,
+  onCancel,
+}: {
+  wine: WineDetail;
+  result: VivinoCrawlResponse | null;
+  saving: boolean;
+  onApply: () => void;
+  onCancel: () => void;
+}) {
+  if (!result) return null;
+  if (!result.success) {
+    return (
+      <div className="mt-4 p-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-sm text-rose-300">
+        검색 실패 ({result.step}): {result.error}
+        <button onClick={onCancel} className="ml-3 text-xs underline text-zinc-400">
+          닫기
+        </button>
+      </div>
+    );
+  }
+  const r = result;
+  const rows: Array<{ label: string; before: string | null; after: string | null }> = [
+    { label: "URL", before: wine.vivino_url, after: r.vivinoUrl },
+    {
+      label: "Vivino 와인명",
+      before: wine.vivino_name,
+      after: r.vivinoName,
+    },
+    {
+      label: "평점",
+      before: wine.vivino_rating != null ? `★ ${wine.vivino_rating}` : null,
+      after: r.rating != null ? `★ ${r.rating}` : null,
+    },
+    {
+      label: "리뷰",
+      before: wine.vivino_reviews != null ? `${wine.vivino_reviews.toLocaleString()}` : null,
+      after: r.reviews != null ? `${r.reviews.toLocaleString()}` : null,
+    },
+    { label: "Winery", before: wine.vivino_winery, after: r.facts.winery || null },
+    { label: "Region", before: wine.vivino_region, after: r.facts.region || null },
+    { label: "Grapes", before: wine.vivino_grapes, after: r.facts.grapes || null },
+    { label: "Style", before: wine.vivino_style, after: r.facts.style || null },
+    { label: "Alcohol", before: wine.vivino_alcohol, after: r.facts.alcohol || null },
+  ];
+
+  return (
+    <div className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.04] overflow-hidden">
+      <div className="px-4 py-3 border-b border-emerald-500/20 flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <p className="text-sm font-semibold text-emerald-300">검색 결과 미리보기</p>
+          {r.matchInfo && (
+            <p className="text-[11px] text-zinc-500 mt-0.5">
+              매칭 {(r.matchInfo.firstMatchScore * 100).toFixed(0)}% · 교차{" "}
+              {(r.matchInfo.crossMatchScore * 100).toFixed(0)}% · 후보 {r.matchInfo.candidateCount}개
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onCancel}
+            disabled={saving}
+            className="text-xs px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700"
+          >
+            취소
+          </button>
+          <button
+            onClick={onApply}
+            disabled={saving}
+            className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50"
+          >
+            {saving ? "적용 중…" : "이 매칭 적용"}
+          </button>
+        </div>
+      </div>
+      <div className="divide-y divide-emerald-500/10">
+        {rows.map((row) => {
+          const changed = row.before !== row.after;
+          if (!row.after && !row.before) return null;
+          return (
+            <div key={row.label} className="grid grid-cols-[6rem_1fr_1fr] text-sm">
+              <div className="px-3 py-1.5 bg-zinc-900/40 text-zinc-500 text-xs uppercase tracking-wider">
+                {row.label}
+              </div>
+              <div className="px-3 py-1.5 text-zinc-500 text-xs flex items-center">
+                {row.before ? (
+                  <span className={changed ? "line-through" : ""}>{row.before}</span>
+                ) : (
+                  <span className="text-zinc-700 italic">없음</span>
+                )}
+              </div>
+              <div className="px-3 py-1.5 border-l border-emerald-500/10 text-emerald-200 text-xs flex items-center">
+                {row.after ?? <span className="text-zinc-700 italic">없음</span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
